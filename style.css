@@ -1,0 +1,182 @@
+/* ---------- RESET ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ---------- ROOT ---------- */
+:root {
+  --bg: #0b0d12;
+  --fg: #eaeaf0;
+  --muted: #9aa0b3;
+  --accent: #4f8cff;
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- BODY ---------- */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: radial-gradient(
+      1000px 600px at 50% -10%,
+      rgba(79, 140, 255, 0.15),
+      transparent
+    ),
+    var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ---------- HERO ---------- */
+.hero {
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+/* ---------- LOGO ---------- */
+.logo {
+  width: 340px;
+  height: auto;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 130px rgba(79, 140, 255, 0.25));
+}
+
+/* ---------- HEADLINE ---------- */
+h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  letter-spacing: 0.4em;
+  font-weight: 600;
+}
+
+/* ---------- TAGLINE ---------- */
+.tagline {
+  max-width: 520px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ---------- CTA ---------- */
+.cta {
+  margin-top: 2.5rem;
+  padding: 0.75rem 2rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  cursor: default;
+}
+
+/* ---------- FOOTER ---------- */
+footer {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- NAV ---------- */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav a {
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.nav .brand {
+  font-weight: 600;
+}
+
+.nav a.active {
+  color: var(--accent);
+}
+
+/* ---------- PAGE ---------- */
+.page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 4rem 2rem;
+}
+
+.content {
+  max-width: 720px;
+}
+
+.content h2 {
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.content p {
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
+}
+
+/* ---------- PRINCIPLES ---------- */
+.principles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.principles h3 {
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.principles p {
+  font-size: 0.9rem;
+}
+
+/* ---------- BRAND LOGO IN NAV ---------- */
+.nav .brand img {
+  height: 28px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 0 8px rgba(79, 140, 255, 0.25));
+}
+
+.nav .brand {
+  display: flex;
+  align-items: center;
+}
+
+footer a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+}
+
+footer a:hover {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
