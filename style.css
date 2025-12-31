@@ -14,6 +14,13 @@
   --border: rgba(255, 255, 255, 0.08);
 }
 
+/* ---------- HTML / BODY (CRITICAL FIX) ---------- */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 /* ---------- BODY ---------- */
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -25,29 +32,70 @@ body {
     ),
     var(--bg);
   color: var(--fg);
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
-/* ---------- HERO ---------- */
+/* ---------- NAV ---------- */
+.nav {
+  height: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.nav a {
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.nav a.active {
+  color: var(--accent);
+}
+
+/* ---------- BRAND LOGO IN NAV ---------- */
+.nav .brand {
+  display: flex;
+  align-items: center;
+}
+
+.nav .brand img {
+  height: 28px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 0 8px rgba(79, 140, 255, 0.25));
+}
+
+/* ---------- HERO (FIXED VIEWPORT) ---------- */
 .hero {
-  min-height: 90vh;
+  height: calc(100vh - 64px - 56px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   gap: 1.5rem;
-  padding: 2rem;
+  padding: 1.5rem;
+}
+
+/* Use real mobile viewport */
+@supports (height: 100dvh) {
+  .hero {
+    height: calc(100dvh - 64px - 56px);
+  }
 }
 
 /* ---------- LOGO ---------- */
 .logo {
   width: 340px;
+  max-width: 90%;
   height: auto;
-  margin-bottom: 1rem;
   filter: drop-shadow(0 0 130px rgba(79, 140, 255, 0.25));
 }
 
@@ -68,7 +116,7 @@ h1 {
 
 /* ---------- CTA ---------- */
 .cta {
-  margin-top: 2.5rem;
+  margin-top: 2rem;
   padding: 0.75rem 2rem;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -81,46 +129,13 @@ h1 {
   cursor: default;
 }
 
-/* ---------- FOOTER ---------- */
-footer {
-  padding: 1.5rem;
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--muted);
-  border-top: 1px solid var(--border);
-}
-
-/* ---------- NAV ---------- */
-.nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 2rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.nav a {
-  color: var(--fg);
-  text-decoration: none;
-  font-size: 0.9rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.nav .brand {
-  font-weight: 600;
-}
-
-.nav a.active {
-  color: var(--accent);
-}
-
-/* ---------- PAGE ---------- */
+/* ---------- PAGE (ABOUT) ---------- */
 .page {
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 3rem 2rem;
+  overflow: hidden;
 }
 
 .content {
@@ -157,19 +172,21 @@ footer {
   font-size: 0.9rem;
 }
 
-/* ---------- BRAND LOGO IN NAV ---------- */
-.nav .brand img {
-  height: 28px;
-  width: auto;
-  display: block;
-  filter: drop-shadow(0 0 8px rgba(79, 140, 255, 0.25));
-}
-
-.nav .brand {
+/* ---------- FOOTER ---------- */
+footer {
+  height: 56px;
+  flex-shrink: 0;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
 }
 
+/* ---------- FOOTER LINK ---------- */
 footer a {
   color: var(--muted);
   text-decoration: none;
@@ -179,4 +196,11 @@ footer a {
 footer a:hover {
   color: var(--fg);
   border-bottom-color: var(--accent);
+}
+
+/* ---------- MOBILE FINAL POLISH ---------- */
+@media (max-width: 768px) {
+  body {
+    background: var(--bg);
+  }
 }
