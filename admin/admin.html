@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AXYOM Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="login-page">
+
+  <main class="login">
+    <img src="/adminlogo.png" class="logo" alt="AXYOM" />
+    <p class="tagline">Authorized access only+-</p>
+
+    <div class="card">
+      <input id="email" type="email" placeholder="Admin email" />
+      <input id="password" type="password" placeholder="Password" />
+      <button class="btn primary" onclick="login()">Login</button>
+      <div class="error" id="loginError"></div>
+    </div>
+  </main>
+
+  <script src="admin-login.js"></script>
+</body>
+</html>

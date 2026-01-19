@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AXYOM Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="dashboard-page">
+
+<header class="nav">
+  <div class="brand">
+    <img src="/adminlogo.png" alt="AXYOM" />
+  </div>
+  <div class="nav-right">
+    <span class="pill" id="adminEmail"></span>
+    <button class="btn ghost" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<main class="dashboard">
+
+  <!-- STATS -->
+  <section class="stats">
+    <div class="stat">
+      <span>Customers</span>
+      <strong id="statCustomers">—</strong>
+    </div>
+    <div class="stat">
+      <span>API Keys</span>
+      <strong id="statKeys">—</strong>
+    </div>
+  </section>
+
+  <!-- CREATE KEY -->
+  <section class="panel">
+    <h2>Create API Key</h2>
+    <div class="form-row">
+      <input id="newEmail" placeholder="Customer email (optional)" />
+      <input id="newDomain" placeholder="Domain (required)" />
+      <button class="btn primary" onclick="createKey()">Create</button>
+    </div>
+    <div class="success" id="createKeyMsg"></div>
+  </section>
+
+  <!-- CUSTOMERS TABLE -->
+  <section class="panel">
+    <h2>Customers</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody id="customersTable"></tbody>
+    </table>
+  </section>
+
+  <!-- KEYS TABLE -->
+  <section class="panel">
+    <h2>API Keys</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Key</th>
+          <th>Website ID</th>
+          <th>Status</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody id="keysTable"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<script src="admin-dashboard.js"></script>
+</body>
+</html>

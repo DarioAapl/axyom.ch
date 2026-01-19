@@ -58,6 +58,11 @@ body {
 .nav a.active {
   color: var(--accent);
 }
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
 
 /* ---------- BRAND LOGO IN NAV ---------- */
 .nav .brand {
