@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8021";
+const API = "https://backend-still-river-1228.fly.dev";
 
 async function login() {
   const email = document.getElementById("email").value.trim();
