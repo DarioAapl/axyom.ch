@@ -20,7 +20,7 @@ function logout() {
 }
 
 /* ============================
-   INIT
+   INIT (PROTECT PAGE)
 ============================ */
 (async function init() {
   if (!getToken()) return logout();
