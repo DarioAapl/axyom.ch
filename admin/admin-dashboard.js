@@ -1,18 +1,15 @@
-// ============================
-// CONFIG
-// ============================
 const API = "https://backend-still-river-1228.fly.dev";
 
-// ============================
-// AUTH HELPERS
-// ============================
+/* ============================
+   AUTH HELPERS
+============================ */
 function getToken() {
   return localStorage.getItem("admin_token");
 }
 
 function authHeaders() {
   return {
-    Authorization: `Bearer ${getToken()}`,
+    Authorization: `Bearer ${getToken()}`
   };
 }
 
@@ -22,9 +19,9 @@ function logout() {
   window.location.href = "admin.html";
 }
 
-// ============================
-// INIT (PROTECT PAGE)
-// ============================
+/* ============================
+   INIT
+============================ */
 (async function init() {
   if (!getToken()) return logout();
 
@@ -42,62 +39,62 @@ function logout() {
   await loadWebsites();
 })();
 
-// ============================
-// CUSTOMERS
-// ============================
+/* ============================
+   CUSTOMERS
+============================ */
 async function loadCustomers() {
   const res = await fetch(`${API}/admin/customers`, {
     headers: authHeaders(),
   });
-
   const data = await res.json();
+
   document.getElementById("statCustomers").textContent = data.length;
 
   const tbody = document.getElementById("customersTable");
   tbody.innerHTML = "";
 
   data.forEach(c => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${c.id}</td>
-      <td>${c.email}</td>
-      <td>${c.is_active ? "Active" : "Disabled"}</td>
-      <td>${new Date(c.created_at).toLocaleString()}</td>
+    tbody.innerHTML += `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.email}</td>
+        <td>${c.is_active ? "Active" : "Disabled"}</td>
+        <td>${new Date(c.created_at).toLocaleString()}</td>
+      </tr>
     `;
-    tbody.appendChild(tr);
   });
 }
 
-// ============================
-// API KEYS
-// ============================
+/* ============================
+   API KEYS
+============================ */
 async function loadKeys() {
   const res = await fetch(`${API}/admin/keys`, {
     headers: authHeaders(),
   });
-
   const data = await res.json();
+
   document.getElementById("statKeys").textContent = data.length;
 
   const tbody = document.getElementById("keysTable");
   tbody.innerHTML = "";
 
   data.forEach(k => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${k.id}</td>
-      <td class="mono">${k.key}</td>
-      <td>${k.website_id}</td>
-      <td>${k.is_active ? "Active" : "Revoked"}</td>
-      <td>${new Date(k.created_at).toLocaleString()}</td>
+    tbody.innerHTML += `
+      <tr>
+        <td>${k.id}</td>
+        <td class="mono">${k.key}</td>
+        <td>${k.website_id}</td>
+        <td>${k.is_active ? "Active" : "Revoked"}</td>
+        <td>${new Date(k.created_at).toLocaleString()}</td>
+      </tr>
     `;
-    tbody.appendChild(tr);
   });
 }
 
-// ============================
-// WEBSITES
-// ============================
+/* ============================
+   WEBSITES
+============================ */
 async function loadWebsites() {
   const res = await fetch(`${API}/admin/websites`, {
     headers: authHeaders(),
@@ -108,13 +105,11 @@ async function loadWebsites() {
   table.innerHTML = "";
 
   websites.forEach(w => {
-    const trained = w.is_trained ? "✅ Yes" : "❌ No";
-
     table.innerHTML += `
       <tr>
         <td>${w.id}</td>
         <td>${w.domain}</td>
-        <td>${trained}</td>
+        <td>${w.is_trained ? "✅ Yes" : "❌ No"}</td>
         <td>
           ${
             w.is_trained
@@ -129,37 +124,34 @@ async function loadWebsites() {
   });
 }
 
-async function trainWebsite(websiteId) {
+/* ============================
+   TRAIN WEBSITE
+============================ */
+async function trainWebsite(id) {
   if (!confirm("Train this website now?")) return;
 
-  const res = await fetch(
-    `${API}/admin/websites/${websiteId}/train`,
-    {
-      method: "POST",
-      headers: authHeaders(),
-    }
-  );
+  const res = await fetch(`${API}/admin/websites/${id}/train`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
 
   if (!res.ok) {
     alert("Training failed");
     return;
   }
 
-  alert("Training completed");
+  alert("Website trained");
   loadWebsites();
 }
 
-// ============================
-// CREATE API KEY
-// ============================
+/* ============================
+   CREATE KEY
+============================ */
 async function createKey() {
   const email = document.getElementById("newEmail").value.trim();
   const domain = document.getElementById("newDomain").value.trim();
 
-  if (!domain) {
-    alert("Domain required");
-    return;
-  }
+  if (!domain) return alert("Domain required");
 
   await fetch(`${API}/admin/create-key`, {
     method: "POST",
@@ -172,7 +164,5 @@ async function createKey() {
 
   document.getElementById("createKeyMsg").textContent = "API key created";
   document.getElementById("newDomain").value = "";
-
   loadKeys();
-  loadWebsites();
 }
