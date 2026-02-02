@@ -144,6 +144,35 @@ async function trainWebsite(id) {
   loadWebsites();
 }
 
+
+
+
+/* ============================
+   ANALYZE WEBSITE
+============================ */
+async function analyzeWebsite(id, domain) {
+  const res = await fetch(`${API}/analyze`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({
+      site_id: domain,
+      url: `https://${domain}`,
+    }),
+  });
+
+  if (!res.ok) {
+    alert("Analysis failed");
+    return null;
+  }
+
+  return await res.json();
+}
+
+
+
 /* ============================
    CREATE KEY
 ============================ */
