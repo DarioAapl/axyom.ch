@@ -2,105 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AXYOM · Admin Dashboard</title>
+  <title>axyom Admin Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="admin.css" />
-
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico">
 </head>
+<body class="login-page">
 
-<body class="dashboard-page">
+  <main class="login">
+    <img src="/adminlogo.png" class="logo" alt="AXYOM" />
+    <p class="tagline">Authorized access only</p>
 
-<header class="nav">
-  <div class="brand">
-    <img src="/adminlogo.png" alt="AXYOM" />
-  </div>
-
-  <div class="nav-right">
-    <span class="pill subtle" id="adminEmail"></span>
-    <button class="btn ghost" onclick="logout()">Logout</button>
-  </div>
-</header>
-
-<main class="dashboard">
-
-  <!-- STATS -->
-  <section class="stats">
-    <div class="stat card">
-      <span>Customers</span>
-      <strong id="statCustomers">—</strong>
+    <div class="card">
+      <input id="email" type="email" placeholder="Admin email" />
+      <input id="password" type="password" placeholder="Password" />
+      <button class="btn primary" onclick="login()">Login</button>
+      <div class="error" id="loginError"></div>
     </div>
-    <div class="stat card">
-      <span>API Keys</span>
-      <strong id="statKeys">—</strong>
-    </div>
-  </section>
+  </main>
 
-  <!-- CREATE KEY -->
-  <section class="panel card">
-    <h2>Create API Key</h2>
-    <div class="form-row">
-      <input id="newEmail" placeholder="Customer email" />
-      <input id="newDomain" placeholder="Domain (example.com)" />
-      <button class="btn primary" onclick="createKey()">Create Key</button>
-    </div>
-    <div class="success" id="createKeyMsg"></div>
-  </section>
-
-  <!-- CUSTOMERS -->
-  <section class="panel card">
-    <h2>Customers</h2>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Email</th>
-          <th>Status</th>
-          <th>Created</th>
-        </tr>
-      </thead>
-      <tbody id="customersTable"></tbody>
-    </table>
-  </section>
-
-  <!-- API KEYS -->
-  <section class="panel card">
-    <h2>API Keys</h2>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Key</th>
-          <th>Website</th>
-          <th>Status</th>
-          <th>Created</th>
-        </tr>
-      </thead>
-      <tbody id="keysTable"></tbody>
-    </table>
-  </section>
-
-  <!-- WEBSITES -->
-  <section class="panel card">
-    <h2>Websites</h2>
-    <table class="table websites">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Domain</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="websitesTable"></tbody>
-    </table>
-  </section>
-
-</main>
-
-<script src="admin-dashboard.js"></script>
+  <script src="admin-login.js"></script>
 </body>
 </html>

@@ -2,22 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>axyom Admin Dashboard</title>
+  <title>AXYOM · Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="admin.css" />
+
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" href="/favicon.ico">
 </head>
+
 <body class="dashboard-page">
 
 <header class="nav">
   <div class="brand">
     <img src="/adminlogo.png" alt="AXYOM" />
   </div>
+
   <div class="nav-right">
-    <span class="pill" id="adminEmail"></span>
+    <span class="pill subtle" id="adminEmail"></span>
     <button class="btn ghost" onclick="logout()">Logout</button>
   </div>
 </header>
@@ -26,29 +29,29 @@
 
   <!-- STATS -->
   <section class="stats">
-    <div class="stat">
+    <div class="stat card">
       <span>Customers</span>
       <strong id="statCustomers">—</strong>
     </div>
-    <div class="stat">
+    <div class="stat card">
       <span>API Keys</span>
       <strong id="statKeys">—</strong>
     </div>
   </section>
 
   <!-- CREATE KEY -->
-  <section class="panel">
+  <section class="panel card">
     <h2>Create API Key</h2>
     <div class="form-row">
-      <input id="newEmail" placeholder="Customer email (required)" />
-      <input id="newDomain" placeholder="Domain (required)" />
-      <button class="btn primary" onclick="createKey()">Create</button>
+      <input id="newEmail" placeholder="Customer email" />
+      <input id="newDomain" placeholder="Domain (example.com)" />
+      <button class="btn primary" onclick="createKey()">Create Key</button>
     </div>
     <div class="success" id="createKeyMsg"></div>
   </section>
 
-  <!-- CUSTOMERS TABLE -->
-  <section class="panel">
+  <!-- CUSTOMERS -->
+  <section class="panel card">
     <h2>Customers</h2>
     <table class="table">
       <thead>
@@ -63,15 +66,15 @@
     </table>
   </section>
 
-  <!-- KEYS TABLE -->
-  <section class="panel">
+  <!-- API KEYS -->
+  <section class="panel card">
     <h2>API Keys</h2>
     <table class="table">
       <thead>
         <tr>
           <th>ID</th>
           <th>Key</th>
-          <th>Website ID</th>
+          <th>Website</th>
           <th>Status</th>
           <th>Created</th>
         </tr>
@@ -80,21 +83,21 @@
     </table>
   </section>
 
-<!-- WEBSITES TABLE -->
-<section class="panel">
-  <h2>Websites</h2>
-  <table class="table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Domain</th>
-        <th>Trained</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="websitesTable"></tbody>
-  </table>
-</section>
+  <!-- WEBSITES -->
+  <section class="panel card">
+    <h2>Websites</h2>
+    <table class="table websites">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Domain</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="websitesTable"></tbody>
+    </table>
+  </section>
 
 </main>
 
