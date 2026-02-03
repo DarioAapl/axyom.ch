@@ -612,3 +612,30 @@ input:focus {
     padding: 0 1.2rem;
   }
 }
+
+-----------------------------------
+
+.pill.green {
+  border-color: #3ddc97;
+  color: #3ddc97;
+}
+
+.pill.red {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.pill.orange {
+  border-color: #ffb454;
+  color: #ffb454;
+}
+
+.pill.gray,
+.pill.muted {
+  opacity: 0.6;
+}
+
+.meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}

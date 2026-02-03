@@ -105,20 +105,57 @@ async function loadWebsites() {
   table.innerHTML = "";
 
   websites.forEach(w => {
+    const analysis = w.analysis;
+
+    let verdictBadge = `<span class="pill muted">Not analyzed</span>`;
+    let actionBtn = `
+      <button class="btn small" onclick="analyzeWebsite(${w.id})">
+        Analyze
+      </button>
+    `;
+
+    if (analysis) {
+      const color =
+        analysis.verdict === "ok" ? "green" :
+        analysis.verdict === "too_big" ? "red" :
+        analysis.verdict === "too_small" ? "orange" :
+        "gray";
+
+      verdictBadge = `
+        <span class="pill ${color}">
+          ${analysis.verdict.toUpperCase()}
+        </span>
+      `;
+
+      if (analysis.verdict === "ok") {
+        actionBtn = `
+          <button class="btn primary small" onclick="trainWebsite(${w.id})">
+            Train
+          </button>
+        `;
+      } else {
+        actionBtn = `
+          <button class="btn ghost small" onclick="trainWebsite(${w.id}, true)">
+            Force Train
+          </button>
+        `;
+      }
+    }
+
     table.innerHTML += `
       <tr>
         <td>${w.id}</td>
         <td>${w.domain}</td>
-        <td>${w.is_trained ? "✅ Yes" : "❌ No"}</td>
+        <td>${verdictBadge}</td>
         <td>
-          ${
-            w.is_trained
-              ? `<span class="pill">Trained</span>`
-              : `<button class="btn small" onclick="trainWebsite(${w.id})">
-                   Train
-                 </button>`
-          }
+          ${analysis ? `
+            <div class="meta">
+              ${analysis.estimated_pages} pages ·
+              ${analysis.estimated_chunks} chunks
+            </div>
+          ` : `<span class="muted">—</span>`}
         </td>
+        <td>${actionBtn}</td>
       </tr>
     `;
   });
@@ -150,25 +187,52 @@ async function trainWebsite(id) {
 /* ============================
    ANALYZE WEBSITE
 ============================ */
-async function analyzeWebsite(id, domain) {
-  const res = await fetch(`${API}/analyze`, {
+async function analyzeWebsite(id) {
+  if (!confirm("Analyze this website first?")) return;
+
+  const res = await fetch(`${API}/admin/websites/${id}/analyze`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(),
     },
-    body: JSON.stringify({
-      site_id: domain,
-      url: `https://${domain}`,
-    }),
+    body: JSON.stringify({}),
   });
 
   if (!res.ok) {
-    alert("Analysis failed");
-    return null;
+    const err = await res.text();
+    alert("Analyze failed: " + err);
+    return;
   }
 
-  return await res.json();
+  alert("Analysis completed");
+  loadWebsites();
+}
+
+async function trainWebsite(id, force = false) {
+  const msg = force
+    ? "Force training despite warnings?"
+    : "Train this website now?";
+
+  if (!confirm(msg)) return;
+
+  const res = await fetch(`${API}/admin/websites/${id}/train`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ force }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    alert("Training blocked: " + err);
+    return;
+  }
+
+  alert("Website trained");
+  loadWebsites();
 }
 
 
