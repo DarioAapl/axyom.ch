@@ -46,8 +46,8 @@ async function loadCustomers() {
   const res = await fetch(`${API}/admin/customers`, {
     headers: authHeaders(),
   });
-  const data = await res.json();
 
+  const data = await res.json();
   document.getElementById("statCustomers").textContent = data.length;
 
   const tbody = document.getElementById("customersTable");
@@ -55,14 +55,46 @@ async function loadCustomers() {
 
   data.forEach(c => {
     tbody.innerHTML += `
-      <tr>
+      <tr id="customer-row-${c.id}">
         <td>${c.id}</td>
         <td>${c.email}</td>
         <td>${c.is_active ? "Active" : "Disabled"}</td>
         <td>${new Date(c.created_at).toLocaleString()}</td>
+        <td>
+          <button class="btn danger small"
+            onclick="deleteCustomer(${c.id})">
+            Delete
+          </button>
+          ${spinner("customer-" + c.id)}
+        </td>
       </tr>
     `;
   });
+}
+
+/* ============================
+   DELETE CUSTOMER
+============================ */
+async function deleteCustomer(id) {
+  if (!confirm("Delete this customer and ALL their websites?")) return;
+
+  showSpinner("customer-" + id);
+
+  const res = await fetch(`${API}/admin/customers/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+
+  hideSpinner("customer-" + id);
+
+  if (!res.ok) {
+    alert("Delete failed");
+    return;
+  }
+
+  await loadCustomers();
+  await loadWebsites();
+  await loadKeys();
 }
 
 /* ============================
@@ -72,8 +104,8 @@ async function loadKeys() {
   const res = await fetch(`${API}/admin/keys`, {
     headers: authHeaders(),
   });
-  const data = await res.json();
 
+  const data = await res.json();
   document.getElementById("statKeys").textContent = data.length;
 
   const tbody = document.getElementById("keysTable");
@@ -93,7 +125,7 @@ async function loadKeys() {
 }
 
 /* ============================
-   SPINNER
+   SPINNER TEMPLATE
 ============================ */
 function spinner(id) {
   return `
@@ -139,19 +171,22 @@ async function loadWebsites() {
       actionBtn = `<span class="pill green">Trained</span>`;
     } else if (!analysis) {
       actionBtn = `
-        <button class="btn small" onclick="analyzeWebsite(${w.id})">
+        <button class="btn small"
+          onclick="analyzeWebsite(${w.id})">
           Analyze
         </button>
       `;
     } else if (analysis.verdict === "ok") {
       actionBtn = `
-        <button class="btn primary small" onclick="trainWebsite(${w.id})">
+        <button class="btn primary small"
+          onclick="trainWebsite(${w.id})">
           Train
         </button>
       `;
     } else {
       actionBtn = `
-        <button class="btn ghost small" onclick="trainWebsite(${w.id}, true)">
+        <button class="btn ghost small"
+          onclick="trainWebsite(${w.id}, true)">
           Force Train
         </button>
       `;
