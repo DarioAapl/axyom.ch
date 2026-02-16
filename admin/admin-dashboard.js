@@ -84,12 +84,23 @@ async function loadKeys() {
       <tr>
         <td>${k.id}</td>
         <td class="mono">${k.key}</td>
-        <td>${k.website_id}</td>
+        <td>${k.domain}</td>
         <td>${k.is_active ? "Active" : "Revoked"}</td>
         <td>${new Date(k.created_at).toLocaleString()}</td>
       </tr>
     `;
   });
+}
+
+/* ============================
+   SPINNER
+============================ */
+function spinner(id) {
+  return `
+    <div id="spinner-${id}" class="row-spinner">
+      <div class="loader"></div>
+    </div>
+  `;
 }
 
 /* ============================
@@ -108,11 +119,7 @@ async function loadWebsites() {
     const analysis = w.analysis;
 
     let verdictBadge = `<span class="pill muted">Not analyzed</span>`;
-    let actionBtn = `
-      <button class="btn small" onclick="analyzeWebsite(${w.id})">
-        Analyze
-      </button>
-    `;
+    let actionBtn = "";
 
     if (analysis) {
       const color =
@@ -126,24 +133,32 @@ async function loadWebsites() {
           ${analysis.verdict.toUpperCase()}
         </span>
       `;
+    }
 
-      if (analysis.verdict === "ok") {
-        actionBtn = `
-          <button class="btn primary small" onclick="trainWebsite(${w.id})">
-            Train
-          </button>
-        `;
-      } else {
-        actionBtn = `
-          <button class="btn ghost small" onclick="trainWebsite(${w.id}, true)">
-            Force Train
-          </button>
-        `;
-      }
+    if (w.is_trained) {
+      actionBtn = `<span class="pill green">Trained</span>`;
+    } else if (!analysis) {
+      actionBtn = `
+        <button class="btn small" onclick="analyzeWebsite(${w.id})">
+          Analyze
+        </button>
+      `;
+    } else if (analysis.verdict === "ok") {
+      actionBtn = `
+        <button class="btn primary small" onclick="trainWebsite(${w.id})">
+          Train
+        </button>
+      `;
+    } else {
+      actionBtn = `
+        <button class="btn ghost small" onclick="trainWebsite(${w.id}, true)">
+          Force Train
+        </button>
+      `;
     }
 
     table.innerHTML += `
-      <tr>
+      <tr id="row-${w.id}">
         <td>${w.id}</td>
         <td>${w.domain}</td>
         <td>${verdictBadge}</td>
@@ -155,7 +170,14 @@ async function loadWebsites() {
             </div>
           ` : `<span class="muted">—</span>`}
         </td>
-        <td>${actionBtn}</td>
+        <td>
+          ${actionBtn}
+          <button class="btn danger small"
+            onclick="deleteWebsite(${w.id})">
+            Delete
+          </button>
+          ${spinner(w.id)}
+        </td>
       </tr>
     `;
   });
@@ -164,57 +186,14 @@ async function loadWebsites() {
 /* ============================
    TRAIN WEBSITE
 ============================ */
-async function trainWebsite(id) {
-  if (!confirm("Train this website now?")) return;
-
-  const res = await fetch(`${API}/admin/websites/${id}/train`, {
-    method: "POST",
-    headers: authHeaders(),
-  });
-
-  if (!res.ok) {
-    alert("Training failed");
-    return;
-  }
-
-  alert("Website trained");
-  loadWebsites();
-}
-
-
-
-
-/* ============================
-   ANALYZE WEBSITE
-============================ */
-async function analyzeWebsite(id) {
-  if (!confirm("Analyze this website first?")) return;
-
-  const res = await fetch(`${API}/admin/websites/${id}/analyze`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({}),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    alert("Analyze failed: " + err);
-    return;
-  }
-
-  alert("Analysis completed");
-  loadWebsites();
-}
-
 async function trainWebsite(id, force = false) {
   const msg = force
     ? "Force training despite warnings?"
     : "Train this website now?";
 
   if (!confirm(msg)) return;
+
+  showSpinner(id);
 
   const res = await fetch(`${API}/admin/websites/${id}/train`, {
     method: "POST",
@@ -225,17 +204,79 @@ async function trainWebsite(id, force = false) {
     body: JSON.stringify({ force }),
   });
 
+  hideSpinner(id);
+
   if (!res.ok) {
-    const err = await res.text();
-    alert("Training blocked: " + err);
+    alert("Training failed");
     return;
   }
 
-  alert("Website trained");
-  loadWebsites();
+  await loadWebsites();
 }
 
+/* ============================
+   ANALYZE WEBSITE
+============================ */
+async function analyzeWebsite(id) {
+  if (!confirm("Analyze this website first?")) return;
 
+  showSpinner(id);
+
+  const res = await fetch(`${API}/admin/websites/${id}/analyze`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({}),
+  });
+
+  hideSpinner(id);
+
+  if (!res.ok) {
+    alert("Analyze failed");
+    return;
+  }
+
+  await loadWebsites();
+}
+
+/* ============================
+   DELETE WEBSITE
+============================ */
+async function deleteWebsite(id) {
+  if (!confirm("Delete this website permanently?")) return;
+
+  showSpinner(id);
+
+  const res = await fetch(`${API}/admin/websites/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+
+  hideSpinner(id);
+
+  if (!res.ok) {
+    alert("Delete failed");
+    return;
+  }
+
+  await loadWebsites();
+  await loadKeys();
+}
+
+/* ============================
+   SPINNER CONTROL
+============================ */
+function showSpinner(id) {
+  const el = document.getElementById(`spinner-${id}`);
+  if (el) el.style.display = "inline-block";
+}
+
+function hideSpinner(id) {
+  const el = document.getElementById(`spinner-${id}`);
+  if (el) el.style.display = "none";
+}
 
 /* ============================
    CREATE KEY
@@ -257,5 +298,5 @@ async function createKey() {
 
   document.getElementById("createKeyMsg").textContent = "API key created";
   document.getElementById("newDomain").value = "";
-  loadKeys();
+  await loadKeys();
 }

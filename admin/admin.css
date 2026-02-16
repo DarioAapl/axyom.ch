@@ -639,3 +639,24 @@ input:focus {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
+.row-spinner {
+  display: none;
+  margin-left: 10px;
+}
+
+.loader {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 178, 160, 0.2);
+  border-top: 2px solid #00B2A0;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
