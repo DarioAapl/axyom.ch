@@ -40,6 +40,27 @@ function logout() {
 })();
 
 /* ============================
+   SPINNER
+============================ */
+function spinner(id) {
+  return `
+    <div id="spinner-${id}" class="row-spinner" style="display:none">
+      <div class="loader"></div>
+    </div>
+  `;
+}
+
+function showSpinner(id) {
+  const el = document.getElementById(`spinner-${id}`);
+  if (el) el.style.display = "inline-block";
+}
+
+function hideSpinner(id) {
+  const el = document.getElementById(`spinner-${id}`);
+  if (el) el.style.display = "none";
+}
+
+/* ============================
    CUSTOMERS
 ============================ */
 async function loadCustomers() {
@@ -55,7 +76,7 @@ async function loadCustomers() {
 
   data.forEach(c => {
     tbody.innerHTML += `
-      <tr id="customer-row-${c.id}">
+      <tr>
         <td>${c.id}</td>
         <td>${c.email}</td>
         <td>${c.is_active ? "Active" : "Disabled"}</td>
@@ -72,9 +93,6 @@ async function loadCustomers() {
   });
 }
 
-/* ============================
-   DELETE CUSTOMER
-============================ */
 async function deleteCustomer(id) {
   if (!confirm("Delete this customer and ALL their websites?")) return;
 
@@ -119,20 +137,32 @@ async function loadKeys() {
         <td>${k.domain}</td>
         <td>${k.is_active ? "Active" : "Revoked"}</td>
         <td>${new Date(k.created_at).toLocaleString()}</td>
+        <td>
+          <button class="btn small"
+            onclick="copyEmbed('${k.key}')">
+            📋 Copy
+          </button>
+        </td>
       </tr>
     `;
   });
 }
 
 /* ============================
-   SPINNER TEMPLATE
+   COPY EMBED SCRIPT
 ============================ */
-function spinner(id) {
-  return `
-    <div id="spinner-${id}" class="row-spinner">
-      <div class="loader"></div>
-    </div>
-  `;
+function copyEmbed(apiKey) {
+  const script = `
+<!-- AXYOM AI -->
+<script>
+  window.AXYOM_KEY = "${apiKey}";
+</script>
+<script src="https://backend-still-river-1228.fly.dev/widget/axyom.js" async></script>
+`.trim();
+
+  navigator.clipboard.writeText(script)
+    .then(() => alert("Embed script copied."))
+    .catch(() => alert("Copy failed."));
 }
 
 /* ============================
@@ -193,7 +223,7 @@ async function loadWebsites() {
     }
 
     table.innerHTML += `
-      <tr id="row-${w.id}">
+      <tr>
         <td>${w.id}</td>
         <td>${w.domain}</td>
         <td>${verdictBadge}</td>
@@ -216,6 +246,33 @@ async function loadWebsites() {
       </tr>
     `;
   });
+}
+
+/* ============================
+   ANALYZE WEBSITE
+============================ */
+async function analyzeWebsite(id) {
+  if (!confirm("Analyze this website first?")) return;
+
+  showSpinner(id);
+
+  const res = await fetch(`${API}/admin/websites/${id}/analyze`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({}),
+  });
+
+  hideSpinner(id);
+
+  if (!res.ok) {
+    alert("Analyze failed");
+    return;
+  }
+
+  await loadWebsites();
 }
 
 /* ============================
@@ -250,33 +307,6 @@ async function trainWebsite(id, force = false) {
 }
 
 /* ============================
-   ANALYZE WEBSITE
-============================ */
-async function analyzeWebsite(id) {
-  if (!confirm("Analyze this website first?")) return;
-
-  showSpinner(id);
-
-  const res = await fetch(`${API}/admin/websites/${id}/analyze`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({}),
-  });
-
-  hideSpinner(id);
-
-  if (!res.ok) {
-    alert("Analyze failed");
-    return;
-  }
-
-  await loadWebsites();
-}
-
-/* ============================
    DELETE WEBSITE
 ============================ */
 async function deleteWebsite(id) {
@@ -298,19 +328,6 @@ async function deleteWebsite(id) {
 
   await loadWebsites();
   await loadKeys();
-}
-
-/* ============================
-   SPINNER CONTROL
-============================ */
-function showSpinner(id) {
-  const el = document.getElementById(`spinner-${id}`);
-  if (el) el.style.display = "inline-block";
-}
-
-function hideSpinner(id) {
-  const el = document.getElementById(`spinner-${id}`);
-  if (el) el.style.display = "none";
 }
 
 /* ============================

@@ -4,12 +4,7 @@
   <meta charset="UTF-8" />
   <title>AXYOM · Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="admin.css?v=20260203">
-
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="admin.css?v=20260216">
 </head>
 
 <body class="dashboard-page">
@@ -27,7 +22,6 @@
 
 <main class="dashboard">
 
-  <!-- STATS -->
   <section class="stats">
     <div class="stat card">
       <span>Customers</span>
@@ -39,7 +33,6 @@
     </div>
   </section>
 
-  <!-- CREATE KEY -->
   <section class="panel card">
     <h2>Create API Key</h2>
     <div class="form-row">
@@ -50,7 +43,6 @@
     <div class="success" id="createKeyMsg"></div>
   </section>
 
-  <!-- CUSTOMERS -->
   <section class="panel card">
     <h2>Customers</h2>
     <table class="table">
@@ -60,13 +52,13 @@
           <th>Email</th>
           <th>Status</th>
           <th>Created</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="customersTable"></tbody>
     </table>
   </section>
 
-  <!-- API KEYS -->
   <section class="panel card">
     <h2>API Keys</h2>
     <table class="table">
@@ -77,13 +69,13 @@
           <th>Website</th>
           <th>Status</th>
           <th>Created</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="keysTable"></tbody>
     </table>
   </section>
 
-  <!-- WEBSITES -->
   <section class="panel card">
     <h2>Websites</h2>
     <table class="table websites">
@@ -101,6 +93,6 @@
 
 </main>
 
-<script src="admin-dashboard.js"></script>
+<script src="admin-dashboard.js?v=20260216"></script>
 </body>
 </html>
