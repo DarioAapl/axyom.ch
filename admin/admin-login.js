@@ -1,4 +1,4 @@
-const API = "https://backend-still-river-1228.fly.dev";
+const API = "https://api.axyom.ch";
 
 async function login() {
   const email = document.getElementById("email").value.trim();

@@ -1,49 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <title>axyom — Artificial Intelligence</title>
+  <title>AXYOM — Coming Soon</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="AXYOM is an advanced AI assistant built for precision, intelligence, and scale." />
+  <meta name="description" content="AXYOM. Coming soon." />
 
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" href="/favicon.ico">
 </head>
 
 <body>
-<nav class="nav">
-  <a href="index.html" class="brand">
-    <img src="axyomlogo2026.png" alt="AXYOM home" />
-  </a>
+  <div class="scene">
+    <div class="wrapper">
+      <img src="axyomlogo2026.png" alt="AXYOM logo" class="logo" />
+      <h1 class="glitch-title">COMING SOON</h1>
+      <p class="subtitle">
+        A new dimension of intelligence is approaching.<br><br>
+        <span style="font-size: 0.8em; opacity: 0.7;">Developed by Dario Tino & Levin Guntli</span>
+      </p>
 
-  <div class="nav-links">
-    <a href="about.html">About</a>
-    <a href="pricing.html">Pricing</a>
+
+    </div>
+
+    <!-- 3D Background Elements -->
+    <div class="grid-floor"></div>
+
+    <div class="cubes">
+      <div class="cube">
+        <div class="face front"></div>
+        <div class="face back"></div>
+        <div class="face right"></div>
+        <div class="face left"></div>
+        <div class="face top"></div>
+        <div class="face bottom"></div>
+      </div>
+      <div class="cube">
+        <div class="face front"></div>
+        <div class="face back"></div>
+        <div class="face right"></div>
+        <div class="face left"></div>
+        <div class="face top"></div>
+        <div class="face bottom"></div>
+      </div>
+      <div class="cube">
+        <div class="face front"></div>
+        <div class="face back"></div>
+        <div class="face right"></div>
+        <div class="face left"></div>
+        <div class="face top"></div>
+        <div class="face bottom"></div>
+      </div>
+      <div class="cube">
+        <div class="face front"></div>
+        <div class="face back"></div>
+        <div class="face right"></div>
+        <div class="face left"></div>
+        <div class="face top"></div>
+        <div class="face bottom"></div>
+      </div>
+      <div class="cube">
+        <div class="face front"></div>
+        <div class="face back"></div>
+        <div class="face right"></div>
+        <div class="face left"></div>
+        <div class="face top"></div>
+        <div class="face bottom"></div>
+      </div>
+    </div>
   </div>
-</nav>
 
-<header class="hero">
-  <img src="axyomlogo2026.png" alt="AXYOM logo" class="logo" />
-
-  <p class="tagline">
-    Artificial Intelligence. Engineered for clarity.
-  </p>
-</header>
-
-<footer>
-  <p>
-    © 2026 AXYOM. All rights reserved. – Developed by Dario Tino –
-    <a href="https://www.dariotino.com" target="_blank" rel="noopener noreferrer">
-      www.dariotino.com
-    </a>
-    – Built with love in Liechtenstein
-  </p>
-</footer>
-
-
+  <script>
+    // Parallax effect on mouse move for the 3D scene
+    document.addEventListener('mousemove', (e) => {
+      const scene = document.querySelector('.scene');
+      // Calculate rotation based on cursor position relative to center of screen
+      const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+      const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+      // Apply the 3D rotation
+      scene.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
+  </script>
 </body>
+
 </html>
