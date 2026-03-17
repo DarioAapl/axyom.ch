@@ -83,8 +83,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const res  = await fetch(`${API}/deploy-info`);
     const data = await res.json();
-    el.textContent = "Deploy: " + fmtDate(data.deploy_time);
-  } catch { el.textContent = "Deploy: unknown"; }
+    // Server returns UTC without timezone suffix — append Z so Date parses it correctly
+    const dt = new Date((data.deploy_time || "").replace(" ", "T") + "Z");
+    const formatted = dt.toLocaleString("de-CH", {
+      timeZone: "Europe/Vaduz",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit",
+    });
+    el.textContent = "Deploy: " + formatted;
+  } catch { el.textContent = "Deploy: —"; }
 });
 
 /* ============================================================
