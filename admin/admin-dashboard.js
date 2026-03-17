@@ -292,7 +292,7 @@ async function loadKeys() {
         <td><span class="pill ${k.is_active ? "green" : "gray"}">${k.is_active ? "Active" : "Revoked"}</span></td>
         <td>${fmtDate(k.created_at)}</td>
         <td>
-          <button class="btn-ghost btn-sm" onclick="copyEmbed('${escapeHtml(k.key)}')">📋 Copy embed</button>
+          <button class="btn-ghost btn-sm" onclick="copyEmbed('${escapeHtml(k.key)}')">📋 Copy</button>
         </td>
       </tr>`;
   });
@@ -329,13 +329,13 @@ async function loadWebsites() {
     if (w.is_trained) {
       mainBtn = `
         <span class="pill green">Trained</span>
-        <button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">Retrain</button>`;
+        <button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">🔄 Retrain</button>`;
     } else if (!analysis) {
-      mainBtn = `<button class="btn-ghost btn-sm" onclick="analyzeWebsite(${w.id})">Analyze</button>`;
+      mainBtn = `<button class="btn-ghost btn-sm" onclick="analyzeWebsite(${w.id})">🔍 Analyze</button>`;
     } else if (analysis.verdict === "ok") {
-      mainBtn = `<button class="btn-primary btn-sm" onclick="trainWebsite(${w.id})">Train</button>`;
+      mainBtn = `<button class="btn-primary btn-sm" onclick="trainWebsite(${w.id})">⚡ Train</button>`;
     } else {
-      mainBtn = `<button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">Force Train</button>`;
+      mainBtn = `<button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">⚠️ Force Train</button>`;
     }
 
     table.innerHTML += `
@@ -354,11 +354,11 @@ async function loadWebsites() {
             ${progressBar(w.id)}
           </div>
           <div class="action-secondary">
-            <button class="btn-ghost btn-sm" onclick="inspectWebsite(${w.id})">Inspect</button>
-            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'widget')">Widget</button>
-            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'chats')">Chats</button>
-            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'stats')">Stats</button>
-            <button class="btn-danger btn-sm" onclick="deleteWebsite(${w.id})">Delete</button>
+            <button class="btn-ghost btn-sm" onclick="inspectWebsite(${w.id})">🔬 Inspect</button>
+            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'widget')">🎨 Widget</button>
+            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'chats')">💬 Chats</button>
+            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'stats')">📊 Stats</button>
+            <button class="btn-danger btn-sm" onclick="deleteWebsite(${w.id})">🗑️ Delete</button>
           </div>
         </td>
       </tr>
@@ -377,6 +377,11 @@ async function loadWebsites() {
 /* ============================================================
    DETAIL ROW TOGGLE  (widget / chats / stats)
 ============================================================ */
+function closeDetail(websiteId) {
+  const row = document.getElementById(`detail-${websiteId}`);
+  if (row) { row.style.display = "none"; row.dataset.activeType = ""; }
+}
+
 function toggleDetail(websiteId, domain, type) {
   const row  = document.getElementById(`detail-${websiteId}`);
   const cell = document.getElementById(`detail-cell-${websiteId}`);
@@ -404,7 +409,12 @@ function toggleDetail(websiteId, domain, type) {
 async function loadWidgetConfig(websiteId, domain, cell) {
   const apiKey = domainKeyMap[domain];
   if (!apiKey) {
-    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">No active API key found for this website.</p>`;
+    cell.innerHTML = `
+      <div class="detail-panel-header">
+        <span class="detail-panel-title">🎨 Widget Configuration</span>
+        <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.85rem">No active API key found for this website.</p>`;
     return;
   }
 
@@ -413,36 +423,45 @@ async function loadWidgetConfig(websiteId, domain, cell) {
     const cfg = await res.json();
 
     widgetPositions[websiteId] = cfg.bubble_position || "right";
-    const pos = widgetPositions[websiteId];
+    const pos    = widgetPositions[websiteId];
+    const pColor = cfg.primary_color || "#00B2A0";
+    const tColor = cfg.text_color    || "#0b0d12";
 
     cell.innerHTML = `
+      <div class="detail-panel-header">
+        <span class="detail-panel-title">🎨 Widget Configuration</span>
+        <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+      </div>
+
       <div class="widget-form">
 
         <div class="input-group">
           <label>Primary Color</label>
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="color" id="wc-primary-${websiteId}" value="${escapeHtml(cfg.primary_color || "#00B2A0")}" />
-            <span id="wc-primary-hex-${websiteId}" class="mono">${escapeHtml(cfg.primary_color || "#00B2A0")}</span>
+          <div class="color-picker-row">
+            <div class="color-swatch" id="wc-swatch-primary-${websiteId}" style="background:${escapeHtml(pColor)}" onclick="document.getElementById('wc-primary-${websiteId}').click()"></div>
+            <input type="color" class="inline-picker" id="wc-primary-${websiteId}" value="${escapeHtml(pColor)}" />
+            <span id="wc-primary-hex-${websiteId}" class="mono">${escapeHtml(pColor)}</span>
           </div>
         </div>
 
         <div class="input-group">
           <label>Text Color</label>
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="color" id="wc-text-${websiteId}" value="${escapeHtml(cfg.text_color || "#0b0d12")}" />
-            <span id="wc-text-hex-${websiteId}" class="mono">${escapeHtml(cfg.text_color || "#0b0d12")}</span>
+          <div class="color-picker-row">
+            <div class="color-swatch" id="wc-swatch-text-${websiteId}" style="background:${escapeHtml(tColor)}" onclick="document.getElementById('wc-text-${websiteId}').click()"></div>
+            <input type="color" class="inline-picker" id="wc-text-${websiteId}" value="${escapeHtml(tColor)}" />
+            <span id="wc-text-hex-${websiteId}" class="mono">${escapeHtml(tColor)}</span>
           </div>
         </div>
 
         <div class="input-group">
           <label>Bubble Position</label>
-          <div style="display:flex;gap:8px">
+          <div class="position-toggle">
             <button id="wc-pos-right-${websiteId}"
-              class="${pos !== "left" ? "btn-primary" : "btn-ghost"} btn-sm"
-              onclick="setWidgetPosition(${websiteId}, 'right')">Right</button>
+              class="pos-btn ${pos !== "left" ? "active" : ""}"
+              onclick="setWidgetPosition(${websiteId}, 'right')">◀ Right</button>
             <button id="wc-pos-left-${websiteId}"
-              class="${pos === "left" ? "btn-primary" : "btn-ghost"} btn-sm"
-              onclick="setWidgetPosition(${websiteId}, 'left')">Left</button>
+              class="pos-btn ${pos === "left" ? "active" : ""}"
+              onclick="setWidgetPosition(${websiteId}, 'left')">Left ▶</button>
           </div>
         </div>
 
@@ -453,31 +472,68 @@ async function loadWidgetConfig(websiteId, domain, cell) {
             value="${escapeHtml(cfg.welcome_message || "")}" />
         </div>
 
+        <div class="widget-preview-area" id="wc-preview-area-${websiteId}">
+          <div class="preview-bubble ${pos === "left" ? "left" : ""}" id="wc-preview-${websiteId}" style="background:${escapeHtml(pColor)}">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="${escapeHtml(tColor)}">
+              <path d="M20 15a4 4 0 01-4 4H7l-3 3V7a4 4 0 014-4h8a4 4 0 014 4z"/>
+            </svg>
+          </div>
+        </div>
+
         <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
-          <button class="btn-primary btn-sm" onclick="saveWidgetConfig(${websiteId})">Save configuration</button>
+          <button class="btn-primary" onclick="saveWidgetConfig(${websiteId})">Save configuration</button>
           <span id="wc-msg-${websiteId}" style="display:none;font-size:0.82rem"></span>
         </div>
 
       </div>`;
 
-    // Live hex label update
-    [`wc-primary-${websiteId}`, `wc-text-${websiteId}`].forEach(inputId => {
-      const input = document.getElementById(inputId);
-      const hexEl = document.getElementById(inputId + "-hex");
-      if (input && hexEl) input.addEventListener("input", () => { hexEl.textContent = input.value; });
-    });
+    // Live updates: hex label, swatch, preview bubble
+    const primaryInput = document.getElementById(`wc-primary-${websiteId}`);
+    const textInput    = document.getElementById(`wc-text-${websiteId}`);
+
+    if (primaryInput) {
+      primaryInput.addEventListener("input", () => {
+        const v = primaryInput.value;
+        const hexEl   = document.getElementById(`wc-primary-hex-${websiteId}`);
+        const swatch  = document.getElementById(`wc-swatch-primary-${websiteId}`);
+        const preview = document.getElementById(`wc-preview-${websiteId}`);
+        if (hexEl)   hexEl.textContent     = v;
+        if (swatch)  swatch.style.background = v;
+        if (preview) preview.style.background = v;
+      });
+    }
+    if (textInput) {
+      textInput.addEventListener("input", () => {
+        const v = textInput.value;
+        const hexEl  = document.getElementById(`wc-text-hex-${websiteId}`);
+        const swatch = document.getElementById(`wc-swatch-text-${websiteId}`);
+        const svg    = document.querySelector(`#wc-preview-${websiteId} svg`);
+        if (hexEl)  hexEl.textContent      = v;
+        if (swatch) swatch.style.background = v;
+        if (svg)    svg.style.fill         = v;
+      });
+    }
 
   } catch {
-    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Failed to load widget config.</p>`;
+    cell.innerHTML = `
+      <div class="detail-panel-header">
+        <span class="detail-panel-title">🎨 Widget Configuration</span>
+        <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.85rem">Failed to load widget config.</p>`;
   }
 }
 
 function setWidgetPosition(websiteId, pos) {
   widgetPositions[websiteId] = pos;
-  const rBtn = document.getElementById(`wc-pos-right-${websiteId}`);
-  const lBtn = document.getElementById(`wc-pos-left-${websiteId}`);
-  if (rBtn) rBtn.className = (pos === "right" ? "btn-primary" : "btn-ghost") + " btn-sm";
-  if (lBtn) lBtn.className = (pos === "left"  ? "btn-primary" : "btn-ghost") + " btn-sm";
+  const rBtn    = document.getElementById(`wc-pos-right-${websiteId}`);
+  const lBtn    = document.getElementById(`wc-pos-left-${websiteId}`);
+  const preview = document.getElementById(`wc-preview-${websiteId}`);
+  if (rBtn) rBtn.className = "pos-btn" + (pos === "right" ? " active" : "");
+  if (lBtn) lBtn.className = "pos-btn" + (pos === "left"  ? " active" : "");
+  if (preview) {
+    preview.classList.toggle("left", pos === "left");
+  }
 }
 
 async function saveWidgetConfig(websiteId) {
@@ -514,68 +570,89 @@ async function loadConversations(websiteId, cell) {
     const res      = await fetch(`${API}/admin/websites/${websiteId}/conversations`, { headers: authHeaders() });
     const sessions = await res.json();
 
-    if (!sessions.length) {
-      cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">No conversations yet.</p>`;
-      return;
-    }
-
     const totalMsgs = sessions.reduce((n, s) => n + s.messages.length, 0);
 
     let html = `
-      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px">
+      <div class="detail-panel-header">
+        <span class="detail-panel-title">💬 Conversations</span>
+        <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+      </div>`;
+
+    if (!sessions.length) {
+      html += `<p style="color:var(--text-muted);font-size:0.85rem">No conversations yet.</p>`;
+      cell.innerHTML = html;
+      return;
+    }
+
+    html += `
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px">
         ${sessions.length} session${sessions.length !== 1 ? "s" : ""} · ${totalMsgs} message${totalMsgs !== 1 ? "s" : ""}
       </p>
-      <div style="display:flex;flex-direction:column;gap:12px">`;
+      <div class="sessions-wrap">`;
 
     sessions.forEach(session => {
       const safeId   = session.session_id.replace(/[^a-zA-Z0-9]/g, "-");
       const firstMsg = session.messages[0];
-      const shortId  = session.session_id.length > 24
+      const shortId  = session.session_id.length > 28
         ? session.session_id.slice(0, 12) + "…" + session.session_id.slice(-8)
         : session.session_id;
 
       html += `
-        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
-          <div class="session-header" onclick="toggleSession('${safeId}')" style="cursor:pointer;padding:10px 16px;background:var(--surface-2)">
-            <span id="arrow-${safeId}" style="font-size:0.65rem;color:var(--teal)">▶</span>
-            <span class="mono">${escapeHtml(shortId)}</span>
-            <span style="margin-left:auto;margin-right:8px;font-size:0.75rem;color:var(--text-muted)">${session.messages.length} msgs</span>
-            <span style="font-size:0.72rem;color:var(--text-muted)">${fmtDate(firstMsg?.created_at)}</span>
+        <div class="session-card">
+          <div class="session-toggle" onclick="toggleSession('${safeId}')">
+            <span class="session-arrow" id="arrow-${safeId}">▶</span>
+            <span class="session-id-label">${escapeHtml(shortId)}</span>
+            <span class="session-badge">${session.messages.length} msg${session.messages.length !== 1 ? "s" : ""}</span>
+            <span class="session-date-label">${fmtDate(firstMsg?.created_at)}</span>
           </div>
-          <div class="chat-thread" id="sess-${safeId}" style="display:none">`;
+          <div class="session-body" id="sess-${safeId}">
+            <div class="chat-thread-wrap">`;
 
       session.messages.forEach(m => {
         const sourceLinks = (m.sources || [])
           .filter(Boolean)
-          .map(s => `<a href="${escapeHtml(s)}" target="_blank" style="display:block;font-size:0.68rem;color:var(--teal);text-decoration:none;opacity:0.8">${escapeHtml(s)}</a>`)
+          .map(s => `<a href="${escapeHtml(s)}" target="_blank" class="chat-source-link">${escapeHtml(s)}</a>`)
           .join("");
 
         html += `
-            <div class="chat-msg ${m.role}">
-              ${escapeHtml(m.message)}
-              ${sourceLinks ? `<div style="margin-top:6px">${sourceLinks}</div>` : ""}
-              <div style="font-size:0.63rem;opacity:0.6;margin-top:4px">${fmtDate(m.created_at)}</div>
-            </div>`;
+              <div class="chat-row ${m.role}">
+                <div class="chat-bubble-msg">
+                  ${escapeHtml(m.message)}
+                  ${sourceLinks}
+                  <span class="chat-ts">${fmtDate(m.created_at)}</span>
+                </div>
+              </div>`;
       });
 
-      html += `</div></div>`;
+      html += `
+            </div>
+          </div>
+        </div>`;
     });
 
     html += `</div>`;
     cell.innerHTML = html;
 
   } catch {
-    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Failed to load conversations.</p>`;
+    cell.innerHTML = `
+      <div class="detail-panel-header">
+        <span class="detail-panel-title">💬 Conversations</span>
+        <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.85rem">Failed to load conversations.</p>`;
   }
 }
 
 function toggleSession(safeId) {
-  const el    = document.getElementById(`sess-${safeId}`);
+  const body  = document.getElementById(`sess-${safeId}`);
   const arrow = document.getElementById(`arrow-${safeId}`);
-  if (!el) return;
-  const open = el.style.display !== "none";
-  el.style.display    = open ? "none" : "";
-  if (arrow) arrow.textContent = open ? "▶" : "▼";
+  if (!body) return;
+  const open = body.style.display === "block";
+  body.style.display = open ? "none" : "block";
+  if (arrow) {
+    arrow.textContent = open ? "▶" : "▼";
+    arrow.classList.toggle("open", !open);
+  }
 }
 
 /* ============================================================
@@ -586,38 +663,65 @@ async function loadStats(websiteId, cell) {
     const res  = await fetch(`${API}/admin/stats/${websiteId}`, { headers: authHeaders() });
     const data = await res.json();
 
-    let topHtml = `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px">No queries yet.</p>`;
+    let topHtml = `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:4px">No queries yet.</p>`;
     if (data.top_user_messages && data.top_user_messages.length) {
+      const maxCount = data.top_user_messages[0].count || 1;
       topHtml = `
-        <div class="top-queries">
+        <div class="queries-section">
           <h4>Top User Queries</h4>
           ${data.top_user_messages.map((q, i) => `
-            <div class="query-item">
-              <span class="q">${escapeHtml(q.message)}</span>
-              <span class="count">${q.count}×</span>
+            <div class="query-bar-item">
+              <div class="query-bar-header">
+                <span class="query-bar-text">${escapeHtml(q.message)}</span>
+                <span class="query-bar-count">${q.count}×</span>
+              </div>
+              <div class="query-bar-track">
+                <div class="query-bar-fill" data-width="${Math.round(q.count / maxCount * 100)}"></div>
+              </div>
             </div>`).join("")}
         </div>`;
     }
 
     cell.innerHTML = `
-      <div class="stats-detail">
-        <div class="stat-mini">
-          <div class="label">Total Conversations</div>
-          <div class="value">${data.total_conversations}</div>
+      <div class="detail-panel-header">
+        <span class="detail-panel-title">📊 Stats</span>
+        <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+      </div>
+      <div class="stats-mini-grid">
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">🗣️</div>
+          <div class="stat-mini-label">Conversations</div>
+          <div class="stat-mini-value">${data.total_conversations}</div>
         </div>
-        <div class="stat-mini">
-          <div class="label">Total Messages</div>
-          <div class="value">${data.total_messages}</div>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">💬</div>
+          <div class="stat-mini-label">Total Messages</div>
+          <div class="stat-mini-value">${data.total_messages}</div>
         </div>
-        <div class="stat-mini">
-          <div class="label">Messages Today</div>
-          <div class="value">${data.messages_today}</div>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">📅</div>
+          <div class="stat-mini-label">Messages Today</div>
+          <div class="stat-mini-value">${data.messages_today}</div>
         </div>
       </div>
       ${topHtml}`;
 
+    // Animate bars after paint
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        cell.querySelectorAll(".query-bar-fill[data-width]").forEach(bar => {
+          bar.style.width = bar.dataset.width + "%";
+        });
+      }, 60);
+    });
+
   } catch {
-    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Failed to load stats.</p>`;
+    cell.innerHTML = `
+      <div class="detail-panel-header">
+        <span class="detail-panel-title">📊 Stats</span>
+        <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.85rem">Failed to load stats.</p>`;
   }
 }
 
