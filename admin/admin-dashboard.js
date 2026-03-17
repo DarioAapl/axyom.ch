@@ -1,7 +1,7 @@
 const API = "https://api.axyom.ch";
 
 // website_id is not returned by /admin/keys, so we key by domain
-const domainKeyMap = {};   // domain  -> api_key string
+const domainKeyMap   = {};  // domain -> api_key string
 const trainingPollers = {}; // website_id -> interval id
 const widgetPositions = {}; // website_id -> 'right' | 'left'
 
@@ -29,50 +29,55 @@ function fmtDate(iso) {
 }
 
 /* ============================================================
-   MODAL  (replaces alert / confirm / prompt)
+   MODAL  (new HTML: modalOverlay / modalTitle / modalBody / modalFooter)
 ============================================================ */
-function _modal({ message, showCancel = false, showInput = false, inputPlaceholder = "", inputDefault = "", okLabel = "OK" }) {
-  return new Promise(resolve => {
-    const overlay  = document.getElementById("modal");
-    const msgEl    = document.getElementById("modal-msg");
-    const inputEl  = document.getElementById("modal-input");
-    const okBtn    = document.getElementById("modal-ok");
-    const cancelBtn = document.getElementById("modal-cancel");
+let _modalResolve = null;
 
-    msgEl.textContent = message;
-    okBtn.textContent = okLabel;
-    cancelBtn.style.display = showCancel ? "" : "none";
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("active");
+  if (_modalResolve) { _modalResolve(null); _modalResolve = null; }
+}
+
+function _modal({ title = "Notice", message, showCancel = false, showInput = false, inputPlaceholder = "", inputDefault = "", okLabel = "OK" }) {
+  return new Promise(resolve => {
+    _modalResolve = resolve;
+
+    document.getElementById("modalTitle").textContent = title;
+
+    document.getElementById("modalBody").innerHTML =
+      `<p style="white-space:pre-wrap">${escapeHtml(message)}</p>` +
+      (showInput
+        ? `<input type="text" id="modal-dyn-input" placeholder="${escapeHtml(inputPlaceholder)}" value="${escapeHtml(inputDefault)}" style="margin-top:14px" />`
+        : "");
+
+    document.getElementById("modalFooter").innerHTML =
+      (showCancel ? `<button class="btn-ghost" onclick="closeModal()">Cancel</button>` : "") +
+      `<button class="btn-primary" id="modal-dyn-ok">${escapeHtml(okLabel)}</button>`;
 
     if (showInput) {
-      inputEl.placeholder = inputPlaceholder;
-      inputEl.value = inputDefault;
-      inputEl.style.display = "";
-      setTimeout(() => inputEl.focus(), 50);
-    } else {
-      inputEl.style.display = "none";
+      setTimeout(() => document.getElementById("modal-dyn-input")?.focus(), 50);
+      const inp = document.getElementById("modal-dyn-input");
+      if (inp) inp.onkeydown = e => {
+        if (e.key === "Enter")  document.getElementById("modal-dyn-ok")?.click();
+        if (e.key === "Escape") closeModal();
+      };
     }
 
-    overlay.style.display = "flex";
-
-    const cleanup = () => { overlay.style.display = "none"; };
-
-    okBtn.onclick = () => {
-      cleanup();
-      resolve(showInput ? inputEl.value : true);
+    document.getElementById("modal-dyn-ok").onclick = () => {
+      const val = showInput ? (document.getElementById("modal-dyn-input")?.value ?? "") : true;
+      document.getElementById("modalOverlay").classList.remove("active");
+      _modalResolve = null;
+      resolve(val);
     };
-    cancelBtn.onclick = () => { cleanup(); resolve(null); };
-    inputEl.onkeydown = e => {
-      if (e.key === "Enter")  okBtn.click();
-      if (e.key === "Escape") cancelBtn.click();
-    };
-    overlay.onclick = e => { if (e.target === overlay) { cleanup(); resolve(null); } };
+
+    document.getElementById("modalOverlay").classList.add("active");
   });
 }
 
-const showAlert   = msg  => _modal({ message: msg });
-const showConfirm = msg  => _modal({ message: msg, showCancel: true, okLabel: "Confirm" });
+const showAlert   = msg => _modal({ title: "Notice",  message: msg });
+const showConfirm = msg => _modal({ title: "Confirm", message: msg, showCancel: true, okLabel: "Confirm" });
 const showPrompt  = (msg, placeholder = "", def = "") =>
-  _modal({ message: msg, showCancel: true, showInput: true, inputPlaceholder: placeholder, inputDefault: def });
+  _modal({ title: "Input", message: msg, showCancel: true, showInput: true, inputPlaceholder: placeholder, inputDefault: def });
 
 /* ============================================================
    DEPLOY INFO
@@ -83,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const res  = await fetch(`${API}/deploy-info`);
     const data = await res.json();
-    // Server returns UTC without timezone suffix — append Z so Date parses it correctly
+    // Server returns UTC without timezone suffix — append Z so Date parses correctly
     const dt = new Date((data.deploy_time || "").replace(" ", "T") + "Z");
     const formatted = dt.toLocaleString("de-CH", {
       timeZone: "Europe/Vaduz",
@@ -91,7 +96,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       hour: "2-digit", minute: "2-digit",
     });
     el.textContent = "Deploy: " + formatted;
-  } catch { el.textContent = "Deploy: —"; }
+
+    // Uptime stat
+    const uptimeEl = document.getElementById("statUptime");
+    if (uptimeEl) {
+      const sec = Math.floor((Date.now() - dt.getTime()) / 1000);
+      uptimeEl.textContent = sec < 3600
+        ? Math.floor(sec / 60) + "m"
+        : Math.floor(sec / 3600) + "h";
+    }
+  } catch {
+    el.textContent = "Deploy: —";
+  }
 });
 
 /* ============================================================
@@ -123,21 +139,19 @@ function logout() {
 })();
 
 /* ============================================================
-   PROGRESS BAR  (fake animation for blocking ops like Analyze)
+   PROGRESS BAR
 ============================================================ */
 const progressIntervals = {};
 
 function progressBar(id) {
   return `
     <div id="progress-${id}" class="progress-container" style="display:none">
-      <div class="progress-bar-wrap">
-        <div class="progress-bar">
-          <div id="progress-fill-${id}" class="progress-fill"></div>
-        </div>
-        <span id="progress-text-${id}" class="progress-text">0%</span>
+      <div class="progress-bar">
+        <div id="progress-fill-${id}" class="progress-fill"></div>
       </div>
-      <span id="progress-msg-${id}" class="progress-msg"></span>
-    </div>`;
+      <span id="progress-text-${id}" class="progress-text">0%</span>
+    </div>
+    <div id="progress-msg-${id}" class="progress-msg"></div>`;
 }
 
 function startProgress(id, msg = "") {
@@ -147,7 +161,7 @@ function startProgress(id, msg = "") {
   const msgEl     = document.getElementById(`progress-msg-${id}`);
   if (!container) return;
 
-  container.style.display = "flex";
+  container.style.display = "inline-flex";
   if (msgEl) msgEl.textContent = msg;
   let pct = 0;
 
@@ -175,9 +189,8 @@ function finishProgress(id) {
    REAL TRAINING PROGRESS  (polling)
 ============================================================ */
 function startProgressPolling(websiteId, jobId) {
-  // Re-show the bar (table might have just re-rendered)
   const container = document.getElementById(`progress-${websiteId}`);
-  if (container) container.style.display = "flex";
+  if (container) container.style.display = "inline-flex";
 
   if (trainingPollers[websiteId]) clearInterval(trainingPollers[websiteId]);
 
@@ -186,15 +199,15 @@ function startProgressPolling(websiteId, jobId) {
       const res  = await fetch(`${API}/admin/websites/${websiteId}/training-status`, { headers: authHeaders() });
       const data = await res.json();
 
-      const fill    = document.getElementById(`progress-fill-${websiteId}`);
-      const text    = document.getElementById(`progress-text-${websiteId}`);
-      const msgEl   = document.getElementById(`progress-msg-${websiteId}`);
-      const cont    = document.getElementById(`progress-${websiteId}`);
+      const fill  = document.getElementById(`progress-fill-${websiteId}`);
+      const text  = document.getElementById(`progress-text-${websiteId}`);
+      const msgEl = document.getElementById(`progress-msg-${websiteId}`);
+      const cont  = document.getElementById(`progress-${websiteId}`);
 
-      if (cont && cont.style.display === "none") cont.style.display = "flex";
-      if (fill)  fill.style.width   = data.progress + "%";
-      if (text)  text.textContent   = data.progress + "%";
-      if (msgEl) msgEl.textContent  = data.message || "";
+      if (cont && cont.style.display === "none") cont.style.display = "inline-flex";
+      if (fill)  fill.style.width  = data.progress + "%";
+      if (text)  text.textContent  = data.progress + "%";
+      if (msgEl) msgEl.textContent = data.message || "";
 
       if (data.status === "done") {
         clearInterval(trainingPollers[websiteId]);
@@ -212,8 +225,8 @@ function startProgressPolling(websiteId, jobId) {
         clearInterval(trainingPollers[websiteId]);
         delete trainingPollers[websiteId];
         if (msgEl) {
-          msgEl.textContent  = "Error: " + (data.message || "Training failed");
-          msgEl.style.color  = "var(--danger)";
+          msgEl.textContent = "Error: " + (data.message || "Training failed");
+          msgEl.style.color = "var(--red)";
         }
       }
     } catch { /* network blip — keep polling */ }
@@ -235,10 +248,10 @@ async function loadCustomers() {
       <tr>
         <td>${c.id}</td>
         <td>${escapeHtml(c.email)}</td>
-        <td>${c.is_active ? "Active" : "Disabled"}</td>
+        <td><span class="pill ${c.is_active ? "green" : "gray"}">${c.is_active ? "Active" : "Disabled"}</span></td>
         <td>${fmtDate(c.created_at)}</td>
         <td>
-          <button class="btn danger small" onclick="deleteCustomer(${c.id})">Delete</button>
+          <button class="btn-danger btn-sm" onclick="deleteCustomer(${c.id})">Delete</button>
           ${progressBar("customer-" + c.id)}
         </td>
       </tr>`;
@@ -276,10 +289,10 @@ async function loadKeys() {
         <td>${k.id}</td>
         <td class="mono">${escapeHtml(k.key)}</td>
         <td>${escapeHtml(k.domain)}</td>
-        <td>${k.is_active ? "Active" : "Revoked"}</td>
+        <td><span class="pill ${k.is_active ? "green" : "gray"}">${k.is_active ? "Active" : "Revoked"}</span></td>
         <td>${fmtDate(k.created_at)}</td>
         <td>
-          <button class="btn small" onclick="copyEmbed('${escapeHtml(k.key)}')">📋 Copy</button>
+          <button class="btn-ghost btn-sm" onclick="copyEmbed('${escapeHtml(k.key)}')">📋 Copy embed</button>
         </td>
       </tr>`;
   });
@@ -311,18 +324,18 @@ async function loadWebsites() {
       verdictBadge = `<span class="pill ${cls}">${analysis.verdict.toUpperCase()}</span>`;
     }
 
-    // Primary action button (left of progress bar)
+    // Primary action
     let mainBtn = "";
     if (w.is_trained) {
       mainBtn = `
         <span class="pill green">Trained</span>
-        <button class="btn ghost small" onclick="trainWebsite(${w.id}, true)">Retrain</button>`;
+        <button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">Retrain</button>`;
     } else if (!analysis) {
-      mainBtn = `<button class="btn small" onclick="analyzeWebsite(${w.id})">Analyze</button>`;
+      mainBtn = `<button class="btn-ghost btn-sm" onclick="analyzeWebsite(${w.id})">Analyze</button>`;
     } else if (analysis.verdict === "ok") {
-      mainBtn = `<button class="btn primary small" onclick="trainWebsite(${w.id})">Train</button>`;
+      mainBtn = `<button class="btn-primary btn-sm" onclick="trainWebsite(${w.id})">Train</button>`;
     } else {
-      mainBtn = `<button class="btn ghost small" onclick="trainWebsite(${w.id}, true)">Force Train</button>`;
+      mainBtn = `<button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">Force Train</button>`;
     }
 
     table.innerHTML += `
@@ -331,19 +344,21 @@ async function loadWebsites() {
         <td>${escapeHtml(w.domain)}</td>
         <td>${verdictBadge}</td>
         <td>
-          ${analysis ? `<div class="meta">${analysis.estimated_pages} pages · ${analysis.estimated_chunks} chunks</div>` : `<span class="muted">—</span>`}
+          ${analysis
+            ? `<span style="font-size:0.8rem;color:var(--text-muted)">${analysis.estimated_pages} pages · ${analysis.estimated_chunks} chunks</span>`
+            : `<span style="color:var(--text-muted)">—</span>`}
         </td>
         <td>
-          <div class="action-primary">
+          <div class="action-row">
             ${mainBtn}
             ${progressBar(w.id)}
           </div>
           <div class="action-secondary">
-            <button class="btn ghost small" onclick="inspectWebsite(${w.id})">Inspect</button>
-            <button class="btn ghost small" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'widget')">🎨 Widget</button>
-            <button class="btn ghost small" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'chats')">💬 Chats</button>
-            <button class="btn ghost small" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'stats')">📊 Stats</button>
-            <button class="btn danger small" onclick="deleteWebsite(${w.id})">Delete</button>
+            <button class="btn-ghost btn-sm" onclick="inspectWebsite(${w.id})">Inspect</button>
+            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'widget')">Widget</button>
+            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'chats')">Chats</button>
+            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'stats')">Stats</button>
+            <button class="btn-danger btn-sm" onclick="deleteWebsite(${w.id})">Delete</button>
           </div>
         </td>
       </tr>
@@ -355,7 +370,7 @@ async function loadWebsites() {
   // Re-attach any active polling bars (table was re-rendered)
   Object.keys(trainingPollers).forEach(id => {
     const cont = document.getElementById(`progress-${id}`);
-    if (cont) cont.style.display = "flex";
+    if (cont) cont.style.display = "inline-flex";
   });
 }
 
@@ -376,7 +391,7 @@ function toggleDetail(websiteId, domain, type) {
 
   row.style.display = "";
   row.dataset.activeType = type;
-  cell.innerHTML = `<div class="detail-loading">Loading…</div>`;
+  cell.innerHTML = `<span style="color:var(--text-muted);font-size:0.85rem">Loading…</span>`;
 
   if (type === "widget") loadWidgetConfig(websiteId, domain, cell);
   else if (type === "chats") loadConversations(websiteId, cell);
@@ -389,7 +404,7 @@ function toggleDetail(websiteId, domain, type) {
 async function loadWidgetConfig(websiteId, domain, cell) {
   const apiKey = domainKeyMap[domain];
   if (!apiKey) {
-    cell.innerHTML = `<div class="detail-content"><p class="muted">No active API key found for this website.</p></div>`;
+    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">No active API key found for this website.</p>`;
     return;
   }
 
@@ -398,65 +413,62 @@ async function loadWidgetConfig(websiteId, domain, cell) {
     const cfg = await res.json();
 
     widgetPositions[websiteId] = cfg.bubble_position || "right";
+    const pos = widgetPositions[websiteId];
 
     cell.innerHTML = `
-      <div class="detail-content widget-config-form">
-        <h3>Widget Configuration</h3>
-        <div class="config-grid">
+      <div class="widget-form">
 
-          <div class="config-field">
-            <label>Primary Color</label>
-            <div class="color-field">
-              <input type="color" id="wc-primary-${websiteId}" value="${escapeHtml(cfg.primary_color || "#00B2A0")}" />
-              <span id="wc-primary-hex-${websiteId}" class="color-hex">${escapeHtml(cfg.primary_color || "#00B2A0")}</span>
-            </div>
+        <div class="input-group">
+          <label>Primary Color</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="color" id="wc-primary-${websiteId}" value="${escapeHtml(cfg.primary_color || "#00B2A0")}" />
+            <span id="wc-primary-hex-${websiteId}" class="mono">${escapeHtml(cfg.primary_color || "#00B2A0")}</span>
           </div>
-
-          <div class="config-field">
-            <label>Text Color</label>
-            <div class="color-field">
-              <input type="color" id="wc-text-${websiteId}" value="${escapeHtml(cfg.text_color || "#0b0d12")}" />
-              <span id="wc-text-hex-${websiteId}" class="color-hex">${escapeHtml(cfg.text_color || "#0b0d12")}</span>
-            </div>
-          </div>
-
-          <div class="config-field">
-            <label>Bubble Position</label>
-            <div class="toggle-group">
-              <button id="wc-pos-right-${websiteId}"
-                class="toggle-btn ${widgetPositions[websiteId] !== "left" ? "active" : ""}"
-                onclick="setWidgetPosition(${websiteId}, 'right')">Right</button>
-              <button id="wc-pos-left-${websiteId}"
-                class="toggle-btn ${widgetPositions[websiteId] === "left" ? "active" : ""}"
-                onclick="setWidgetPosition(${websiteId}, 'left')">Left</button>
-            </div>
-          </div>
-
-          <div class="config-field wide">
-            <label>Welcome Message</label>
-            <input type="text" id="wc-welcome-${websiteId}"
-              placeholder="Hi! How can I help you?"
-              value="${escapeHtml(cfg.welcome_message || "")}" />
-          </div>
-
         </div>
-        <div class="config-actions">
-          <button class="btn primary small" onclick="saveWidgetConfig(${websiteId})">Save Configuration</button>
-          <span id="wc-msg-${websiteId}" class="config-saved" style="display:none">✓ Saved!</span>
+
+        <div class="input-group">
+          <label>Text Color</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="color" id="wc-text-${websiteId}" value="${escapeHtml(cfg.text_color || "#0b0d12")}" />
+            <span id="wc-text-hex-${websiteId}" class="mono">${escapeHtml(cfg.text_color || "#0b0d12")}</span>
+          </div>
         </div>
+
+        <div class="input-group">
+          <label>Bubble Position</label>
+          <div style="display:flex;gap:8px">
+            <button id="wc-pos-right-${websiteId}"
+              class="${pos !== "left" ? "btn-primary" : "btn-ghost"} btn-sm"
+              onclick="setWidgetPosition(${websiteId}, 'right')">Right</button>
+            <button id="wc-pos-left-${websiteId}"
+              class="${pos === "left" ? "btn-primary" : "btn-ghost"} btn-sm"
+              onclick="setWidgetPosition(${websiteId}, 'left')">Left</button>
+          </div>
+        </div>
+
+        <div class="input-group" style="grid-column:1/-1">
+          <label>Welcome Message</label>
+          <input type="text" id="wc-welcome-${websiteId}"
+            placeholder="Hi! How can I help you?"
+            value="${escapeHtml(cfg.welcome_message || "")}" />
+        </div>
+
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
+          <button class="btn-primary btn-sm" onclick="saveWidgetConfig(${websiteId})">Save configuration</button>
+          <span id="wc-msg-${websiteId}" style="display:none;font-size:0.82rem"></span>
+        </div>
+
       </div>`;
 
     // Live hex label update
     [`wc-primary-${websiteId}`, `wc-text-${websiteId}`].forEach(inputId => {
       const input = document.getElementById(inputId);
       const hexEl = document.getElementById(inputId + "-hex");
-      if (input && hexEl) {
-        input.addEventListener("input", () => { hexEl.textContent = input.value; });
-      }
+      if (input && hexEl) input.addEventListener("input", () => { hexEl.textContent = input.value; });
     });
 
   } catch {
-    cell.innerHTML = `<div class="detail-content"><p class="muted">Failed to load widget config.</p></div>`;
+    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Failed to load widget config.</p>`;
   }
 }
 
@@ -464,8 +476,8 @@ function setWidgetPosition(websiteId, pos) {
   widgetPositions[websiteId] = pos;
   const rBtn = document.getElementById(`wc-pos-right-${websiteId}`);
   const lBtn = document.getElementById(`wc-pos-left-${websiteId}`);
-  if (rBtn) rBtn.className = "toggle-btn" + (pos === "right" ? " active" : "");
-  if (lBtn) lBtn.className = "toggle-btn" + (pos === "left"  ? " active" : "");
+  if (rBtn) rBtn.className = (pos === "right" ? "btn-primary" : "btn-ghost") + " btn-sm";
+  if (lBtn) lBtn.className = (pos === "left"  ? "btn-primary" : "btn-ghost") + " btn-sm";
 }
 
 async function saveWidgetConfig(websiteId) {
@@ -484,11 +496,11 @@ async function saveWidgetConfig(websiteId) {
   if (msgEl) {
     msgEl.style.display = "inline";
     if (res.ok) {
-      msgEl.textContent  = "✓ Saved!";
-      msgEl.style.color  = "var(--success)";
+      msgEl.textContent = "✓ Saved!";
+      msgEl.style.color = "var(--green)";
     } else {
-      msgEl.textContent  = "Save failed";
-      msgEl.style.color  = "var(--danger)";
+      msgEl.textContent = "Save failed";
+      msgEl.style.color = "var(--red)";
     }
     setTimeout(() => { msgEl.style.display = "none"; }, 2500);
   }
@@ -503,17 +515,19 @@ async function loadConversations(websiteId, cell) {
     const sessions = await res.json();
 
     if (!sessions.length) {
-      cell.innerHTML = `<div class="detail-content"><p class="muted">No conversations yet.</p></div>`;
+      cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">No conversations yet.</p>`;
       return;
     }
 
     const totalMsgs = sessions.reduce((n, s) => n + s.messages.length, 0);
 
-    let html = `<div class="detail-content convos-wrap">
-      <div class="convos-meta">${sessions.length} session${sessions.length !== 1 ? "s" : ""} · ${totalMsgs} message${totalMsgs !== 1 ? "s" : ""}</div>
-      <div class="sessions-list">`;
+    let html = `
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px">
+        ${sessions.length} session${sessions.length !== 1 ? "s" : ""} · ${totalMsgs} message${totalMsgs !== 1 ? "s" : ""}
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px">`;
 
-    sessions.forEach((session, si) => {
+    sessions.forEach(session => {
       const safeId   = session.session_id.replace(/[^a-zA-Z0-9]/g, "-");
       const firstMsg = session.messages[0];
       const shortId  = session.session_id.length > 24
@@ -521,40 +535,37 @@ async function loadConversations(websiteId, cell) {
         : session.session_id;
 
       html += `
-        <div class="session">
-          <div class="session-header" onclick="toggleSession('${safeId}')">
-            <span class="session-arrow" id="arrow-${safeId}">▶</span>
-            <span class="session-id mono">${escapeHtml(shortId)}</span>
-            <span class="session-count">${session.messages.length} msgs</span>
-            <span class="session-time">${fmtDate(firstMsg?.created_at)}</span>
+        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+          <div class="session-header" onclick="toggleSession('${safeId}')" style="cursor:pointer;padding:10px 16px;background:var(--surface-2)">
+            <span id="arrow-${safeId}" style="font-size:0.65rem;color:var(--teal)">▶</span>
+            <span class="mono">${escapeHtml(shortId)}</span>
+            <span style="margin-left:auto;margin-right:8px;font-size:0.75rem;color:var(--text-muted)">${session.messages.length} msgs</span>
+            <span style="font-size:0.72rem;color:var(--text-muted)">${fmtDate(firstMsg?.created_at)}</span>
           </div>
-          <div class="session-messages" id="sess-${safeId}" style="display:none">`;
+          <div class="chat-thread" id="sess-${safeId}" style="display:none">`;
 
       session.messages.forEach(m => {
         const sourceLinks = (m.sources || [])
           .filter(Boolean)
-          .map(s => `<a href="${escapeHtml(s)}" target="_blank" class="source-link">${escapeHtml(s)}</a>`)
+          .map(s => `<a href="${escapeHtml(s)}" target="_blank" style="display:block;font-size:0.68rem;color:var(--teal);text-decoration:none;opacity:0.8">${escapeHtml(s)}</a>`)
           .join("");
 
         html += `
-          <div class="chat-msg ${m.role}">
-            <span class="chat-icon">${m.role === "user" ? "👤" : "🤖"}</span>
-            <div class="chat-bubble">
-              <p>${escapeHtml(m.message)}</p>
-              ${sourceLinks ? `<div class="chat-sources">${sourceLinks}</div>` : ""}
-              <span class="chat-time">${fmtDate(m.created_at)}</span>
-            </div>
-          </div>`;
+            <div class="chat-msg ${m.role}">
+              ${escapeHtml(m.message)}
+              ${sourceLinks ? `<div style="margin-top:6px">${sourceLinks}</div>` : ""}
+              <div style="font-size:0.63rem;opacity:0.6;margin-top:4px">${fmtDate(m.created_at)}</div>
+            </div>`;
       });
 
       html += `</div></div>`;
     });
 
-    html += `</div></div>`;
+    html += `</div>`;
     cell.innerHTML = html;
 
   } catch {
-    cell.innerHTML = `<div class="detail-content"><p class="muted">Failed to load conversations.</p></div>`;
+    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Failed to load conversations.</p>`;
   }
 }
 
@@ -575,43 +586,38 @@ async function loadStats(websiteId, cell) {
     const res  = await fetch(`${API}/admin/stats/${websiteId}`, { headers: authHeaders() });
     const data = await res.json();
 
-    let topHtml = `<p class="muted" style="margin-top:1rem">No queries yet.</p>`;
+    let topHtml = `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px">No queries yet.</p>`;
     if (data.top_user_messages && data.top_user_messages.length) {
       topHtml = `
         <div class="top-queries">
           <h4>Top User Queries</h4>
-          <div class="query-list">
-            ${data.top_user_messages.map((q, i) => `
-              <div class="query-item">
-                <span class="query-rank">${i + 1}</span>
-                <span class="query-text">${escapeHtml(q.message)}</span>
-                <span class="query-count">${q.count}×</span>
-              </div>`).join("")}
-          </div>
+          ${data.top_user_messages.map((q, i) => `
+            <div class="query-item">
+              <span class="q">${escapeHtml(q.message)}</span>
+              <span class="count">${q.count}×</span>
+            </div>`).join("")}
         </div>`;
     }
 
     cell.innerHTML = `
-      <div class="detail-content stats-detail">
-        <div class="stats-grid">
-          <div class="stat-item">
-            <span>Total Conversations</span>
-            <strong>${data.total_conversations}</strong>
-          </div>
-          <div class="stat-item">
-            <span>Total Messages</span>
-            <strong>${data.total_messages}</strong>
-          </div>
-          <div class="stat-item">
-            <span>Messages Today</span>
-            <strong>${data.messages_today}</strong>
-          </div>
+      <div class="stats-detail">
+        <div class="stat-mini">
+          <div class="label">Total Conversations</div>
+          <div class="value">${data.total_conversations}</div>
         </div>
-        ${topHtml}
-      </div>`;
+        <div class="stat-mini">
+          <div class="label">Total Messages</div>
+          <div class="value">${data.total_messages}</div>
+        </div>
+        <div class="stat-mini">
+          <div class="label">Messages Today</div>
+          <div class="value">${data.messages_today}</div>
+        </div>
+      </div>
+      ${topHtml}`;
 
   } catch {
-    cell.innerHTML = `<div class="detail-content"><p class="muted">Failed to load stats.</p></div>`;
+    cell.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Failed to load stats.</p>`;
   }
 }
 
@@ -695,10 +701,10 @@ async function createKey() {
   if (!res.ok) { await showAlert("Failed to create key"); return; }
 
   const msgEl = document.getElementById("createKeyMsg");
-  msgEl.textContent = "API key created for " + domain;
+  if (msgEl) msgEl.textContent = "API key created for " + domain;
   document.getElementById("newEmail").value  = "";
   document.getElementById("newDomain").value = "";
-  setTimeout(() => { msgEl.textContent = ""; }, 3000);
+  setTimeout(() => { if (msgEl) msgEl.textContent = ""; }, 3000);
 
   await loadKeys();
   await loadWebsites();
