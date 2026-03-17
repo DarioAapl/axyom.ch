@@ -4,18 +4,17 @@
   <meta charset="UTF-8" />
   <title>AXYOM · Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="admin.css?v=20260216">
+  <link rel="stylesheet" href="admin.css?v=20260317">
 </head>
-
 <body class="dashboard-page">
 
 <header class="nav">
   <div class="brand">
     <img src="/adminlogo.png" alt="AXYOM" />
   </div>
-
   <div class="nav-right">
     <span class="pill subtle" id="adminEmail"></span>
+    <span class="pill subtle" id="deployInfo">Deploy: —</span>
     <button class="btn ghost" onclick="logout()">Logout</button>
   </div>
 </header>
@@ -23,17 +22,17 @@
 <main class="dashboard">
 
   <section class="stats">
-    <div class="stat card">
+    <div class="stat">
       <span>Customers</span>
       <strong id="statCustomers">—</strong>
     </div>
-    <div class="stat card">
+    <div class="stat">
       <span>API Keys</span>
       <strong id="statKeys">—</strong>
     </div>
   </section>
 
-  <section class="panel card">
+  <section class="panel">
     <h2>Create API Key</h2>
     <div class="form-row">
       <input id="newEmail" placeholder="Customer email" />
@@ -43,7 +42,7 @@
     <div class="success" id="createKeyMsg"></div>
   </section>
 
-  <section class="panel card">
+  <section class="panel">
     <h2>Customers</h2>
     <table class="table">
       <thead>
@@ -59,7 +58,7 @@
     </table>
   </section>
 
-  <section class="panel card">
+  <section class="panel">
     <h2>API Keys</h2>
     <table class="table">
       <thead>
@@ -76,15 +75,16 @@
     </table>
   </section>
 
-  <section class="panel card">
+  <section class="panel">
     <h2>Websites</h2>
     <table class="table websites">
       <thead>
         <tr>
           <th>ID</th>
           <th>Domain</th>
-          <th>Status</th>
-          <th>Action</th>
+          <th>Analysis</th>
+          <th>Info</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="websitesTable"></tbody>
@@ -93,6 +93,18 @@
 
 </main>
 
-<script src="admin-dashboard.js?v=20260216"></script>
+<!-- Modal (replaces alert / confirm / prompt) -->
+<div id="modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <p id="modal-msg"></p>
+    <input type="text" id="modal-input" class="modal-input" style="display:none" />
+    <div class="modal-actions">
+      <button class="btn primary" id="modal-ok">OK</button>
+      <button class="btn ghost"   id="modal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin-dashboard.js?v=20260317"></script>
 </body>
 </html>
