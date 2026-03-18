@@ -1,7 +1,8 @@
 const API = "https://api.axyom.ch";
 
 // website_id is not returned by /admin/keys, so we key by domain
-const domainKeyMap   = {};  // domain -> api_key string
+const domainKeyMap   = {};  // domain -> api_key string (raw key when available, else masked)
+const sessionKeyMap  = {};  // domain -> raw api_key (only for keys created this session)
 const trainingPollers = {}; // website_id -> interval id
 const widgetPositions = {}; // website_id -> 'right' | 'left'
 
@@ -78,6 +79,31 @@ const showAlert   = msg => _modal({ title: "Notice",  message: msg });
 const showConfirm = msg => _modal({ title: "Confirm", message: msg, showCancel: true, okLabel: "Confirm" });
 const showPrompt  = (msg, placeholder = "", def = "") =>
   _modal({ title: "Input", message: msg, showCancel: true, showInput: true, inputPlaceholder: placeholder, inputDefault: def });
+
+// openModal — like _modal but accepts raw HTML for the body and custom button array
+function openModal(title, htmlBody, buttons = []) {
+  return new Promise(resolve => {
+    _modalResolve = resolve;
+    document.getElementById("modalTitle").textContent = title;
+    document.getElementById("modalBody").innerHTML = htmlBody;
+
+    const btns = buttons.length ? buttons : [{ label: "OK", className: "btn-primary" }];
+    document.getElementById("modalFooter").innerHTML = btns
+      .map((b, i) => `<button class="${escapeHtml(b.className || "btn-primary")}" id="modal-open-${i}">${escapeHtml(b.label)}</button>`)
+      .join("");
+
+    btns.forEach((b, i) => {
+      const el = document.getElementById(`modal-open-${i}`);
+      if (el) el.onclick = () => {
+        document.getElementById("modalOverlay").classList.remove("active");
+        _modalResolve = null;
+        resolve(b.label);
+      };
+    });
+
+    document.getElementById("modalOverlay").classList.add("active");
+  });
+}
 
 /* ============================================================
    DEPLOY INFO
@@ -278,12 +304,20 @@ async function loadKeys() {
   document.getElementById("statKeys").textContent = data.length;
 
   // Build domain → api_key map for widget config
+  // Use raw key from sessionKeyMap when available (keys created this session), else masked
   Object.keys(domainKeyMap).forEach(k => delete domainKeyMap[k]);
-  data.forEach(k => { if (k.is_active) domainKeyMap[k.domain] = k.key; });
+  data.forEach(k => {
+    if (k.is_active) domainKeyMap[k.domain] = sessionKeyMap[k.domain] || k.key;
+  });
 
   const tbody = document.getElementById("keysTable");
   tbody.innerHTML = "";
   data.forEach(k => {
+    const rawKey = sessionKeyMap[k.domain];
+    const embedBtn = rawKey
+      ? `<button class="btn-ghost btn-sm" onclick="copyEmbed('${rawKey}')">📋 Embed</button>`
+      : `<button class="btn-ghost btn-sm" onclick="copyEmbedPlaceholder('${escapeHtml(k.domain)}')">📋 Embed</button>`;
+
     tbody.innerHTML += `
       <tr>
         <td>${k.id}</td>
@@ -291,9 +325,7 @@ async function loadKeys() {
         <td>${escapeHtml(k.domain)}</td>
         <td><span class="pill ${k.is_active ? "green" : "gray"}">${k.is_active ? "Active" : "Revoked"}</span></td>
         <td>${fmtDate(k.created_at)}</td>
-        <td>
-          <span style="font-size:0.78rem;color:var(--text-muted)">Key hidden</span>
-        </td>
+        <td>${embedBtn}</td>
       </tr>`;
   });
 }
@@ -302,6 +334,13 @@ function copyEmbed(apiKey) {
   const script = `<!-- AXYOM AI -->\n<script>\n  window.AXYOM_KEY = "${apiKey}";\n<\/script>\n<script src="https://api.axyom.ch/widget/axyom.js" async><\/script>`;
   navigator.clipboard.writeText(script)
     .then(() => showAlert("Embed script copied to clipboard."))
+    .catch(() => showAlert("Copy failed — check clipboard permissions."));
+}
+
+function copyEmbedPlaceholder(domain) {
+  const script = `<!-- AXYOM AI -->\n<script>\n  window.AXYOM_KEY = "YOUR_API_KEY_HERE";\n<\/script>\n<script src="https://api.axyom.ch/widget/axyom.js" async><\/script>`;
+  navigator.clipboard.writeText(script)
+    .then(() => showAlert(`Embed script copied for ${domain}.\n\nReplace YOUR_API_KEY_HERE with the actual API key (only visible at creation time).`))
     .catch(() => showAlert("Copy failed — check clipboard permissions."));
 }
 
@@ -809,6 +848,9 @@ async function createKey() {
 
   document.getElementById("newEmail").value  = "";
   document.getElementById("newDomain").value = "";
+
+  // Cache raw key so the keys table can show a real Copy Embed button for this session
+  sessionKeyMap[domain] = rawKey;
 
   await loadKeys();
   await loadWebsites();
