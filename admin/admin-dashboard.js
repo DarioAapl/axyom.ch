@@ -316,7 +316,7 @@ async function loadKeys() {
     const rawKey = sessionKeyMap[k.domain];
     const embedBtn = rawKey
       ? `<button class="btn-ghost btn-sm" onclick="copyEmbed('${rawKey}')">📋 Embed</button>`
-      : `<button class="btn-ghost btn-sm" onclick="copyEmbedPlaceholder('${escapeHtml(k.domain)}')">📋 Embed</button>`;
+      : `<button class="btn-ghost btn-sm" onclick="copyEmbedPlaceholder('${escapeHtml(k.key)}')">📋 Embed</button>`;
 
     tbody.innerHTML += `
       <tr>
@@ -337,10 +337,10 @@ function copyEmbed(apiKey) {
     .catch(() => showAlert("Copy failed — check clipboard permissions."));
 }
 
-function copyEmbedPlaceholder(domain) {
-  const script = `<!-- AXYOM AI -->\n<script>\n  window.AXYOM_KEY = "YOUR_API_KEY_HERE";\n<\/script>\n<script src="https://api.axyom.ch/widget/axyom.js" async><\/script>`;
+function copyEmbedPlaceholder(maskedKey) {
+  const script = `<!-- AXYOM AI -->\n<!-- TODO: replace the key below with your actual API key (was shown once at creation) -->\n<script>\n  window.AXYOM_KEY = "${maskedKey}";\n<\/script>\n<script src="https://api.axyom.ch/widget/axyom.js" async><\/script>`;
   navigator.clipboard.writeText(script)
-    .then(() => showAlert(`Embed script copied for ${domain}.\n\nReplace YOUR_API_KEY_HERE with the actual API key (only visible at creation time).`))
+    .then(() => showAlert("Embed script copied.\n\nReplace the masked key with your actual API key before deploying."))
     .catch(() => showAlert("Copy failed — check clipboard permissions."));
 }
 
