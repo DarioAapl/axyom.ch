@@ -287,12 +287,12 @@ async function loadKeys() {
     tbody.innerHTML += `
       <tr>
         <td>${k.id}</td>
-        <td class="mono">${escapeHtml(k.key)}</td>
+        <td class="mono" style="color:var(--text-muted)">${escapeHtml(k.key)}</td>
         <td>${escapeHtml(k.domain)}</td>
         <td><span class="pill ${k.is_active ? "green" : "gray"}">${k.is_active ? "Active" : "Revoked"}</span></td>
         <td>${fmtDate(k.created_at)}</td>
         <td>
-          <button class="btn-ghost btn-sm" onclick="copyEmbed('${escapeHtml(k.key)}')">📋 Copy</button>
+          <span style="font-size:0.78rem;color:var(--text-muted)">Key hidden</span>
         </td>
       </tr>`;
   });
@@ -804,14 +804,35 @@ async function createKey() {
 
   if (!res.ok) { await showAlert("Failed to create key"); return; }
 
-  const msgEl = document.getElementById("createKeyMsg");
-  if (msgEl) msgEl.textContent = "API key created for " + domain;
+  const data = await res.json();
+  const rawKey = data.api_key;
+
   document.getElementById("newEmail").value  = "";
   document.getElementById("newDomain").value = "";
-  setTimeout(() => { if (msgEl) msgEl.textContent = ""; }, 3000);
 
   await loadKeys();
   await loadWebsites();
+
+  // Show raw key once — this is the only time it's available
+  const embedScript = `<!-- AXYOM AI -->\n<script>\n  window.AXYOM_KEY = "${rawKey}";\n<\/script>\n<script src="https://api.axyom.ch/widget/axyom.js" async><\/script>`;
+
+  openModal(
+    "🔑 API Key Created",
+    `<p style="color:var(--yellow,#f5a623);font-weight:600;margin-bottom:12px">
+      ⚠️ Save this key now — it will never be shown again.
+    </p>
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">API Key for <strong>${escapeHtml(domain)}</strong>:</p>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+      <code id="newRawKey" style="flex:1;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;word-break:break-all;user-select:all">${escapeHtml(rawKey)}</code>
+      <button class="btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('newRawKey').textContent).then(()=>this.textContent='✓ Copied')">📋 Copy</button>
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px">Embed script:</p>
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      <pre id="newEmbedScript" style="flex:1;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:0.75rem;white-space:pre-wrap;word-break:break-all;margin:0">${escapeHtml(embedScript)}</pre>
+      <button class="btn-ghost btn-sm" style="flex-shrink:0" onclick="navigator.clipboard.writeText(\`${embedScript.replace(/`/g,'\\`')}\`).then(()=>this.textContent='✓ Copied')">📋 Copy</button>
+    </div>`,
+    [{ label: "Done", className: "btn-primary" }]
+  );
 }
 
 /* ============================================================
