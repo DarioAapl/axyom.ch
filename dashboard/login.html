@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AXYOM · Customer Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css?v=20260319a">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+</head>
+<body class="login-page">
+
+<div class="login-scene">
+  <div class="login-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="/adminlogo.png" alt="AXYOM" style="height:28px;display:block">
+      <h1>AXYOM</h1>
+    </div>
+    <p class="login-sub">Sign in to your dashboard</p>
+
+    <form class="login-fields" onsubmit="doLogin(event)">
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <div class="error-msg" id="errMsg"></div>
+      <button class="btn-primary full" type="submit" id="loginBtn">Sign in</button>
+    </form>
+
+    <div class="login-footer">
+      No account? <a href="register.html">Create one</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://api.axyom.ch';
+
+  // Already logged in?
+  if (localStorage.getItem('customer_token')) {
+    window.location.href = 'index.html';
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const errMsg = document.getElementById('errMsg');
+    errMsg.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    try {
+      const res = await fetch(`${API}/customer/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errMsg.textContent = data.detail || 'Login failed';
+        return;
+      }
+
+      localStorage.setItem('customer_token', data.access_token);
+      window.location.href = 'index.html';
+    } catch (err) {
+      errMsg.textContent = 'Network error — please try again';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign in';
+    }
+  }
+</script>
+</body>
+</html>
