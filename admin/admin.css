@@ -1348,3 +1348,43 @@ input[type="color"].inline-picker {
   transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+
+/* ── Plan option radio cards (billing modal) ── */
+.plan-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--text);
+  transition: border-color .15s, background .15s;
+  flex: 1;
+  min-width: 120px;
+}
+
+.plan-option:hover {
+  border-color: var(--teal-border);
+  background: var(--surface-3);
+}
+
+.plan-option input[type="radio"] {
+  margin-top: 2px;
+  accent-color: var(--teal);
+  flex-shrink: 0;
+}
+
+.plan-option:has(input:checked) {
+  border-color: var(--teal);
+  background: var(--teal-ghost);
+}
+
+.plan-option small {
+  display: block;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-size: 0.75rem;
+}

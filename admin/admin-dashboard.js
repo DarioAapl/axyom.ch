@@ -3,6 +3,7 @@ const API = "https://api.axyom.ch";
 // website_id is not returned by /admin/keys, so we key by domain
 const domainKeyMap   = {};  // domain -> api_key string (raw key when available, else masked)
 const sessionKeyMap  = {};  // domain -> raw api_key (only for keys created this session)
+const customerSubMap = {};  // customer_id -> subscription object from /billing/subscription
 const trainingPollers = {}; // website_id -> interval id
 const widgetPositions = {}; // website_id -> 'right' | 'left'
 
@@ -262,26 +263,139 @@ function startProgressPolling(websiteId, jobId) {
 /* ============================================================
    CUSTOMERS
 ============================================================ */
+function _planPill(sub) {
+  if (!sub || !sub.plan) return '<span class="pill gray">None</span>';
+  const cls = { active: "green", trialing: "green", past_due: "orange", cancelled: "red", canceled: "red" }[sub.status] || "gray";
+  const label = { starter: "Starter", pro: "Pro", business: "Business" }[sub.plan] || escapeHtml(sub.plan);
+  const statusLabel = sub.status === "past_due" ? " ⚠" : sub.status === "cancelled" ? " ✕" : "";
+  return `<span class="pill ${cls}">${label}${statusLabel}</span>`;
+}
+
 async function loadCustomers() {
   const res  = await fetch(`${API}/admin/customers`, { headers: authHeaders() });
   const data = await res.json();
   document.getElementById("statCustomers").textContent = data.length;
 
+  // Fetch all subscriptions in parallel
+  const subs = await Promise.all(
+    data.map(c =>
+      fetch(`${API}/billing/subscription/${c.id}`, { headers: authHeaders() })
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
+    )
+  );
+
+  // Populate shared map so loadWebsites() can use it
+  Object.keys(customerSubMap).forEach(k => delete customerSubMap[k]);
+  data.forEach((c, i) => { customerSubMap[c.id] = subs[i]; });
+
+  // Active subscriptions stat
+  const activeSubs = subs.filter(s => s && (s.status === "active" || s.status === "trialing")).length;
+  const statEl = document.getElementById("statActiveSubs");
+  if (statEl) statEl.textContent = activeSubs;
+
   const tbody = document.getElementById("customersTable");
   tbody.innerHTML = "";
-  data.forEach(c => {
+  data.forEach((c, i) => {
+    const sub = subs[i];
     tbody.innerHTML += `
       <tr>
         <td>${c.id}</td>
         <td>${escapeHtml(c.email)}</td>
         <td><span class="pill ${c.is_active ? "green" : "gray"}">${c.is_active ? "Active" : "Disabled"}</span></td>
+        <td>${_planPill(sub)}</td>
         <td>${fmtDate(c.created_at)}</td>
         <td>
+          <button class="btn-ghost btn-sm" onclick="openSubscribeModal(${c.id}, '${escapeHtml(c.email)}')">💳 Subscribe</button>
           <button class="btn-danger btn-sm" onclick="deleteCustomer(${c.id})">Delete</button>
           ${progressBar("customer-" + c.id)}
         </td>
       </tr>`;
   });
+}
+
+async function openSubscribeModal(customerId, email) {
+  await openModal(
+    "💳 Subscribe Customer",
+    `<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">
+      Create a Stripe Checkout link for <strong>${escapeHtml(email)}</strong>
+    </p>
+
+    <p style="font-size:0.8rem;font-weight:600;margin-bottom:8px">Plan</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <label class="plan-option">
+        <input type="radio" name="subPlan" value="starter" checked>
+        <span>Starter<br><small>CHF/EUR 49 / mo<br>500 conv · 1 site</small></span>
+      </label>
+      <label class="plan-option">
+        <input type="radio" name="subPlan" value="pro">
+        <span>Pro<br><small>CHF/EUR 149 / mo<br>2 000 conv · 3 sites</small></span>
+      </label>
+      <label class="plan-option">
+        <input type="radio" name="subPlan" value="business">
+        <span>Business<br><small>CHF/EUR 349 / mo<br>10 000 conv · 10 sites</small></span>
+      </label>
+    </div>
+
+    <p style="font-size:0.8rem;font-weight:600;margin-bottom:8px">Currency</p>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <label class="plan-option">
+        <input type="radio" name="subCurrency" value="chf" checked>
+        <span>CHF 🇨🇭</span>
+      </label>
+      <label class="plan-option">
+        <input type="radio" name="subCurrency" value="eur">
+        <span>EUR 🇪🇺</span>
+      </label>
+    </div>
+
+    <button class="btn-primary" style="width:100%" onclick="createCheckout(${customerId}, this)">
+      Create Checkout Link
+    </button>
+    <div id="checkoutResult" style="margin-top:14px"></div>`,
+    [{ label: "Close", className: "btn-ghost" }]
+  );
+}
+
+async function createCheckout(customerId, btn) {
+  const plan     = document.querySelector('input[name="subPlan"]:checked')?.value;
+  const currency = document.querySelector('input[name="subCurrency"]:checked')?.value;
+  if (!plan || !currency) return;
+
+  btn.disabled = true;
+  btn.textContent = "Creating…";
+
+  try {
+    const res  = await fetch(`${API}/billing/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ customer_id: customerId, plan, currency }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      document.getElementById("checkoutResult").innerHTML =
+        `<p style="color:var(--red);font-size:0.82rem">${escapeHtml(data.detail || "Failed")}</p>`;
+      return;
+    }
+
+    const url = data.checkout_url;
+    document.getElementById("checkoutResult").innerHTML = `
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px">Send this link to the customer:</p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <code style="flex:1;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:0.72rem;word-break:break-all;user-select:all">${escapeHtml(url)}</code>
+        <button class="btn-ghost btn-sm" style="flex-shrink:0"
+          onclick="navigator.clipboard.writeText('${url.replace(/'/g,"\\'")}').then(()=>this.textContent='✓ Copied')">
+          📋 Copy
+        </button>
+      </div>`;
+  } catch (e) {
+    document.getElementById("checkoutResult").innerHTML =
+      `<p style="color:var(--red);font-size:0.82rem">Network error</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Create Checkout Link";
+  }
 }
 
 async function deleteCustomer(id) {
@@ -377,11 +491,25 @@ async function loadWebsites() {
       mainBtn = `<button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">⚠️ Force Train</button>`;
     }
 
+    // Usage column: conversations used vs limit from customerSubMap
+    const sub = customerSubMap[w.customer_id];
+    let usageCell = `<span style="color:var(--text-muted);font-size:0.8rem">—</span>`;
+    if (sub && sub.conversation_limit) {
+      const used  = sub.conversations_used ?? 0;
+      const limit = sub.conversation_limit;
+      const pct   = used / limit;
+      const color = pct >= 1 ? "var(--red)" : pct >= 0.8 ? "var(--yellow,#f5a623)" : "var(--text-muted)";
+      usageCell = `<span style="font-size:0.8rem;color:${color};font-weight:${pct>=0.8?'600':'400'}">${used} / ${limit}</span>`;
+    } else if (sub && sub.plan) {
+      usageCell = `<span style="font-size:0.8rem;color:var(--text-muted)">${sub.conversations_used ?? 0} / ∞</span>`;
+    }
+
     table.innerHTML += `
       <tr id="row-${w.id}">
         <td>${w.id}</td>
         <td>${escapeHtml(w.domain)}</td>
         <td>${verdictBadge}</td>
+        <td>${usageCell}</td>
         <td>
           ${analysis
             ? `<span style="font-size:0.8rem;color:var(--text-muted)">${analysis.estimated_pages} pages · ${analysis.estimated_chunks} chunks</span>`
