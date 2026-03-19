@@ -1,91 +1,822 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>AXYOM — Coming Soon</title>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="AXYOM. Coming soon." />
-
-  <link rel="stylesheet" href="style.css" />
+  <title>AXYOM — KI-Verkaufsassistent für Ihre Website</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AXYOM verwandelt Ihre Website in einen KI-Verkaufsassistenten. Automatisch trainiert. In 5 Minuten live." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260320">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="icon" href="/favicon.ico">
 </head>
-
 <body>
-  <div class="scene">
-    <div class="wrapper">
-      <img src="axyomlogo2026.png" alt="AXYOM logo" class="logo" />
-      <h1 class="glitch-title">COMING SOON</h1>
-      <p class="subtitle">
-        A new dimension of intelligence is approaching.<br><br>
-        <span style="font-size: 0.8em; opacity: 0.7;">Developed by Dario Tino & Levin Guntli</span>
-      </p>
 
-
+<!-- ═══ NAV ═══ -->
+<nav class="nav" id="mainNav">
+  <div class="nav-inner container">
+    <a href="/" class="nav-logo">
+      <img src="axyomlogo2026.png" alt="AXYOM" />
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="nav-link" data-t="nav_features">Funktionen</a>
+      <a href="#how" class="nav-link" data-t="nav_how">So funktioniert's</a>
+      <a href="#pricing" class="nav-link" data-t="nav_pricing">Preise</a>
+      <a href="#contact" class="nav-link" data-t="nav_contact">Kontakt</a>
     </div>
+    <div class="nav-right">
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="de" onclick="setLang('de')">DE</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button>
+        <button class="lang-btn" data-lang="it" onclick="setLang('it')">IT</button>
+      </div>
+      <a href="/dashboard/login.html" class="nav-login" data-t="nav_login">Login</a>
+      <a href="#contact" class="btn-primary btn-sm" data-t="nav_cta">Demo buchen</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features" data-t="nav_features" onclick="closeMobileMenu()">Funktionen</a>
+    <a href="#how" data-t="nav_how" onclick="closeMobileMenu()">So funktioniert's</a>
+    <a href="#pricing" data-t="nav_pricing" onclick="closeMobileMenu()">Preise</a>
+    <a href="#contact" data-t="nav_contact" onclick="closeMobileMenu()">Kontakt</a>
+    <div class="mobile-sep"></div>
+    <div class="mobile-langs">
+      <button class="lang-btn" data-lang="de" onclick="setLang('de');closeMobileMenu()">DE</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en');closeMobileMenu()">EN</button>
+      <button class="lang-btn" data-lang="fr" onclick="setLang('fr');closeMobileMenu()">FR</button>
+      <button class="lang-btn" data-lang="it" onclick="setLang('it');closeMobileMenu()">IT</button>
+    </div>
+    <a href="/dashboard/login.html" data-t="nav_login" onclick="closeMobileMenu()">Login</a>
+    <a href="#contact" class="btn-primary" data-t="nav_cta" onclick="closeMobileMenu()">Demo buchen</a>
+  </div>
+</nav>
 
-    <!-- 3D Background Elements -->
-    <div class="grid-floor"></div>
-
-    <div class="cubes">
-      <div class="cube">
-        <div class="face front"></div>
-        <div class="face back"></div>
-        <div class="face right"></div>
-        <div class="face left"></div>
-        <div class="face top"></div>
-        <div class="face bottom"></div>
+<!-- ═══ HERO ═══ -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <div class="hero-badge" data-t="hero_badge">KI für Schweizer KMU</div>
+      <h1 class="hero-headline" id="heroHeadline">
+        <span class="line" data-t="hero_line1">Ihr KI-Verkaufsassistent.</span>
+        <span class="line line-2" data-t="hero_line2">Auf Ihrer Website.</span>
+        <span class="line line-3" data-t="hero_line3">In 5 Minuten.</span>
+      </h1>
+      <p class="hero-sub" data-t="hero_sub">
+        AXYOM analysiert Ihre Website automatisch und erstellt einen KI-Assistenten, der Besucher berät, Produkte empfiehlt und rund um die Uhr antwortet.
+      </p>
+      <div class="hero-ctas">
+        <a href="#contact" class="btn-primary btn-lg" data-t="hero_cta1">Demo buchen</a>
+        <a href="/dashboard/" class="btn-ghost btn-lg" data-t="hero_cta2">
+          Dashboard öffnen
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
       </div>
-      <div class="cube">
-        <div class="face front"></div>
-        <div class="face back"></div>
-        <div class="face right"></div>
-        <div class="face left"></div>
-        <div class="face top"></div>
-        <div class="face bottom"></div>
-      </div>
-      <div class="cube">
-        <div class="face front"></div>
-        <div class="face back"></div>
-        <div class="face right"></div>
-        <div class="face left"></div>
-        <div class="face top"></div>
-        <div class="face bottom"></div>
-      </div>
-      <div class="cube">
-        <div class="face front"></div>
-        <div class="face back"></div>
-        <div class="face right"></div>
-        <div class="face left"></div>
-        <div class="face top"></div>
-        <div class="face bottom"></div>
-      </div>
-      <div class="cube">
-        <div class="face front"></div>
-        <div class="face back"></div>
-        <div class="face right"></div>
-        <div class="face left"></div>
-        <div class="face top"></div>
-        <div class="face bottom"></div>
+    </div>
+    <div class="hero-visual">
+      <div class="chat-mockup">
+        <div class="mockup-header">
+          <div class="mockup-avatar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </div>
+          <div class="mockup-header-info">
+            <div class="mockup-name">AXYOM Assistent</div>
+            <div class="mockup-status"><span class="status-dot"></span>Online</div>
+          </div>
+          <div class="mockup-header-actions">
+            <span class="mockup-dot red"></span>
+            <span class="mockup-dot yellow"></span>
+            <span class="mockup-dot green"></span>
+          </div>
+        </div>
+        <div class="mockup-messages" id="mockupMessages"></div>
+        <div class="mockup-input">
+          <input type="text" data-t-placeholder="mockup_ph" placeholder="Nachricht eingeben…" disabled />
+          <button>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
+  <div class="hero-scroll-hint">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
 
-  <script>
-    // Parallax effect on mouse move for the 3D scene
-    document.addEventListener('mousemove', (e) => {
-      const scene = document.querySelector('.scene');
-      // Calculate rotation based on cursor position relative to center of screen
-      const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
-      const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
-      // Apply the 3D rotation
-      scene.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-    });
-  </script>
+<!-- ═══ TRUST BAR ═══ -->
+<section class="trust">
+  <div class="container">
+    <p class="trust-label" data-t="trust_label">Vertraut von Unternehmen in der Schweiz</p>
+    <div class="trust-logos">
+      <div class="trust-logo">CFMOTO</div>
+      <div class="trust-logo">Alpine Motors</div>
+      <div class="trust-logo">Swiss KMU</div>
+      <div class="trust-logo">Handels AG</div>
+      <div class="trust-logo">TechFirma GmbH</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-eyebrow" data-t="how_eyebrow">Wie es funktioniert</div>
+      <h2 class="section-title" data-t="how_title">In 3 Schritten live</h2>
+      <p class="section-sub" data-t="how_sub">Keine technischen Kenntnisse nötig. Setup in unter 10 Minuten.</p>
+    </div>
+    <div class="steps">
+      <div class="step-card fade-in">
+        <div class="step-num">01</div>
+        <div class="step-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        </div>
+        <h3 data-t="how_1_title">Domain eingeben</h3>
+        <p data-t="how_1_desc">Geben Sie Ihre Website-URL ein. AXYOM crawlt automatisch alle Seiten und Produktbeschreibungen.</p>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-num">02</div>
+        <div class="step-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a4 4 0 014 4 4 4 0 01-4 4 4 4 0 01-4-4 4 4 0 014-4"/><path d="M12 10v4m0 0a6 6 0 006 6H6a6 6 0 006-6"/><path d="M9.5 10.5C9.5 13 11 14.5 12 15s2.5-2 2.5-4.5"/></svg>
+        </div>
+        <h3 data-t="how_2_title">KI trainiert automatisch</h3>
+        <p data-t="how_2_desc">Unsere KI analysiert Ihren gesamten Inhalt und erstellt ein massgeschneidertes Modell für Ihr Unternehmen.</p>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-num">03</div>
+        <div class="step-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h3 data-t="how_3_title">Widget einbetten</h3>
+        <p data-t="how_3_desc">4 Zeilen Code — fertig. Ihr Assistent ist sofort live auf Ihrer Website, 24/7 verfügbar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-eyebrow" data-t="feat_eyebrow">Funktionen</div>
+      <h2 class="section-title" data-t="feat_title">Alles was Sie brauchen</h2>
+      <p class="section-sub" data-t="feat_sub">Mehr als nur ein Chatbot — ein vollständiger KI-Verkaufsassistent.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card fade-in">
+        <span class="feat-icon">🛒</span>
+        <h3 data-t="feat_1_title">Crossselling</h3>
+        <p data-t="feat_1_desc">Empfiehlt automatisch passende Produkte basierend auf dem Gespräch.</p>
+      </div>
+      <div class="feat-card fade-in">
+        <span class="feat-icon">🖼️</span>
+        <h3 data-t="feat_2_title">Produktkarten</h3>
+        <p data-t="feat_2_desc">Zeigt Bilder, Preise und direkte Links zu Produkten im Chat.</p>
+      </div>
+      <div class="feat-card fade-in">
+        <span class="feat-icon">🌍</span>
+        <h3 data-t="feat_3_title">Mehrsprachig</h3>
+        <p data-t="feat_3_desc">Deutsch, Englisch, Französisch, Italienisch — automatisch erkannt.</p>
+      </div>
+      <div class="feat-card fade-in">
+        <span class="feat-icon">⚡</span>
+        <h3 data-t="feat_4_title">Streaming</h3>
+        <p data-t="feat_4_desc">Antworten erscheinen in Echtzeit — wie eine echte Konversation.</p>
+      </div>
+      <div class="feat-card fade-in">
+        <span class="feat-icon">🎨</span>
+        <h3 data-t="feat_5_title">Anpassbar</h3>
+        <p data-t="feat_5_desc">Farben, Position und Stil passend zu Ihrer Marke konfigurierbar.</p>
+      </div>
+      <div class="feat-card fade-in">
+        <span class="feat-icon">📊</span>
+        <h3 data-t="feat_6_title">Analytics</h3>
+        <p data-t="feat_6_desc">Sehen Sie, was Ihre Besucher fragen und optimieren Sie Ihren Auftritt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIVE DEMO ═══ -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-eyebrow" data-t="demo_eyebrow">Live Demo</div>
+      <h2 class="section-title" data-t="demo_title">Probieren Sie es aus</h2>
+      <p class="section-sub" data-t="demo_sub">Fragen Sie unseren KI-Assistenten — live auf dieser Seite</p>
+    </div>
+    <div class="demo-widget-wrap fade-in">
+      <!-- TODO: Replace DEMO_KEY_HERE with the real cfmoto-schweiz.ch API key -->
+      <script>window.AXYOM_KEY = "DEMO_KEY_HERE";</script>
+      <script src="https://api.axyom.ch/widget/axyom.js" async></script>
+      <p class="demo-hint" data-t="demo_hint">Der Chat-Button erscheint unten rechts auf dieser Seite →</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-eyebrow" data-t="price_eyebrow">Preise</div>
+      <h2 class="section-title" data-t="price_title">Einfache, transparente Preise</h2>
+      <p class="section-sub" data-t="price_sub">Kein Setup-Gebühr. Monatlich kündbar. Sofort los.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="price-card fade-in">
+        <div class="price-header">
+          <div class="price-plan" data-t="plan_starter">Starter</div>
+          <div class="price-amount">
+            <span class="price-currency">CHF</span>
+            <span class="price-num">49</span>
+            <span class="price-period" data-t="price_mo">/Monat</span>
+          </div>
+          <p class="price-tagline" data-t="starter_tagline">Perfekt für den Einstieg</p>
+        </div>
+        <ul class="price-features">
+          <li><span class="check">✓</span><span data-t="starter_f1">500 Gespräche / Monat</span></li>
+          <li><span class="check">✓</span><span data-t="starter_f2">1 Website</span></li>
+          <li><span class="check">✓</span><span data-t="starter_f3">Chat + Widget</span></li>
+          <li><span class="check">✓</span><span data-t="starter_f4">Mehrsprachig</span></li>
+          <li class="dim"><span class="cross">✗</span><span data-t="starter_f5">Crossselling</span></li>
+          <li class="dim"><span class="cross">✗</span><span data-t="starter_f6">Analytics</span></li>
+        </ul>
+        <a href="/dashboard/register.html" class="btn-ghost price-btn" data-t="price_cta">Jetzt starten</a>
+      </div>
+      <!-- Pro -->
+      <div class="price-card price-card-featured fade-in">
+        <div class="popular-badge" data-t="price_popular">Beliebteste</div>
+        <div class="price-header">
+          <div class="price-plan" data-t="plan_pro">Pro</div>
+          <div class="price-amount">
+            <span class="price-currency">CHF</span>
+            <span class="price-num">149</span>
+            <span class="price-period" data-t="price_mo">/Monat</span>
+          </div>
+          <p class="price-tagline" data-t="pro_tagline">Für wachsende Unternehmen</p>
+        </div>
+        <ul class="price-features">
+          <li><span class="check">✓</span><span data-t="pro_f1">2'000 Gespräche / Monat</span></li>
+          <li><span class="check">✓</span><span data-t="pro_f2">3 Websites</span></li>
+          <li><span class="check">✓</span><span data-t="pro_f3">Chat + Widget</span></li>
+          <li><span class="check">✓</span><span data-t="pro_f4">Mehrsprachig</span></li>
+          <li><span class="check">✓</span><span data-t="pro_f5">Crossselling + Produktkarten</span></li>
+          <li><span class="check">✓</span><span data-t="pro_f6">Analytics Dashboard</span></li>
+        </ul>
+        <a href="/dashboard/register.html" class="btn-primary price-btn" data-t="price_cta">Jetzt starten</a>
+      </div>
+      <!-- Business -->
+      <div class="price-card fade-in">
+        <div class="price-header">
+          <div class="price-plan" data-t="plan_business">Business</div>
+          <div class="price-amount">
+            <span class="price-currency">CHF</span>
+            <span class="price-num">349</span>
+            <span class="price-period" data-t="price_mo">/Monat</span>
+          </div>
+          <p class="price-tagline" data-t="business_tagline">Für etablierte Unternehmen</p>
+        </div>
+        <ul class="price-features">
+          <li><span class="check">✓</span><span data-t="biz_f1">10'000 Gespräche / Monat</span></li>
+          <li><span class="check">✓</span><span data-t="biz_f2">10 Websites</span></li>
+          <li><span class="check">✓</span><span data-t="biz_f3">Alles aus Pro</span></li>
+          <li><span class="check">✓</span><span data-t="biz_f4">Priority Support</span></li>
+          <li><span class="check">✓</span><span data-t="biz_f5">Custom Training</span></li>
+          <li><span class="check">✓</span><span data-t="biz_f6">SLA-Garantie</span></li>
+        </ul>
+        <a href="/dashboard/register.html" class="btn-ghost price-btn" data-t="price_cta">Jetzt starten</a>
+      </div>
+    </div>
+    <p class="price-enterprise fade-in">
+      <span data-t="enterprise_text">Enterprise mit 10'000+ Gesprächen?</span>
+      <a href="#contact" data-t="enterprise_link">Kontaktieren Sie uns →</a>
+    </p>
+  </div>
+</section>
+
+<!-- ═══ CONTACT ═══ -->
+<section class="contact" id="contact">
+  <div class="container">
+    <div class="contact-inner fade-in">
+      <div class="contact-text">
+        <div class="section-eyebrow" data-t="contact_eyebrow">Kontakt</div>
+        <h2 class="section-title" data-t="contact_title">Bereit, Ihre Verkäufe zu automatisieren?</h2>
+        <p class="section-sub" data-t="contact_sub">Buchen Sie eine kostenlose Demo oder schreiben Sie uns direkt.</p>
+      </div>
+      <div class="contact-form-wrap">
+        <form class="contact-form" id="contactForm" onsubmit="submitContact(event)">
+          <div class="form-row">
+            <div class="input-group">
+              <label data-t="form_name">Name</label>
+              <input type="text" id="fname" data-t-placeholder="form_name_ph" placeholder="Max Muster" required />
+            </div>
+            <div class="input-group">
+              <label data-t="form_email">E-Mail</label>
+              <input type="email" id="femail" data-t-placeholder="form_email_ph" placeholder="max@firma.ch" required />
+            </div>
+          </div>
+          <div class="input-group">
+            <label data-t="form_website">Website</label>
+            <input type="text" id="fwebsite" data-t-placeholder="form_website_ph" placeholder="https://ihre-firma.ch" />
+          </div>
+          <div class="input-group">
+            <label data-t="form_message">Nachricht</label>
+            <textarea id="fmessage" rows="4" data-t-placeholder="form_msg_ph" placeholder="Was möchten Sie automatisieren?"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary btn-lg" data-t="form_submit">Demo anfragen</button>
+            <a href="mailto:hello@axyom.ch" class="btn-ghost btn-lg" data-t="form_email_direct">Direkt schreiben</a>
+          </div>
+        </form>
+        <div class="form-success" id="formSuccess" style="display:none">
+          <div class="success-icon">✓</div>
+          <h3 data-t="form_success_title">Nachricht erhalten!</h3>
+          <p data-t="form_success_sub">Wir melden uns innert 24 Stunden bei Ihnen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <img src="axyomlogo2026.png" alt="AXYOM" class="footer-logo" />
+      <p class="footer-tagline" data-t="footer_tagline">KI-Assistent für Ihre Website.</p>
+      <p class="footer-made" data-t="footer_made">Made in Liechtenstein 🇱🇮</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <span class="footer-col-title" data-t="footer_product">Produkt</span>
+        <a href="#features" data-t="footer_features">Funktionen</a>
+        <a href="#pricing" data-t="footer_pricing">Preise</a>
+        <a href="#how" data-t="footer_how">So funktioniert's</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title" data-t="footer_access">Zugang</span>
+        <a href="/dashboard/" data-t="footer_dashboard">Dashboard</a>
+        <a href="/admin/" data-t="footer_admin">Admin</a>
+        <a href="/dashboard/register.html" data-t="footer_register">Registrieren</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title" data-t="footer_legal_title">Rechtliches</span>
+        <a href="#" data-t="footer_imprint">Impressum</a>
+        <a href="#" data-t="footer_privacy">Datenschutz</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom container">
+    <span data-t="footer_copy">© 2026 axyom GmbH</span>
+  </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// TRANSLATIONS
+// ══════════════════════════════════════════════════════════
+const T = {
+  de: {
+    nav_features:"Funktionen", nav_how:"So funktioniert's", nav_pricing:"Preise",
+    nav_contact:"Kontakt", nav_login:"Login", nav_cta:"Demo buchen",
+    hero_badge:"KI für Schweizer KMU",
+    hero_line1:"Ihr KI-Verkaufsassistent.",
+    hero_line2:"Auf Ihrer Website.",
+    hero_line3:"In 5 Minuten.",
+    hero_sub:"AXYOM analysiert Ihre Website automatisch und erstellt einen KI-Assistenten, der Besucher berät, Produkte empfiehlt und rund um die Uhr antwortet.",
+    hero_cta1:"Demo buchen", hero_cta2:"Dashboard öffnen",
+    mockup_ph:"Nachricht eingeben…",
+    trust_label:"Vertraut von Unternehmen in der Schweiz",
+    how_eyebrow:"Wie es funktioniert", how_title:"In 3 Schritten live",
+    how_sub:"Keine technischen Kenntnisse nötig. Setup in unter 10 Minuten.",
+    how_1_title:"Domain eingeben",
+    how_1_desc:"Geben Sie Ihre Website-URL ein. AXYOM crawlt automatisch alle Seiten und Produktbeschreibungen.",
+    how_2_title:"KI trainiert automatisch",
+    how_2_desc:"Unsere KI analysiert Ihren gesamten Inhalt und erstellt ein massgeschneidertes Modell für Ihr Unternehmen.",
+    how_3_title:"Widget einbetten",
+    how_3_desc:"4 Zeilen Code — fertig. Ihr Assistent ist sofort live auf Ihrer Website, 24/7 verfügbar.",
+    feat_eyebrow:"Funktionen", feat_title:"Alles was Sie brauchen",
+    feat_sub:"Mehr als nur ein Chatbot — ein vollständiger KI-Verkaufsassistent.",
+    feat_1_title:"Crossselling", feat_1_desc:"Empfiehlt automatisch passende Produkte basierend auf dem Gespräch.",
+    feat_2_title:"Produktkarten", feat_2_desc:"Zeigt Bilder, Preise und direkte Links zu Produkten im Chat.",
+    feat_3_title:"Mehrsprachig", feat_3_desc:"Deutsch, Englisch, Französisch, Italienisch — automatisch erkannt.",
+    feat_4_title:"Streaming", feat_4_desc:"Antworten erscheinen in Echtzeit — wie eine echte Konversation.",
+    feat_5_title:"Anpassbar", feat_5_desc:"Farben, Position und Stil passend zu Ihrer Marke konfigurierbar.",
+    feat_6_title:"Analytics", feat_6_desc:"Sehen Sie, was Ihre Besucher fragen und optimieren Sie Ihren Auftritt.",
+    demo_eyebrow:"Live Demo", demo_title:"Probieren Sie es aus",
+    demo_sub:"Fragen Sie unseren KI-Assistenten — live auf dieser Seite",
+    demo_hint:"Der Chat-Button erscheint unten rechts auf dieser Seite →",
+    price_eyebrow:"Preise", price_title:"Einfache, transparente Preise",
+    price_sub:"Kein Setup-Gebühr. Monatlich kündbar. Sofort los.",
+    price_mo:"/Monat", price_popular:"Beliebteste",
+    plan_starter:"Starter", plan_pro:"Pro", plan_business:"Business",
+    starter_tagline:"Perfekt für den Einstieg",
+    pro_tagline:"Für wachsende Unternehmen",
+    business_tagline:"Für etablierte Unternehmen",
+    starter_f1:"500 Gespräche / Monat", starter_f2:"1 Website",
+    starter_f3:"Chat + Widget", starter_f4:"Mehrsprachig",
+    starter_f5:"Crossselling", starter_f6:"Analytics",
+    pro_f1:"2'000 Gespräche / Monat", pro_f2:"3 Websites",
+    pro_f3:"Chat + Widget", pro_f4:"Mehrsprachig",
+    pro_f5:"Crossselling + Produktkarten", pro_f6:"Analytics Dashboard",
+    biz_f1:"10'000 Gespräche / Monat", biz_f2:"10 Websites",
+    biz_f3:"Alles aus Pro", biz_f4:"Priority Support",
+    biz_f5:"Custom Training", biz_f6:"SLA-Garantie",
+    price_cta:"Jetzt starten",
+    enterprise_text:"Enterprise mit 10'000+ Gesprächen?",
+    enterprise_link:"Kontaktieren Sie uns →",
+    contact_eyebrow:"Kontakt",
+    contact_title:"Bereit, Ihre Verkäufe zu automatisieren?",
+    contact_sub:"Buchen Sie eine kostenlose Demo oder schreiben Sie uns direkt.",
+    form_name:"Name", form_email:"E-Mail", form_website:"Website", form_message:"Nachricht",
+    form_name_ph:"Max Muster", form_email_ph:"max@firma.ch",
+    form_website_ph:"https://ihre-firma.ch", form_msg_ph:"Was möchten Sie automatisieren?",
+    form_submit:"Demo anfragen", form_email_direct:"Direkt schreiben",
+    form_success_title:"Nachricht erhalten!",
+    form_success_sub:"Wir melden uns innert 24 Stunden bei Ihnen.",
+    footer_tagline:"KI-Assistent für Ihre Website.",
+    footer_made:"Made in Liechtenstein 🇱🇮",
+    footer_product:"Produkt", footer_access:"Zugang",
+    footer_features:"Funktionen", footer_pricing:"Preise", footer_how:"So funktioniert's",
+    footer_dashboard:"Dashboard", footer_admin:"Admin", footer_register:"Registrieren",
+    footer_legal_title:"Rechtliches", footer_imprint:"Impressum", footer_privacy:"Datenschutz",
+    footer_copy:"© 2026 axyom GmbH",
+  },
+  en: {
+    nav_features:"Features", nav_how:"How it works", nav_pricing:"Pricing",
+    nav_contact:"Contact", nav_login:"Login", nav_cta:"Book demo",
+    hero_badge:"AI for Swiss businesses",
+    hero_line1:"Your AI Sales Assistant.",
+    hero_line2:"On Your Website.",
+    hero_line3:"In 5 Minutes.",
+    hero_sub:"AXYOM automatically analyzes your website and creates an AI assistant that advises visitors, recommends products, and answers questions 24/7.",
+    hero_cta1:"Book a demo", hero_cta2:"Open dashboard",
+    mockup_ph:"Type a message…",
+    trust_label:"Trusted by businesses in Switzerland",
+    how_eyebrow:"How it works", how_title:"Live in 3 steps",
+    how_sub:"No technical knowledge needed. Setup in under 10 minutes.",
+    how_1_title:"Enter your domain",
+    how_1_desc:"Enter your website URL. AXYOM automatically crawls all your pages and product descriptions.",
+    how_2_title:"AI trains automatically",
+    how_2_desc:"Our AI analyzes your entire content and creates a custom language model for your business.",
+    how_3_title:"Embed the widget",
+    how_3_desc:"4 lines of code — done. Your assistant is live immediately, available 24/7.",
+    feat_eyebrow:"Features", feat_title:"Everything you need",
+    feat_sub:"More than a chatbot — a complete AI sales assistant.",
+    feat_1_title:"Cross-selling", feat_1_desc:"Automatically recommends matching products based on the conversation.",
+    feat_2_title:"Product cards", feat_2_desc:"Shows images, prices and direct links to products in the chat.",
+    feat_3_title:"Multilingual", feat_3_desc:"German, English, French, Italian — automatically detected.",
+    feat_4_title:"Streaming", feat_4_desc:"Answers appear in real time — just like a real conversation.",
+    feat_5_title:"Customizable", feat_5_desc:"Colors, position and style to match your brand.",
+    feat_6_title:"Analytics", feat_6_desc:"See what your visitors are asking and optimize your presence.",
+    demo_eyebrow:"Live Demo", demo_title:"Try it out",
+    demo_sub:"Ask our AI assistant — live on this page",
+    demo_hint:"The chat button appears at the bottom right of this page →",
+    price_eyebrow:"Pricing", price_title:"Simple, transparent pricing",
+    price_sub:"No setup fee. Cancel anytime. Get started immediately.",
+    price_mo:"/mo", price_popular:"Most popular",
+    plan_starter:"Starter", plan_pro:"Pro", plan_business:"Business",
+    starter_tagline:"Perfect to get started",
+    pro_tagline:"For growing businesses",
+    business_tagline:"For established companies",
+    starter_f1:"500 conversations / month", starter_f2:"1 website",
+    starter_f3:"Chat + widget", starter_f4:"Multilingual",
+    starter_f5:"Cross-selling", starter_f6:"Analytics",
+    pro_f1:"2,000 conversations / month", pro_f2:"3 websites",
+    pro_f3:"Chat + widget", pro_f4:"Multilingual",
+    pro_f5:"Cross-selling + product cards", pro_f6:"Analytics dashboard",
+    biz_f1:"10,000 conversations / month", biz_f2:"10 websites",
+    biz_f3:"Everything from Pro", biz_f4:"Priority support",
+    biz_f5:"Custom training", biz_f6:"SLA guarantee",
+    price_cta:"Get started",
+    enterprise_text:"Enterprise with 10,000+ conversations?",
+    enterprise_link:"Contact us →",
+    contact_eyebrow:"Contact",
+    contact_title:"Ready to automate your sales?",
+    contact_sub:"Book a free demo or write to us directly.",
+    form_name:"Name", form_email:"Email", form_website:"Website", form_message:"Message",
+    form_name_ph:"John Doe", form_email_ph:"john@company.com",
+    form_website_ph:"https://your-company.com", form_msg_ph:"What would you like to automate?",
+    form_submit:"Request demo", form_email_direct:"Write directly",
+    form_success_title:"Message received!",
+    form_success_sub:"We'll get back to you within 24 hours.",
+    footer_tagline:"AI assistant for your website.",
+    footer_made:"Made in Liechtenstein 🇱🇮",
+    footer_product:"Product", footer_access:"Access",
+    footer_features:"Features", footer_pricing:"Pricing", footer_how:"How it works",
+    footer_dashboard:"Dashboard", footer_admin:"Admin", footer_register:"Register",
+    footer_legal_title:"Legal", footer_imprint:"Imprint", footer_privacy:"Privacy policy",
+    footer_copy:"© 2026 axyom GmbH",
+  },
+  fr: {
+    nav_features:"Fonctionnalités", nav_how:"Comment ça marche", nav_pricing:"Tarifs",
+    nav_contact:"Contact", nav_login:"Connexion", nav_cta:"Réserver une démo",
+    hero_badge:"IA pour les PME suisses",
+    hero_line1:"Votre assistant IA.",
+    hero_line2:"Sur votre site web.",
+    hero_line3:"En 5 minutes.",
+    hero_sub:"AXYOM analyse automatiquement votre site et crée un assistant IA qui conseille vos visiteurs, recommande des produits et répond 24h/24.",
+    hero_cta1:"Réserver une démo", hero_cta2:"Ouvrir le tableau de bord",
+    mockup_ph:"Tapez un message…",
+    trust_label:"Approuvé par des entreprises en Suisse",
+    how_eyebrow:"Comment ça marche", how_title:"En 3 étapes simples",
+    how_sub:"Aucune compétence technique requise. Installation en moins de 10 minutes.",
+    how_1_title:"Entrez votre domaine",
+    how_1_desc:"Entrez l'URL de votre site. AXYOM explore automatiquement toutes vos pages.",
+    how_2_title:"L'IA s'entraîne automatiquement",
+    how_2_desc:"Notre IA analyse votre contenu et crée un modèle sur mesure pour votre entreprise.",
+    how_3_title:"Intégrez le widget",
+    how_3_desc:"4 lignes de code — c'est tout. Votre assistant est en ligne immédiatement, 24h/24.",
+    feat_eyebrow:"Fonctionnalités", feat_title:"Tout ce dont vous avez besoin",
+    feat_sub:"Plus qu'un chatbot — un assistant commercial IA complet.",
+    feat_1_title:"Vente croisée", feat_1_desc:"Recommande automatiquement des produits selon la conversation.",
+    feat_2_title:"Fiches produit", feat_2_desc:"Affiche images, prix et liens directs dans le chat.",
+    feat_3_title:"Multilingue", feat_3_desc:"Allemand, anglais, français, italien — détection automatique.",
+    feat_4_title:"Streaming", feat_4_desc:"Les réponses apparaissent en temps réel.",
+    feat_5_title:"Personnalisable", feat_5_desc:"Couleurs, position et style adaptés à votre marque.",
+    feat_6_title:"Analytics", feat_6_desc:"Voyez ce que vos visiteurs demandent.",
+    demo_eyebrow:"Démo en direct", demo_title:"Essayez par vous-même",
+    demo_sub:"Interrogez notre assistant IA — en direct sur cette page",
+    demo_hint:"Le bouton de chat apparaît en bas à droite de cette page →",
+    price_eyebrow:"Tarifs", price_title:"Des prix simples et transparents",
+    price_sub:"Sans frais d'installation. Résiliable à tout moment.",
+    price_mo:"/mois", price_popular:"Le plus populaire",
+    plan_starter:"Starter", plan_pro:"Pro", plan_business:"Business",
+    starter_tagline:"Idéal pour commencer",
+    pro_tagline:"Pour les entreprises en croissance",
+    business_tagline:"Pour les grandes entreprises",
+    starter_f1:"500 conversations / mois", starter_f2:"1 site web",
+    starter_f3:"Chat + widget", starter_f4:"Multilingue",
+    starter_f5:"Vente croisée", starter_f6:"Analytics",
+    pro_f1:"2'000 conversations / mois", pro_f2:"3 sites web",
+    pro_f3:"Chat + widget", pro_f4:"Multilingue",
+    pro_f5:"Vente croisée + fiches produit", pro_f6:"Tableau de bord Analytics",
+    biz_f1:"10'000 conversations / mois", biz_f2:"10 sites web",
+    biz_f3:"Tout du plan Pro", biz_f4:"Support prioritaire",
+    biz_f5:"Formation personnalisée", biz_f6:"Garantie SLA",
+    price_cta:"Commencer",
+    enterprise_text:"Enterprise avec plus de 10'000 conversations?",
+    enterprise_link:"Contactez-nous →",
+    contact_eyebrow:"Contact",
+    contact_title:"Prêt à automatiser vos ventes?",
+    contact_sub:"Réservez une démo gratuite ou écrivez-nous directement.",
+    form_name:"Nom", form_email:"E-mail", form_website:"Site web", form_message:"Message",
+    form_name_ph:"Jean Dupont", form_email_ph:"jean@entreprise.ch",
+    form_website_ph:"https://votre-entreprise.ch", form_msg_ph:"Que souhaitez-vous automatiser?",
+    form_submit:"Demander une démo", form_email_direct:"Écrire directement",
+    form_success_title:"Message reçu!", form_success_sub:"Nous vous répondons dans les 24 heures.",
+    footer_tagline:"Assistant IA pour votre site web.",
+    footer_made:"Fabriqué au Liechtenstein 🇱🇮",
+    footer_product:"Produit", footer_access:"Accès",
+    footer_features:"Fonctionnalités", footer_pricing:"Tarifs", footer_how:"Comment ça marche",
+    footer_dashboard:"Tableau de bord", footer_admin:"Admin", footer_register:"S'inscrire",
+    footer_legal_title:"Légal", footer_imprint:"Mentions légales", footer_privacy:"Confidentialité",
+    footer_copy:"© 2026 axyom GmbH",
+  },
+  it: {
+    nav_features:"Funzionalità", nav_how:"Come funziona", nav_pricing:"Prezzi",
+    nav_contact:"Contatto", nav_login:"Accesso", nav_cta:"Prenota demo",
+    hero_badge:"IA per le PMI svizzere",
+    hero_line1:"Il tuo assistente IA.",
+    hero_line2:"Sul tuo sito web.",
+    hero_line3:"In 5 minuti.",
+    hero_sub:"AXYOM analizza automaticamente il tuo sito e crea un assistente IA che consiglia i visitatori, raccomanda prodotti e risponde 24 ore su 24.",
+    hero_cta1:"Prenota una demo", hero_cta2:"Apri dashboard",
+    mockup_ph:"Scrivi un messaggio…",
+    trust_label:"Scelto da aziende in Svizzera",
+    how_eyebrow:"Come funziona", how_title:"In 3 semplici passi",
+    how_sub:"Nessuna competenza tecnica richiesta. Configurazione in meno di 10 minuti.",
+    how_1_title:"Inserisci il dominio",
+    how_1_desc:"Inserisci l'URL del tuo sito. AXYOM eseguirà automaticamente la scansione di tutte le pagine.",
+    how_2_title:"L'IA si allena automaticamente",
+    how_2_desc:"La nostra IA analizza tutto il tuo contenuto e crea un modello su misura per la tua azienda.",
+    how_3_title:"Incorpora il widget",
+    how_3_desc:"4 righe di codice — fatto. Il tuo assistente è online immediatamente, disponibile 24/7.",
+    feat_eyebrow:"Funzionalità", feat_title:"Tutto ciò di cui hai bisogno",
+    feat_sub:"Più di un chatbot — un assistente alle vendite IA completo.",
+    feat_1_title:"Cross-selling", feat_1_desc:"Raccomanda automaticamente prodotti correlati in base alla conversazione.",
+    feat_2_title:"Schede prodotto", feat_2_desc:"Mostra immagini, prezzi e link diretti nella chat.",
+    feat_3_title:"Multilingue", feat_3_desc:"Tedesco, inglese, francese, italiano — rilevato automaticamente.",
+    feat_4_title:"Streaming", feat_4_desc:"Le risposte appaiono in tempo reale.",
+    feat_5_title:"Personalizzabile", feat_5_desc:"Colori, posizione e stile adattati al tuo marchio.",
+    feat_6_title:"Analytics", feat_6_desc:"Scopri cosa chiedono i tuoi visitatori.",
+    demo_eyebrow:"Demo dal vivo", demo_title:"Provalo tu stesso",
+    demo_sub:"Chiedi al nostro assistente IA — in diretta su questa pagina",
+    demo_hint:"Il pulsante chat appare in basso a destra in questa pagina →",
+    price_eyebrow:"Prezzi", price_title:"Prezzi semplici e trasparenti",
+    price_sub:"Nessun costo di configurazione. Cancellabile in qualsiasi momento.",
+    price_mo:"/mese", price_popular:"Più popolare",
+    plan_starter:"Starter", plan_pro:"Pro", plan_business:"Business",
+    starter_tagline:"Perfetto per iniziare",
+    pro_tagline:"Per le aziende in crescita",
+    business_tagline:"Per le grandi aziende",
+    starter_f1:"500 conversazioni / mese", starter_f2:"1 sito web",
+    starter_f3:"Chat + widget", starter_f4:"Multilingue",
+    starter_f5:"Cross-selling", starter_f6:"Analytics",
+    pro_f1:"2'000 conversazioni / mese", pro_f2:"3 siti web",
+    pro_f3:"Chat + widget", pro_f4:"Multilingue",
+    pro_f5:"Cross-selling + schede prodotto", pro_f6:"Dashboard Analytics",
+    biz_f1:"10'000 conversazioni / mese", biz_f2:"10 siti web",
+    biz_f3:"Tutto del piano Pro", biz_f4:"Supporto prioritario",
+    biz_f5:"Training personalizzato", biz_f6:"Garanzia SLA",
+    price_cta:"Inizia ora",
+    enterprise_text:"Enterprise con 10'000+ conversazioni?",
+    enterprise_link:"Contattaci →",
+    contact_eyebrow:"Contatto",
+    contact_title:"Pronto ad automatizzare le tue vendite?",
+    contact_sub:"Prenota una demo gratuita o scrivici direttamente.",
+    form_name:"Nome", form_email:"E-mail", form_website:"Sito web", form_message:"Messaggio",
+    form_name_ph:"Mario Rossi", form_email_ph:"mario@azienda.ch",
+    form_website_ph:"https://la-tua-azienda.ch", form_msg_ph:"Cosa vorresti automatizzare?",
+    form_submit:"Richiedi demo", form_email_direct:"Scrivi direttamente",
+    form_success_title:"Messaggio ricevuto!", form_success_sub:"Ti risponderemo entro 24 ore.",
+    footer_tagline:"Assistente IA per il tuo sito web.",
+    footer_made:"Fatto in Liechtenstein 🇱🇮",
+    footer_product:"Prodotto", footer_access:"Accesso",
+    footer_features:"Funzionalità", footer_pricing:"Prezzi", footer_how:"Come funziona",
+    footer_dashboard:"Dashboard", footer_admin:"Admin", footer_register:"Registrati",
+    footer_legal_title:"Legale", footer_imprint:"Note legali", footer_privacy:"Privacy",
+    footer_copy:"© 2026 axyom GmbH",
+  },
+};
+
+// ══════════════════════════════════════════════════════════
+// LANGUAGE SYSTEM
+// ══════════════════════════════════════════════════════════
+
+let currentLang = 'de';
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('axyom_lang', lang);
+  document.documentElement.lang = lang;
+  applyLang(lang);
+}
+
+function applyLang(lang) {
+  const dict = T[lang] || T.de;
+
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.dataset.t;
+    if (dict[key] !== undefined) el.textContent = dict[key];
+  });
+
+  document.querySelectorAll('[data-t-placeholder]').forEach(el => {
+    const key = el.dataset.tPlaceholder;
+    if (dict[key] !== undefined) el.placeholder = dict[key];
+  });
+
+  // Update all lang-btn active states
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// NAV: scroll + mobile menu
+// ══════════════════════════════════════════════════════════
+
+window.addEventListener('scroll', () => {
+  document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 20);
+}, { passive: true });
+
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const btn = document.getElementById('hamburger');
+  const isOpen = menu.classList.contains('open');
+  menu.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+}
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
+// Close mobile menu on outside click
+document.addEventListener('click', e => {
+  const nav = document.getElementById('mainNav');
+  if (!nav.contains(e.target)) closeMobileMenu();
+});
+
+// ══════════════════════════════════════════════════════════
+// SCROLL ANIMATIONS (IntersectionObserver)
+// ══════════════════════════════════════════════════════════
+
+const scrollObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      scrollObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-in').forEach(el => scrollObserver.observe(el));
+
+// ══════════════════════════════════════════════════════════
+// HERO CHAT MOCKUP ANIMATION
+// ══════════════════════════════════════════════════════════
+
+const MOCK_SCRIPT = [
+  { type: 'bot',     text: 'Guten Tag! Wie kann ich Ihnen helfen? 👋',            delay: 800  },
+  { type: 'user',    text: 'Haben Sie den CFORCE 450S auf Lager?',                delay: 2400 },
+  { type: 'typing',                                                                delay: 3200 },
+  { type: 'bot',     text: 'Ja! Der CFORCE 450S ist sofort verfügbar. 🏍️',       delay: 4600 },
+  { type: 'product', name: 'CFORCE 450S',     price: 'CHF 7\'990',               delay: 5400 },
+  { type: 'user',    text: 'Gibt es auch eine stärkere Variante?',                delay: 7000 },
+  { type: 'typing',                                                                delay: 7800 },
+  { type: 'bot',     text: 'Natürlich! Schauen Sie sich den CFORCE 625 an:',      delay: 9200 },
+  { type: 'product', name: 'CFORCE 625 EPS',  price: 'CHF 10\'490',              delay: 10000 },
+];
+
+const LOOP_DURATION = 14500;
+
+function renderMockMsg(item) {
+  const container = document.getElementById('mockupMessages');
+  if (!container) return;
+
+  // Remove typing indicator if any
+  const existing = container.querySelector('.mock-typing');
+  if (existing && item.type !== 'typing') existing.remove();
+
+  let el;
+  if (item.type === 'typing') {
+    el = document.createElement('div');
+    el.className = 'mock-typing';
+    el.innerHTML = '<span></span><span></span><span></span>';
+  } else if (item.type === 'product') {
+    el = document.createElement('div');
+    el.className = 'mock-product';
+    el.innerHTML = `
+      <div class="mock-product-icon">🏍️</div>
+      <div>
+        <div class="mock-product-name">${item.name}</div>
+        <div class="mock-product-price">${item.price}</div>
+      </div>`;
+  } else {
+    el = document.createElement('div');
+    el.className = `mock-msg ${item.type}`;
+    el.textContent = item.text;
+  }
+
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+
+function runMockupLoop() {
+  const container = document.getElementById('mockupMessages');
+  if (!container) return;
+
+  // Clear and replay
+  container.innerHTML = '';
+  MOCK_SCRIPT.forEach(item => {
+    setTimeout(() => renderMockMsg(item), item.delay);
+  });
+  setTimeout(runMockupLoop, LOOP_DURATION);
+}
+
+// Start after hero animation settles
+setTimeout(runMockupLoop, 1200);
+
+// ══════════════════════════════════════════════════════════
+// CONTACT FORM
+// ══════════════════════════════════════════════════════════
+
+function submitContact(e) {
+  e.preventDefault();
+  const form = document.getElementById('contactForm');
+  const success = document.getElementById('formSuccess');
+  const btn = form.querySelector('[type=submit]');
+
+  btn.textContent = '…';
+  btn.disabled = true;
+
+  // Simulate submission (replace with real endpoint if needed)
+  setTimeout(() => {
+    form.style.display = 'none';
+    success.style.display = 'block';
+  }, 900);
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+
+const savedLang = localStorage.getItem('axyom_lang') || 'de';
+setLang(savedLang);
+</script>
 </body>
-
 </html>
