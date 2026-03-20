@@ -82,11 +82,15 @@ const showPrompt  = (msg, placeholder = "", def = "") =>
   _modal({ title: "Input", message: msg, showCancel: true, showInput: true, inputPlaceholder: placeholder, inputDefault: def });
 
 // openModal — like _modal but accepts raw HTML for the body and custom button array
-function openModal(title, htmlBody, buttons = []) {
+// opts.wide = true → applies .modal-wide class for a wider dialog
+function openModal(title, htmlBody, buttons = [], opts = {}) {
   return new Promise(resolve => {
     _modalResolve = resolve;
     document.getElementById("modalTitle").textContent = title;
     document.getElementById("modalBody").innerHTML = htmlBody;
+
+    const modalEl = document.querySelector("#modalOverlay .modal");
+    if (modalEl) modalEl.classList.toggle("modal-wide", !!opts.wide);
 
     const btns = buttons.length ? buttons : [{ label: "OK", className: "btn-primary" }];
     document.getElementById("modalFooter").innerHTML = btns
@@ -317,43 +321,68 @@ async function loadCustomers() {
 async function openSubscribeModal(customerId, email) {
   await openModal(
     "💳 Subscribe Customer",
-    `<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">
-      Create a Stripe Checkout link for <strong>${escapeHtml(email)}</strong>
+    `<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px">
+      Create a Stripe Checkout link for <strong style="color:var(--text)">${escapeHtml(email)}</strong>
     </p>
 
-    <p style="font-size:0.8rem;font-weight:600;margin-bottom:8px">Plan</p>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <label class="plan-option">
+    <p style="font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Plan</p>
+    <div class="plan-grid" style="margin-bottom:20px">
+      <label class="plan-card">
         <input type="radio" name="subPlan" value="starter" checked>
-        <span>Starter<br><small>CHF/EUR 49 / mo<br>500 conv · 1 site</small></span>
+        <div class="plan-card-inner">
+          <div class="plan-card-name">Starter</div>
+          <div class="plan-card-price">49 <span>/mo</span></div>
+          <ul class="plan-card-features">
+            <li>500 conversations</li>
+            <li>1 website</li>
+            <li>Chat + Widget</li>
+          </ul>
+        </div>
       </label>
-      <label class="plan-option">
+      <label class="plan-card">
         <input type="radio" name="subPlan" value="pro">
-        <span>Pro<br><small>CHF/EUR 149 / mo<br>2 000 conv · 3 sites</small></span>
+        <div class="plan-card-inner">
+          <div class="plan-card-name">Pro</div>
+          <div class="plan-card-price">149 <span>/mo</span></div>
+          <ul class="plan-card-features">
+            <li>2&apos;000 conversations</li>
+            <li>3 websites</li>
+            <li>+ Crossselling</li>
+          </ul>
+        </div>
       </label>
-      <label class="plan-option">
+      <label class="plan-card">
         <input type="radio" name="subPlan" value="business">
-        <span>Business<br><small>CHF/EUR 349 / mo<br>10 000 conv · 10 sites</small></span>
+        <div class="plan-card-inner">
+          <div class="plan-card-name">Business</div>
+          <div class="plan-card-price">349 <span>/mo</span></div>
+          <ul class="plan-card-features">
+            <li>10&apos;000 conversations</li>
+            <li>10 websites</li>
+            <li>+ Priority Support</li>
+          </ul>
+        </div>
       </label>
     </div>
 
-    <p style="font-size:0.8rem;font-weight:600;margin-bottom:8px">Currency</p>
-    <div style="display:flex;gap:8px;margin-bottom:20px">
-      <label class="plan-option">
+    <p style="font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Currency</p>
+    <div class="currency-toggle" style="margin-bottom:24px">
+      <label class="currency-btn">
         <input type="radio" name="subCurrency" value="chf" checked>
         <span>CHF 🇨🇭</span>
       </label>
-      <label class="plan-option">
+      <label class="currency-btn">
         <input type="radio" name="subCurrency" value="eur">
         <span>EUR 🇪🇺</span>
       </label>
     </div>
 
-    <button class="btn-primary" style="width:100%" onclick="createCheckout(${customerId}, this)">
+    <button class="btn-primary" id="checkoutBtn" style="width:100%" onclick="createCheckout(${customerId}, this)">
       Create Checkout Link
     </button>
     <div id="checkoutResult" style="margin-top:14px"></div>`,
-    [{ label: "Close", className: "btn-ghost" }]
+    [{ label: "Close", className: "btn-ghost" }],
+    { wide: true }
   );
 }
 
@@ -363,7 +392,7 @@ async function createCheckout(customerId, btn) {
   if (!plan || !currency) return;
 
   btn.disabled = true;
-  btn.textContent = "Creating…";
+  btn.innerHTML = `<span class="btn-spinner"></span> Creating…`;
 
   try {
     const res  = await fetch(`${API}/billing/checkout`, {
@@ -394,6 +423,7 @@ async function createCheckout(customerId, btn) {
       `<p style="color:var(--red);font-size:0.82rem">Network error</p>`;
   } finally {
     btn.disabled = false;
+    btn.innerHTML = "Create Checkout Link";
     btn.textContent = "Create Checkout Link";
   }
 }
