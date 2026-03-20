@@ -551,6 +551,57 @@ async function saveAccount(e) {
   }
 }
 
+// ── Delete Account ───────────────────────────────────────────────────────────
+
+function openDeleteModal() {
+  const modal = document.getElementById('deleteModal');
+  modal.style.display = 'flex';
+  document.getElementById('deletePw').value = '';
+  document.getElementById('deleteErr').textContent = '';
+  document.getElementById('confirmDeleteBtn').disabled = false;
+  document.getElementById('confirmDeleteBtn').textContent = 'Delete permanently';
+  setTimeout(() => document.getElementById('deletePw').focus(), 50);
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+async function confirmDelete() {
+  const btn = document.getElementById('confirmDeleteBtn');
+  const errMsg = document.getElementById('deleteErr');
+  const password = document.getElementById('deletePw').value;
+
+  errMsg.textContent = '';
+  if (!password) { errMsg.textContent = 'Password is required'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+
+  try {
+    const res = await apiFetch('/customer/me', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errMsg.textContent = data.detail || 'Deletion failed';
+      return;
+    }
+
+    localStorage.removeItem('customer_token');
+    window.location.href = '/';
+  } catch {
+    errMsg.textContent = 'Network error — please try again';
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Delete permanently';
+    }
+  }
+}
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
 function escHtml(str) {
