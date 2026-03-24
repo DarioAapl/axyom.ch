@@ -1,0 +1,127 @@
+/* ═══════════════════════════════════════
+   AXYOM PRELOADER — preloader.css
+   Drop into any page that links preloader.js
+═══════════════════════════════════════ */
+
+/* ── Core overlay ── */
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #050e0d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2rem, 5vh, 3.5rem);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── Animated background gradient ── */
+.pl-bg-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Primary orb — centred behind the logo, slow breathe */
+.pl-bg-glow::before {
+  content: '';
+  position: absolute;
+  width: 72vw;
+  height: 58vh;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%) scale(1);
+  background: radial-gradient(ellipse at center,
+    rgba(0, 178, 160, 0.28) 0%,
+    rgba(0, 120, 108, 0.10) 42%,
+    transparent 68%
+  );
+  filter: blur(48px);
+  animation: plOrbPulse 4.5s ease-in-out infinite;
+}
+
+/* Secondary orb — lower-left, slow drift */
+.pl-bg-glow::after {
+  content: '';
+  position: absolute;
+  width: 52vw;
+  height: 44vh;
+  left: 28%;
+  top: 70%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center,
+    rgba(0, 76, 68, 0.22) 0%,
+    transparent 65%
+  );
+  filter: blur(60px);
+  animation: plOrbDrift 9s ease-in-out infinite alternate;
+}
+
+@keyframes plOrbPulse {
+  0%, 100% { opacity: 0.6;  transform: translate(-50%, -50%) scale(1);    }
+  50%       { opacity: 1;    transform: translate(-50%, -50%) scale(1.25); }
+}
+
+@keyframes plOrbDrift {
+  0%   { opacity: 0.35; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0.75; transform: translate(-36%, -58%) scale(1.2); }
+}
+
+/* ── Logo ── */
+.pl-logo-wrap {
+  position: relative;
+  z-index: 1;
+  /* Render at hero-wordmark size so the SVG is always sharp.
+     JS applies scale() to make it appear small during the preloader,
+     then animates to scale(1) during the morph — no upscaling ever. */
+  width: 70vw;
+  transform-origin: center center;
+}
+
+#pl-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  /* paths start invisible; JS sets stroke + dasharray */
+}
+
+/* ── Loading bar ── */
+.pl-bar-track {
+  position: relative;
+  z-index: 1;
+  width: min(180px, 52vw);
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.pl-bar-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #003D36, #00B2A0 55%, #00D4BF);
+  border-radius: 99px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  /* transition triggered by JS → adds .pl-bar-run class */
+  transition: transform 3.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pl-bar-fill.pl-bar-run {
+  transform: scaleX(1);
+}
+
+/* ── Exit animation ── */
+#preloader.pl-exit {
+  animation: plExit 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes plExit {
+  0%   { opacity: 1; transform: scale(1);    }
+  100% { opacity: 0; transform: scale(1.04); }
+}

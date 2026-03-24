@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXYOM AI — Internal Architecture Blueprint</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #070a0f;
+    --surface: #0d1117;
+    --surface2: #111820;
+    --border: #1e2d3d;
+    --border2: #243447;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7c3aed;
+    --accent4: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Space Grotesk', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(135deg, #070a0f 0%, #0d1525 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-left h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .header-left h1 span { color: var(--accent); }
+  .header-left .subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .header-right {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #ef4444;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+
+  /* NAV */
+  .toc {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .toc a {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .toc a:hover { color: var(--accent); border-color: var(--accent); background: rgba(0,212,255,0.05); }
+
+  /* MAIN */
+  .main { padding: 0 48px 80px; }
+
+  /* SECTION */
+  .section {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    min-width: 32px;
+  }
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .section-desc {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* DIAGRAM WRAPPER */
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 32px 24px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .diagram-wrap.dark-bg {
+    background: #0a0f16;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* CODE BLOCKS */
+  pre {
+    background: #0a0f16;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: #a8d8ea;
+    margin: 12px 0;
+  }
+  pre .k { color: #ff79c6; }
+  pre .s { color: #f1fa8c; }
+  pre .c { color: #6272a4; }
+  pre .n { color: #8be9fd; }
+  pre .v { color: #bd93f9; }
+  pre .t { color: #50fa7b; }
+  pre .p { color: #ff6b35; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,212,255,0.08);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* LABEL TAGS */
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 2px;
+  }
+  .tag-blue { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+  .tag-orange { background: rgba(255,107,53,0.1); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
+  .tag-purple { background: rgba(124,58,237,0.1); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); }
+  .tag-green { background: rgba(16,185,129,0.1); color: var(--accent4); border: 1px solid rgba(16,185,129,0.2); }
+  .tag-red { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+  .tag-yellow { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+  th {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    background: var(--surface);
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:hover td { background: rgba(0,212,255,0.02); }
+  td code { font-size: 11px; }
+
+  /* INLINE LABEL */
+  .label-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+    align-items: center;
+  }
+  .label-row .lbl {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+
+  /* MERMAID OVERRIDES */
+  .mermaid {
+    display: flex;
+    justify-content: center;
+  }
+  .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 32px 0;
+  }
+
+  /* SMALL CAPS LABEL */
+  .caps {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(0,212,255,0.04);
+    padding: 12px 16px;
+    border-radius: 0 4px 4px 0;
+    margin: 12px 0;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .callout.warn { border-left-color: var(--yellow); background: rgba(245,158,11,0.04); }
+  .callout.error { border-left-color: var(--red); background: rgba(239,68,68,0.04); }
+  .callout.success { border-left-color: var(--accent4); background: rgba(16,185,129,0.04); }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 80px;
+    padding: 24px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 900px) {
+    .main, .toc, .header, .footer { padding-left: 20px; padding-right: 20px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="badge">⬛ CONFIDENTIAL — INTERNAL USE ONLY</div>
+    <h1>AXYOM <span>AI</span></h1>
+    <div class="subtitle">Production Architecture Blueprint · v1.0 · RAG System</div>
+  </div>
+  <div class="header-right">
+    CLASSIFICATION: INTERNAL<br>
+    DOC TYPE: SYSTEM ARCHITECTURE<br>
+    STATUS: PRODUCTION<br>
+    REVISION: 2025-Q1<br>
+    AUTHOR: AI SYSTEMS TEAM
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <a href="#s1">01 System Overview</a>
+  <a href="#s2">02 Frontend Lifecycle</a>
+  <a href="#s3">03 Nginx Routing</a>
+  <a href="#s4">04 Backend Architecture</a>
+  <a href="#s5">05 Query Pipeline</a>
+  <a href="#s6">06 Prompt Construction</a>
+  <a href="#s7">07 Embedding Flow</a>
+  <a href="#s8">08 Vector DB Structure</a>
+  <a href="#s9">09 Chunk Metadata Schema</a>
+  <a href="#s10">10 Ingestion Engine</a>
+  <a href="#s11">11 PDF + OCR Logic</a>
+  <a href="#s12">12 Crawler URL Filtering</a>
+  <a href="#s13">13 File Structure</a>
+  <a href="#s14">14 API Route Map</a>
+  <a href="#s15">15 Error Handling</a>
+  <a href="#s16">16 Security Boundaries</a>
+  <a href="#s17">17 Deployment</a>
+  <a href="#s18">18 Scaling Model</a>
+  <a href="#s19">19 Data Lifecycle</a>
+  <a href="#s20">20 Failure Scenarios</a>
+  <a href="#s21">21 Rate Limiting</a>
+  <a href="#s22">22 Logging</a>
+  <a href="#s23">23 Monitoring</a>
+  <a href="#s24">24 Extensibility</a>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 1: SYSTEM OVERVIEW -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <div>
+      <div class="section-title">Full System Overview</div>
+      <div class="section-desc">Top-level architecture map · all subsystems and data flows</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap dark-bg">
+    <div class="mermaid">
+flowchart TB
+    subgraph EXT["🌐 EXTERNAL"]
+        USR([👤 User Browser])
+        WEB([🕷 Web Sources])
+        PDF_SRC([📄 PDF Sources])
+        OAI([☁ OpenAI API])
+    end
+
+    subgraph VPS["🖥 Ubuntu VPS · Production"]
+        subgraph NGX["NGINX REVERSE PROXY :443/:80"]
+            SSL[SSL Termination\nCertbot / Let's Encrypt]
+            STATIC[Static File Server\n/var/www/axyom/]
+            PROXY[API Proxy\nproxy_pass :8000]
+        end
+
+        subgraph FE["FRONTEND LAYER"]
+            HTML[index.html]
+            JS[app.js · Fetch POST]
+            CSS[styles.css]
+        end
+
+        subgraph API["FASTAPI BACKEND :8000"]
+            AUTH[API Key Middleware]
+            RATE[Rate Limiter]
+            QROUTE[/api/ask]
+            IROUTE[/api/ingest]
+            HROUTE[/api/health]
+        end
+
+        subgraph QP["QUERY PIPELINE"]
+            SANIT[Input Sanitizer]
+            QEMB[Query Embedder]
+            VSEARCH[Vector Search]
+            TOPK[Top-K Retrieval]
+            CTX[Context Assembler]
+            PROMPT[Prompt Builder]
+            LLM[LLM Call]
+            FMT[Response Formatter]
+        end
+
+        subgraph ING["INGESTION ENGINE"]
+            CRAWLER[Web Crawler]
+            PPARSE[PDF Parser]
+            OCR[OCR Fallback\nTesseract]
+            CHUNK[Text Chunker]
+            IEMB[Embedding Generator]
+            VSTORE[Vector Storer]
+        end
+
+        subgraph STORE["STORAGE LAYER"]
+            VDB[(Vector DB\nChroma / pgvector)]
+            META[(Metadata Store\nSQLite / Postgres)]
+            RAW[(Raw File Store\n/data/raw/)]
+        end
+
+        subgraph LOG["OBSERVABILITY"]
+            LOGGER[Structured Logger\nJSON / loguru]
+            METRICS[Metrics Collector\nPrometheus]
+            TRACE[Request Tracer\nreq_id / span_id]
+        end
+    end
+
+    USR -->|HTTPS GET| NGX
+    USR -->|HTTPS POST /api/ask| NGX
+    NGX -->|Static| FE
+    NGX -->|Proxy /api/*| API
+    API --> AUTH --> RATE
+    RATE --> QROUTE --> QP
+    RATE --> IROUTE --> ING
+    QP --> STORE
+    QP -->|Chat Completion| OAI
+    ING --> WEB
+    ING --> PDF_SRC
+    ING --> STORE
+    OAI -->|Response| QP
+    QP --> LOG
+    ING --> LOG
+    API --> LOG
+
+    style EXT fill:#0d1117,stroke:#1e2d3d,color:#64748b
+    style VPS fill:#070a0f,stroke:#243447,color:#e2e8f0
+    style NGX fill:#0f1b2b,stroke:#1e2d3d,color:#e2e8f0
+    style FE fill:#0f1b2b,stroke:#1e2d3d,color:#e2e8f0
+    style API fill:#0f1b2b,stroke:#2a3f5c,color:#e2e8f0
+    style QP fill:#0f1b2b,stroke:#7c3aed,color:#e2e8f0
+    style ING fill:#0f1b2b,stroke:#ff6b35,color:#e2e8f0
+    style STORE fill:#0f1b2b,stroke:#10b981,color:#e2e8f0
+    style LOG fill:#0f1b2b,stroke:#1e2d3d,color:#e2e8f0
+    </div>
+  </div>
+
+  <div class="label-row">
+    <span class="lbl">Layers:</span>
+    <span class="tag tag-blue">Nginx Edge</span>
+    <span class="tag tag-orange">FastAPI Core</span>
+    <span class="tag tag-purple">Query Pipeline</span>
+    <span class="tag tag-green">Storage</span>
+    <span class="tag tag-yellow">Ingestion</span>
+    <span class="tag tag-red">External APIs</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 2: FRONTEND LIFECYCLE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div>
+      <div class="section-title">Frontend Request Lifecycle</div>
+      <div class="section-desc">From user input to rendered answer · complete sequence</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+sequenceDiagram
+    actor U as 👤 User
+    participant BR as Browser DOM
+    participant JS as app.js
+    participant SW as Service Worker
+    participant NG as Nginx :443
+    participant FA as FastAPI :8000
+
+    U->>BR: types query → submits form
+    BR->>JS: onclick / onkeydown enter
+    JS->>JS: validateInput(query)<br/>trim, length check, XSS strip
+    JS->>BR: showLoadingState()
+    JS->>JS: buildPayload()<br/>{ query, session_id, timestamp }
+    JS->>NG: POST /api/ask<br/>Content-Type: application/json<br/>X-API-Key: [key]
+    NG->>NG: SSL termination<br/>rate check headers
+    NG->>FA: proxy_pass :8000/api/ask<br/>X-Real-IP forwarded
+    FA->>FA: auth middleware<br/>rate limiter<br/>request ID assigned
+    FA-->>NG: 200 { answer, sources, latency_ms }
+    NG-->>JS: response forwarded
+    JS->>JS: parseResponse(data)
+    JS->>BR: renderAnswer(answer)
+    JS->>BR: renderSources(sources)
+    JS->>BR: hideLoadingState()
+    BR-->>U: Answer displayed
+
+    Note over JS,FA: On error: JS catches, shows toast error
+    Note over NG,FA: Timeout: 30s max, 504 returned
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <span class="caps">Payload Schema — Request</span>
+      <pre>{
+  <span class="n">"query"</span>:      <span class="s">"What is Axyom AI?"</span>,
+  <span class="n">"session_id"</span>: <span class="s">"sess_a3f9b2c1"</span>,
+  <span class="n">"timestamp"</span>:  <span class="v">1710000000000</span>,
+  <span class="n">"top_k"</span>:      <span class="v">5</span>           <span class="c">// optional override</span>
+}</pre>
+    </div>
+    <div>
+      <span class="caps">Payload Schema — Response</span>
+      <pre>{
+  <span class="n">"answer"</span>:     <span class="s">"Axyom AI is..."</span>,
+  <span class="n">"sources"</span>:    [
+    { <span class="n">"url"</span>: <span class="s">"..."</span>, <span class="n">"title"</span>: <span class="s">"..."</span>, <span class="n">"score"</span>: <span class="v">0.91</span> }
+  ],
+  <span class="n">"req_id"</span>:     <span class="s">"req_7a2f"</span>,
+  <span class="n">"latency_ms"</span>: <span class="v">812</span>
+}</pre>
+    </div>
+  </div>
+
+  <span class="caps">app.js — Core Logic Pseudocode</span>
+  <pre><span class="k">async function</span> <span class="t">handleAsk</span>(query) {
+  <span class="k">const</span> clean = sanitize(query)              <span class="c">// strip tags, trim</span>
+  <span class="k">if</span> (clean.length &lt; <span class="v">3</span> || clean.length &gt; <span class="v">500</span>) <span class="k">return</span> showError(<span class="s">"Invalid query length"</span>)
+
+  setLoading(<span class="v">true</span>)
+  <span class="k">try</span> {
+    <span class="k">const</span> res = <span class="k">await</span> fetch(<span class="s">"/api/ask"</span>, {
+      method: <span class="s">"POST"</span>,
+      headers: { <span class="s">"Content-Type"</span>: <span class="s">"application/json"</span>, <span class="s">"X-API-Key"</span>: getKey() },
+      body: JSON.stringify({ query: clean, session_id: SESSION_ID })
+    })
+    <span class="k">if</span> (!res.ok) <span class="k">throw new</span> Error(<span class="s">`HTTP ${res.status}`</span>)
+    <span class="k">const</span> data = <span class="k">await</span> res.json()
+    renderAnswer(data.answer)
+    renderSources(data.sources)
+  } <span class="k">catch</span> (e) {
+    showToast(e.message, <span class="s">"error"</span>)
+  } <span class="k">finally</span> {
+    setLoading(<span class="v">false</span>)
+  }
+}</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 3: NGINX ROUTING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div>
+      <div class="section-title">Nginx Routing Logic</div>
+      <div class="section-desc">SSL termination · static serving · API proxy · security headers</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart LR
+    subgraph IN["Incoming Request"]
+        R80[":80 HTTP"]
+        R443[":443 HTTPS"]
+    end
+
+    subgraph NGX["Nginx Decision Tree"]
+        REDIR[301 → HTTPS]
+        CERT[SSL Cert Check\nLet's Encrypt]
+        HDRS[Security Headers\nHSTS / CSP / X-Frame]
+        LOC_ROOT["location /\nStatic Files\n/var/www/axyom/"]
+        LOC_API["location /api/\nproxy_pass :8000\nproxy_timeout 30s"]
+        LOC_WELL["location /.well-known/\nCertbot Challenge"]
+        CACHE["Cache-Control\nstatic: 1d\nAPI: no-store"]
+    end
+
+    subgraph BACK["Backend"]
+        FA[FastAPI :8000]
+    end
+
+    subgraph STATIC["Static Assets"]
+        IDX[index.html]
+        STC[/static/*]
+    end
+
+    R80 --> REDIR --> R443
+    R443 --> CERT --> HDRS
+    HDRS --> LOC_ROOT
+    HDRS --> LOC_API
+    HDRS --> LOC_WELL
+    LOC_ROOT --> CACHE --> STATIC
+    LOC_API --> CACHE --> FA
+
+    style NGX fill:#0f1b2b,stroke:#00d4ff
+    </div>
+  </div>
+
+  <span class="caps">nginx.conf — Key Directives</span>
+  <pre><span class="c"># /etc/nginx/sites-available/axyom</span>
+
+server {
+    listen <span class="v">80</span>;
+    server_name axyom.ai;
+    <span class="k">return</span> <span class="v">301</span> https://$host$request_uri;
+}
+
+server {
+    listen <span class="v">443</span> ssl http2;
+    server_name axyom.ai;
+
+    ssl_certificate     /etc/letsencrypt/live/axyom.ai/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/axyom.ai/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    <span class="c"># Security headers</span>
+    add_header Strict-Transport-Security <span class="s">"max-age=31536000"</span> always;
+    add_header X-Frame-Options           DENY;
+    add_header X-Content-Type-Options    nosniff;
+    add_header Content-Security-Policy   <span class="s">"default-src 'self'"</span>;
+    add_header X-Request-ID              $request_id;
+
+    <span class="c"># Static frontend</span>
+    location / {
+        root  /var/www/axyom;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+        expires <span class="v">1d</span>;
+    }
+
+    <span class="c"># API proxy</span>
+    location /api/ {
+        proxy_pass         http://127.0.0.1:<span class="v">8000</span>;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_read_timeout <span class="v">30</span>s;
+        add_header         Cache-Control     no-store;
+    }
+
+    <span class="c"># Certbot challenge</span>
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+}</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 4: BACKEND ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div>
+      <div class="section-title">Backend Architecture Breakdown</div>
+      <div class="section-desc">FastAPI internals · middleware stack · dependency injection</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph FAPI["FastAPI Application"]
+        subgraph MW["Middleware Stack (LIFO)"]
+            MW1[CORSMiddleware]
+            MW2[RequestIDMiddleware]
+            MW3[APIKeyMiddleware]
+            MW4[RateLimitMiddleware]
+            MW5[LoggingMiddleware]
+            MW6[ErrorHandlerMiddleware]
+        end
+
+        subgraph ROUTES["Route Handlers"]
+            R1[POST /api/ask]
+            R2[POST /api/ingest]
+            R3[GET  /api/health]
+            R4[GET  /api/sources]
+            R5[DELETE /api/cache]
+        end
+
+        subgraph DEPS["Dependency Injection"]
+            D1[get_db() → DB session]
+            D2[get_embedder() → EmbedClient]
+            D3[get_openai() → OpenAI client]
+            D4[get_vector_db() → VectorDB]
+            D5[get_settings() → Config]
+        end
+
+        subgraph SVC["Service Layer"]
+            S1[QueryService]
+            S2[IngestionService]
+            S3[EmbeddingService]
+            S4[LLMService]
+        end
+    end
+
+    MW1 --> MW2 --> MW3 --> MW4 --> MW5 --> MW6
+    MW6 --> ROUTES
+    R1 --> D1 & D2 & D3 & D4 & D5
+    R2 --> D1 & D2 & D4
+    ROUTES --> SVC
+
+    style FAPI fill:#0f1b2b,stroke:#ff6b35
+    style MW fill:#0d1525,stroke:#1e2d3d
+    style ROUTES fill:#0d1525,stroke:#1e2d3d
+    style DEPS fill:#0d1525,stroke:#1e2d3d
+    style SVC fill:#0d1525,stroke:#1e2d3d
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <span class="caps">main.py — App Bootstrap</span>
+      <pre><span class="k">from</span> fastapi <span class="k">import</span> FastAPI
+<span class="k">from</span> contextlib <span class="k">import</span> asynccontextmanager
+
+<span class="k">@asynccontextmanager</span>
+<span class="k">async def</span> <span class="t">lifespan</span>(app):
+    <span class="c"># Startup</span>
+    <span class="k">await</span> init_vector_db()
+    <span class="k">await</span> init_metadata_db()
+    <span class="k">yield</span>
+    <span class="c"># Shutdown</span>
+    <span class="k">await</span> close_connections()
+
+app = FastAPI(
+    title=<span class="s">"Axyom AI"</span>,
+    lifespan=lifespan,
+    docs_url=<span class="k">None</span>,       <span class="c"># disabled in prod</span>
+    redoc_url=<span class="k">None</span>
+)
+
+app.add_middleware(CORSMiddleware, ...)
+app.add_middleware(RateLimitMiddleware, ...)
+app.add_middleware(APIKeyMiddleware, ...)
+app.include_router(query_router, prefix=<span class="s">"/api"</span>)
+app.include_router(ingest_router, prefix=<span class="s">"/api"</span>)</pre>
+    </div>
+    <div>
+      <span class="caps">Settings — Config Model</span>
+      <pre><span class="k">class</span> <span class="t">Settings</span>(BaseSettings):
+    <span class="c"># API</span>
+    API_KEY: str
+    OPENAI_API_KEY: str
+    OPENAI_MODEL: str = <span class="s">"gpt-4o"</span>
+
+    <span class="c"># Vector DB</span>
+    VECTOR_DB_PATH: str = <span class="s">"./data/chroma"</span>
+    COLLECTION_NAME: str = <span class="s">"axyom_chunks"</span>
+    TOP_K: int = <span class="v">5</span>
+    SIMILARITY_THRESHOLD: float = <span class="v">0.72</span>
+
+    <span class="c"># Embedding</span>
+    EMBEDDING_MODEL: str = <span class="s">"text-embedding-3-small"</span>
+    EMBEDDING_DIM: int = <span class="v">1536</span>
+
+    <span class="c"># Rate limiting</span>
+    RATE_LIMIT_RPM: int = <span class="v">60</span>
+    RATE_LIMIT_BURST: int = <span class="v">10</span>
+
+    <span class="k">class</span> Config:
+        env_file = <span class="s">".env"</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 5: QUERY PIPELINE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-num">05</div>
+    <div>
+      <div class="section-title">Complete Query Pipeline</div>
+      <div class="section-desc">Step-by-step from raw input to formatted answer</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    IN([POST /api/ask\nraw query]) --> STEP1
+
+    subgraph STEP1["① INPUT SANITIZATION"]
+        S1A[strip HTML tags]
+        S1B[trim whitespace]
+        S1C[length check: 3–500 chars]
+        S1D[detect prompt injection patterns]
+        S1E[normalize unicode]
+        S1A --> S1B --> S1C --> S1D --> S1E
+    end
+
+    STEP1 -->|clean_query| STEP2
+
+    subgraph STEP2["② QUERY EMBEDDING"]
+        S2A[call OpenAI Embeddings API\nmodel: text-embedding-3-small]
+        S2B[receive float32[1536]]
+        S2C[normalize vector L2]
+        S2A --> S2B --> S2C
+    end
+
+    STEP2 -->|query_vector| STEP3
+
+    subgraph STEP3["③ VECTOR SIMILARITY SEARCH"]
+        S3A[cosine_similarity search\nagainst ChromaDB collection]
+        S3B[retrieve top-K candidates\ndefault K=5]
+        S3C[filter by threshold ≥ 0.72]
+        S3D[deduplicate by source_url]
+        S3A --> S3B --> S3C --> S3D
+    end
+
+    STEP3 -->|chunk_results| STEP4
+
+    subgraph STEP4["④ CONTEXT ASSEMBLY"]
+        S4A[rank by score desc]
+        S4B[concat chunk texts\nwith source metadata]
+        S4C[trim to max 3000 tokens\nrespect chunk boundaries]
+        S4D[build source_list for citation]
+        S4A --> S4B --> S4C --> S4D
+    end
+
+    STEP4 -->|context_block| STEP5
+
+    subgraph STEP5["⑤ PROMPT CONSTRUCTION"]
+        S5A[system prompt + instructions]
+        S5B[inject context_block]
+        S5C[append user query]
+        S5D[validate final token count ≤ 4096]
+        S5A --> S5B --> S5C --> S5D
+    end
+
+    STEP5 -->|full_prompt| STEP6
+
+    subgraph STEP6["⑥ LLM CALL"]
+        S6A[POST openai.chat.completions.create\nmodel: gpt-4o\ntemperature: 0.2\nmax_tokens: 1024]
+        S6B[receive completion]
+        S6C[extract content text]
+        S6A --> S6B --> S6C
+    end
+
+    STEP6 -->|raw_answer| STEP7
+
+    subgraph STEP7["⑦ RESPONSE FORMATTING"]
+        S7A[strip model artifacts]
+        S7B[attach source citations]
+        S7C[compute latency_ms]
+        S7D[assign req_id]
+        S7E[log to structured logger]
+        S7A --> S7B --> S7C --> S7D --> S7E
+    end
+
+    STEP7 --> OUT([JSON Response\n{ answer, sources, req_id, latency_ms }])
+
+    style STEP1 fill:#0f1b2b,stroke:#00d4ff,color:#e2e8f0
+    style STEP2 fill:#0f1b2b,stroke:#7c3aed,color:#e2e8f0
+    style STEP3 fill:#0f1b2b,stroke:#10b981,color:#e2e8f0
+    style STEP4 fill:#0f1b2b,stroke:#ff6b35,color:#e2e8f0
+    style STEP5 fill:#0f1b2b,stroke:#f59e0b,color:#e2e8f0
+    style STEP6 fill:#0f1b2b,stroke:#ef4444,color:#e2e8f0
+    style STEP7 fill:#0f1b2b,stroke:#00d4ff,color:#e2e8f0
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 6: PROMPT CONSTRUCTION -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-num">06</div>
+    <div>
+      <div class="section-title">Prompt Construction Logic</div>
+      <div class="section-desc">Exact template structure · token budget · injection pattern</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart LR
+    subgraph PROMPT["FINAL PROMPT OBJECT"]
+        direction TB
+        SYS["[system]\n────────────────────\nYou are Axyom AI, a precise knowledge assistant.\nAnswer ONLY using the provided context.\nIf context is insufficient, say: 'I don't have enough\ninformation to answer that.'\nDo NOT fabricate information.\nCite source URLs when available.\nBe concise. Prefer bullet points for lists."]
+        SEP1["────── CONTEXT BLOCK ──────"]
+        CTX["[context]\n────────────────────\nSOURCE 1 [score: 0.94] [url: ...]\n{chunk_text_1}\n\nSOURCE 2 [score: 0.88] [url: ...]\n{chunk_text_2}\n\n... up to TOP_K sources ..."]
+        SEP2["────── USER QUERY ──────"]
+        USR_Q["[user]\n────────────────────\n{clean_query}"]
+        SYS --> SEP1 --> CTX --> SEP2 --> USR_Q
+    end
+
+    subgraph BUDGET["TOKEN BUDGET"]
+        B1["System: ~120 tokens"]
+        B2["Context: max 3000 tokens"]
+        B3["Query: max 200 tokens"]
+        B4["Response: max 1024 tokens"]
+        B5["TOTAL: ≤ 4344 tokens\n(gpt-4o: 128k ctx)"]
+    end
+
+    PROMPT -.->|token count| BUDGET
+    </div>
+  </div>
+
+  <span class="caps">Prompt Template — Python</span>
+  <pre><span class="k">def</span> <span class="t">build_prompt</span>(query: str, chunks: list[ChunkResult]) -> list[dict]:
+    context_parts = []
+    <span class="k">for</span> i, chunk <span class="k">in</span> enumerate(chunks, <span class="v">1</span>):
+        context_parts.append(
+            <span class="s">f"SOURCE {i} [score: {chunk.score:.2f}] [url: {chunk.source_url}]\n{chunk.text}"</span>
+        )
+
+    context_block = <span class="s">"\n\n"</span>.join(context_parts)
+    context_block = truncate_to_tokens(context_block, max_tokens=<span class="v">3000</span>)
+
+    <span class="k">return</span> [
+        {
+            <span class="s">"role"</span>: <span class="s">"system"</span>,
+            <span class="s">"content"</span>: SYSTEM_PROMPT          <span class="c"># constant from config</span>
+        },
+        {
+            <span class="s">"role"</span>: <span class="s">"user"</span>,
+            <span class="s">"content"</span>: (
+                <span class="s">f"Context:\n{context_block}\n\n"</span>
+                <span class="s">f"Question: {query}"</span>
+            )
+        }
+    ]</pre>
+
+  <div class="callout warn">⚠️ Context injection is the primary injection vector. All chunk text is sanitized at ingestion time. Query is sanitized before embedding. Both sanitization stages are independently enforced.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 7: EMBEDDING FLOW -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-num">07</div>
+    <div>
+      <div class="section-title">Embedding Generation Flow</div>
+      <div class="section-desc">Query + ingestion embedding paths · batching · caching</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph QE["QUERY EMBEDDING PATH"]
+        QIN[clean_query string]
+        QCACHE{In-memory\ncache hit?}
+        QAPI[OpenAI Embeddings API\nmodel: text-embedding-3-small\ninput: [query]]
+        QVEC[float32 vector [1536]]
+        QL2[L2 normalize]
+        QOUT[query_vector]
+        QIN --> QCACHE
+        QCACHE -->|HIT| QOUT
+        QCACHE -->|MISS| QAPI --> QVEC --> QL2 --> QOUT
+    end
+
+    subgraph IE["INGESTION EMBEDDING PATH"]
+        ICHUNKS[chunk_texts: list[str]]
+        IBATCH[batch into groups of 100]
+        IAPI[OpenAI Embeddings API\nbatch call]
+        IVECS[list of float32[1536]]
+        IL2[L2 normalize each]
+        ISTORE[Store to ChromaDB\nwith metadata]
+        ICHUNKS --> IBATCH --> IAPI --> IVECS --> IL2 --> ISTORE
+    end
+
+    subgraph MODEL["EMBEDDING MODEL SPEC"]
+        M1["Model: text-embedding-3-small"]
+        M2["Dimensions: 1536"]
+        M3["Max input: 8191 tokens"]
+        M4["Pricing: $0.02 / 1M tokens"]
+        M5["Similarity: cosine"]
+    end
+    </div>
+  </div>
+
+  <div class="callout">💡 Batch size of 100 is OpenAI's recommended max per API call. Each call is retried with exponential backoff on 429/500 errors (max 3 retries).</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 8: VECTOR DB STRUCTURE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-num">08</div>
+    <div>
+      <div class="section-title">Vector Database Structure</div>
+      <div class="section-desc">ChromaDB collection schema · index structure · query interface</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph CHROMA["ChromaDB Instance"]
+        subgraph COLL["Collection: axyom_chunks"]
+            subgraph DOC["Per Document Record"]
+                ID["id: chunk_uuid"]
+                EMB["embedding: float32[1536]"]
+                DOC_TXT["document: chunk_text"]
+                META["metadata: {...}"]
+            end
+            HNSW["HNSW Index\nM=16, ef_construction=200"]
+            COLL_META["collection_metadata:\n  hnsw:space: cosine"]
+        end
+    end
+
+    subgraph QUERY["Query Interface"]
+        QI1["collection.query(\n  query_embeddings=[vec],\n  n_results=TOP_K,\n  where={'active': True},\n  include=['documents','metadatas','distances']\n)"]
+    end
+
+    subgraph RESULT["Result Structure"]
+        R1["ids: [[id1, id2, ...]]"]
+        R2["distances: [[0.06, 0.12, ...]]"]
+        R3["documents: [['text1', 'text2', ...]]"]
+        R4["metadatas: [[{...}, {...}, ...]]"]
+    end
+
+    CHROMA --> QUERY --> RESULT
+
+    style CHROMA fill:#0f1b2b,stroke:#10b981
+    style QUERY fill:#0f1b2b,stroke:#7c3aed
+    style RESULT fill:#0f1b2b,stroke:#00d4ff
+    </div>
+  </div>
+
+  <span class="caps">Distance → Score Conversion</span>
+  <pre><span class="c"># ChromaDB returns cosine DISTANCE (0=identical, 2=opposite)</span>
+<span class="c"># Convert to similarity score [0, 1]:</span>
+<span class="k">def</span> <span class="t">distance_to_score</span>(distance: float) -> float:
+    <span class="k">return</span> <span class="v">1.0</span> - (distance / <span class="v">2.0</span>)
+
+<span class="c"># Filter below threshold</span>
+results = [r <span class="k">for</span> r <span class="k">in</span> results <span class="k">if</span> distance_to_score(r.distance) >= SIMILARITY_THRESHOLD]</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 9: CHUNK METADATA SCHEMA -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-num">09</div>
+    <div>
+      <div class="section-title">Chunk Metadata Schema</div>
+      <div class="section-desc">Full schema for vector records · SQLite metadata store · JSON examples</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <span class="caps">ChromaDB Metadata Per Chunk</span>
+      <pre>{
+  <span class="n">"chunk_id"</span>:      <span class="s">"ck_a3f9b2c1d4e5"</span>,
+  <span class="n">"source_url"</span>:    <span class="s">"https://example.com/page"</span>,
+  <span class="n">"source_type"</span>:   <span class="s">"web"</span>,     <span class="c">// web | pdf | text</span>
+  <span class="n">"doc_id"</span>:        <span class="s">"doc_7f2a"</span>,
+  <span class="n">"doc_title"</span>:     <span class="s">"Page Title"</span>,
+  <span class="n">"chunk_index"</span>:   <span class="v">3</span>,
+  <span class="n">"chunk_total"</span>:   <span class="v">12</span>,
+  <span class="n">"char_count"</span>:    <span class="v">512</span>,
+  <span class="n">"token_count"</span>:   <span class="v">128</span>,
+  <span class="n">"ingested_at"</span>:   <span class="s">"2025-01-15T10:30:00Z"</span>,
+  <span class="n">"crawl_depth"</span>:   <span class="v">2</span>,
+  <span class="n">"language"</span>:      <span class="s">"en"</span>,
+  <span class="n">"active"</span>:        <span class="v">true</span>,
+  <span class="n">"ocr_used"</span>:      <span class="v">false</span>,
+  <span class="n">"embedding_model"</span>: <span class="s">"text-embedding-3-small"</span>
+}</pre>
+    </div>
+    <div>
+      <span class="caps">SQLite Metadata Store Schema</span>
+      <pre><span class="k">CREATE TABLE</span> chunks (
+  chunk_id       TEXT PRIMARY KEY,
+  doc_id         TEXT NOT NULL,
+  source_url     TEXT,
+  source_type    TEXT,
+  chunk_index    INTEGER,
+  chunk_total    INTEGER,
+  char_count     INTEGER,
+  token_count    INTEGER,
+  ingested_at    DATETIME,
+  active         BOOLEAN DEFAULT <span class="v">1</span>,
+  ocr_used       BOOLEAN DEFAULT <span class="v">0</span>,
+  embedding_model TEXT,
+  raw_file_path  TEXT,
+  FOREIGN KEY (doc_id) REFERENCES documents(doc_id)
+);
+
+<span class="k">CREATE TABLE</span> documents (
+  doc_id         TEXT PRIMARY KEY,
+  source_url     TEXT UNIQUE,
+  title          TEXT,
+  language       TEXT,
+  crawl_depth    INTEGER,
+  first_seen     DATETIME,
+  last_updated   DATETIME,
+  chunk_count    INTEGER
+);</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 10: INGESTION ENGINE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div>
+      <div class="section-title">Ingestion Engine Flow</div>
+      <div class="section-desc">End-to-end from URL/file to stored vector</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph INPUT["INPUT SOURCES"]
+        URL_LIST[URL seed list\n.txt / API param]
+        PDF_UP[PDF file upload\nmultipart/form-data]
+        SCHED[Scheduled re-crawl\ncron job]
+    end
+
+    subgraph CRAWL["CRAWLER"]
+        FETCH[HTTP GET\nrequests / httpx]
+        FILTER[URL Filter\n→ see Section 12]
+        ROBOTS[robots.txt check]
+        THROTTLE[Politeness delay\n1–2s per domain]
+        QUEUE[BFS queue\nmax_depth configurable]
+        FETCH --> ROBOTS --> FILTER --> THROTTLE --> QUEUE
+        QUEUE -->|next URL| FETCH
+    end
+
+    subgraph PARSE["CONTENT PARSING"]
+        MIME{MIME type?}
+        HTML_PARSE[HTML Parser\nBeautifulSoup4\nstrip nav/footer/ads]
+        PDF_PARSE[PDF Parser\n→ Section 11]
+        TXT[Raw text\ndirect use]
+        MIME -->|text/html| HTML_PARSE
+        MIME -->|application/pdf| PDF_PARSE
+        MIME -->|text/plain| TXT
+    end
+
+    subgraph CHUNK["TEXT CHUNKING"]
+        LANG[Language detection\nlangdetect]
+        SPLIT[RecursiveTextSplitter\nchunk_size=512 tokens\noverlap=64 tokens\nsplit: paragraph → sentence → word]
+        DEDUP[Chunk dedup\nsha256 hash check]
+        LANG --> SPLIT --> DEDUP
+    end
+
+    subgraph EMBED["EMBEDDING"]
+        BATCH_EMB[Batch embed\ngroups of 100]
+        NORM[L2 normalize]
+        BATCH_EMB --> NORM
+    end
+
+    subgraph STORE2["STORAGE"]
+        CHROMA2[ChromaDB\nvectors + metadata]
+        SQLITE2[SQLite\nchunk index]
+        RAWSTORE[/data/raw/\noriginal files]
+    end
+
+    INPUT --> CRAWL --> PARSE --> CHUNK --> EMBED --> STORE2
+
+    style INPUT fill:#0f1b2b,stroke:#00d4ff
+    style CRAWL fill:#0f1b2b,stroke:#ff6b35
+    style PARSE fill:#0f1b2b,stroke:#f59e0b
+    style CHUNK fill:#0f1b2b,stroke:#7c3aed
+    style EMBED fill:#0f1b2b,stroke:#10b981
+    style STORE2 fill:#0f1b2b,stroke:#ef4444
+    </div>
+  </div>
+
+  <span class="caps">Chunking Algorithm — Pseudocode</span>
+  <pre><span class="k">def</span> <span class="t">recursive_chunk</span>(text: str, chunk_size=<span class="v">512</span>, overlap=<span class="v">64</span>) -> list[str]:
+    separators = [<span class="s">"\n\n"</span>, <span class="s">"\n"</span>, <span class="s">". "</span>, <span class="s">" "</span>, <span class="s">""</span>]  <span class="c"># priority order</span>
+    chunks = []
+
+    <span class="k">def</span> <span class="t">split</span>(text, seps):
+        <span class="k">if</span> token_count(text) <= chunk_size:
+            <span class="k">return</span> [text]
+        sep = seps[<span class="v">0</span>] <span class="k">if</span> seps <span class="k">else</span> <span class="s">""</span>
+        parts = text.split(sep)
+        merged = merge_splits(parts, chunk_size, overlap, sep)
+        result = []
+        <span class="k">for</span> part <span class="k">in</span> merged:
+            <span class="k">if</span> token_count(part) > chunk_size:
+                result.extend(split(part, seps[<span class="v">1</span>:]))  <span class="c"># recurse</span>
+            <span class="k">else</span>:
+                result.append(part)
+        <span class="k">return</span> result
+
+    chunks = split(text, separators)
+    <span class="c"># Deduplicate by content hash</span>
+    seen = set()
+    <span class="k">return</span> [c <span class="k">for</span> c <span class="k">in</span> chunks <span class="k">if</span> (h := sha256(c)) <span class="k">not in</span> seen <span class="k">and not</span> seen.add(h)]</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 11: PDF + OCR -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s11">
+  <div class="section-header">
+    <div class="section-num">11</div>
+    <div>
+      <div class="section-title">PDF Parsing + OCR Fallback Logic</div>
+      <div class="section-desc">pdfminer → PyMuPDF → Tesseract cascade</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    PDF([PDF File]) --> PDFMINE
+
+    subgraph PDFMINE["① pdfminer.six — Text Layer"]
+        PM1[Extract text from PDF text layer]
+        PM2{Text extracted?\nlen > 100 chars?}
+        PM1 --> PM2
+    end
+
+    PM2 -->|YES| CLEAN["Text cleaning\nremove headers/footers\nnormalize whitespace"]
+    PM2 -->|NO| PYMUPDF
+
+    subgraph PYMUPDF["② PyMuPDF — Fallback Text + Image Render"]
+        MU1[Open with fitz.open]
+        MU2[Extract page text via get_text]
+        MU3{Meaningful text?}
+        MU4[Render page to PNG\n300 DPI]
+        MU1 --> MU2 --> MU3
+        MU3 -->|YES| MU_OUT[text output]
+        MU3 -->|NO| MU4
+    end
+
+    PYMUPDF --> OCR_STEP
+
+    subgraph OCR_STEP["③ Tesseract OCR — Last Resort"]
+        O1[pytesseract.image_to_string\nlang=eng\nconfig: --psm 3]
+        O2[Post-process OCR output\nfix common errors]
+        O3[Flag chunk: ocr_used=true]
+        O1 --> O2 --> O3
+    end
+
+    OCR_STEP --> CLEAN
+    CLEAN --> CHUNK2([→ Text Chunking Pipeline])
+
+    style PDFMINE fill:#0f1b2b,stroke:#00d4ff
+    style PYMUPDF fill:#0f1b2b,stroke:#7c3aed
+    style OCR_STEP fill:#0f1b2b,stroke:#ff6b35
+    </div>
+  </div>
+
+  <div class="callout warn">⚠️ OCR adds ~2–5s per page. Rate-limit PDF ingestion. Max file size: 50MB. Max pages: 200. Large PDFs are split into 50-page batches.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 12: CRAWLER URL FILTERING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s12">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div>
+      <div class="section-title">Crawler URL Filtering Logic</div>
+      <div class="section-desc">Allowlist / blocklist / depth / domain rules</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    URL([Candidate URL]) --> F1
+
+    F1{Schema valid?\nhttp/https only} -->|NO| REJECT1[❌ REJECT]
+    F1 -->|YES| F2
+
+    F2{Domain in\nallowed_domains?} -->|NO| REJECT2[❌ REJECT]
+    F2 -->|YES| F3
+
+    F3{Path matches\nblocklist pattern?} -->|YES| REJECT3[❌ REJECT]
+    F3 -->|NO| F4
+
+    F4{Already visited?\nURL in seen_set} -->|YES| REJECT4[❌ SKIP dup]
+    F4 -->|NO| F5
+
+    F5{Crawl depth\n≤ max_depth?} -->|NO| REJECT5[❌ REJECT]
+    F5 -->|YES| F6
+
+    F6{robots.txt\npermits?} -->|NO| REJECT6[❌ REJECT]
+    F6 -->|YES| F7
+
+    F7{MIME content-type\nallowed?} -->|NO| REJECT7[❌ REJECT]
+    F7 -->|YES| ACCEPT([✅ ENQUEUE])
+
+    style ACCEPT fill:#0f2b1a,stroke:#10b981,color:#10b981
+    style REJECT1 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    style REJECT2 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    style REJECT3 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    style REJECT4 fill:#1a1a0f,stroke:#f59e0b,color:#f59e0b
+    style REJECT5 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    style REJECT6 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    style REJECT7 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <span class="caps">Blocklist Patterns</span>
+      <pre>BLOCKED_PATTERNS = [
+  r<span class="s">"/login"</span>, r<span class="s">"/logout"</span>, r<span class="s">"/signup"</span>,
+  r<span class="s">"/cart"</span>, r<span class="s">"/checkout"</span>,
+  r<span class="s">"\.(jpg|png|gif|mp4|zip|exe)$"</span>,
+  r<span class="s">"/wp-admin"</span>, r<span class="s">"/admin"</span>,
+  r<span class="s">"\?.*utm_"</span>,         <span class="c"># tracking params</span>
+  r<span class="s">"#"</span>,                  <span class="c"># anchor fragments</span>
+  r<span class="s">"/feed/"</span>, r<span class="s">"/rss"</span>,
+  r<span class="s">"/page/\d+"</span>           <span class="c"># pagination</span>
+]</pre>
+    </div>
+    <div>
+      <span class="caps">Allowed MIME Types</span>
+      <pre>ALLOWED_MIME = {
+  <span class="s">"text/html"</span>,
+  <span class="s">"text/plain"</span>,
+  <span class="s">"application/pdf"</span>,
+  <span class="s">"application/xhtml+xml"</span>,
+}
+
+MAX_DEPTH     = <span class="v">3</span>       <span class="c"># default</span>
+POLITENESS_DELAY = <span class="v">1.5</span> <span class="c"># seconds</span>
+MAX_URLS_PER_DOMAIN = <span class="v">500</span>
+MAX_TOTAL_URLS = <span class="v">10000</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 13: FILE STRUCTURE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s13">
+  <div class="section-header">
+    <div class="section-num">13</div>
+    <div>
+      <div class="section-title">Backend File Structure</div>
+      <div class="section-desc">Complete directory tree · module responsibilities</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+graph TD
+    ROOT["📁 axyom-ai/"]
+    ROOT --> BE["📁 backend/"]
+    ROOT --> FE2["📁 frontend/"]
+    ROOT --> DEPLOY2["📁 deploy/"]
+    ROOT --> TESTS["📁 tests/"]
+    ROOT --> DATA["📁 data/"]
+
+    BE --> MAIN2["📄 main.py\napp factory, lifespan"]
+    BE --> CFG["📄 config.py\nSettings, env vars"]
+    BE --> ROUTES["📁 routes/"]
+    BE --> SVCS["📁 services/"]
+    BE --> MODELS2["📁 models/"]
+    BE --> CORE["📁 core/"]
+    BE --> UTILS["📁 utils/"]
+    BE --> REQ["📄 requirements.txt"]
+    BE --> ENVEX["📄 .env.example"]
+
+    ROUTES --> R_QUERY["📄 query.py\nPOST /api/ask"]
+    ROUTES --> R_INGEST["📄 ingest.py\nPOST /api/ingest"]
+    ROUTES --> R_HEALTH["📄 health.py\nGET /api/health"]
+    ROUTES --> R_SRC["📄 sources.py\nGET /api/sources"]
+
+    SVCS --> S_QUERY2["📄 query_service.py\nfull pipeline orchestration"]
+    SVCS --> S_INGEST2["📄 ingest_service.py\ncrawl + parse + store"]
+    SVCS --> S_EMB["📄 embedding_service.py\nopenai embed + cache"]
+    SVCS --> S_LLM["📄 llm_service.py\nopenai chat"]
+    SVCS --> S_VDB["📄 vector_service.py\nchroma CRUD"]
+
+    MODELS2 --> M_REQ["📄 request.py\nPydantic models in"]
+    MODELS2 --> M_RESP["📄 response.py\nPydantic models out"]
+    MODELS2 --> M_CHUNK["📄 chunk.py\nChunkResult, ChunkMeta"]
+
+    CORE --> C_CRAWL["📄 crawler.py\nBFS crawler"]
+    CORE --> C_PARSE["📄 parser.py\nHTML / PDF / OCR"]
+    CORE --> C_CHUNK["📄 chunker.py\nRecursiveTextSplitter"]
+    CORE --> C_SANIT["📄 sanitizer.py\nInput sanitization"]
+    CORE --> C_PROMPT["📄 prompt.py\nPrompt templates"]
+
+    UTILS --> U_LOG["📄 logger.py\nloguru config"]
+    UTILS --> U_TOKENS["📄 tokens.py\ntiktoken utils"]
+    UTILS --> U_HASH["📄 hashing.py\nsha256 dedup"]
+    UTILS --> U_RATE["📄 ratelimit.py\nsliding window"]
+
+    DATA --> D_CHROMA["📁 chroma/\nvector store"]
+    DATA --> D_RAW["📁 raw/\noriginal files"]
+    DATA --> D_META["📄 metadata.db\nSQLite"]
+    DATA --> D_LOGS["📁 logs/\nrotating JSON logs"]
+
+    FE2 --> F_IDX["📄 index.html"]
+    FE2 --> F_APP["📄 app.js"]
+    FE2 --> F_CSS2["📄 styles.css"]
+
+    DEPLOY2 --> D_NGX["📄 nginx.conf"]
+    DEPLOY2 --> D_SYNC["📄 deploy.sh\nrsync script"]
+    DEPLOY2 --> D_SERV["📄 axyom.service\nsystemd unit"]
+    DEPLOY2 --> D_ENV["📄 .env.prod"]
+
+    TESTS --> T_QUERY2["📄 test_query.py"]
+    TESTS --> T_INGEST2["📄 test_ingest.py"]
+    TESTS --> T_EMB2["📄 test_embedding.py"]
+    TESTS --> T_E2E["📄 test_e2e.py"]
+
+    style ROOT fill:#070a0f,stroke:#00d4ff,color:#e2e8f0
+    style BE fill:#0d1117,stroke:#00d4ff,color:#a0c8e0
+    style FE2 fill:#0d1117,stroke:#ff6b35,color:#a0c8e0
+    style DEPLOY2 fill:#0d1117,stroke:#10b981,color:#a0c8e0
+    style DATA fill:#0d1117,stroke:#f59e0b,color:#a0c8e0
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 14: API ROUTE MAP -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s14">
+  <div class="section-header">
+    <div class="section-num">14</div>
+    <div>
+      <div class="section-title">API Route Map</div>
+      <div class="section-desc">All endpoints · methods · auth · request/response schemas</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Route</th><th>Auth</th><th>Rate Limit</th><th>Request Body</th><th>Response</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-blue">POST</span></td>
+        <td><code>/api/ask</code></td>
+        <td><span class="tag tag-green">API Key</span></td>
+        <td>60 RPM</td>
+        <td><code>{ query, session_id?, top_k? }</code></td>
+        <td><code>{ answer, sources, req_id, latency_ms }</code></td>
+        <td>Primary query endpoint</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-blue">POST</span></td>
+        <td><code>/api/ingest</code></td>
+        <td><span class="tag tag-red">Admin Key</span></td>
+        <td>5 RPM</td>
+        <td><code>{ urls?: [], file?: PDF, max_depth? }</code></td>
+        <td><code>{ job_id, status, chunks_added }</code></td>
+        <td>Async job dispatch</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-green">GET</span></td>
+        <td><code>/api/health</code></td>
+        <td>None</td>
+        <td>–</td>
+        <td>–</td>
+        <td><code>{ status, vector_db, llm_api, uptime_s }</code></td>
+        <td>Used by monitoring</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-green">GET</span></td>
+        <td><code>/api/sources</code></td>
+        <td><span class="tag tag-green">API Key</span></td>
+        <td>120 RPM</td>
+        <td>Query params: <code>limit, offset</code></td>
+        <td><code>{ sources: [...], total }</code></td>
+        <td>List ingested sources</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">DELETE</span></td>
+        <td><code>/api/cache</code></td>
+        <td><span class="tag tag-red">Admin Key</span></td>
+        <td>10 RPM</td>
+        <td><code>{ doc_id?: string }</code></td>
+        <td><code>{ deleted_chunks, status }</code></td>
+        <td>Purge by doc or all</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-green">GET</span></td>
+        <td><code>/api/ingest/{job_id}</code></td>
+        <td><span class="tag tag-red">Admin Key</span></td>
+        <td>60 RPM</td>
+        <td>–</td>
+        <td><code>{ job_id, status, progress, error? }</code></td>
+        <td>Poll async job status</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 15: ERROR HANDLING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s15">
+  <div class="section-header">
+    <div class="section-num">15</div>
+    <div>
+      <div class="section-title">Error Handling Paths</div>
+      <div class="section-desc">All failure modes · HTTP status codes · recovery actions</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    REQ([Incoming Request]) --> MW_CHECK
+
+    MW_CHECK{Middleware\nChecks} -->|Auth fail| E401[401 Unauthorized\n{error: invalid_api_key}]
+    MW_CHECK -->|Rate exceeded| E429[429 Too Many Requests\nRetry-After header]
+    MW_CHECK -->|OK| HANDLER
+
+    HANDLER -->|Validation fail| E422[422 Unprocessable\nPydantic error detail]
+    HANDLER -->|Query too long| E400[400 Bad Request\n{error: query_too_long}]
+    HANDLER -->|OK| PIPELINE
+
+    PIPELINE -->|Embed API fail| EMBED_ERR
+    PIPELINE -->|Vector search fail| VS_ERR
+    PIPELINE -->|No results| NO_CTX
+    PIPELINE -->|LLM fail| LLM_ERR
+    PIPELINE -->|OK| E200[200 OK\n{answer, sources}]
+
+    subgraph EMBED_ERR["Embedding Error"]
+        EE1{Retry count\n< 3?}
+        EE2[Exponential backoff\n1s → 2s → 4s]
+        EE3[503 Service Unavailable\n{error: embedding_failed}]
+        EE1 -->|YES| EE2 --> EE1
+        EE1 -->|NO| EE3
+    end
+
+    subgraph VS_ERR["Vector DB Error"]
+        VE1[Log error]
+        VE2[503 + {error: search_failed}]
+        VE1 --> VE2
+    end
+
+    subgraph NO_CTX["No Context Found"]
+        NC1[Return graceful fallback\n200 OK\n{answer: insufficient_context_msg}]
+    end
+
+    subgraph LLM_ERR["LLM API Error"]
+        LE1{OpenAI status?}
+        LE2[Retry up to 3x\nbackoff]
+        LE3[502 Bad Gateway\n{error: llm_unavailable}]
+        LE1 -->|429 / 500| LE2 --> LE1
+        LE1 -->|persistent| LE3
+    end
+
+    style E200 fill:#0f2b1a,stroke:#10b981,color:#10b981
+    style E401 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    style E429 fill:#1a1a0f,stroke:#f59e0b,color:#f59e0b
+    style E422 fill:#1a1a0f,stroke:#f59e0b,color:#f59e0b
+    style E400 fill:#1a0f0f,stroke:#ef4444,color:#ef4444
+    </div>
+  </div>
+
+  <span class="caps">Unified Error Response Schema</span>
+  <pre>{
+  <span class="n">"error"</span>:    <span class="s">"embedding_failed"</span>,   <span class="c">// machine-readable code</span>
+  <span class="n">"message"</span>:  <span class="s">"Embedding service temporarily unavailable"</span>,
+  <span class="n">"req_id"</span>:   <span class="s">"req_7a2f"</span>,
+  <span class="n">"timestamp"</span>: <span class="s">"2025-01-15T10:31:00Z"</span>
+}
+
+<span class="c">// Note: stack traces never exposed in production responses</span>
+<span class="c">// Full traces logged server-side with req_id correlation</span></pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 16: SECURITY BOUNDARIES -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s16">
+  <div class="section-header">
+    <div class="section-num">16</div>
+    <div>
+      <div class="section-title">Security Boundaries</div>
+      <div class="section-desc">Trust zones · attack surfaces · mitigations</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph UNTRUSTED["🔴 UNTRUSTED ZONE"]
+        EXT_USR[External User]
+        EXT_NET[Public Internet]
+    end
+
+    subgraph EDGE["🟡 EDGE ZONE — Nginx"]
+        TLS[TLS 1.2/1.3 only]
+        HSTS[HSTS enforced]
+        CSP[Content-Security-Policy]
+        IP_LOG[IP logged for abuse detection]
+    end
+
+    subgraph APP["🟢 APP ZONE — FastAPI"]
+        KEY_AUTH[HMAC API Key validation\nconstant-time compare]
+        INPUT_SAN[Input sanitization\nHTML strip, length, unicode normalize]
+        INJECT_DET[Prompt injection detection\npattern match on query]
+        RATE_LIM[Rate limiting per IP + key]
+    end
+
+    subgraph DATA_ZONE["🔵 DATA ZONE — Storage"]
+        VDB_ISO[ChromaDB file isolation\n/data/chroma/ permissions 700]
+        META_ISO[SQLite with parameterized queries\nno raw SQL from user input]
+        RAW_ISO[Raw file store\nisolated from web root]
+    end
+
+    subgraph EXT_API["🔴 EXTERNAL API ZONE"]
+        OAI_KEY[OpenAI key in env var\nnever in code or logs]
+        OAI_TLS[All calls over TLS]
+    end
+
+    UNTRUSTED -->|HTTPS only| EDGE
+    EDGE -->|X-Real-IP header| APP
+    APP -->|parameterized only| DATA_ZONE
+    APP -->|API key from env| EXT_API
+
+    style UNTRUSTED fill:#1a0f0f,stroke:#ef4444,color:#e2e8f0
+    style EDGE fill:#1a1a0f,stroke:#f59e0b,color:#e2e8f0
+    style APP fill:#0f2b1a,stroke:#10b981,color:#e2e8f0
+    style DATA_ZONE fill:#0f1b2b,stroke:#00d4ff,color:#e2e8f0
+    style EXT_API fill:#1a0f0f,stroke:#ef4444,color:#e2e8f0
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Threat</th><th>Vector</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td>Prompt Injection</td><td>User query → LLM context</td><td>Query sanitizer + system prompt framing</td></tr>
+      <tr><td>API Key Leakage</td><td>Logs / responses</td><td>Keys in env vars; redacted from all logs</td></tr>
+      <tr><td>Path Traversal</td><td>PDF filename</td><td>UUID rename on upload; no user-controlled paths</td></tr>
+      <tr><td>XSS</td><td>Stored chunk content rendered</td><td>HTML escaping in frontend; sanitized at ingestion</td></tr>
+      <tr><td>DDoS</td><td>POST /api/ask flood</td><td>Nginx rate limit + app-layer sliding window</td></tr>
+      <tr><td>SSRF</td><td>Crawler fetching internal URLs</td><td>Allowlist domains; block 127.x, 10.x, 172.x, 192.168.x</td></tr>
+      <tr><td>SQL Injection</td><td>Metadata queries</td><td>100% parameterized queries; ORM layer</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 17: DEPLOYMENT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s17">
+  <div class="section-header">
+    <div class="section-num">17</div>
+    <div>
+      <div class="section-title">Deployment Architecture</div>
+      <div class="section-desc">rsync deploy pipeline · systemd · process supervision</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+sequenceDiagram
+    participant DEV as 💻 Dev Machine
+    participant GIT as 📦 Git Repo
+    participant VPS as 🖥 Ubuntu VPS
+    participant NGX2 as Nginx
+    participant SYSD as systemd
+    participant APP as FastAPI
+
+    DEV->>GIT: git push main
+    DEV->>DEV: run: ./deploy/deploy.sh
+
+    rect rgb(15,27,43)
+        Note over DEV,VPS: deploy.sh steps
+        DEV->>DEV: pytest tests/
+        DEV->>VPS: rsync -avz --exclude='.env' \n  backend/ root@vps:/opt/axyom/
+        DEV->>VPS: rsync -avz frontend/ \n  root@vps:/var/www/axyom/
+        DEV->>VPS: ssh: pip install -r requirements.txt
+        DEV->>VPS: ssh: systemctl restart axyom
+    end
+
+    VPS->>SYSD: restart axyom.service
+    SYSD->>APP: ExecStart: uvicorn main:app\n  --host 127.0.0.1 --port 8000\n  --workers 4
+    APP-->>SYSD: Process started (PID)
+    SYSD-->>VPS: Service active (running)
+    VPS->>NGX2: nginx -t && systemctl reload nginx
+    NGX2-->>VPS: Config OK, reloaded
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <span class="caps">axyom.service — systemd Unit</span>
+      <pre>[Unit]
+Description=Axyom AI Backend
+After=network.target
+
+[Service]
+Type=exec
+User=axyom
+WorkingDirectory=/opt/axyom/backend
+EnvironmentFile=/opt/axyom/.env.prod
+ExecStart=/opt/axyom/venv/bin/uvicorn \
+    main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 4 \
+    --log-level warning
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target</pre>
+    </div>
+    <div>
+      <span class="caps">deploy.sh</span>
+      <pre><span class="k">#!/bin/bash</span>
+<span class="k">set</span> -e
+
+VPS=<span class="s">"root@axyom.ai"</span>
+REMOTE_BE=<span class="s">"/opt/axyom"</span>
+REMOTE_FE=<span class="s">"/var/www/axyom"</span>
+
+<span class="t">echo</span> <span class="s">"▶ Running tests..."</span>
+pytest tests/ -q
+
+<span class="t">echo</span> <span class="s">"▶ Syncing backend..."</span>
+rsync -avz --exclude=<span class="s">'.env'</span> \
+  --exclude=<span class="s">'__pycache__'</span> \
+  --exclude=<span class="s">'data/'</span> \
+  backend/ $VPS:$REMOTE_BE/
+
+<span class="t">echo</span> <span class="s">"▶ Syncing frontend..."</span>
+rsync -avz frontend/ $VPS:$REMOTE_FE/
+
+<span class="t">echo</span> <span class="s">"▶ Installing deps..."</span>
+ssh $VPS <span class="s">"cd $REMOTE_BE && \
+  source venv/bin/activate && \
+  pip install -qr requirements.txt"</span>
+
+<span class="t">echo</span> <span class="s">"▶ Restarting service..."</span>
+ssh $VPS <span class="s">"systemctl restart axyom && \
+  systemctl status axyom --no-pager"</span>
+
+<span class="t">echo</span> <span class="s">"✅ Deploy complete"</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 18: SCALING MODEL -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s18">
+  <div class="section-header">
+    <div class="section-num">18</div>
+    <div>
+      <div class="section-title">Scaling Model — Future Microservice Split</div>
+      <div class="section-desc">Current monolith → phased decomposition</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph P1["PHASE 1: CURRENT — Monolith on VPS"]
+        M_API[FastAPI All-in-One\n:8000]
+        M_CHROMA[ChromaDB local\n/data/chroma]
+        M_SQLITE[SQLite local]
+        M_API --- M_CHROMA
+        M_API --- M_SQLITE
+    end
+
+    subgraph P2["PHASE 2: Split Ingestion Worker"]
+        P2_API[FastAPI API\n:8000]
+        P2_WORKER[Celery Worker\nIngestion jobs]
+        P2_REDIS[Redis\nTask queue + cache]
+        P2_CHROMA[ChromaDB\nshared volume]
+        P2_API -->|dispatch| P2_REDIS -->|consume| P2_WORKER
+        P2_WORKER --> P2_CHROMA
+        P2_API --> P2_CHROMA
+    end
+
+    subgraph P3["PHASE 3: Full Microservice Split"]
+        P3_GW[API Gateway\nFastAPI / Kong]
+        P3_QUERY[Query Service\n:8001]
+        P3_INGEST[Ingestion Service\n:8002]
+        P3_EMB[Embedding Service\n:8003]
+        P3_LLM[LLM Proxy Service\n:8004]
+        P3_VDB[pgvector\nPostgreSQL]
+        P3_CACHE[Redis Cache\n+ Rate limit]
+        P3_GW --> P3_QUERY & P3_INGEST
+        P3_QUERY --> P3_EMB & P3_LLM & P3_VDB
+        P3_INGEST --> P3_EMB & P3_VDB
+        P3_GW --> P3_CACHE
+    end
+
+    P1 -->|phase 2 trigger:\n>100 RPM or slow ingestion| P2
+    P2 -->|phase 3 trigger:\n>1000 RPM or multi-tenant| P3
+
+    style P1 fill:#0f1b2b,stroke:#64748b
+    style P2 fill:#0f1b2b,stroke:#f59e0b
+    style P3 fill:#0f1b2b,stroke:#10b981
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 19: DATA LIFECYCLE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s19">
+  <div class="section-header">
+    <div class="section-num">19</div>
+    <div>
+      <div class="section-title">Data Lifecycle — Ingestion to Answer</div>
+      <div class="section-desc">Full data lineage trace</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+sequenceDiagram
+    participant SRC as Source (URL/PDF)
+    participant CRAWL2 as Crawler
+    participant PARSE2 as Parser
+    participant CHUNK2 as Chunker
+    participant EMB2 as EmbedService
+    participant VDB2 as ChromaDB
+    participant META2 as SQLite
+    participant RAW2 as /data/raw/
+    participant QPIPE as QueryPipeline
+    participant LLM2 as OpenAI LLM
+    participant USR2 as User
+
+    SRC->>CRAWL2: Seed URL / PDF upload
+    CRAWL2->>RAW2: Save raw content (original)
+    CRAWL2->>PARSE2: Pass HTML/PDF bytes
+    PARSE2->>CHUNK2: Cleaned text string
+    CHUNK2->>EMB2: Chunk list [str, ...]
+    EMB2->>EMB2: Batch 100 chunks
+    EMB2->>EMB2: Call OpenAI embed API
+    EMB2->>VDB2: Store vectors + metadata
+    EMB2->>META2: Insert chunk records
+
+    Note over VDB2,META2: Data at rest — persisted
+
+    USR2->>QPIPE: Query string
+    QPIPE->>EMB2: Embed query
+    EMB2-->>QPIPE: query_vector
+    QPIPE->>VDB2: cosine search TOP_K
+    VDB2-->>QPIPE: chunks + scores + metadata
+    QPIPE->>QPIPE: Assemble context
+    QPIPE->>LLM2: [system + context + query]
+    LLM2-->>QPIPE: answer text
+    QPIPE-->>USR2: { answer, sources, req_id }
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 20: FAILURE SCENARIOS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s20">
+  <div class="section-header">
+    <div class="section-num">20</div>
+    <div>
+      <div class="section-title">Failure Scenarios</div>
+      <div class="section-desc">Missing context · API failure · empty search · cascade failures</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph SC1["SCENARIO A: No Relevant Context Found"]
+        A1[Query embedded]
+        A2[Vector search returns 0 results\nor all scores below threshold]
+        A3[Context block = empty]
+        A4[Prompt: 'No relevant context available.']
+        A5[LLM instructed to return:\n'I don't have enough information.']
+        A6[200 OK returned\nsources: empty array]
+        A1-->A2-->A3-->A4-->A5-->A6
+    end
+
+    subgraph SC2["SCENARIO B: OpenAI API Failure"]
+        B1[LLM call throws exception\nor returns 500/429]
+        B2{Retry attempt\n< 3?}
+        B3[Wait: 2^attempt seconds]
+        B4[502 Bad Gateway\n{error: llm_unavailable}]
+        B5[Log full error + req_id]
+        B1-->B2
+        B2-->|YES| B3-->B1
+        B2-->|NO| B4-->B5
+    end
+
+    subgraph SC3["SCENARIO C: Vector DB Crash"]
+        C1[ChromaDB unavailable\nor corrupted]
+        C2[SearchError raised in pipeline]
+        C3[503 Service Unavailable]
+        C4[Alert fired to monitoring]
+        C5[Admin notified via log / alert]
+        C1-->C2-->C3-->C4-->C5
+    end
+
+    subgraph SC4["SCENARIO D: Embedding API Timeout"]
+        D1[OpenAI embed call timeout\n> 10s]
+        D2[Retry with backoff]
+        D3{Cache hit for\nidentical query?}
+        D4[Use cached vector]
+        D5[503 Embedding Failed]
+        D1-->D2-->D3
+        D3-->|YES| D4
+        D3-->|NO| D5
+    end
+
+    style SC1 fill:#0f1b2b,stroke:#f59e0b
+    style SC2 fill:#0f1b2b,stroke:#ef4444
+    style SC3 fill:#0f1b2b,stroke:#ef4444
+    style SC4 fill:#0f1b2b,stroke:#7c3aed
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 21: RATE LIMITING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s21">
+  <div class="section-header">
+    <div class="section-num">21</div>
+    <div>
+      <div class="section-title">Rate Limiting & Abuse Prevention</div>
+      <div class="section-desc">Sliding window · per-key · per-IP · burst control</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    REQ2([Request]) --> NGINX_RL
+
+    subgraph NGINX_RL["Layer 1: Nginx Rate Limit"]
+        NRL1[limit_req_zone $binary_remote_addr\nzone=api:10m rate=10r/s]
+        NRL2[limit_req zone=api burst=20\nnodelay]
+        NRL3{Burst exceeded?}
+        NRL4[503 + log]
+        NRL1 --> NRL2 --> NRL3
+        NRL3 -->|YES| NRL4
+        NRL3 -->|NO| PASS1
+    end
+
+    PASS1[→ FastAPI] --> APP_RL
+
+    subgraph APP_RL["Layer 2: App-Layer Sliding Window"]
+        AR1[Extract key = IP + API_KEY hash]
+        AR2[Sliding window counter\nRedis / in-memory dict]
+        AR3[Window: 60s\nLimit: 60 requests]
+        AR4{Over limit?}
+        AR5[429 + Retry-After header]
+        AR1 --> AR2 --> AR3 --> AR4
+        AR4 -->|YES| AR5
+        AR4 -->|NO| PASS2
+    end
+
+    PASS2[→ Route Handler]
+
+    subgraph ABUSE["Abuse Detection Heuristics"]
+        AB1[Identical query repeated > 5x in 60s → flag]
+        AB2[Query contains known injection patterns → block]
+        AB3[Unusually large query batches → throttle]
+        AB4[IP blacklist check against known bad actors]
+    end
+
+    PASS2 --> ABUSE
+    </div>
+  </div>
+
+  <pre><span class="c"># In-memory sliding window (no Redis dep for MVP)</span>
+<span class="k">from</span> collections <span class="k">import</span> deque
+<span class="k">import</span> time
+
+rate_store: dict[str, deque] = {}
+
+<span class="k">def</span> <span class="t">is_rate_limited</span>(key: str, limit: int = <span class="v">60</span>, window_s: int = <span class="v">60</span>) -> bool:
+    now = time.time()
+    dq = rate_store.setdefault(key, deque())
+    <span class="c"># Remove entries outside window</span>
+    <span class="k">while</span> dq <span class="k">and</span> dq[<span class="v">0</span>] < now - window_s:
+        dq.popleft()
+    <span class="k">if</span> len(dq) >= limit:
+        <span class="k">return</span> <span class="v">True</span>
+    dq.append(now)
+    <span class="k">return</span> <span class="v">False</span></pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 22: LOGGING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s22">
+  <div class="section-header">
+    <div class="section-num">22</div>
+    <div>
+      <div class="section-title">Logging Architecture</div>
+      <div class="section-desc">Structured JSON · log levels · rotation · correlation IDs</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart LR
+    subgraph SOURCES["Log Sources"]
+        L1[FastAPI request logs]
+        L2[Query pipeline steps]
+        L3[Ingestion events]
+        L4[Error traces]
+        L5[Nginx access logs]
+    end
+
+    subgraph LOGGER["loguru Configuration"]
+        LF1["stdout sink\nlevel: INFO\nformat: JSON"]
+        LF2["file sink\n/data/logs/axyom_{date}.log\nrotation: 100MB / daily\nretention: 30 days\ncompression: gz"]
+        LF3["error sink\n/data/logs/errors.log\nlevel: ERROR only"]
+    end
+
+    subgraph FORMAT["Log Record Schema"]
+        FMT2["{
+  timestamp: ISO8601,
+  level: INFO|WARNING|ERROR,
+  req_id: 'req_7a2f',
+  event: 'query_complete',
+  query_hash: sha256[:8],
+  latency_ms: 812,
+  chunks_retrieved: 5,
+  top_score: 0.94,
+  model: 'gpt-4o',
+  tokens_used: 1240,
+  ip: redacted/hashed,
+  api_key_prefix: 'sk-ax...'
+}"]
+    end
+
+    SOURCES --> LOGGER --> FORMAT
+    </div>
+  </div>
+
+  <div class="callout error">🔐 PII POLICY: IP addresses are hashed before logging. Query content is hashed (not stored). API keys logged as prefix only (first 6 chars). Full query text never written to disk.</div>
+
+  <span class="caps">Log Events Taxonomy</span>
+  <table>
+    <thead><tr><th>Event</th><th>Level</th><th>Fields</th></tr></thead>
+    <tbody>
+      <tr><td><code>request_received</code></td><td><span class="tag tag-blue">INFO</span></td><td>req_id, method, path, ip_hash</td></tr>
+      <tr><td><code>auth_failed</code></td><td><span class="tag tag-yellow">WARN</span></td><td>req_id, reason, ip_hash</td></tr>
+      <tr><td><code>rate_limited</code></td><td><span class="tag tag-yellow">WARN</span></td><td>req_id, key_prefix, ip_hash</td></tr>
+      <tr><td><code>query_start</code></td><td><span class="tag tag-blue">INFO</span></td><td>req_id, query_hash, top_k</td></tr>
+      <tr><td><code>embed_complete</code></td><td><span class="tag tag-blue">INFO</span></td><td>req_id, latency_ms</td></tr>
+      <tr><td><code>search_complete</code></td><td><span class="tag tag-blue">INFO</span></td><td>req_id, results_count, top_score</td></tr>
+      <tr><td><code>llm_complete</code></td><td><span class="tag tag-blue">INFO</span></td><td>req_id, tokens_in, tokens_out, latency_ms</td></tr>
+      <tr><td><code>query_complete</code></td><td><span class="tag tag-blue">INFO</span></td><td>req_id, total_latency_ms</td></tr>
+      <tr><td><code>embed_error</code></td><td><span class="tag tag-red">ERROR</span></td><td>req_id, exception, retry_count</td></tr>
+      <tr><td><code>llm_error</code></td><td><span class="tag tag-red">ERROR</span></td><td>req_id, status_code, exception</td></tr>
+      <tr><td><code>ingest_complete</code></td><td><span class="tag tag-green">INFO</span></td><td>job_id, chunks_added, duration_s</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 23: MONITORING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s23">
+  <div class="section-header">
+    <div class="section-num">23</div>
+    <div>
+      <div class="section-title">Monitoring Hooks</div>
+      <div class="section-desc">Health checks · metrics · alerting · uptime</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph HEALTH["Health Check Endpoint — GET /api/health"]
+        HC1[Check ChromaDB: collection.count()]
+        HC2[Check SQLite: SELECT 1]
+        HC3[Check OpenAI: lightweight ping]
+        HC4[Report uptime_seconds]
+        HC5[Return component statuses]
+        HC1 & HC2 & HC3 & HC4 --> HC5
+    end
+
+    subgraph METRICS["Prometheus Metrics — /metrics"]
+        PM1[axyom_requests_total{route,status}]
+        PM2[axyom_latency_ms{route,p50,p95,p99}]
+        PM3[axyom_llm_tokens_total{model}]
+        PM4[axyom_chunks_in_db gauge]
+        PM5[axyom_embed_errors_total]
+        PM6[axyom_rate_limited_total]
+    end
+
+    subgraph ALERTS["Alert Conditions"]
+        A1["p95 latency > 5s → WARN"]
+        A2["error rate > 5% → CRITICAL"]
+        A3["ChromaDB unreachable → CRITICAL"]
+        A4["OpenAI API errors > 10/min → WARN"]
+        A5["Disk > 80% full → WARN"]
+        A6["Service restart → INFO"]
+    end
+
+    subgraph UPTIME["External Uptime Monitor"]
+        UP1[UptimeRobot / Pingdom\nping /api/health every 60s]
+        UP2[Alert on HTTP ≠ 200\nor response > 3s]
+    end
+
+    HEALTH --> METRICS --> ALERTS
+    UPTIME -.->|external probe| HEALTH
+    </div>
+  </div>
+
+  <span class="caps">Health Response Schema</span>
+  <pre>{
+  <span class="n">"status"</span>:     <span class="s">"healthy"</span>,     <span class="c">// healthy | degraded | unhealthy</span>
+  <span class="n">"components"</span>: {
+    <span class="n">"vector_db"</span>:  { <span class="n">"status"</span>: <span class="s">"ok"</span>, <span class="n">"chunk_count"</span>: <span class="v">48291</span> },
+    <span class="n">"metadata_db"</span>: { <span class="n">"status"</span>: <span class="s">"ok"</span> },
+    <span class="n">"llm_api"</span>:    { <span class="n">"status"</span>: <span class="s">"ok"</span>, <span class="n">"latency_ms"</span>: <span class="v">312</span> }
+  },
+  <span class="n">"uptime_s"</span>:   <span class="v">864000</span>,
+  <span class="n">"version"</span>:    <span class="s">"1.4.2"</span>
+}</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 24: EXTENSIBILITY -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="s24">
+  <div class="section-header">
+    <div class="section-num">24</div>
+    <div>
+      <div class="section-title">Future Extensibility Model</div>
+      <div class="section-desc">Plugin points · abstraction boundaries · swap targets</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph ABSTRACT["Abstraction Interfaces"]
+        I1["EmbedProvider\n──────────\n+ embed(texts) → vectors\n\nImpls: OpenAI ✓\n       Cohere\n       local/ONNX\n       Ollama"]
+        I2["VectorStore\n──────────\n+ upsert(chunks)\n+ search(vec, k)\n+ delete(ids)\n\nImpls: ChromaDB ✓\n       pgvector\n       Pinecone\n       Weaviate"]
+        I3["LLMProvider\n──────────\n+ complete(messages) → str\n\nImpls: OpenAI ✓\n       Anthropic Claude\n       Ollama/local\n       Azure OpenAI"]
+        I4["ContentParser\n──────────\n+ parse(bytes, mime) → str\n\nImpls: HTML ✓\n       PDF ✓\n       DOCX\n       Markdown\n       Confluence API"]
+        I5["StorageBackend\n──────────\n+ save(key, data)\n+ load(key)\n\nImpls: local disk ✓\n       S3\n       GCS"]
+    end
+
+    subgraph PLUGIN["Plugin Extension Points"]
+        P1["Pre-query hooks:\nquery rewriting\nHyDE expansion\nquery routing"]
+        P2["Post-retrieval hooks:\nreranking (Cohere)\ncross-encoder\nMMR diversity"]
+        P3["Post-generation hooks:\nfact checking\ncitation validation\nhallucination detection"]
+        P4["Ingestion hooks:\ncustom parsers\nentity extraction\nauto-tagging"]
+    end
+
+    ABSTRACT --> PLUGIN
+
+    style ABSTRACT fill:#0f1b2b,stroke:#00d4ff
+    style PLUGIN fill:#0f1b2b,stroke:#7c3aed
+    </div>
+  </div>
+
+  <div class="callout success">✅ All interface implementations are registered via dependency injection. Swapping providers requires only updating Settings (env vars) + installing the relevant SDK. No core pipeline code changes required.</div>
+
+  <span class="caps">HyDE Extension Example (Hypothetical Document Embedding)</span>
+  <pre><span class="c"># Drop-in pre-query hook for improved recall on short queries</span>
+<span class="k">class</span> <span class="t">HyDEPreQueryHook</span>:
+    <span class="k">async def</span> <span class="t">__call__</span>(self, query: str, llm: LLMProvider) -> str:
+        <span class="c"># Generate a hypothetical document that would answer the query</span>
+        hyp_doc = <span class="k">await</span> llm.complete([
+            {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"Write a short answer to: {query}"</span>}
+        ])
+        <span class="c"># Embed the hypothetical doc instead of the raw query</span>
+        <span class="k">return</span> hyp_doc  <span class="c"># → passed to embed pipeline</span>
+
+<span class="c"># Register in Settings:</span>
+PRE_QUERY_HOOKS = [<span class="s">"HyDEPreQueryHook"</span>]  <span class="c"># enable via env var</span></pre>
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <div>AXYOM AI — INTERNAL ARCHITECTURE BLUEPRINT · CONFIDENTIAL</div>
+  <div>v1.0 · Generated 2026 · AI Systems Team · DO NOT DISTRIBUTE</div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      background: '#0d1117',
+      primaryColor: '#0f1b2b',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#1e2d3d',
+      lineColor: '#3b5268',
+      secondaryColor: '#0d1525',
+      tertiaryColor: '#070a0f',
+      edgeLabelBackground: '#0d1117',
+      clusterBkg: '#0d1525',
+      titleColor: '#e2e8f0',
+      attributeBackgroundColorEven: '#0d1525',
+      attributeBackgroundColorOdd: '#0f1b2b',
+      actorBkg: '#0f1b2b',
+      actorBorder: '#1e2d3d',
+      actorTextColor: '#e2e8f0',
+      actorLineColor: '#3b5268',
+      signalColor: '#e2e8f0',
+      signalTextColor: '#e2e8f0',
+      labelBoxBkgColor: '#0f1b2b',
+      labelBoxBorderColor: '#1e2d3d',
+      labelTextColor: '#e2e8f0',
+      loopTextColor: '#e2e8f0',
+      noteBorderColor: '#1e2d3d',
+      noteBkgColor: '#0d1525',
+      noteTextColor: '#e2e8f0',
+      activationBorderColor: '#00d4ff',
+      activationBkgColor: '#0f1b2b',
+      sequenceNumberColor: '#e2e8f0',
+      nodeBorder: '#1e2d3d',
+      nodeTextColor: '#e2e8f0',
+      mainBkg: '#0f1b2b',
+      nodeBkg: '#0f1b2b',
+    },
+    flowchart: { curve: 'basis', padding: 20, htmlLabels: true },
+    sequence: { actorMargin: 80, width: 150, noteMargin: 10, messageMargin: 35, mirrorActors: false },
+    securityLevel: 'loose'
+  });
+</script>
+</body>
+</html>

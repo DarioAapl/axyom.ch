@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axyom AI — Loading</title>
+<style>
+/* ══════════════════════════════════════════════════════════
+   AXYOM PRELOADER — self-contained demo
+   This file is a standalone preview.
+   For production embed, use preloader.css + preloader.js.
+══════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: #050e0d;
+  overflow: hidden;
+}
+
+/* ── Core overlay ── */
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #050e0d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2rem, 5vh, 3.5rem);
+  will-change: opacity, transform;
+}
+
+/* Ambient radial glow behind logo */
+#preloader::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0, 178, 160, 0.055) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 25% 80%, rgba(0,  76,  68, 0.06)  0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Logo wrapper ── */
+.pl-logo-wrap {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 80vw);
+  filter: drop-shadow(0 0 0px rgba(0, 178, 160, 0));
+}
+
+.pl-logo-wrap.pl-glow {
+  animation: plGlow 2.6s ease-in-out infinite;
+}
+
+@keyframes plGlow {
+  0%,  100% { filter: drop-shadow(0 0  0px rgba(0, 178, 160, 0.00)); }
+  50%        { filter: drop-shadow(0 0 30px rgba(0, 178, 160, 0.50)); }
+}
+
+#pl-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  /* Paths start with fill/stroke controlled by JS */
+}
+
+/* ── Loading bar ── */
+.pl-bar-track {
+  position: relative;
+  z-index: 1;
+  width: min(180px, 52vw);
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.pl-bar-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #004C44, #00B2A0 55%, #18cbff);
+  border-radius: 99px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.pl-bar-fill.pl-bar-run {
+  transform: scaleX(1);
+}
+
+/* ── Exit ── */
+#preloader.pl-exit {
+  animation: plExit 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes plExit {
+  0%   { opacity: 1; transform: scale(1);    }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     PRELOADER FRAGMENT
+     Copy everything between these comments into index.html,
+     right after <body>, before any other content.
+════════════════════════════════════════════════════════ -->
+<div id="preloader">
+
+  <div class="pl-logo-wrap" id="pl-logo-wrap">
+
+    <svg id="pl-svg"
+         viewBox="0 0 1664 749"
+         fill="none"
+         xmlns="http://www.w3.org/2000/svg"
+         aria-label="Axyom logo" role="img">
+      <defs>
+        <!-- Original fill gradient for the decorative A mark -->
+        <linearGradient id="pl-fill-grad"
+            x1="454" y1="251.5" x2="454.117" y2="748.253"
+            gradientUnits="userSpaceOnUse">
+          <stop stop-color="#00B2A0"/>
+          <stop offset="1" stop-color="#004C44"/>
+        </linearGradient>
+        <!-- Slightly brighter version used during stroke-draw phase -->
+        <linearGradient id="pl-stroke-grad"
+            x1="454" y1="0" x2="454" y2="748.253"
+            gradientUnits="userSpaceOnUse">
+          <stop stop-color="#00D9C4"/>
+          <stop offset="1" stop-color="#007A6E"/>
+        </linearGradient>
+      </defs>
+
+      <!-- p0: Decorative A mark — gradient fill -->
+      <path id="pl-p0" fill="url(#pl-fill-grad)"
+        d="M105.327 748.253C106.039 746.723 106.527 745.043 107.494 743.693C159.109 671.595 210.777 599.543 262.399 527.453C293.037 484.68 323.614 441.862 354.214 399.06C355.114 397.807 355.962 396.51 356.952 395.07C355.812 393.435 354.769 391.898 353.689 390.39C288.567 299.348 223.437 208.305 158.307 117.263C157.669 116.378 157.062 115.47 156.499 114.128C156.559 113.685 156.897 113.362 156.897 113.362C158.044 114.135 159.259 114.825 160.332 115.695C247.947 186.465 335.547 257.243 423.154 328.02C424.482 329.093 425.832 330.15 427.662 331.598C552.574 221.048 677.457 110.52 802.339 0C802.534 0.1575 802.722 0.307496 802.917 0.464996C705.934 131.985 608.959 263.497 511.894 395.137C513.282 397.125 514.519 398.918 515.772 400.695C579.687 491.505 643.602 582.307 707.517 673.117C708.147 674.01 708.754 674.918 709.294 676.275C709.099 676.838 708.979 676.943 708.859 677.055C707.577 676.2 706.227 675.428 705.019 674.483C615.274 604.395 525.544 534.293 435.814 464.19C434.584 463.23 433.332 462.308 431.847 461.183C430.759 462.045 429.649 462.84 428.629 463.74C323.569 556.223 218.517 648.713 113.464 741.203C110.899 743.46 108.312 745.703 105.507 748.117C105.252 748.268 105.327 748.253 105.327 748.253Z"/>
+
+      <!-- p1: Letter "a" (leftmost text glyph) -->
+      <path id="pl-p1" fill="white"
+        d="M296.427 390.03C296.427 414.398 296.427 438.3 296.427 462.825C285.709 476.918 274.429 491.093 263.884 505.793C253.422 520.365 243.694 535.463 233.832 550.058C228.709 550.058 224.352 550.058 219.702 550.058C214.137 537.938 212.929 524.76 211.429 510.93C209.712 512.603 208.617 513.66 207.537 514.733C192.574 529.613 176.014 542.265 156.499 550.62C136.264 559.283 115.069 561.833 93.2291 560.07C79.7291 558.983 66.6791 556.103 54.3866 550.35C23.0216 535.658 4.94658 511.26 1.00908 476.655C-0.918424 459.728 -0.228429 442.935 4.33157 426.48C12.0716 398.543 29.7866 378.99 55.7291 366.683C70.7816 359.543 86.7791 355.245 103.144 352.62C121.324 349.703 139.647 347.723 157.857 344.948C167.089 343.538 176.299 341.693 185.299 339.233C190.002 337.95 194.532 335.378 198.597 332.595C205.324 327.99 208.722 321.27 208.602 312.998C208.557 310.035 208.512 307.035 208.002 304.125C206.134 293.43 200.164 286.043 189.964 282.03C183.072 279.315 175.932 277.763 168.604 277.103C156.282 275.985 143.982 275.678 131.772 278.363C116.374 281.745 105.657 290.535 100.324 305.468C98.3891 310.883 96.9941 316.5 95.2691 322.328C67.5716 322.328 39.4991 322.328 10.8116 322.328C11.3591 317.318 11.7341 312.413 12.4391 307.56C15.0491 289.598 20.5391 272.633 30.4166 257.273C43.1741 237.428 61.3991 224.633 83.2466 216.57C99.4841 210.578 116.367 207.69 133.549 206.348C150.574 205.013 167.577 205.245 184.549 207.218C194.629 208.388 204.612 210.075 214.692 212.903C241.864 250.905 266.487 290.88 296.427 326.655C296.427 348.015 296.427 368.79 296.427 390.03ZM157.714 492.803C165.177 490.418 172.182 487.095 178.954 483.135C190.684 476.273 198.409 466.298 202.849 453.585C206.757 442.41 208.264 430.845 208.369 419.078C208.452 409.71 208.392 400.335 208.392 390.96C208.392 389.775 208.392 388.59 208.392 387.57C207.822 387.36 207.627 387.218 207.529 387.263C206.427 387.818 205.317 388.38 204.244 388.988C196.594 393.315 188.524 396.653 179.922 398.445C167.254 401.078 154.519 403.433 141.829 405.975C132.034 407.94 122.314 410.243 113.187 414.443C101.179 419.97 92.8241 428.775 89.7341 441.878C87.3941 451.793 87.8141 461.708 90.7841 471.48C93.0566 478.943 97.5266 484.77 104.059 489.023C109.909 492.825 116.277 495.15 123.199 496.11C134.712 497.7 145.909 495.983 157.714 492.803Z"/>
+
+      <!-- p2: Letters "mm" (rightmost) -->
+      <path id="pl-p2" fill="white"
+        d="M1572.49 364.717C1572.49 354.562 1572.8 344.865 1572.37 335.19C1572.07 328.207 1571.41 321.12 1569.78 314.347C1565.19 295.312 1551.85 283.77 1532.35 281.467C1523.94 280.477 1515.48 280.605 1507.18 282.532C1490.43 286.425 1478.97 296.602 1472.24 312.277C1468.25 321.57 1466.49 331.372 1465.87 341.392C1465.62 345.442 1465.67 349.515 1465.66 353.572C1465.66 417.007 1465.66 480.435 1465.66 543.87C1465.66 545.737 1465.66 547.597 1465.66 549.405C1462.03 550.38 1388.17 550.777 1376.91 549.87C1376.91 548.137 1376.91 546.33 1376.91 544.53C1376.91 480.157 1376.9 415.792 1376.91 351.42C1376.91 341.107 1376.8 330.795 1374.88 320.61C1374.27 317.4 1373.66 314.152 1372.64 311.055C1367.03 293.962 1354.78 284.752 1337.32 282.487C1326.42 281.077 1315.48 281.595 1304.79 284.58C1286.02 289.822 1275.25 302.25 1271.72 321.27C1270.06 330.225 1269.63 339.247 1269.64 348.315C1269.65 385.027 1269.64 421.747 1269.64 458.46C1269.64 487.05 1269.64 515.64 1269.64 544.23C1269.64 545.94 1269.64 547.657 1269.64 549.315C1265.9 550.477 1199.51 550.95 1181.17 549.99C1180.15 546.78 1179.68 223.95 1180.73 214.47C1208.88 214.47 1237.06 214.47 1265.81 214.47C1265.81 230.092 1265.81 245.722 1265.81 261.345C1266.13 261.442 1266.44 261.547 1266.76 261.645C1267.4 260.707 1268.02 259.747 1268.7 258.825C1273.09 252.757 1277.3 246.54 1281.94 240.667C1295.59 223.387 1313.59 213.21 1335.04 208.927C1355.06 204.93 1375.03 205.23 1395 209.655C1418.21 214.8 1435.27 228.082 1447.03 248.467C1449.67 253.027 1451.94 257.79 1454.6 262.89C1455.31 261.892 1455.9 261.09 1456.46 260.265C1458.66 257.04 1460.75 253.74 1463.05 250.59C1477.18 231.285 1495.56 218.032 1518.73 211.59C1543.67 204.652 1568.68 203.55 1593.44 211.897C1628.1 223.575 1650.01 247.5 1658.77 282.967C1661.04 292.14 1661.81 301.762 1662.46 311.235C1663.17 321.66 1663.11 332.152 1663.09 342.622C1662.98 409.807 1662.79 476.985 1662.61 544.17C1662.61 546.007 1662.61 547.845 1662.61 549.915C1632.42 549.915 1602.67 549.915 1572.5 549.915C1572.49 488.22 1572.49 426.705 1572.49 364.717Z"/>
+
+      <!-- p3: Letter "o" -->
+      <path id="pl-p3" fill="white"
+        d="M963.289 559.522C950.209 557.475 937.789 554.55 925.759 550.042C897.102 539.31 875.007 520.56 858.267 495.142C842.652 471.435 832.789 445.575 828.686 417.51C823.624 382.845 825.492 348.69 836.479 315.255C844.122 291.99 855.964 271.02 871.849 252.412C891.964 228.855 917.831 214.942 947.734 208.14C972.949 202.402 998.434 201.525 1024.11 204.165C1045.09 206.325 1065.24 211.372 1084.14 220.972C1101.26 229.665 1115.76 241.552 1127.67 256.597C1149.38 284.017 1162.72 315.022 1167.59 349.672C1172.33 383.415 1170.29 416.64 1159.93 449.205C1152.9 471.322 1141.87 491.302 1127.26 509.318C1107.4 533.798 1081.52 548.513 1051.21 555.915C1026.86 561.863 1002.12 562.875 977.217 560.955C972.702 560.587 968.209 560.032 963.289 559.522ZM963.544 284.04C951.409 289.612 942.034 298.297 934.834 309.45C925.579 323.79 921.154 339.787 919.024 356.505C916.819 373.785 916.849 391.087 919.009 408.375C920.742 422.242 924.124 435.667 930.544 448.17C939.559 465.727 952.879 478.47 972.026 484.425C983.051 487.852 994.376 488.572 1005.85 487.672C1029.33 485.827 1047.78 475.455 1060.5 455.415C1070.25 440.033 1074.56 422.887 1076.47 405.022C1078.09 389.91 1078.05 374.775 1076.46 359.662C1075 345.937 1072.01 332.587 1066.19 319.98C1057.86 301.912 1045.22 288.09 1025.99 281.737C1005.28 274.897 984.544 275.347 963.544 284.04Z"/>
+
+      <!-- p4: Lower "x" piece -->
+      <path id="pl-p4" fill="white"
+        d="M618.739 618.097C639.086 633.915 659.171 649.53 679.646 665.437C677.756 667.095 676.121 668.73 674.291 670.102C665.479 676.68 655.324 680.122 644.741 682.477C634.496 684.757 624.079 686.002 613.624 686.047C597.859 686.115 582.094 685.537 566.329 685.215C565.586 685.2 564.851 685.02 563.959 684.892C563.959 661.462 563.959 638.28 563.959 614.79C579.761 615.262 595.391 616.552 610.841 611.752C613.391 613.8 615.934 615.84 618.739 618.097Z"/>
+
+      <!-- p5: Tiny "x" chip -->
+      <path id="pl-p5" fill="white"
+        d="M522.041 231.915C519.904 225.877 517.901 220.17 515.899 214.447C519.296 213.487 540.019 213.217 547.736 214.102C539.494 221.415 531.679 228.337 523.601 235.507C523.024 234.172 522.604 233.205 522.041 231.915Z"/>
+
+      <!-- p6: "x" / "y" body (the vy-shape spanning x, y) -->
+      <path id="pl-p6" fill="white"
+        d="M773.164 433.628C753.897 487.905 736.257 542.378 715.497 595.733C710.412 608.805 704.434 621.525 698.839 634.395C698.179 635.91 697.332 637.335 696.387 639.158C695.322 637.793 694.512 636.863 693.814 635.858C674.449 608.228 655.069 580.598 635.772 552.923C634.369 550.905 633.312 548.573 632.487 546.24C609.229 480.195 586.024 414.135 562.819 348.068C562.414 346.905 562.099 345.713 561.717 344.475C583.032 315.48 604.287 286.56 626.187 256.778C646.557 325.17 666.409 392.79 687.334 460.328C710.307 378.248 733.272 296.168 756.297 213.893C787.294 213.893 818.187 213.893 849.807 213.893C824.262 287.16 798.792 360.225 773.164 433.628Z"/>
+
+    </svg>
+  </div><!-- .pl-logo-wrap -->
+
+  <div class="pl-bar-track">
+    <div class="pl-bar-fill" id="pl-bar-fill"></div>
+  </div>
+
+</div><!-- #preloader -->
+<!-- ════════════════════════════════════════════════════ END FRAGMENT ══ -->
+
+
+<script>
+/**
+ * AXYOM PRELOADER — inline animation script
+ *
+ * For production: move this to preloader.js and load it via <script src="preloader.js">
+ *
+ * Public API:
+ *   window.hidePreloader(callback?)  — hide immediately (cancels auto-exit timer)
+ */
+(function () {
+  'use strict';
+
+  /* ── CONFIG ───────────────────────────────── */
+  var DRAW_DURATION = 1000;   // ms per path stroke animation
+  var STAGGER       = 85;     // ms between successive path starts
+  var FILL_DELAY    = DRAW_DURATION + 6 * STAGGER + 240;
+  var FILL_DURATION = 650;
+  var GLOW_DELAY    = FILL_DELAY + Math.round(FILL_DURATION * 0.55);
+  var EXIT_DELAY    = 3300;
+
+  /* ── ELEMENTS ─────────────────────────────── */
+  var preloader = document.getElementById('preloader');
+  var logoWrap  = document.getElementById('pl-logo-wrap');
+  var barFill   = document.getElementById('pl-bar-fill');
+  var svg       = document.getElementById('pl-svg');
+
+  if (!preloader || !svg) return;
+
+  /* ── PATH ORDER — left → right visual reveal ── */
+  var pathOrder = [
+    'pl-p0',  // Decorative A mark     (gradient, spans full width, drawn first as anchor)
+    'pl-p1',  // letter a              (far left text)
+    'pl-p5',  // tiny x chip
+    'pl-p4',  // x lower piece
+    'pl-p6',  // x / y body
+    'pl-p3',  // o
+    'pl-p2',  // mm (rightmost)
+  ];
+
+  var paths = pathOrder.map(function (id) {
+    return document.getElementById(id);
+  }).filter(Boolean);
+
+  var originalFills = paths.map(function (p) {
+    return p.getAttribute('fill');
+  });
+
+  /* ── PHASE 1: Stroke setup + draw ─────────── */
+  paths.forEach(function (p, i) {
+    var len        = Math.ceil(p.getTotalLength());
+    var isGradient = originalFills[i] && originalFills[i].indexOf('url(') === 0;
+
+    p.setAttribute('fill',           'none');
+    p.setAttribute('stroke',         isGradient ? 'url(#pl-stroke-grad)' : 'rgba(255,255,255,0.85)');
+    p.setAttribute('stroke-width',   '5');
+    p.setAttribute('stroke-linejoin','round');
+    p.setAttribute('stroke-linecap', 'round');
+
+    p.style.strokeDasharray  = String(len);
+    p.style.strokeDashoffset = String(len);
+  });
+
+  /* Double rAF — ensures initial invisible state renders before transition fires */
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      paths.forEach(function (p, i) {
+        p.style.transition =
+          'stroke-dashoffset ' + DRAW_DURATION + 'ms ' +
+          'cubic-bezier(0.4,0,0.2,1) ' +
+          (i * STAGGER) + 'ms';
+        p.style.strokeDashoffset = '0';
+      });
+    });
+  });
+
+  /* ── PHASE 2: Fill fades in, stroke fades out ── */
+  var fillTimer = setTimeout(function () {
+    paths.forEach(function (p, i) {
+      var delay = i * 50;
+      p.style.transition = [
+        'fill '           + FILL_DURATION                       + 'ms ease ' + delay + 'ms',
+        'stroke-opacity ' + Math.round(FILL_DURATION * 0.65)   + 'ms ease ' + delay + 'ms',
+      ].join(', ');
+      p.setAttribute('fill', originalFills[i]);
+      p.style.strokeOpacity = '0';
+    });
+  }, FILL_DELAY);
+
+  /* ── PHASE 3: Glow pulse ────────────────────── */
+  var glowTimer = setTimeout(function () {
+    if (logoWrap) logoWrap.classList.add('pl-glow');
+  }, GLOW_DELAY);
+
+  /* ── LOADING BAR ────────────────────────────── */
+  requestAnimationFrame(function () {
+    if (barFill) barFill.classList.add('pl-bar-run');
+  });
+
+  /* ── EXIT ───────────────────────────────────── */
+  function doExit(cb) {
+    preloader.classList.add('pl-exit');
+    preloader.addEventListener('animationend', function () {
+      preloader.style.display = 'none';
+      document.documentElement.classList.remove('preloader-active');
+      if (typeof cb === 'function') cb();
+    }, { once: true });
+  }
+
+  var exitTimer = setTimeout(function () { doExit(); }, EXIT_DELAY);
+
+  /* ── PUBLIC API ─────────────────────────────── */
+  /**
+   * Call window.hidePreloader() to dismiss immediately.
+   * Useful when all assets have loaded:
+   *
+   *   window.addEventListener('load', function () {
+   *     window.hidePreloader();
+   *   });
+   */
+  window.hidePreloader = function (callback) {
+    clearTimeout(fillTimer);
+    clearTimeout(glowTimer);
+    clearTimeout(exitTimer);
+    doExit(callback);
+  };
+
+})();
+</script>
+
+</body>
+</html>

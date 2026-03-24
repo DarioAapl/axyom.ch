@@ -1,0 +1,3340 @@
+<!DOCTYPE html>
+<html lang="en" class="preloader-active">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axyom AI — Intelligent Sales Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="preloader.css">
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+/* ═══════════════════════════════════════
+   CSS CUSTOM PROPERTIES
+═══════════════════════════════════════ */
+:root {
+  --bg-primary:   #000000;
+  --bg-secondary: #000000;
+  --bg-card:      #0a0a0a;
+  --accent:       #00B2A0;
+  --accent-glow:  rgba(0, 178, 160, 0.15);
+  --accent-dim:   rgba(0, 178, 160, 0.08);
+  --accent-border:rgba(0, 178, 160, 0.25);
+  --text-primary: #E8E8F0;
+  --text-secondary:#6B6B80;
+  --border:       rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --success:      #00FF9D;
+  --error:        #FF4C6A;
+  --font-display: 'Inter', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --radius:       16px;
+  --radius-sm:    10px;
+}
+
+/* ── Preloader: lock scroll until animation exits ── */
+html.preloader-active body { overflow: hidden; }
+
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glow orbs */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(120px);
+}
+body::before {
+  width: 700px; height: 700px;
+  top: -200px; left: -200px;
+  background: radial-gradient(circle, rgba(0,178,160,0.07) 0%, transparent 70%);
+}
+body::after {
+  width: 600px; height: 600px;
+  bottom: 10%; right: -150px;
+  background: radial-gradient(circle, rgba(0,178,160,0.05) 0%, transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════ */
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.05; letter-spacing: -0.02em; }
+p { font-family: var(--font-body); }
+
+.label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.label::before {
+  content: '';
+  display: inline-block;
+  width: 18px; height: 1px;
+  background: var(--accent);
+}
+
+/* ═══════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════ */
+.container { max-width: 1140px; margin: 0 auto; padding: 0 clamp(1.25rem, 5vw, 3.5rem); }
+.text-accent { color: var(--accent); }
+.text-muted  { color: var(--text-secondary); }
+
+/* ═══════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.8rem 1.75rem;
+  font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+  border-radius: var(--radius-sm);
+  text-decoration: none; cursor: pointer; border: none;
+  transition: all 0.25s ease;
+  letter-spacing: 0.01em;
+  position: relative; overflow: hidden;
+}
+.btn-primary {
+  background: var(--accent); color: #000;
+  box-shadow: 0 0 24px rgba(0,178,160,0.3);
+}
+.btn-primary:hover {
+  box-shadow: 0 0 48px rgba(0,178,160,0.5), 0 0 80px rgba(0,178,160,0.2);
+  transform: translateY(-2px);
+  background: #18cbff;
+}
+.btn-outline {
+  background: transparent; color: var(--text-primary);
+  border: 1px solid var(--border-hover);
+}
+.btn-outline:hover {
+  border-color: var(--accent-border); color: var(--accent);
+  background: var(--accent-dim);
+  transform: translateY(-2px);
+}
+.btn-ghost {
+  background: var(--accent-dim); color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.btn-ghost:hover {
+  background: rgba(0,178,160,0.15);
+  box-shadow: 0 0 24px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+#nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  height: 68px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 clamp(1.25rem, 5vw, 3.5rem);
+  transition: background 0.4s, backdrop-filter 0.4s, border-bottom 0.4s;
+}
+#nav.scrolled {
+  background: rgba(8,8,13,0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: var(--font-display); font-size: 1.25rem; font-weight: 800;
+  color: var(--text-primary); text-decoration: none; letter-spacing: -0.03em;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+#nav.scrolled .nav-logo {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nav-logo .a-mark {
+  color: var(--accent);
+  position: relative;
+  display: inline-block;
+}
+.nav-logo .a-mark::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+.nav-links {
+  display: flex; align-items: center; gap: 2.25rem;
+  list-style: none; margin: 0; justify-content: center;
+}
+.nav-links a {
+  font-family: var(--font-body); font-size: 0.875rem; font-weight: 500;
+  color: var(--text-secondary); text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text-primary); }
+.nav-right {
+  display: flex; align-items: center; justify-content: flex-end; gap: 0;
+}
+.nav-cta {
+  padding: 0.5rem 1.25rem !important;
+  font-size: 0.85rem !important;
+}
+/* ─── HAMBURGER + MOBILE NAV ─── */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  z-index: 1001;
+  flex-shrink: 0;
+}
+.nav-hamburger span {
+  display: block;
+  width: 22px; height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: center;
+}
+.nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.nav-mobile-overlay {
+  position: fixed; inset: 0;
+  background: rgba(5, 14, 13, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: 998;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2.5rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.nav-mobile-overlay.open {
+  opacity: 1; pointer-events: all;
+}
+.nav-mobile-links {
+  list-style: none;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 2rem;
+  padding: 0; margin: 0;
+}
+.nav-mobile-links a {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 9vw, 2.75rem); font-weight: 800;
+  color: var(--text-primary); text-decoration: none;
+  letter-spacing: -0.03em;
+  transition: color 0.2s;
+}
+.nav-mobile-links a:hover, .nav-mobile-links a:focus { color: var(--accent); }
+.nav-mobile-overlay .btn {
+  font-size: 1rem !important;
+  padding: 0.875rem 2.5rem !important;
+}
+
+@media (max-width: 900px) {
+  #nav { display: flex; }
+  .nav-links { display: none; }
+  .nav-right { margin-left: auto; }
+  .nav-cta { display: none; }
+  .lang-switcher { display: none; }
+  .nav-hamburger { display: flex; margin-left: 0; }
+}
+
+/* ─── LANGUAGE SWITCHER ─── */
+.lang-switcher {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 1.25rem;
+}
+.lang-btn {
+  display: flex; align-items: center; gap: 0.35rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.lang-btn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+}
+.lang-btn svg { flex-shrink: 0; opacity: 0.6; transition: transform 0.2s; }
+.lang-switcher.open .lang-btn svg { transform: rotate(180deg); }
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(10,14,13,0.97);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 110px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0; pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 2000;
+  backdrop-filter: blur(20px);
+}
+.lang-switcher.open .lang-dropdown {
+  opacity: 1; pointer-events: all;
+  transform: translateY(0);
+}
+.lang-option {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.lang-option:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+.lang-option.active { color: var(--accent); }
+.lang-option .lang-flag { font-size: 1rem; line-height: 1; }
+.lang-option .lang-label { letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.78rem; font-weight: 600; }
+/* Mobile lang switcher inside overlay */
+.lang-switcher-mobile {
+  display: flex; gap: 1rem; margin-top: 0.5rem;
+}
+.lang-mobile-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+  color: var(--text-secondary); cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.lang-mobile-btn:hover, .lang-mobile-btn.active {
+  color: var(--accent); border-color: var(--accent-border);
+  background: var(--accent-dim);
+}
+
+/* ═══════════════════════════════════════
+   HERO — SCROLLYTELLING
+═══════════════════════════════════════ */
+#hero-scrolly {
+  position: relative; z-index: 1;
+  height: 700vh; /* matches end: '+=700%' */
+}
+.hero-pin {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 10;
+  background: #050e0d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ─ Top content: headline area ─ */
+.hero-top {
+  text-align: center;
+  padding: 5.5rem clamp(1.25rem, 5vw, 3.5rem) 0;
+  position: relative; z-index: 3;
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.hero-wordmark {
+  width: 70vw;
+  margin: 0 auto 1.5rem;
+  opacity: 0; transform: translateY(24px);
+}
+.hero-wordmark svg {
+  width: 100%; height: auto; display: block;
+  filter: drop-shadow(0 0 80px rgba(0,178,160,0.4));
+}
+@media (max-width: 540px) {
+  .hero-wordmark { width: 96vw; }
+}
+
+.hero-headline {
+  font-size: clamp(1.3rem, 2.6vw, 2.6rem);
+  font-weight: 800; line-height: 1.2; letter-spacing: -0.02em;
+  max-width: 700px; margin: 0 auto 0.875rem;
+  opacity: 0;
+}
+.hero-headline span {
+  background: linear-gradient(90deg, #00B2A0 0%, #007A6E 50%, #004C44 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem); color: var(--text-secondary);
+  font-weight: 400; line-height: 1.75;
+  max-width: 540px; margin: 0 auto 1.25rem;
+  opacity: 0;
+}
+
+.hero-arrow {
+  display: flex; justify-content: center;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+}
+.scroll-line {
+  position: relative;
+  width: 1px;
+  height: 64px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to bottom, transparent, #00B2A0, transparent);
+  border-radius: 99px;
+  animation: scrollDrop 1.8s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+@keyframes scrollDrop {
+  0%   { top: -50%; opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; opacity: 0; }
+
+/* ─ 3D Screen / Browser mockup ─ */
+.hero-screen-wrap {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(64vw, 920px);
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  z-index: 2;
+  pointer-events: none;
+}
+.hero-screen {
+  width: 100%;
+  max-width: 920px;
+  transform-origin: center bottom;
+  /* initial state: pushed down, rotated, scaled small — set via GSAP */
+  will-change: transform, opacity;
+}
+.hero-screen .browser {
+  background: #111118;
+  border: 2px solid rgba(108,108,108,0.5);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 40px 80px rgba(0,0,0,0.8),
+    0 80px 160px rgba(0,0,0,0.5);
+}
+.hero-screen .browser-body {
+  min-height: 460px;
+  position: relative;
+  display: flex;
+  background: var(--bg-primary);
+}
+@media (max-width: 768px) {
+  .hero-screen .browser-body { min-height: 300px; }
+}
+
+.browser {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.browser-bar {
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+  padding: 0.65rem 1rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.b-url {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 6px; padding: 0.3rem 0.75rem;
+  font-size: 0.72rem; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.b-url::before { content:'🔒'; font-size:0.62rem; }
+
+.site-bg {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+  opacity: 0.18;
+}
+.sk { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.sk-h { height: 18px; width: 55%; }
+.sk-s { height: 11px; }
+.sk-s2 { height: 11px; width: 40%; }
+
+/* Website mockup inside browser */
+.mock-site {
+  flex: 1; padding: 2rem 2.5rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+}
+.mock-nav {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.mock-logo {
+  font-family: var(--font-display); font-weight: 800; font-size: 1.1rem;
+  color: var(--text-primary); letter-spacing: -0.02em;
+}
+.mock-nav-links { display: flex; gap: 1.5rem; }
+.mock-nav-links span {
+  font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;
+}
+.mock-hero-area {
+  flex: 1; display: flex; flex-direction: column; justify-content: center;
+  gap: 0.75rem; max-width: 500px;
+}
+.mock-hero-area h3 {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 800;
+  color: var(--text-primary); line-height: 1.15; letter-spacing: -0.02em;
+}
+.mock-hero-area p {
+  font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6;
+}
+.mock-hero-area .mock-btn {
+  display: inline-block; padding: 0.4rem 1rem;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+  border-radius: 6px; font-size: 0.68rem; color: var(--text-secondary);
+  width: fit-content;
+}
+.mock-cards { display: flex; gap: 0.75rem; }
+.mock-card {
+  flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem;
+}
+.mock-card-h { height: 10px; width: 60%; background: rgba(255,255,255,0.08); border-radius: 2px; margin-bottom: 0.5rem; }
+.mock-card-p { height: 7px; width: 100%; background: rgba(255,255,255,0.04); border-radius: 2px; margin-bottom: 0.35rem; }
+.mock-card-p2 { height: 7px; width: 70%; background: rgba(255,255,255,0.04); border-radius: 2px; }
+@media (max-width: 768px) {
+  .mock-site { padding: 1rem 1.25rem; }
+  .mock-hero-area h3 { font-size: 1rem; }
+  .mock-cards { display: none; }
+  .mock-nav-links { display: none; }
+}
+
+/* Chat widget inside browser */
+.chat-widget {
+  position: absolute; bottom: 1.25rem; right: 1.25rem;
+  width: 320px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 16px 60px rgba(0,0,0,0.6), 0 0 0 1px var(--accent-border), 0 0 30px rgba(0,178,160,0.08);
+}
+@media (max-width: 600px) {
+  .chat-widget { position: relative; bottom: auto; right: auto; width: 100%; border-radius: 0; }
+}
+.cw-head {
+  background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  display: flex; align-items: center; gap: 0.625rem;
+}
+.cw-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-dim); border: 1px solid var(--accent-border);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.cw-avatar svg { width: 12px; height: 12px; }
+.cw-name { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); }
+.cw-status { font-size: 0.65rem; color: var(--accent); display: flex; align-items: center; gap: 0.25rem; }
+.cw-status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.cw-msgs { padding: 0.875rem; min-height: 180px; display: flex; flex-direction: column; gap: 0.625rem; }
+.cw-msg {
+  max-width: 88%; padding: 0.5rem 0.75rem;
+  font-size: 0.75rem; line-height: 1.5;
+  border-radius: 10px; opacity: 0;
+}
+.cw-msg.user {
+  align-self: flex-end;
+  background: var(--accent-dim); border: 1px solid var(--accent-border);
+  color: var(--text-primary); border-radius: 10px 10px 2px 10px;
+}
+.cw-msg.ai {
+  align-self: flex-start;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  color: var(--text-secondary); border-radius: 10px 10px 10px 2px;
+}
+.cw-typing { display: flex; gap: 3px; padding: 0.5rem 0.75rem; opacity: 0; align-self: flex-start; }
+.cw-typing span {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--text-secondary);
+  animation: bounce 1.2s ease-in-out infinite;
+}
+.cw-typing span:nth-child(2){animation-delay:0.2s}
+.cw-typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+.cw-input-bar {
+  padding: 0.625rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.cw-input {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 7px; padding: 0.45rem 0.75rem;
+  font-size: 0.72rem; color: var(--text-secondary);
+  font-family: var(--font-body); outline: none;
+}
+.cw-send {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: var(--accent); border: none; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.cw-send svg { width: 11px; height: 11px; }
+
+/* ─ Scrollytelling Story Cards ─ */
+.story-cards {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; z-index: 10;
+}
+.story-card {
+  position: absolute;
+  width: clamp(260px, 28vw, 380px);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.75rem 2rem;
+  /* Liquid glass — teal tinted */
+  background: linear-gradient(
+    135deg,
+    rgba(0, 178, 160, 0.18) 0%,
+    rgba(0, 178, 160, 0.08) 50%,
+    rgba(0, 76, 68, 0.15) 100%
+  );
+  border-radius: var(--radius);
+  border: 1px solid rgba(0, 178, 160, 0.35);
+  backdrop-filter: blur(48px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.05);
+  box-shadow:
+    0 2px 0 0 rgba(0, 220, 200, 0.3) inset,      /* top specular highlight */
+    0 -1px 0 0 rgba(0, 178, 160, 0.08) inset,    /* bottom edge */
+    1px 0 0 0 rgba(0, 178, 160, 0.1) inset,      /* left edge */
+    -1px 0 0 0 rgba(0, 178, 160, 0.1) inset,     /* right edge */
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 24px 64px rgba(0, 0, 0, 0.2),
+    0 0 40px rgba(0, 178, 160, 0.1),
+    0 0 0 0.5px rgba(0, 178, 160, 0.2);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(30px);
+  will-change: opacity, transform;
+}
+/* Liquid glass shimmer layer */
+.story-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(0, 220, 200, 0.2) 0%,
+    rgba(0, 178, 160, 0.05) 40%,
+    rgba(0, 76, 68, 0.1) 100%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+.story-card .story-num {
+  font-family: var(--font-display); font-size: 0.65rem; font-weight: 700;
+  color: rgba(0, 178, 160, 0.9); text-transform: uppercase; letter-spacing: 0.15em;
+  margin-bottom: 0.625rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  position: relative;
+}
+.story-card .story-num::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(0,178,160,0.35), rgba(255,255,255,0.1), transparent);
+}
+.story-card h4 {
+  font-family: var(--font-display); font-size: clamp(1.5rem, 2.2vw, 2rem); font-weight: 700;
+  color: rgba(255, 255, 255, 0.95); margin-bottom: 0; line-height: 1.15;
+  position: relative;
+}
+.story-card p {
+  font-size: clamp(1rem, 1.35vw, 1.2rem); color: rgba(255, 255, 255, 0.55); line-height: 1.65;
+  position: relative;
+}
+
+/* Story card positions — 1,2,5 left · 3,4 right */
+.story-card:nth-child(1),
+.story-card:nth-child(2),
+.story-card:nth-child(5) {
+  left: clamp(1.5rem, 4vw, 4rem);
+  right: auto;
+  top: 28%;
+}
+.story-card:nth-child(3),
+.story-card:nth-child(4) {
+  right: clamp(1.5rem, 4vw, 4rem);
+  left: auto;
+  top: 28%;
+}
+
+@media (max-width: 540px) {
+  .hero-screen-wrap {
+    width: 88vw;
+    top: 38%;
+  }
+  .hero-screen .browser-body { min-height: 220px; }
+
+  .story-card {
+    width: 84vw !important;
+    left: 50% !important; right: auto !important;
+    margin-left: calc(-42vw) !important;
+    top: auto !important;
+    bottom: 6% !important;
+    aspect-ratio: auto !important;
+    padding: 1.25rem 1.5rem;
+  }
+  .story-card h4 { font-size: clamp(1.1rem, 4vw, 1.4rem); }
+  .story-card p  { font-size: clamp(0.85rem, 3vw, 1rem); }
+}
+
+/* Screen glow behind browser */
+.hero-screen::before {
+  content: '';
+  position: absolute; bottom: -20%; left: 50%;
+  transform: translateX(-50%);
+  width: 80%; height: 50%;
+  background: radial-gradient(ellipse, rgba(0,178,160,0.15) 0%, transparent 70%);
+  pointer-events: none; z-index: -1;
+  filter: blur(60px);
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.hero-screen.revealed::before { opacity: 1; }
+
+/* Story title — appears after hero text exits */
+.hero-story-title {
+  position: absolute;
+  top: clamp(4.5rem, 7vh, 6rem);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.hst-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+.hst-heading {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.2vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════
+   SPEED SCROLLYTELLING
+═══════════════════════════════════════ */
+#speed-scrolly {
+  position: relative;
+  height: 350vh;
+  z-index: 1;
+}
+.speed-pin {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  isolation: isolate; /* contain mix-blend-mode to this section */
+}
+/* Atmospheric background — full-screen gradient that shifts per card */
+#speed-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen; /* screen-blends with the black canvas: black→teal, lines stay bright */
+  background: #000;
+  transition: none;
+}
+#speed-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+#speed-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+/* Cards container */
+.speed-cards {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  perspective: 900px;
+  perspective-origin: center 45%;
+}
+/* Speed cards — half-screen with image */
+.speed-card {
+  position: absolute;
+  width: 44vw;
+  top: 28%;
+  height: 50vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border-radius: var(--radius);
+  border: 1px solid rgba(0, 178, 160, 0.35);
+  backdrop-filter: blur(48px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.05);
+  box-shadow:
+    0 2px 0 0 rgba(0, 220, 200, 0.3) inset,
+    0 -1px 0 0 rgba(0, 178, 160, 0.08) inset,
+    1px 0 0 0 rgba(0, 178, 160, 0.1) inset,
+    -1px 0 0 0 rgba(0, 178, 160, 0.1) inset,
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 24px 64px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.sc-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 2rem 2.5rem;
+  justify-content: center;
+}
+/* Per-card background colors — distinct moods from the brand palette */
+.speed-card:nth-child(1) {
+  background: rgba(0, 178, 160, 0.18);
+  border-color: rgba(0, 178, 160, 0.50);
+  box-shadow: 0 2px 0 0 rgba(0,220,200,0.3) inset, 0 8px 40px rgba(0,0,0,0.4), 0 0 50px rgba(0,178,160,0.15);
+}
+.speed-card:nth-child(2) {
+  background: rgba(0, 36, 32, 0.65);
+  border-color: rgba(0, 76, 68, 0.55);
+  box-shadow: 0 2px 0 0 rgba(0,100,90,0.25) inset, 0 8px 40px rgba(0,0,0,0.5), 0 0 50px rgba(0,76,68,0.20);
+}
+.speed-card:nth-child(3) {
+  background: rgba(0, 122, 110, 0.22);
+  border-color: rgba(0, 144, 130, 0.50);
+  box-shadow: 0 2px 0 0 rgba(0,180,162,0.25) inset, 0 8px 40px rgba(0,0,0,0.4), 0 0 50px rgba(0,122,110,0.15);
+}
+.speed-card:nth-child(4) {
+  background: rgba(0, 52, 46, 0.55);
+  border-color: rgba(0, 100, 90, 0.50);
+  box-shadow: 0 2px 0 0 rgba(0,140,126,0.25) inset, 0 8px 40px rgba(0,0,0,0.45), 0 0 50px rgba(0,100,90,0.18);
+}
+.speed-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 60%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+.sc-body { position: relative; z-index: 2; }
+.speed-card .sc-num {
+  font-family: var(--font-display); font-size: 0.65rem; font-weight: 700;
+  color: rgba(0, 178, 160, 0.9); text-transform: uppercase; letter-spacing: 0.15em;
+  margin-bottom: 0.625rem;
+  display: flex; align-items: center; gap: 0.5rem; position: relative;
+}
+.speed-card .sc-num::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(0,178,160,0.35), rgba(255,255,255,0.1), transparent);
+}
+.speed-card h4 {
+  font-family: var(--font-display); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800;
+  color: rgba(255, 255, 255, 0.95); margin-bottom: 0; line-height: 1.1;
+  position: relative;
+}
+.speed-card p {
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem); color: rgba(255, 255, 255, 0.55); line-height: 1.65;
+  position: relative;
+}
+/* Card positions — each card fills its half of the screen */
+.speed-card.sc-left  { left: 2%; }
+.speed-card.sc-right { right: 2%; }
+@media (max-width: 900px) {
+  .speed-card {
+    width: min(84vw, 480px);
+    left: 50% !important;
+    right: auto !important;
+    margin-left: min(-42vw, -240px) !important;
+    top: 44%;
+    height: 48vh;
+    padding: 0;
+  }
+  .speed-card h4 { font-size: clamp(1.5rem, 4vw, 2rem); }
+  .speed-card p  { font-size: clamp(0.9rem, 2.5vw, 1.15rem); }
+  .sc-body { padding: 1.75rem 2rem; }
+}
+
+/* Speed section title */
+#speed-title {
+  position: absolute;
+  top: 14%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: none;
+  opacity: 0;
+  white-space: nowrap;
+  text-align: center;
+}
+.speed-title-text {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+@media (max-width: 900px) {
+  #speed-title { white-space: normal; padding: 0 1.5rem; top: 12%; }
+}
+
+/* ═══════════════════════════════════════
+   PROBLEM CAROUSEL
+═══════════════════════════════════════ */
+#problem {
+  padding: 8rem 0;
+  position: relative; z-index: 1;
+  overflow: hidden;
+  border-radius: 2.5rem 2.5rem 0 0;
+}
+/* Fade in from the black hero above, fade out to the black speed section below */
+#problem::before,
+#problem::after {
+  content: '';
+  position: absolute; left: 0; right: 0;
+  height: 120px; pointer-events: none; z-index: 10;
+}
+#problem::before {
+  top: 0;
+  background: linear-gradient(to bottom, #000 0%, transparent 100%);
+}
+#problem::after {
+  bottom: 0;
+  background: linear-gradient(to top, #000 0%, transparent 100%);
+}
+/* Initial hidden states driven by GSAP */
+#prob-label, #prob-h2, #prob-carousel-wrap {
+  will-change: transform, opacity;
+}
+.prob-swiper {
+  width: 100%;
+  padding-bottom: 64px !important;
+  overflow: hidden !important;
+}
+.prob-swiper .swiper-wrapper { align-items: stretch; }
+.prob-swiper .swiper-slide {
+  height: auto;
+  transform: scale(0.84);
+  opacity: 0.45;
+  transition: transform 0.45s ease, opacity 0.45s ease;
+}
+.prob-swiper .swiper-slide-active  { transform: scale(1)    !important; opacity: 1    !important; }
+.prob-swiper .swiper-slide-prev,
+.prob-swiper .swiper-slide-next    { transform: scale(0.91) !important; opacity: 0.72 !important; }
+.prob-swiper .swiper-pagination { bottom: 0; }
+.prob-swiper .swiper-pagination-bullet {
+  background: rgba(0,178,160,0.18); opacity: 1;
+  width: 6px; height: 6px; transition: all 0.3s ease;
+}
+.prob-swiper .swiper-pagination-bullet-active {
+  background: var(--accent); width: 22px; border-radius: 99px;
+}
+.prob-swiper .swiper-slide-active .custom-card,
+.prob-swiper .swiper-slide:hover .custom-card {
+  border-color: rgba(0,178,160,0.28);
+  box-shadow: 0 12px 60px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06) inset, 0 0 80px rgba(0,178,160,0.06) inset;
+}
+
+/* ═══════════════════════════════════════
+   SPEED → HOW TRANSITION
+═══════════════════════════════════════ */
+/* Gradient fade at the tail of the speed section */
+#speed-scrolly::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 180px;
+  background: linear-gradient(to bottom, transparent 0%, #000 100%);
+  pointer-events: none; z-index: 5;
+}
+
+/* ═══════════════════════════════════════
+   HOW IT WORKS — FLUID EXPANDING GRID
+═══════════════════════════════════════ */
+#how { position: relative; z-index: 1; padding: 8rem 0; }
+
+.how-header { text-align: center; margin-bottom: 3rem; }
+.how-heading {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800; margin-bottom: 0.875rem;
+}
+
+/* ── Fluid grid wrapper — GSAP positions cards absolutely ── */
+.feg-wrap {
+  position: relative;
+  width: min(860px, 90vw); margin: 0 auto;
+  height: 500px;
+}
+
+/* ── Individual cards ── */
+.feg-card {
+  position: absolute; border-radius: 32px; overflow: hidden;
+  cursor: pointer; z-index: 1;
+}
+.feg-card.feg-solo { cursor: default; z-index: 2; }
+
+.feg-card img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; transition: transform 0.7s ease;
+}
+.feg-card:hover img { transform: scale(1.04); }
+
+.feg-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.1) 100%);
+}
+.feg-card::after {
+  content: ''; position: absolute; inset: 0; border-radius: 32px;
+  border: 1.5px solid rgba(0,178,160,0.0);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  pointer-events: none;
+}
+.feg-card.feg-solo::after {
+  border-color: rgba(0,178,160,0.45);
+  box-shadow: inset 0 0 32px rgba(0,178,160,0.07);
+}
+
+.feg-content {
+  position: absolute; inset: 0; padding: 1.5rem 1.75rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+  z-index: 2;
+}
+.feg-step {
+  display: inline-block;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #fff; font-family: var(--font-body);
+  padding: 0.3em 0.9em;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.feg-bottom { display: flex; flex-direction: column; gap: 0.3rem; }
+.feg-title {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.5vw, 1.45rem);
+  font-weight: 800; color: #fff; line-height: 1.2;
+}
+.feg-sub {
+  font-size: 0.82rem; color: rgba(255,255,255,0.65); line-height: 1.55;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.45s ease;
+}
+.feg-card.feg-solo .feg-sub { max-height: 5rem; opacity: 1; }
+
+/* ═══════════════════════════════════════
+   FEATURES
+═══════════════════════════════════════ */
+#features { padding: 8rem 0; position: relative; z-index: 1; }
+.features-head { text-align: center; max-width: 560px; margin: 0 auto 3.5rem; padding: 0 1.25rem; }
+.features-head .label { justify-content: center; }
+.features-head h2 { font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; margin-bottom: 0.875rem; }
+.features-head p { color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.7; }
+
+.features-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  max-width: 1100px; margin: 0 auto;
+}
+@media (max-width: 900px) { .features-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .features-grid { grid-template-columns: 1fr; } }
+
+.feat-card {
+  background: var(--bg-primary);
+  padding: 2rem;
+  transition: background 0.3s;
+}
+.feat-card:hover { background: var(--bg-card); }
+.feat-card:hover .feat-icon { border-color: var(--accent-border); box-shadow: 0 0 20px rgba(0,178,160,0.2); }
+
+.feat-icon {
+  width: 46px; height: 46px;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.25rem; transition: all 0.3s;
+}
+.feat-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.feat-card h3 { font-family: var(--font-display); font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+.feat-card p  { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.65; }
+
+
+/* ═══════════════════════════════════════
+   COMPARISON TABLE
+═══════════════════════════════════════ */
+#comparison { padding: 8rem 0; position: relative; z-index: 1; }
+.comp-inner { max-width: 900px; margin: 0 auto; padding: 0 clamp(1.25rem,5vw,3.5rem); }
+.comp-inner .label { display: flex; }
+.comp-inner h2 { font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; margin-bottom: 3rem; line-height: 1.1; }
+
+.comp-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.comp-table th, .comp-table td { padding: 0.875rem 1.25rem; font-size: 0.875rem; }
+.comp-table thead th { font-family: var(--font-display); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.comp-table thead th:first-child { background: var(--bg-card); color: var(--text-secondary); width: 36%; text-align: left; border-radius: 10px 0 0 0; border: 1px solid var(--border); border-right: none; }
+.comp-table thead th.th-old { background: var(--bg-card); color: var(--text-secondary); text-align: center; border: 1px solid var(--border); border-left: none; border-right: none; }
+.comp-table thead th.th-new { background: var(--accent-dim); color: var(--accent); text-align: center; border: 1px solid var(--accent-border); border-radius: 0 10px 0 0; }
+.comp-table tbody tr td:first-child { background: var(--bg-secondary); color: var(--text-primary); border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.comp-table tbody tr td.td-old { background: var(--bg-secondary); color: var(--text-secondary); text-align: center; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); }
+.comp-table tbody tr td.td-new { background: rgba(0,178,160,0.03); text-align: center; border-right: 1px solid var(--accent-border); border-bottom: 1px solid rgba(0,178,160,0.1); border-left: 1px solid var(--accent-border); }
+.comp-table tbody tr:last-child td:first-child { border-radius: 0 0 0 10px; }
+.comp-table tbody tr:last-child td.td-old { }
+.comp-table tbody tr:last-child td.td-new { border-radius: 0 0 10px 0; border-bottom: 1px solid var(--accent-border); }
+.comp-table tbody tr { }
+.chk { color: var(--accent); font-weight: 600; }
+.crs { color: var(--text-secondary); opacity: 0.5; }
+
+/* ═══════════════════════════════════════
+   CUSTOM SOLUTIONS CAROUSEL
+═══════════════════════════════════════ */
+#custom {
+  padding: 8rem 0;
+  position: relative; z-index: 1;
+  overflow: hidden;
+}
+.custom-swiper {
+  width: 100%;
+  padding-bottom: 64px !important;
+  overflow: hidden !important;
+}
+.custom-swiper .swiper-wrapper { align-items: stretch; }
+.custom-swiper .swiper-slide {
+  height: auto;
+  transform: scale(0.82);
+  opacity: 0.5;
+  transition: transform 0.45s ease, opacity 0.45s ease;
+}
+.custom-swiper .swiper-slide-active {
+  transform: scale(1) !important;
+  opacity: 1 !important;
+}
+.custom-swiper .swiper-slide-prev,
+.custom-swiper .swiper-slide-next {
+  transform: scale(0.91) !important;
+  opacity: 0.75 !important;
+}
+
+/* Liquid glass card */
+.custom-card {
+  background: linear-gradient(135deg,
+    rgba(0,178,160,0.07) 0%,
+    rgba(0,70,64,0.04) 50%,
+    rgba(0,0,0,0) 100%);
+  backdrop-filter: blur(48px) saturate(200%) brightness(1.06);
+  -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.06);
+  border: 1px solid rgba(0,178,160,0.14);
+  border-radius: 24px;
+  padding: 2.25rem 1.75rem 2rem;
+  height: 100%; box-sizing: border-box;
+  position: relative; overflow: hidden;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.45),
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 0 60px rgba(0,178,160,0.03) inset;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+  display: flex; flex-direction: column;
+}
+.custom-card::before {
+  content: '';
+  position: absolute; top: 0; left: 15%; right: 15%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,178,160,0.5), transparent);
+}
+.custom-card::after {
+  content: '';
+  position: absolute; top: -60px; left: -60px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(0,178,160,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.swiper-slide-active .custom-card,
+.custom-swiper .swiper-slide:hover .custom-card {
+  border-color: rgba(0,178,160,0.28);
+  box-shadow:
+    0 12px 60px rgba(0,0,0,0.55),
+    0 1px 0 rgba(255,255,255,0.06) inset,
+    0 0 80px rgba(0,178,160,0.06) inset;
+}
+.custom-card-icon {
+  width: 44px; height: 44px;
+  background: rgba(0,178,160,0.08);
+  border: 1px solid rgba(0,178,160,0.16);
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem; margin-bottom: 1.25rem; flex-shrink: 0;
+}
+.custom-card-industry {
+  font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 0.6rem;
+}
+.custom-card h4 {
+  font-size: 1.1rem; font-weight: 700; line-height: 1.25;
+  font-family: var(--font-display);
+  color: var(--text-primary); margin-bottom: 0.75rem;
+}
+.custom-card p {
+  font-size: 0.845rem; color: var(--text-secondary);
+  line-height: 1.65; margin: 0; flex: 1;
+}
+.custom-card-tags {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 1.4rem;
+}
+.custom-tag {
+  font-size: 0.6rem; font-weight: 600;
+  padding: 0.18rem 0.55rem; border-radius: 99px;
+  background: rgba(0,178,160,0.06);
+  border: 1px solid rgba(0,178,160,0.12);
+  color: rgba(0,178,160,0.7);
+}
+.custom-swiper .swiper-pagination { bottom: 0; }
+.custom-swiper .swiper-pagination-bullet {
+  background: rgba(0,178,160,0.18); opacity: 1;
+  width: 6px; height: 6px; transition: all 0.3s ease;
+}
+.custom-swiper .swiper-pagination-bullet-active {
+  background: var(--accent); width: 22px; border-radius: 99px;
+}
+
+/* ═══════════════════════════════════════
+   CLOSING CTA
+═══════════════════════════════════════ */
+#cta {
+  padding: 8rem 0;
+  position: relative; z-index: 1; overflow: hidden;
+}
+.cta-orb {
+  position: absolute; top: 40%; left: 30%;
+  transform: translate(-50%, -50%);
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,178,160,0.07) 0%, transparent 65%);
+  filter: blur(80px); pointer-events: none;
+}
+/* Two-column layout */
+.cta-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+/* Left copy */
+.cta-copy .label { margin-bottom: 1.25rem; }
+.cta-copy h2 {
+  font-size: clamp(2.2rem, 4vw, 3.8rem); font-weight: 800; line-height: 1.05;
+  letter-spacing: -0.03em; margin-bottom: 1.25rem;
+}
+.cta-copy h2 em { font-style: normal; color: var(--accent); }
+.cta-copy p {
+  color: var(--text-secondary); font-size: 1rem; line-height: 1.75;
+  max-width: 400px;
+}
+.cta-copy .cta-trust {
+  margin-top: 2rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+.cta-copy .cta-trust span {
+  font-size: 0.82rem; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.cta-copy .cta-trust span::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+/* Form card */
+.cta-form-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 2.5rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 2px 0 0 rgba(255,255,255,0.04) inset;
+}
+.cta-form-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  margin-bottom: 1rem;
+}
+.cta-form-group {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.cta-form-group:last-of-type { margin-bottom: 1.5rem; }
+.cta-form-group label {
+  font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.cta-form-group input,
+.cta-form-group textarea {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body); font-size: 0.92rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  resize: none;
+}
+.cta-form-group input::placeholder,
+.cta-form-group textarea::placeholder { color: rgba(255,255,255,0.22); }
+.cta-form-group input:focus,
+.cta-form-group textarea:focus {
+  border-color: rgba(0,178,160,0.55);
+  background: rgba(0,178,160,0.04);
+}
+.cta-form-group textarea { min-height: 110px; }
+.cta-form-btns {
+  display: flex; gap: 0.875rem;
+}
+.cta-form-btns .btn-primary {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 10px;
+  font-family: var(--font-body); font-size: 0.92rem; font-weight: 600;
+  cursor: pointer; transition: background 0.2s, transform 0.15s;
+}
+.cta-form-btns .btn-primary:hover { background: #00c9b5; transform: translateY(-1px); }
+.cta-form-btns .btn-ghost-sm {
+  display: flex; align-items: center; gap: 0.45rem;
+  padding: 0.875rem 1.25rem;
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  background: transparent; color: var(--text-secondary);
+  font-family: var(--font-body); font-size: 0.88rem; font-weight: 500;
+  cursor: pointer; text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.cta-form-btns .btn-ghost-sm:hover { border-color: rgba(255,255,255,0.25); color: var(--text-primary); }
+/* Success state */
+.cta-form-success {
+  display: none; text-align: center; padding: 2rem 0;
+}
+.cta-form-success svg { color: var(--accent); margin-bottom: 1rem; }
+.cta-form-success h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+.cta-form-success p  { color: var(--text-secondary); font-size: 0.9rem; }
+/* Mobile */
+@media (max-width: 768px) {
+  .cta-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .cta-form-row { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 2.5rem clamp(1.25rem,5vw,3.5rem);
+  position: relative; z-index: 1;
+}
+.footer-inner {
+  max-width: 1140px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 1.5rem;
+}
+.footer-copy { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; }
+.footer-links { display: flex; gap: 1.5rem; }
+.footer-links a { font-size: 0.78rem; color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+.footer-links a:hover { color: var(--text-primary); }
+.footer-swiss {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.75rem; color: var(--text-secondary);
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--border); border-radius: 100px;
+}
+
+/* ═══════════════════════════════════════
+   COMPARISON TABLE — HORIZONTAL SCROLL
+═══════════════════════════════════════ */
+.comp-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius);
+}
+.comp-table-scroll .comp-table { min-width: 480px; }
+
+/* ═══════════════════════════════════════
+   ADDITIONAL MOBILE BREAKPOINTS
+═══════════════════════════════════════ */
+
+/* Tablet & small laptop */
+@media (max-width: 768px) {
+  #how     { padding: 5rem 0; }
+  #features{ padding: 5rem 0; }
+  #comparison { padding: 5rem 0; }
+  #problem { padding: 5rem 0; }
+  #custom  { padding: 5rem 0; }
+  #cta     { padding: 5rem 0; }
+
+  .hero-top {
+    padding-top: 0;
+    height: 100vh;
+    justify-content: center;
+    padding-bottom: 2rem;
+  }
+  #hero-arrow {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0;
+  }
+
+  /* Speed section height */
+  #speed-scrolly { height: 300vh; }
+
+  /* FEG grid height */
+  .feg-wrap { height: 420px; }
+  .feg-card { border-radius: 24px; }
+}
+
+/* Mobile phones */
+@media (max-width: 600px) {
+  .hero-btns .btn { padding: 0.75rem 1.25rem; font-size: 0.84rem; }
+
+  /* FEG: reduce height for stacked feel */
+  .feg-wrap { height: 380px; }
+
+
+  /* CTA section */
+  #cta .cta-btn-wrap .btn {
+    padding: 0.875rem 1.75rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+  .hero-btns { flex-direction: column; align-items: center; width: 100%; }
+  .hero-btns .btn { width: min(280px, 90vw); justify-content: center; }
+
+  .story-card { width: 200px !important; }
+
+
+  .feg-wrap { height: 340px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ PRELOADER ══ -->
+<div id="preloader">
+
+  <div class="pl-bg-glow" aria-hidden="true"></div>
+
+  <div class="pl-logo-wrap" id="pl-logo-wrap">
+    <svg id="pl-svg" viewBox="0 0 1664 749" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-label="Axyom logo" role="img">
+      <defs>
+        <linearGradient id="pl-fill-grad" x1="454" y1="251.5" x2="454.117" y2="748.253" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#00B2A0"/>
+          <stop offset="1" stop-color="#004C44"/>
+        </linearGradient>
+        <linearGradient id="pl-stroke-grad" x1="454" y1="251.5" x2="454.117" y2="748.253" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#00B2A0"/>
+          <stop offset="1" stop-color="#004C44"/>
+        </linearGradient>
+        <!-- Soft leading-edge gradient for the wave mask (objectBoundingBox so it
+             always goes left→right regardless of where the edge rect is placed) -->
+        <linearGradient id="pl-edge-grad" gradientUnits="objectBoundingBox" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="white"/>
+          <stop offset="1" stop-color="white" stop-opacity="0"/>
+        </linearGradient>
+        <!-- Wave mask: body rect grows left→right, edge rect adds a soft fade -->
+        <mask id="pl-fill-mask" maskUnits="userSpaceOnUse" x="-10" y="-10" width="1684" height="769">
+          <rect id="pl-wave-body" x="0" y="-10" width="0"   height="769" fill="white"/>
+          <rect id="pl-wave-edge" x="-90" y="-10" width="90" height="769" fill="url(#pl-edge-grad)"/>
+        </mask>
+      </defs>
+      <path id="pl-p0" fill="url(#pl-fill-grad)" fill-opacity="0" d="M105.327 748.253C106.039 746.723 106.527 745.043 107.494 743.693C159.109 671.595 210.777 599.543 262.399 527.453C293.037 484.68 323.614 441.862 354.214 399.06C355.114 397.807 355.962 396.51 356.952 395.07C355.812 393.435 354.769 391.898 353.689 390.39C288.567 299.348 223.437 208.305 158.307 117.263C157.669 116.378 157.062 115.47 156.499 114.128C156.559 113.685 156.897 113.362 156.897 113.362C158.044 114.135 159.259 114.825 160.332 115.695C247.947 186.465 335.547 257.243 423.154 328.02C424.482 329.093 425.832 330.15 427.662 331.598C552.574 221.048 677.457 110.52 802.339 0C802.534 0.1575 802.722 0.307496 802.917 0.464996C705.934 131.985 608.959 263.497 511.894 395.137C513.282 397.125 514.519 398.918 515.772 400.695C579.687 491.505 643.602 582.307 707.517 673.117C708.147 674.01 708.754 674.918 709.294 676.275C709.099 676.838 708.979 676.943 708.859 677.055C707.577 676.2 706.227 675.428 705.019 674.483C615.274 604.395 525.544 534.293 435.814 464.19C434.584 463.23 433.332 462.308 431.847 461.183C430.759 462.045 429.649 462.84 428.629 463.74C323.569 556.223 218.517 648.713 113.464 741.203C110.899 743.46 108.312 745.703 105.507 748.117C105.252 748.268 105.327 748.253 105.327 748.253Z"/>
+      <path id="pl-p1" fill="white" fill-opacity="0" d="M296.427 390.03C296.427 414.398 296.427 438.3 296.427 462.825C285.709 476.918 274.429 491.093 263.884 505.793C253.422 520.365 243.694 535.463 233.832 550.058C228.709 550.058 224.352 550.058 219.702 550.058C214.137 537.938 212.929 524.76 211.429 510.93C209.712 512.603 208.617 513.66 207.537 514.733C192.574 529.613 176.014 542.265 156.499 550.62C136.264 559.283 115.069 561.833 93.2291 560.07C79.7291 558.983 66.6791 556.103 54.3866 550.35C23.0216 535.658 4.94658 511.26 1.00908 476.655C-0.918424 459.728 -0.228429 442.935 4.33157 426.48C12.0716 398.543 29.7866 378.99 55.7291 366.683C70.7816 359.543 86.7791 355.245 103.144 352.62C121.324 349.703 139.647 347.723 157.857 344.948C167.089 343.538 176.299 341.693 185.299 339.233C190.002 337.95 194.532 335.378 198.597 332.595C205.324 327.99 208.722 321.27 208.602 312.998C208.557 310.035 208.512 307.035 208.002 304.125C206.134 293.43 200.164 286.043 189.964 282.03C183.072 279.315 175.932 277.763 168.604 277.103C156.282 275.985 143.982 275.678 131.772 278.363C116.374 281.745 105.657 290.535 100.324 305.468C98.3891 310.883 96.9941 316.5 95.2691 322.328C67.5716 322.328 39.4991 322.328 10.8116 322.328C11.3591 317.318 11.7341 312.413 12.4391 307.56C15.0491 289.598 20.5391 272.633 30.4166 257.273C43.1741 237.428 61.3991 224.633 83.2466 216.57C99.4841 210.578 116.367 207.69 133.549 206.348C150.574 205.013 167.577 205.245 184.549 207.218C194.629 208.388 204.612 210.075 214.692 212.903C241.864 250.905 266.487 290.88 296.427 326.655C296.427 348.015 296.427 368.79 296.427 390.03ZM157.714 492.803C165.177 490.418 172.182 487.095 178.954 483.135C190.684 476.273 198.409 466.298 202.849 453.585C206.757 442.41 208.264 430.845 208.369 419.078C208.452 409.71 208.392 400.335 208.392 390.96C208.392 389.775 208.392 388.59 208.392 387.57C207.822 387.36 207.627 387.218 207.529 387.263C206.427 387.818 205.317 388.38 204.244 388.988C196.594 393.315 188.524 396.653 179.922 398.445C167.254 401.078 154.519 403.433 141.829 405.975C132.034 407.94 122.314 410.243 113.187 414.443C101.179 419.97 92.8241 428.775 89.7341 441.878C87.3941 451.793 87.8141 461.708 90.7841 471.48C93.0566 478.943 97.5266 484.77 104.059 489.023C109.909 492.825 116.277 495.15 123.199 496.11C134.712 497.7 145.909 495.983 157.714 492.803Z"/>
+      <path id="pl-p2" fill="white" fill-opacity="0" d="M1572.49 364.717C1572.49 354.562 1572.8 344.865 1572.37 335.19C1572.07 328.207 1571.41 321.12 1569.78 314.347C1565.19 295.312 1551.85 283.77 1532.35 281.467C1523.94 280.477 1515.48 280.605 1507.18 282.532C1490.43 286.425 1478.97 296.602 1472.24 312.277C1468.25 321.57 1466.49 331.372 1465.87 341.392C1465.62 345.442 1465.67 349.515 1465.66 353.572C1465.66 417.007 1465.66 480.435 1465.66 543.87C1465.66 545.737 1465.66 547.597 1465.66 549.405C1462.03 550.38 1388.17 550.777 1376.91 549.87C1376.91 548.137 1376.91 546.33 1376.91 544.53C1376.91 480.157 1376.9 415.792 1376.91 351.42C1376.91 341.107 1376.8 330.795 1374.88 320.61C1374.27 317.4 1373.66 314.152 1372.64 311.055C1367.03 293.962 1354.78 284.752 1337.32 282.487C1326.42 281.077 1315.48 281.595 1304.79 284.58C1286.02 289.822 1275.25 302.25 1271.72 321.27C1270.06 330.225 1269.63 339.247 1269.64 348.315C1269.65 385.027 1269.64 421.747 1269.64 458.46C1269.64 487.05 1269.64 515.64 1269.64 544.23C1269.64 545.94 1269.64 547.657 1269.64 549.315C1265.9 550.477 1199.51 550.95 1181.17 549.99C1180.15 546.78 1179.68 223.95 1180.73 214.47C1208.88 214.47 1237.06 214.47 1265.81 214.47C1265.81 230.092 1265.81 245.722 1265.81 261.345C1266.13 261.442 1266.44 261.547 1266.76 261.645C1267.4 260.707 1268.02 259.747 1268.7 258.825C1273.09 252.757 1277.3 246.54 1281.94 240.667C1295.59 223.387 1313.59 213.21 1335.04 208.927C1355.06 204.93 1375.03 205.23 1395 209.655C1418.21 214.8 1435.27 228.082 1447.03 248.467C1449.67 253.027 1451.94 257.79 1454.6 262.89C1455.31 261.892 1455.9 261.09 1456.46 260.265C1458.66 257.04 1460.75 253.74 1463.05 250.59C1477.18 231.285 1495.56 218.032 1518.73 211.59C1543.67 204.652 1568.68 203.55 1593.44 211.897C1628.1 223.575 1650.01 247.5 1658.77 282.967C1661.04 292.14 1661.81 301.762 1662.46 311.235C1663.17 321.66 1663.11 332.152 1663.09 342.622C1662.98 409.807 1662.79 476.985 1662.61 544.17C1662.61 546.007 1662.61 547.845 1662.61 549.915C1632.42 549.915 1602.67 549.915 1572.5 549.915C1572.49 488.22 1572.49 426.705 1572.49 364.717Z"/>
+      <path id="pl-p3" fill="white" fill-opacity="0" d="M963.289 559.522C950.209 557.475 937.789 554.55 925.759 550.042C897.102 539.31 875.007 520.56 858.267 495.142C842.652 471.435 832.789 445.575 828.686 417.51C823.624 382.845 825.492 348.69 836.479 315.255C844.122 291.99 855.964 271.02 871.849 252.412C891.964 228.855 917.831 214.942 947.734 208.14C972.949 202.402 998.434 201.525 1024.11 204.165C1045.09 206.325 1065.24 211.372 1084.14 220.972C1101.26 229.665 1115.76 241.552 1127.67 256.597C1149.38 284.017 1162.72 315.022 1167.59 349.672C1172.33 383.415 1170.29 416.64 1159.93 449.205C1152.9 471.322 1141.87 491.302 1127.26 509.318C1107.4 533.798 1081.52 548.513 1051.21 555.915C1026.86 561.863 1002.12 562.875 977.217 560.955C972.702 560.587 968.209 560.032 963.289 559.522ZM963.544 284.04C951.409 289.612 942.034 298.297 934.834 309.45C925.579 323.79 921.154 339.787 919.024 356.505C916.819 373.785 916.849 391.087 919.009 408.375C920.742 422.242 924.124 435.667 930.544 448.17C939.559 465.727 952.879 478.47 972.026 484.425C983.051 487.852 994.376 488.572 1005.85 487.672C1029.33 485.827 1047.78 475.455 1060.5 455.415C1070.25 440.033 1074.56 422.887 1076.47 405.022C1078.09 389.91 1078.05 374.775 1076.46 359.662C1075 345.937 1072.01 332.587 1066.19 319.98C1057.86 301.912 1045.22 288.09 1025.99 281.737C1005.28 274.897 984.544 275.347 963.544 284.04Z"/>
+      <path id="pl-p4" fill="white" fill-opacity="0" d="M618.739 618.097C639.086 633.915 659.171 649.53 679.646 665.437C677.756 667.095 676.121 668.73 674.291 670.102C665.479 676.68 655.324 680.122 644.741 682.477C634.496 684.757 624.079 686.002 613.624 686.047C597.859 686.115 582.094 685.537 566.329 685.215C565.586 685.2 564.851 685.02 563.959 684.892C563.959 661.462 563.959 638.28 563.959 614.79C579.761 615.262 595.391 616.552 610.841 611.752C613.391 613.8 615.934 615.84 618.739 618.097Z"/>
+      <path id="pl-p5" fill="white" fill-opacity="0" d="M522.041 231.915C519.904 225.877 517.901 220.17 515.899 214.447C519.296 213.487 540.019 213.217 547.736 214.102C539.494 221.415 531.679 228.337 523.601 235.507C523.024 234.172 522.604 233.205 522.041 231.915Z"/>
+      <path id="pl-p6" fill="white" fill-opacity="0" d="M773.164 433.628C753.897 487.905 736.257 542.378 715.497 595.733C710.412 608.805 704.434 621.525 698.839 634.395C698.179 635.91 697.332 637.335 696.387 639.158C695.322 637.793 694.512 636.863 693.814 635.858C674.449 608.228 655.069 580.598 635.772 552.923C634.369 550.905 633.312 548.573 632.487 546.24C609.229 480.195 586.024 414.135 562.819 348.068C562.414 346.905 562.099 345.713 561.717 344.475C583.032 315.48 604.287 286.56 626.187 256.778C646.557 325.17 666.409 392.79 687.334 460.328C710.307 378.248 733.272 296.168 756.297 213.893C787.294 213.893 818.187 213.893 849.807 213.893C824.262 287.16 798.792 360.225 773.164 433.628Z"/>
+    </svg>
+  </div>
+
+  <div class="pl-bar-track">
+    <div class="pl-bar-fill" id="pl-bar-fill"></div>
+  </div>
+
+</div><!-- #preloader -->
+<!-- ══════════════════════════════════════════════════════ -->
+
+<!-- ─── NAV ─── -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <img src="Assets/axyomwhitelogo.png" alt="axyom" style="height:30px;width:auto;display:block;">
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how" data-i18n="nav.how">How It Works</a></li>
+    <li><a href="#features" data-i18n="nav.features">Features</a></li>
+    <li><a href="#custom" data-i18n="nav.solutions">Solutions</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="#cta" class="btn btn-ghost nav-cta" data-i18n="nav.cta">Contact</a>
+    <div class="lang-switcher" id="lang-switcher">
+      <button class="lang-btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false">
+        <span id="lang-current">EN</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="lang-dropdown" role="listbox" id="lang-dropdown">
+        <button class="lang-option active" data-lang="en" role="option"><span class="lang-flag">🇬🇧</span><span class="lang-label">EN</span></button>
+        <button class="lang-option" data-lang="de" role="option"><span class="lang-flag">🇩🇪</span><span class="lang-label">DE</span></button>
+        <button class="lang-option" data-lang="it" role="option"><span class="lang-flag">🇮🇹</span><span class="lang-label">IT</span></button>
+        <button class="lang-option" data-lang="fr" role="option"><span class="lang-flag">🇫🇷</span><span class="lang-label">FR</span></button>
+      </div>
+    </div>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ─── MOBILE NAV OVERLAY ─── -->
+<div class="nav-mobile-overlay" id="nav-mobile-overlay" role="dialog" aria-modal="true" aria-label="Navigation">
+  <ul class="nav-mobile-links">
+    <li><a href="#how" data-i18n="nav.how">How It Works</a></li>
+    <li><a href="#features" data-i18n="nav.features">Features</a></li>
+    <li><a href="#custom" data-i18n="nav.solutions">Solutions</a></li>
+  </ul>
+  <a href="#cta" class="btn btn-ghost" data-i18n="nav.cta">Contact</a>
+  <div class="lang-switcher-mobile">
+    <button class="lang-mobile-btn active" data-lang="en">🇬🇧 EN</button>
+    <button class="lang-mobile-btn" data-lang="de">🇩🇪 DE</button>
+    <button class="lang-mobile-btn" data-lang="it">🇮🇹 IT</button>
+    <button class="lang-mobile-btn" data-lang="fr">🇫🇷 FR</button>
+  </div>
+</div>
+
+<!-- ─── HERO SCROLLYTELLING ─── -->
+<section id="hero-scrolly">
+  <div class="hero-pin" id="hero-pin">
+    <canvas id="aurora-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+
+    <!-- Hero text: fills top of viewport on load -->
+    <div class="hero-top" id="hero-top">
+      <!-- Big wordmark logo -->
+      <div class="hero-wordmark" id="hero-wordmark">
+        <svg viewBox="0 0 1664 749" fill="none" xmlns="http://www.w3.org/2000/svg"
+             style="width:100%;height:auto;display:block;" aria-label="Axyom" role="img">
+          <defs>
+            <linearGradient id="hw-grad" x1="454" y1="251.5" x2="454.117" y2="748.253" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#00B2A0"/>
+              <stop offset="1" stop-color="#004C44"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#hw-grad)" d="M105.327 748.253C106.039 746.723 106.527 745.043 107.494 743.693C159.109 671.595 210.777 599.543 262.399 527.453C293.037 484.68 323.614 441.862 354.214 399.06C355.114 397.807 355.962 396.51 356.952 395.07C355.812 393.435 354.769 391.898 353.689 390.39C288.567 299.348 223.437 208.305 158.307 117.263C157.669 116.378 157.062 115.47 156.499 114.128C156.559 113.685 156.897 113.362 156.897 113.362C158.044 114.135 159.259 114.825 160.332 115.695C247.947 186.465 335.547 257.243 423.154 328.02C424.482 329.093 425.832 330.15 427.662 331.598C552.574 221.048 677.457 110.52 802.339 0C802.534 0.1575 802.722 0.307496 802.917 0.464996C705.934 131.985 608.959 263.497 511.894 395.137C513.282 397.125 514.519 398.918 515.772 400.695C579.687 491.505 643.602 582.307 707.517 673.117C708.147 674.01 708.754 674.918 709.294 676.275C709.099 676.838 708.979 676.943 708.859 677.055C707.577 676.2 706.227 675.428 705.019 674.483C615.274 604.395 525.544 534.293 435.814 464.19C434.584 463.23 433.332 462.308 431.847 461.183C430.759 462.045 429.649 462.84 428.629 463.74C323.569 556.223 218.517 648.713 113.464 741.203C110.899 743.46 108.312 745.703 105.507 748.117C105.252 748.268 105.327 748.253 105.327 748.253Z"/>
+          <path fill="white" d="M296.427 390.03C296.427 414.398 296.427 438.3 296.427 462.825C285.709 476.918 274.429 491.093 263.884 505.793C253.422 520.365 243.694 535.463 233.832 550.058C228.709 550.058 224.352 550.058 219.702 550.058C214.137 537.938 212.929 524.76 211.429 510.93C209.712 512.603 208.617 513.66 207.537 514.733C192.574 529.613 176.014 542.265 156.499 550.62C136.264 559.283 115.069 561.833 93.2291 560.07C79.7291 558.983 66.6791 556.103 54.3866 550.35C23.0216 535.658 4.94658 511.26 1.00908 476.655C-0.918424 459.728 -0.228429 442.935 4.33157 426.48C12.0716 398.543 29.7866 378.99 55.7291 366.683C70.7816 359.543 86.7791 355.245 103.144 352.62C121.324 349.703 139.647 347.723 157.857 344.948C167.089 343.538 176.299 341.693 185.299 339.233C190.002 337.95 194.532 335.378 198.597 332.595C205.324 327.99 208.722 321.27 208.602 312.998C208.557 310.035 208.512 307.035 208.002 304.125C206.134 293.43 200.164 286.043 189.964 282.03C183.072 279.315 175.932 277.763 168.604 277.103C156.282 275.985 143.982 275.678 131.772 278.363C116.374 281.745 105.657 290.535 100.324 305.468C98.3891 310.883 96.9941 316.5 95.2691 322.328C67.5716 322.328 39.4991 322.328 10.8116 322.328C11.3591 317.318 11.7341 312.413 12.4391 307.56C15.0491 289.598 20.5391 272.633 30.4166 257.273C43.1741 237.428 61.3991 224.633 83.2466 216.57C99.4841 210.578 116.367 207.69 133.549 206.348C150.574 205.013 167.577 205.245 184.549 207.218C194.629 208.388 204.612 210.075 214.692 212.903C241.864 250.905 266.487 290.88 296.427 326.655C296.427 348.015 296.427 368.79 296.427 390.03ZM157.714 492.803C165.177 490.418 172.182 487.095 178.954 483.135C190.684 476.273 198.409 466.298 202.849 453.585C206.757 442.41 208.264 430.845 208.369 419.078C208.452 409.71 208.392 400.335 208.392 390.96C208.392 389.775 208.392 388.59 208.392 387.57C207.822 387.36 207.627 387.218 207.529 387.263C206.427 387.818 205.317 388.38 204.244 388.988C196.594 393.315 188.524 396.653 179.922 398.445C167.254 401.078 154.519 403.433 141.829 405.975C132.034 407.94 122.314 410.243 113.187 414.443C101.179 419.97 92.8241 428.775 89.7341 441.878C87.3941 451.793 87.8141 461.708 90.7841 471.48C93.0566 478.943 97.5266 484.77 104.059 489.023C109.909 492.825 116.277 495.15 123.199 496.11C134.712 497.7 145.909 495.983 157.714 492.803Z"/>
+          <path fill="white" d="M1572.49 364.717C1572.49 354.562 1572.8 344.865 1572.37 335.19C1572.07 328.207 1571.41 321.12 1569.78 314.347C1565.19 295.312 1551.85 283.77 1532.35 281.467C1523.94 280.477 1515.48 280.605 1507.18 282.532C1490.43 286.425 1478.97 296.602 1472.24 312.277C1468.25 321.57 1466.49 331.372 1465.87 341.392C1465.62 345.442 1465.67 349.515 1465.66 353.572C1465.66 417.007 1465.66 480.435 1465.66 543.87C1465.66 545.737 1465.66 547.597 1465.66 549.405C1462.03 550.38 1388.17 550.777 1376.91 549.87C1376.91 548.137 1376.91 546.33 1376.91 544.53C1376.91 480.157 1376.9 415.792 1376.91 351.42C1376.91 341.107 1376.8 330.795 1374.88 320.61C1374.27 317.4 1373.66 314.152 1372.64 311.055C1367.03 293.962 1354.78 284.752 1337.32 282.487C1326.42 281.077 1315.48 281.595 1304.79 284.58C1286.02 289.822 1275.25 302.25 1271.72 321.27C1270.06 330.225 1269.63 339.247 1269.64 348.315C1269.65 385.027 1269.64 421.747 1269.64 458.46C1269.64 487.05 1269.64 515.64 1269.64 544.23C1269.64 545.94 1269.64 547.657 1269.64 549.315C1265.9 550.477 1199.51 550.95 1181.17 549.99C1180.15 546.78 1179.68 223.95 1180.73 214.47C1208.88 214.47 1237.06 214.47 1265.81 214.47C1265.81 230.092 1265.81 245.722 1265.81 261.345C1266.13 261.442 1266.44 261.547 1266.76 261.645C1267.4 260.707 1268.02 259.747 1268.7 258.825C1273.09 252.757 1277.3 246.54 1281.94 240.667C1295.59 223.387 1313.59 213.21 1335.04 208.927C1355.06 204.93 1375.03 205.23 1395 209.655C1418.21 214.8 1435.27 228.082 1447.03 248.467C1449.67 253.027 1451.94 257.79 1454.6 262.89C1455.31 261.892 1455.9 261.09 1456.46 260.265C1458.66 257.04 1460.75 253.74 1463.05 250.59C1477.18 231.285 1495.56 218.032 1518.73 211.59C1543.67 204.652 1568.68 203.55 1593.44 211.897C1628.1 223.575 1650.01 247.5 1658.77 282.967C1661.04 292.14 1661.81 301.762 1662.46 311.235C1663.17 321.66 1663.11 332.152 1663.09 342.622C1662.98 409.807 1662.79 476.985 1662.61 544.17C1662.61 546.007 1662.61 547.845 1662.61 549.915C1632.42 549.915 1602.67 549.915 1572.5 549.915C1572.49 488.22 1572.49 426.705 1572.49 364.717Z"/>
+          <path fill="white" d="M963.289 559.522C950.209 557.475 937.789 554.55 925.759 550.042C897.102 539.31 875.007 520.56 858.267 495.142C842.652 471.435 832.789 445.575 828.686 417.51C823.624 382.845 825.492 348.69 836.479 315.255C844.122 291.99 855.964 271.02 871.849 252.412C891.964 228.855 917.831 214.942 947.734 208.14C972.949 202.402 998.434 201.525 1024.11 204.165C1045.09 206.325 1065.24 211.372 1084.14 220.972C1101.26 229.665 1115.76 241.552 1127.67 256.597C1149.38 284.017 1162.72 315.022 1167.59 349.672C1172.33 383.415 1170.29 416.64 1159.93 449.205C1152.9 471.322 1141.87 491.302 1127.26 509.318C1107.4 533.798 1081.52 548.513 1051.21 555.915C1026.86 561.863 1002.12 562.875 977.217 560.955C972.702 560.587 968.209 560.032 963.289 559.522ZM963.544 284.04C951.409 289.612 942.034 298.297 934.834 309.45C925.579 323.79 921.154 339.787 919.024 356.505C916.819 373.785 916.849 391.087 919.009 408.375C920.742 422.242 924.124 435.667 930.544 448.17C939.559 465.727 952.879 478.47 972.026 484.425C983.051 487.852 994.376 488.572 1005.85 487.672C1029.33 485.827 1047.78 475.455 1060.5 455.415C1070.25 440.033 1074.56 422.887 1076.47 405.022C1078.09 389.91 1078.05 374.775 1076.46 359.662C1075 345.937 1072.01 332.587 1066.19 319.98C1057.86 301.912 1045.22 288.09 1025.99 281.737C1005.28 274.897 984.544 275.347 963.544 284.04Z"/>
+          <path fill="white" d="M618.739 618.097C639.086 633.915 659.171 649.53 679.646 665.437C677.756 667.095 676.121 668.73 674.291 670.102C665.479 676.68 655.324 680.122 644.741 682.477C634.496 684.757 624.079 686.002 613.624 686.047C597.859 686.115 582.094 685.537 566.329 685.215C565.586 685.2 564.851 685.02 563.959 684.892C563.959 661.462 563.959 638.28 563.959 614.79C579.761 615.262 595.391 616.552 610.841 611.752C613.391 613.8 615.934 615.84 618.739 618.097Z"/>
+          <path fill="white" d="M522.041 231.915C519.904 225.877 517.901 220.17 515.899 214.447C519.296 213.487 540.019 213.217 547.736 214.102C539.494 221.415 531.679 228.337 523.601 235.507C523.024 234.172 522.604 233.205 522.041 231.915Z"/>
+          <path fill="white" d="M773.164 433.628C753.897 487.905 736.257 542.378 715.497 595.733C710.412 608.805 704.434 621.525 698.839 634.395C698.179 635.91 697.332 637.335 696.387 639.158C695.322 637.793 694.512 636.863 693.814 635.858C674.449 608.228 655.069 580.598 635.772 552.923C634.369 550.905 633.312 548.573 632.487 546.24C609.229 480.195 586.024 414.135 562.819 348.068C562.414 346.905 562.099 345.713 561.717 344.475C583.032 315.48 604.287 286.56 626.187 256.778C646.557 325.17 666.409 392.79 687.334 460.328C710.307 378.248 733.272 296.168 756.297 213.893C787.294 213.893 818.187 213.893 849.807 213.893C824.262 287.16 798.792 360.225 773.164 433.628Z"/>
+        </svg>
+      </div>
+
+      <h1 class="hero-headline" id="hero-hl">
+        <span data-i18n="hero.hl.1">Your Personal AI Assistant</span><br><span data-i18n="hero.hl.2">for your Websites</span>
+      </h1>
+
+      <p class="hero-sub" data-i18n="hero.sub">
+        Bring your website on a new level
+      </p>
+
+      <div class="hero-arrow" id="hero-arrow">
+        <div class="scroll-line"></div>
+      </div>
+
+    </div>
+
+    <!-- Story title: fades in when screen tilts, stays for all cards -->
+    <div class="hero-story-title" id="hero-story-title">
+      <div class="hst-label" data-i18n="hero.label">See it in action</div>
+      <h2 class="hst-heading"><span data-i18n="hero.heading.1">What can Axyom</span><br><span data-i18n="hero.heading.2">do for you?</span></h2>
+    </div>
+
+    <!-- Screen: peeks from bottom on load, rises on scroll -->
+    <div class="hero-screen-wrap">
+      <div class="hero-screen" id="hero-screen">
+        <div class="browser">
+          <div class="browser-bar">
+            <div class="b-url">demowebsite.com — powered by Axyom AI</div>
+          </div>
+          <div class="browser-body">
+            <!-- Fake website inside browser -->
+            <div class="mock-site">
+              <div class="mock-nav">
+                <div class="mock-logo">DemoWebsite</div>
+                <div class="mock-nav-links">
+                  <span>ATVs</span>
+                  <span>Specs</span>
+                  <span>Dealers</span>
+                </div>
+              </div>
+              <div class="mock-hero-area">
+                <h3>Built for the<br>Untamed</h3>
+                <p>Discover DemoWebsite off-road vehicles — engineered for performance, built to last.</p>
+                <div class="mock-btn">Browse Models</div>
+              </div>
+              <div class="mock-cards">
+                <div class="mock-card">
+                  <div class="mock-card-h"></div>
+                  <div class="mock-card-p"></div>
+                  <div class="mock-card-p2"></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-h"></div>
+                  <div class="mock-card-p"></div>
+                  <div class="mock-card-p2"></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-h"></div>
+                  <div class="mock-card-p"></div>
+                  <div class="mock-card-p2"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Axyom Chat Widget -->
+            <div class="chat-widget" id="hero-chat-widget">
+              <div class="cw-head">
+                <div class="cw-avatar">
+                  <svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z"/></svg>
+                </div>
+                <div>
+                  <div class="cw-name">Axyom AI</div>
+                  <div class="cw-status"><span class="cw-status-dot"></span><span data-i18n="hero.chat.status">Online · Knows your products</span></div>
+                </div>
+              </div>
+              <div class="cw-msgs" id="hero-msgs">
+                <div class="cw-msg user" id="hm1" data-i18n="hero.chat.q1">Which ATV has the biggest fuel tank?</div>
+                <div class="cw-msg ai" id="hm2"><span data-i18n="hm2.pre">The </span><strong data-i18n="hm2.model">ATV 1000</strong><span data-i18n="hm2.post"> leads with 22 L, followed by the ATV 650 at 18 L.</span></div>
+                <div class="cw-msg user" id="hm3" data-i18n="hero.chat.q2">What about the lightest one?</div>
+                <div class="cw-msg ai" id="hm4"><span data-i18n="hm4.pre">The lightest is the </span><strong data-i18n="hm4.model">ATV 650</strong><span data-i18n="hm4.post"> at 298 kg with a 14 L tank — perfect for agility and trail riding.</span></div>
+              </div>
+              <div class="cw-input-bar">
+                <input class="cw-input" type="text" placeholder="Ask about any product…" readonly data-i18n-placeholder="hero.chat.placeholder">
+                <button class="cw-send" aria-label="Send">
+                  <svg viewBox="0 0 24 24" fill="black"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrollytelling story cards that fade in/out -->
+    <div class="story-cards" id="story-cards">
+      <div class="story-card" data-step="1">
+        <div class="story-num" data-i18n="story.1.num">Step 01</div>
+        <h4 data-i18n="story.1.title">Axyom Reads Your Website</h4>
+        <p data-i18n="story.1.body">Our crawler scans every page — products, specs, FAQs, hidden tabs. Nothing is missed, even JavaScript-rendered content.</p>
+      </div>
+      <div class="story-card" data-step="2">
+        <div class="story-num" data-i18n="story.2.num">Step 02</div>
+        <h4 data-i18n="story.2.title">Understands Your Products</h4>
+        <p data-i18n="story.2.body">Product specs, prices, and features are extracted into structured data. The AI knows your catalog inside and out.</p>
+      </div>
+      <div class="story-card" data-step="3">
+        <div class="story-num" data-i18n="story.3.num">Step 03</div>
+        <h4 data-i18n="story.3.title">Answers Like Your Best Employee</h4>
+        <p data-i18n="story.3.body">Customers ask questions in natural language. Axyom responds with accurate, grounded answers in your brand voice.</p>
+      </div>
+      <div class="story-card" data-step="4">
+        <div class="story-num" data-i18n="story.4.num">Step 04</div>
+        <h4 data-i18n="story.4.title">Compares, Recommends, Sells</h4>
+        <p data-i18n="story.4.body">It doesn't just answer — it advises. Cross-selling, comparisons, and personalized recommendations drive conversion.</p>
+      </div>
+      <div class="story-card" data-step="5">
+        <div class="story-num" data-i18n="story.5.num">Result</div>
+        <h4 data-i18n="story.5.title">24/7 Sales Intelligence</h4>
+        <p data-i18n="story.5.body">An always-on AI employee that knows everything about your business. Not a chatbot. A real sales assistant.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PROBLEM CAROUSEL ─── -->
+<section id="problem">
+  <div class="container" style="text-align:center;margin-bottom:3rem">
+    <div class="label" style="justify-content:center" id="prob-label" data-i18n="prob.label">The Problem</div>
+    <h2 style="font-size:clamp(2rem,3.5vw,3rem);font-weight:800;line-height:1.1" id="prob-h2">
+      <span data-i18n="prob.h2.1">Most websites leave visitors</span><br>
+      <span style="color:var(--text-secondary)" data-i18n="prob.h2.2">searching, not finding.</span>
+    </h2>
+  </div>
+
+  <div style="overflow:hidden">
+  <div class="swiper prob-swiper" id="prob-swiper">
+    <div class="swiper-wrapper">
+
+      <div class="swiper-slide"><div class="custom-card">
+        <div class="custom-card-icon">🔍</div>
+        <div class="custom-card-industry" data-i18n="prob.1.industry">Bounce Rate</div>
+        <h4 data-i18n="prob.1.title">Visitors leave without finding answers</h4>
+        <p data-i18n="prob.1.body">People arrive with real questions and leave empty-handed. They can't find what they need fast enough — so they bounce.</p>
+        <div class="custom-card-tags"><span class="custom-tag" data-i18n="prob.1.tag1">High Bounce</span><span class="custom-tag" data-i18n="prob.1.tag2">Lost Leads</span></div>
+      </div></div>
+
+      <div class="swiper-slide"><div class="custom-card">
+        <div class="custom-card-icon">📂</div>
+        <div class="custom-card-industry" data-i18n="prob.2.industry">Navigation</div>
+        <h4 data-i18n="prob.2.title">Information buried across dozens of pages</h4>
+        <p data-i18n="prob.2.body">Specs, pricing, policies — scattered across layers of navigation. Customers give up before they find what matters.</p>
+        <div class="custom-card-tags"><span class="custom-tag" data-i18n="prob.2.tag1">Poor UX</span><span class="custom-tag" data-i18n="prob.2.tag2">Content Silos</span></div>
+      </div></div>
+
+      <div class="swiper-slide"><div class="custom-card">
+        <div class="custom-card-icon">👤</div>
+        <div class="custom-card-industry" data-i18n="prob.3.industry">Personalisation</div>
+        <h4 data-i18n="prob.3.title">Every visitor gets the same generic experience</h4>
+        <p data-i18n="prob.3.body">Regardless of intent or context, every user sees the same page. No adaptation, no guidance, no relevance.</p>
+        <div class="custom-card-tags"><span class="custom-tag" data-i18n="prob.3.tag1">No Context</span><span class="custom-tag" data-i18n="prob.3.tag2">Low Conversion</span></div>
+      </div></div>
+
+      <div class="swiper-slide"><div class="custom-card">
+        <div class="custom-card-icon">🌙</div>
+        <div class="custom-card-industry" data-i18n="prob.4.industry">Availability</div>
+        <h4 data-i18n="prob.4.title">Questions go unanswered outside business hours</h4>
+        <p data-i18n="prob.4.body">Customers don't shop 9-to-5. Every unanswered question at midnight is a lead that quietly disappears.</p>
+        <div class="custom-card-tags"><span class="custom-tag" data-i18n="prob.4.tag1">Off-hours</span><span class="custom-tag" data-i18n="prob.4.tag2">Missed Revenue</span></div>
+      </div></div>
+
+      <div class="swiper-slide"><div class="custom-card">
+        <div class="custom-card-icon">🔁</div>
+        <div class="custom-card-industry" data-i18n="prob.5.industry">Support Cost</div>
+        <h4 data-i18n="prob.5.title">Support teams buried in repetitive questions</h4>
+        <p data-i18n="prob.5.body">The same questions, asked over and over. Your team spends hours answering things that shouldn't need a human.</p>
+        <div class="custom-card-tags"><span class="custom-tag" data-i18n="prob.5.tag1">Repetitive Work</span><span class="custom-tag" data-i18n="prob.5.tag2">High Cost</span></div>
+      </div></div>
+
+      <div class="swiper-slide"><div class="custom-card">
+        <div class="custom-card-icon">📉</div>
+        <div class="custom-card-industry" data-i18n="prob.6.industry">Funnel Drop-off</div>
+        <h4 data-i18n="prob.6.title">Complex navigation kills conversions</h4>
+        <p data-i18n="prob.6.body">Confusing menus, dead ends, broken search. Visitors hit friction and leave before they ever reach your value.</p>
+        <div class="custom-card-tags"><span class="custom-tag" data-i18n="prob.6.tag1">Drop-off</span><span class="custom-tag" data-i18n="prob.6.tag2">Friction</span></div>
+      </div></div>
+
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+  </div>
+</section>
+
+<!-- ─── SPEED SCROLLYTELLING ─── -->
+<section id="speed-scrolly">
+  <div class="speed-pin">
+    <div id="speed-canvas"></div>
+    <div id="speed-bg"></div>
+    <div id="speed-title">
+      <div class="label" style="justify-content:center" data-i18n="speed.label">Performance</div>
+      <h2 class="speed-title-text" data-i18n="speed.title">Follow the path into the future with us</h2>
+    </div>
+    <div class="speed-cards">
+
+      <div class="speed-card sc-left">
+        <div class="sc-body">
+          <div class="sc-num" data-i18n="speed.1.num">01 / Speed</div>
+          <h4 data-i18n="speed.1.title">Answers in milliseconds</h4>
+          <p data-i18n="speed.1.body">Your AI responds before visitors finish typing. No loading screens, no queues — instant.</p>
+        </div>
+      </div>
+
+      <div class="speed-card sc-right">
+        <div class="sc-body">
+          <div class="sc-num" data-i18n="speed.2.num">02 / Accuracy</div>
+          <h4 data-i18n="speed.2.title">Grounded in your content</h4>
+          <p data-i18n="speed.2.body">Every answer is sourced directly from your website. No hallucinations, no guessing, ever.</p>
+        </div>
+      </div>
+
+      <div class="speed-card sc-left">
+        <div class="sc-body">
+          <div class="sc-num" data-i18n="speed.3.num">03 / Availability</div>
+          <h4 data-i18n="speed.3.title">24/7 without fatigue</h4>
+          <p data-i18n="speed.3.body">Handles thousands of conversations simultaneously. No off-hours, no call queues, no limits.</p>
+        </div>
+      </div>
+
+      <div class="speed-card sc-right">
+        <div class="sc-body">
+          <div class="sc-num" data-i18n="speed.4.num">04 / Setup</div>
+          <h4 data-i18n="speed.4.title">Live in minutes</h4>
+          <p data-i18n="speed.4.body">Paste your URL and your AI assistant is indexing, learning, and ready to talk. No code needed.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS — FLUID EXPANDING GRID ─── -->
+<section id="how">
+  <div class="container">
+    <div class="how-header">
+      <div class="label" style="justify-content:center" data-i18n="how.label">How It Works</div>
+      <h2 class="how-heading" data-i18n="how.heading">Three steps to a smarter website</h2>
+    </div>
+  </div>
+
+  <div class="feg-wrap" id="feg-wrap">
+
+    <div class="feg-card" id="fgc-1" onclick="FEG.expand('fgc-1')">
+      <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="Put in your domain">
+      <div class="feg-overlay"></div>
+      <div class="feg-content">
+        <span class="feg-step" data-i18n="how.1.step">Step 01</span>
+        <div class="feg-bottom">
+          <h3 class="feg-title" data-i18n="how.1.title">Put in your domain</h3>
+          <p class="feg-sub" data-i18n="how.1.sub">Paste your URL and Axyom gets to work — no technical setup required.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="feg-card" id="fgc-2" onclick="FEG.expand('fgc-2')">
+      <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80" alt="Axyom scans your website">
+      <div class="feg-overlay"></div>
+      <div class="feg-content">
+        <span class="feg-step" data-i18n="how.2.step">Step 02</span>
+        <div class="feg-bottom">
+          <h3 class="feg-title" data-i18n="how.2.title">Axyom scans your website</h3>
+          <p class="feg-sub" data-i18n="how.2.sub">Every page, product, and paragraph is crawled and indexed in minutes.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="feg-card feg-solo" id="fgc-3" onclick="FEG.expand('fgc-3')">
+      <img src="https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&auto=format&fit=crop&q=80" alt="Your own personal assistant">
+      <div class="feg-overlay"></div>
+      <div class="feg-content">
+        <span class="feg-step" data-i18n="how.3.step">Step 03</span>
+        <div class="feg-bottom">
+          <h3 class="feg-title" data-i18n="how.3.title">Your own personal assistant</h3>
+          <p class="feg-sub" data-i18n="how.3.sub">A brand-aware AI goes live on your site — answering every question, day and night.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── FEATURES ─── -->
+<section id="features">
+  <div class="container">
+    <div class="features-head">
+      <div class="label" data-aos="fade-right" data-i18n="feat.label">Capabilities</div>
+      <h2 data-aos="fade-up" data-aos-delay="100" data-i18n="feat.h2">What Makes Axyom Different</h2>
+      <p data-aos="fade-up" data-aos-delay="200" data-i18n="feat.p">Not a ChatGPT wrapper. A purpose-built sales intelligence system, trained exclusively on your content.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card" data-aos="fade-up" data-aos-delay="0">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
+        </div>
+        <h3 data-i18n="feat.1.title">Intelligent Crawling</h3>
+        <p data-i18n="feat.1.body">Scans your entire site including dynamic content, hidden tabs, and JavaScript-rendered elements. Nothing is missed.</p>
+      </div>
+      <div class="feat-card" data-aos="fade-up" data-aos-delay="80">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+        </div>
+        <h3 data-i18n="feat.2.title">Structured Extraction</h3>
+        <p data-i18n="feat.2.body">Detects product specs, technical data, and numeric values. All normalized into machine-readable JSON for precision.</p>
+      </div>
+      <div class="feat-card" data-aos="fade-up" data-aos-delay="160">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+        </div>
+        <h3 data-i18n="feat.3.title">Hybrid RAG 2.0</h3>
+        <p data-i18n="feat.3.body">Semantic embeddings plus keyword matching with diversified retrieval. Grounded answers only — sourced from your data.</p>
+      </div>
+      <div class="feat-card" data-aos="fade-up" data-aos-delay="0">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <h3 data-i18n="feat.4.title">Conversation Memory</h3>
+        <p data-i18n="feat.4.body">Understands context and follow-up questions across the full conversation. "What about the lighter one?" — it knows.</p>
+      </div>
+      <div class="feat-card" data-aos="fade-up" data-aos-delay="80">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3 data-i18n="feat.5.title">Comparison Intelligence</h3>
+        <p data-i18n="feat.5.body">Ranks, compares, and explains differences across your entire product catalog. It doesn't just answer — it advises.</p>
+      </div>
+      <div class="feat-card" data-aos="fade-up" data-aos-delay="160">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+        </div>
+        <h3 data-i18n="feat.6.title">Brand Voice</h3>
+        <p data-i18n="feat.6.body">Speaks exactly like your company. Premium, technical, friendly — configured to your tone, not a generic AI default.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── COMPARISON ─── -->
+<section id="comparison">
+  <div class="comp-inner">
+    <div class="label" data-aos="fade-right" data-i18n="comp.label">Comparison</div>
+    <h2 data-aos="fade-up" data-aos-delay="100" data-i18n="comp.h2">Why Not a Regular Chatbot?</h2>
+    <div class="comp-table-scroll">
+    <table class="comp-table" role="table">
+      <thead>
+        <tr data-aos="fade-up" data-aos-delay="150">
+          <th scope="col" data-i18n="comp.th.cap">Capability</th>
+          <th scope="col" class="th-old" data-i18n="comp.th.old">Regular Chatbots</th>
+          <th scope="col" class="th-new">Axyom AI</th>
+        </tr>
+      </thead>
+      <tbody id="comp-tbody">
+        <tr data-aos="fade-up" data-aos-delay="200"><td data-i18n="comp.r1.cap">Knowledge Source</td><td class="td-old" data-i18n="comp.r1.old">Static FAQs, manual entry</td><td class="td-new"><span class="chk">✓</span> <span data-i18n="comp.r1.new">Entire website, live-crawled</span></td></tr>
+        <tr data-aos="fade-up" data-aos-delay="260"><td data-i18n="comp.r2.cap">Product Comparison</td><td class="td-old"><span class="crs">✕</span> <span data-i18n="comp.r2.old">Not supported</span></td><td class="td-new"><span class="chk">✓</span> <span data-i18n="comp.r2.new">Structured comparisons</span></td></tr>
+        <tr data-aos="fade-up" data-aos-delay="320"><td data-i18n="comp.r3.cap">Context Memory</td><td class="td-old"><span class="crs">✕</span> <span data-i18n="comp.r3.old">Each message isolated</span></td><td class="td-new"><span class="chk">✓</span> <span data-i18n="comp.r3.new">Understands follow-ups</span></td></tr>
+        <tr data-aos="fade-up" data-aos-delay="380"><td data-i18n="comp.r4.cap">Brand Voice</td><td class="td-old" data-i18n="comp.r4.old">Generic (ChatGPT style)</td><td class="td-new"><span class="chk">✓</span> <span data-i18n="comp.r4.new">Custom to your brand</span></td></tr>
+        <tr data-aos="fade-up" data-aos-delay="440"><td data-i18n="comp.r5.cap">Hallucinations</td><td class="td-old"><span class="crs">✕</span> <span data-i18n="comp.r5.old">Common problem</span></td><td class="td-new"><span class="chk">✓</span> <span data-i18n="comp.r5.new">Grounded — your data only</span></td></tr>
+        <tr data-aos="fade-up" data-aos-delay="500"><td data-i18n="comp.r6.cap">Setup</td><td class="td-old" data-i18n="comp.r6.old">Manual FAQ maintenance</td><td class="td-new"><span class="chk">✓</span> <span data-i18n="comp.r6.new">Auto-crawl, zero effort</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CUSTOM SOLUTIONS ─── -->
+<section id="custom">
+  <div class="container" style="text-align:center;margin-bottom:3.5rem">
+    <div class="label" style="justify-content:center" data-aos="fade-up" data-i18n="custom.label">Custom Solutions</div>
+    <h2 style="font-size:clamp(2rem,3.5vw,3rem);font-weight:800;line-height:1.1" data-aos="fade-up" data-aos-delay="80">
+      <span data-i18n="custom.h2.1">Built for every industry.</span><br>
+      <span style="color:var(--text-secondary)" data-i18n="custom.h2.2">Trained on your world.</span>
+    </h2>
+  </div>
+  <div data-aos="fade-up" data-aos-delay="160" style="overflow:hidden">
+    <div class="swiper custom-swiper">
+      <div class="swiper-wrapper">
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">🛒</div>
+          <div class="custom-card-industry">E-Commerce</div>
+          <h4>Product Discovery at Scale</h4>
+          <p>Customers find exactly what they need without browsing. Axyom compares specs, recommends alternatives and cross-sells based on intent — across thousands of SKUs.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Product Compare</span><span class="custom-tag">Cross-sell</span><span class="custom-tag">Inventory-aware</span></div>
+        </div></div>
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">🚗</div>
+          <div class="custom-card-industry">Automotive</div>
+          <h4>Vehicle Configurator & Spec Expert</h4>
+          <p>Answers detailed questions about trims, engines, towing capacities, and compatibility in seconds. Guides buyers through complex decisions without a sales rep.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Spec Matching</span><span class="custom-tag">Configurator</span><span class="custom-tag">Lead Capture</span></div>
+        </div></div>
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">🏠</div>
+          <div class="custom-card-industry">Real Estate</div>
+          <h4>Property Inquiry Assistant</h4>
+          <p>Answers availability questions, explains floor plans, and qualifies buyer intent 24/7. Reduces agent workload by handling repetitive property queries instantly.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Availability</span><span class="custom-tag">Qualification</span><span class="custom-tag">24/7 Response</span></div>
+        </div></div>
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">⚙️</div>
+          <div class="custom-card-industry">B2B / SaaS</div>
+          <h4>Technical Product Guide</h4>
+          <p>Explains pricing tiers, integration requirements, and API limits to prospects before they speak to sales. Reduces unqualified calls and accelerates the cycle.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Pre-sales</span><span class="custom-tag">Technical FAQ</span><span class="custom-tag">Qualification</span></div>
+        </div></div>
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">🏥</div>
+          <div class="custom-card-industry">Healthcare</div>
+          <h4>Patient Information Guide</h4>
+          <p>Answers questions about treatments, procedures, and appointments from your published content — always grounded in your own documentation, never generic AI.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Content-grounded</span><span class="custom-tag">Appointment Info</span><span class="custom-tag">Compliant</span></div>
+        </div></div>
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">🏍️</div>
+          <div class="custom-card-industry">Powersports</div>
+          <h4>Gear & Parts Expert</h4>
+          <p>Matches riders with compatible parts, helmets, and accessories by make, model, and year. Answers fitment questions that would otherwise require a specialist.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Fitment Logic</span><span class="custom-tag">Parts Matching</span><span class="custom-tag">Upsell</span></div>
+        </div></div>
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">🏨</div>
+          <div class="custom-card-industry">Hospitality</div>
+          <h4>Concierge & Booking Assistant</h4>
+          <p>Answers guest questions about room types, amenities, policies and local recommendations instantly — elevating the pre-stay experience without extra staff.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Guest Experience</span><span class="custom-tag">Policy Q&A</span><span class="custom-tag">Multilingual</span></div>
+        </div></div>
+
+        <div class="swiper-slide"><div class="custom-card">
+          <div class="custom-card-icon">🏭</div>
+          <div class="custom-card-industry">Manufacturing</div>
+          <h4>Technical Specs & Ordering Guide</h4>
+          <p>Helps procurement teams find the right part numbers, tolerances, and lead times from complex product catalogs — reducing back-and-forth with engineers.</p>
+          <div class="custom-card-tags"><span class="custom-tag">Catalog Search</span><span class="custom-tag">Spec Lookup</span><span class="custom-tag">B2B Ordering</span></div>
+        </div></div>
+
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CLOSING CTA ─── -->
+<section id="cta">
+  <div class="cta-orb"></div>
+  <div class="container">
+    <div class="cta-inner">
+
+      <!-- Left: copy -->
+      <div class="cta-copy" data-aos="fade-right">
+        <div class="label" data-i18n="cta.label">Contact</div>
+        <h2><span data-i18n="cta.h2.1">Let's build your</span><br><em data-i18n="cta.h2.em">AI assistant</em><br><span data-i18n="cta.h2.3">together.</span></h2>
+        <p data-i18n="cta.p">Tell us about your website and we'll show you what Axyom can do for you — no commitment, no pressure.</p>
+        <div class="cta-trust">
+          <span data-i18n="cta.trust1">Swiss-based team</span>
+          <span data-i18n="cta.trust2">Response within 24 hours</span>
+          <span data-i18n="cta.trust3">No commitment required</span>
+        </div>
+      </div>
+
+      <!-- Right: form -->
+      <div data-aos="fade-left" data-aos-delay="100">
+        <div class="cta-form-card">
+          <form id="contact-form" novalidate>
+            <div class="cta-form-row">
+              <div class="cta-form-group" style="margin-bottom:0">
+                <label for="cf-name" data-i18n="cta.form.name">Name</label>
+                <input type="text" id="cf-name" name="name" placeholder="Jane Doe" autocomplete="name" data-i18n-placeholder="cta.form.namePh">
+              </div>
+              <div class="cta-form-group" style="margin-bottom:0">
+                <label for="cf-email" data-i18n="cta.form.email">Email</label>
+                <input type="email" id="cf-email" name="email" placeholder="jane@company.com" autocomplete="email" data-i18n-placeholder="cta.form.emailPh">
+              </div>
+            </div>
+            <div class="cta-form-group">
+              <label for="cf-website" data-i18n="cta.form.website">Website</label>
+              <input type="url" id="cf-website" name="website" placeholder="https://your-company.com">
+            </div>
+            <div class="cta-form-group">
+              <label for="cf-message" data-i18n="cta.form.message">Message</label>
+              <textarea id="cf-message" name="message" placeholder="Tell us what you'd like to automate…" data-i18n-placeholder="cta.form.messagePh"></textarea>
+            </div>
+            <div class="cta-form-btns">
+              <button type="submit" class="btn-primary">
+                <span data-i18n="cta.form.send">Send message</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+              <a href="mailto:hello@axyom.ai" class="btn-ghost-sm">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+                <span data-i18n="cta.form.direct">Write directly</span>
+              </a>
+            </div>
+          </form>
+          <div class="cta-form-success" id="cta-success">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            <h3 data-i18n="cta.success.title">Message sent!</h3>
+            <p data-i18n="cta.success.body">We'll get back to you within 24 hours.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <a href="#" class="nav-logo" style="display:inline-block;margin-bottom:0.5rem">
+        <img src="Assets/axyomwhitelogo.png" alt="axyom" style="height:26px;width:auto;display:block;">
+      </a>
+      <p class="footer-copy" data-aos="fade-up" data-aos-delay="100"><span data-i18n="footer.copy.1">© 2026 Axyom AI. All rights reserved.</span><br><span data-i18n="footer.copy.2">Intelligent Sales Assistants for the Web.</span></p>
+    </div>
+    <div class="footer-links" data-aos="fade-up" data-aos-delay="200">
+      <a href="#" data-i18n="footer.privacy">Privacy</a>
+      <a href="#" data-i18n="footer.impressum">Impressum</a>
+      <a href="#" data-i18n="footer.contact">Contact</a>
+    </div>
+    <div class="footer-swiss" data-aos="fade-up" data-aos-delay="300">
+      <span>🇨🇭</span> <span data-i18n="footer.swiss">Made in Switzerland</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════
+   JAVASCRIPT
+═══════════════════════════════════════ -->
+<script>
+gsap.registerPlugin(ScrollTrigger);
+const isMobile = window.innerWidth <= 540;
+
+/* ─── NAV scroll state ─── */
+ScrollTrigger.create({
+  start: 'top -60',
+  onUpdate(s) {
+    document.getElementById('nav').classList.toggle('scrolled', s.scroll() > 60);
+  }
+});
+
+/* ─── HERO SCROLLYTELLING ─── */
+
+/* Initial load: headline reveal
+   hero-wordmark is handled by the preloader morph — heroTL starts paused
+   and is played by preloader.js after the logo lands. */
+window.heroTL = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+window.heroTL
+  .fromTo('.hero-headline',  { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.65, delay: 0.1 })
+  .fromTo('.hero-sub',       { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.55 }, '-=0.35')
+  .fromTo('#hero-arrow',     { opacity: 0 },         { opacity: 1, duration: 0.4 }, '-=0.25')
+  .fromTo('.hero-btns',      { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.2');
+
+/* Initial screen state: pushed down so only the title bar peeks at the bottom */
+gsap.set('#hero-screen', {
+  y: isMobile ? '40vh' : '62vh',
+  rotateX: isMobile ? 0 : 28,
+  scale: isMobile ? 0.9 : 0.8,
+  opacity: 0,
+  transformOrigin: 'center center'
+});
+
+/* Pin the hero and drive all animations from scroll */
+const heroScrollTL = gsap.timeline({
+  scrollTrigger: {
+    trigger: '#hero-scrolly',
+    start: 'top top',
+    end: '+=700%',
+    pin: '#hero-pin',
+    scrub: 0.6,
+    anticipatePin: 1,
+  }
+});
+
+/* Phase 1: Hero text scrolls off first */
+heroScrollTL
+  .to('#hero-top', {
+    y: '-100vh',
+    duration: 1.5,
+    ease: 'none'
+  }, 0);
+
+/* Phase 2: Screen rises together with text leaving */
+heroScrollTL
+  .to('#hero-screen', {
+    y: 0,
+    rotateX: 0,
+    scale: 1,
+    opacity: 1,
+    duration: 2.2,
+    ease: 'power2.out'
+  }, 0.3);
+
+/* Add glow once screen is revealed */
+heroScrollTL.call(() => {
+  document.getElementById('hero-screen').classList.add('revealed');
+}, [], 3.0);
+
+/* Phase 2b: Initial tilt — desktop only */
+if (!isMobile) {
+  heroScrollTL.to('#hero-screen', {
+    rotateY: -22,
+    rotateX: 7,
+    xPercent: 20,
+    y: 55,
+    scale: 0.86,
+    duration: 1.0,
+    ease: 'power2.inOut'
+  }, 3.15);
+}
+
+/* Story title fades in just after tilt begins */
+heroScrollTL.to('#hero-story-title', {
+  opacity: 1,
+  duration: 0.6,
+  ease: 'power2.out'
+}, 3.4);
+
+/* Story cards appear and disappear one by one */
+const storyCards = document.querySelectorAll('.story-card');
+const cardDuration = 1.2;
+const cardGap = 0.3;
+const startTime = 3.8;
+
+/* Pre-compute exit moment so last card, screen, and title all sync */
+const lastCardT         = startTime + (storyCards.length - 1) * (cardDuration + cardGap);
+const lastCardFadeStart = lastCardT + cardDuration + 0.5;
+
+storyCards.forEach((card, i) => {
+  const t = startTime + i * (cardDuration + cardGap);
+  const cardOnLeft = i < 2 || i === 4;
+  const enterX = cardOnLeft ? -160 : 160;
+  const exitX  = cardOnLeft ? -80  : 80;
+
+  /* Screen swings on desktop only */
+  if (!isMobile && (i === 2 || i === 4)) {
+    heroScrollTL.to('#hero-screen', {
+      rotateY:  cardOnLeft ? -22 : 22,
+      rotateX:  7,
+      xPercent: cardOnLeft ?  20 : -20,
+      y: 55,
+      scale: 0.86,
+      duration: 0.7,
+      ease: 'power2.inOut'
+    }, t - 0.15);
+  }
+
+  if (isMobile) {
+    /* Mobile: cards slide up from below */
+    heroScrollTL.fromTo(card, { opacity: 0, y: 60 }, {
+      opacity: 1, y: 0, duration: 0.5, ease: 'power2.out'
+    }, t);
+
+    if (i < storyCards.length - 1) {
+      heroScrollTL.to(card, { opacity: 0, y: -40, duration: 0.35, ease: 'power2.in' }, t + cardDuration);
+    } else {
+      heroScrollTL.to(card, { opacity: 0, y: -40, duration: 0.6, ease: 'none' }, lastCardFadeStart);
+    }
+  } else {
+    /* Desktop: cards slide in from sides */
+    heroScrollTL.fromTo(card, { opacity: 0, x: enterX }, {
+      opacity: 1, x: 0, duration: 0.5, ease: 'power2.out'
+    }, t);
+
+    if (i < storyCards.length - 1) {
+      heroScrollTL.to(card, { opacity: 0, x: exitX, duration: 0.35, ease: 'power2.out' }, t + cardDuration);
+    } else {
+      heroScrollTL.to(card, { opacity: 0, x: exitX, duration: 0.6, ease: 'none' }, lastCardFadeStart);
+    }
+  }
+});
+
+/* Phase: Chat messages appear during the story */
+heroScrollTL
+  .to('#hm1', { opacity: 1, duration: 0.15 }, startTime + 1.5)
+  .to('#hm2', { opacity: 1, duration: 0.15 }, startTime + 2.5)
+  .to('#hm3', { opacity: 1, duration: 0.15 }, startTime + 4.0)
+  .to('#hm4', { opacity: 1, duration: 0.15 }, startTime + 5.2);
+
+/* Phase final: Screen launches at the same time as last card and title */
+
+// Story title fades out at the same moment
+heroScrollTL.to('#hero-story-title', {
+  opacity: 0,
+  duration: 0.6,
+  ease: 'none'
+}, lastCardFadeStart);
+
+// Rocket upward
+heroScrollTL.to('#hero-screen', {
+  y: '-130vh',
+  rotateY: 0,
+  rotateX: -6,
+  xPercent: 0,
+  scale: 1.05,
+  opacity: 0,
+  duration: 1.2,
+  ease: 'none'
+}, lastCardFadeStart);
+
+// Long dark hold — screen is gone, pure black before problem section appears
+heroScrollTL.to({}, { duration: 0.5 }, lastCardFadeStart + 1.2);
+
+// Refresh once after everything has loaded — preserving scroll position so
+// the pin-spacer recalculation never snaps the user back.
+window.addEventListener('load', function () {
+  var saved = window.scrollY;
+  ScrollTrigger.refresh();
+  window.scrollTo(0, saved);
+  // Re-check AOS visibility after scroll position is restored,
+  // so footer/below-fold elements aren't stuck invisible on reload.
+  if (typeof AOS !== 'undefined') AOS.refresh();
+}, { once: true });
+
+/* ─── SPEED SCROLLYTELLING ─── */
+const speedTL = gsap.timeline({
+  scrollTrigger: {
+    trigger: '#speed-scrolly',
+    start: 'top top',
+    end: '+=250%',
+    pin: '.speed-pin',
+    scrub: 0.8,
+    anticipatePin: 1,
+  }
+});
+
+// Proxy object that GSAP tweens — animate loop reads it each frame → uPathX uniform
+// Must be on window so the Three.js module script can access it
+window.speedPathProxy = { x: 0 };
+
+// Convergence proxy — drives uConverge uniform; 0=spread, 1=all lanes at center
+window.speedConvergeProxy = { value: 0 };
+
+// Background palette proxy — cardIdx 0-3 drives mood lighting interpolation
+window.speedBgProxy = { cardIdx: 0 };
+
+// Start both canvas and bg invisible — black until scroll begins
+gsap.set('#speed-bg',     { opacity: 0 });
+gsap.set('#speed-canvas', { opacity: 0 });
+
+// Path forms from black — canvas fades in at the start of the scroll
+speedTL.to('#speed-canvas', { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0);
+
+// Title fades in with the canvas
+speedTL.to('#speed-title', { opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.1);
+
+const speedCards = document.querySelectorAll('.speed-card');
+speedCards.forEach((card, i) => {
+  const t = 0.5 + i * 1.6;
+  const isLeft = card.classList.contains('sc-left');
+
+  // Card rises from deep Z (far back = small) toward the viewer
+  speedTL.fromTo(card,
+    { opacity: 0, z: -700, scale: 0.55 },
+    { opacity: 1, z: 0,    scale: 1,    duration: 0.65, ease: 'power2.out' },
+    t
+  );
+
+  // Path glides to OPPOSITE half — long ease so the shift feels organic, not snappy
+  speedTL.to(window.speedPathProxy,
+    { x: isLeft ? 38 : -38, duration: 1.1, ease: 'sine.inOut' },
+    t
+  );
+
+  // Background: snap to this card's palette color, then fade in
+  speedTL.to(window.speedBgProxy, { cardIdx: i, duration: 0.01 }, t);
+  speedTL.to('#speed-bg', { opacity: 1, duration: 0.5, ease: 'power2.out' }, t);
+
+  if (i < speedCards.length - 1) {
+    // Card flies through the viewer (positive Z = past camera = gets huge then gone)
+    speedTL.to(card, { opacity: 0, z: 500, scale: 1.35, duration: 0.45, ease: 'power2.in' }, t + 1.2);
+    // No x:0 reset — the next card's entry tween takes over, path glides directly across
+    // Background fades back to black as card exits
+    speedTL.to('#speed-bg', { opacity: 0, duration: 0.35, ease: 'power2.in' }, t + 1.2);
+  } else {
+    speedTL.to(card, { opacity: 0, z: 500, scale: 1.35, duration: 0.45, ease: 'power2.in' }, t + 1.3);
+    speedTL.to(window.speedPathProxy, { x: 0, duration: 0.9, ease: 'sine.inOut' }, t + 1.3);
+    speedTL.to('#speed-bg', { opacity: 0, duration: 0.4, ease: 'power2.in' }, t + 1.3);
+    speedTL.to('#speed-title', { opacity: 0, duration: 0.45, ease: 'none' }, t + 1.3);
+
+    // ── CONVERGENCE: after last card exits, lanes collapse to a single bright point ──
+    // t + 1.3 = last card fully gone. Convergence starts shortly after.
+    const convStart = t + 1.8;
+    speedTL.to(window.speedConvergeProxy, {
+      value: 1,
+      duration: 1.8,
+      ease: 'power3.in',        // slow start, then rapid collapse
+    }, convStart);
+
+    // Canvas fades to black after the flash — hands off to the how-entry-mask dissolve
+    speedTL.to('#speed-canvas', {
+      opacity: 0,
+      duration: 0.6,
+      ease: 'power2.in',
+    }, convStart + 1.5);
+  }
+});
+
+/* ─── PROBLEM CAROUSEL ─── initialized after Swiper JS loads ─── */
+
+/* ─── SPEED → HOW TRANSITION ─── */
+
+// 1. Speed exit: fade the speed-pin to black as it leaves the viewport
+//    (fires in the 100vh gap after the speed pin releases)
+gsap.to('.speed-pin', {
+  opacity: 0,
+  ease: 'power2.in',
+  scrollTrigger: {
+    trigger: '#speed-scrolly',
+    start: 'bottom 70%',
+    end: 'bottom 10%',
+    scrub: 1,
+  }
+});
+
+/* ─── HOW IT WORKS — FLUID EXPANDING GRID ─── */
+const FEG = (() => {
+  const GAP = 16;
+  const IDS = ['fgc-1', 'fgc-2', 'fgc-3'];
+  const state = { row1: ['fgc-1', 'fgc-2'], row2: ['fgc-3'] };
+
+  function getTargets() {
+    const wrap = document.getElementById('feg-wrap');
+    const W = wrap.clientWidth, H = wrap.clientHeight;
+    const rowH = (H - GAP) / 2;
+    const targets = {};
+    [state.row1, state.row2].forEach((row, ri) => {
+      const n = row.length;
+      const colW = n === 1 ? W : (W - GAP) / 2;
+      row.forEach((id, ci) => {
+        targets[id] = { left: n === 1 ? 0 : ci * (colW + GAP), top: ri * (rowH + GAP), width: colW, height: rowH };
+      });
+    });
+    return targets;
+  }
+
+  function apply(anim) {
+    const t = getTargets();
+    IDS.forEach(id => {
+      const el = document.getElementById(id);
+      const solo = (state.row1.includes(id) && state.row1.length === 1) ||
+                   (state.row2.includes(id) && state.row2.length === 1);
+      el.classList.toggle('feg-solo', solo);
+      if (anim) {
+        gsap.to(el, { left: t[id].left, top: t[id].top, width: t[id].width, height: t[id].height,
+          duration: 0.65, ease: 'back.out(1.3)' });
+      } else {
+        gsap.set(el, t[id]);
+      }
+    });
+  }
+
+  function expand(id) {
+    const inRow1 = state.row1.includes(id);
+    const row = inRow1 ? state.row1 : state.row2;
+    if (row.length === 1) return;
+    if (inRow1) {
+      const nb = state.row1.find(i => i !== id);
+      state.row1 = [id];
+      state.row2 = [nb, ...state.row2].slice(0, 2);
+    } else {
+      const nb = state.row2.find(i => i !== id);
+      state.row1 = [nb, ...state.row1].slice(0, 2);
+      state.row2 = [id];
+    }
+    // Bring clicked card above others during spring overshoot
+    IDS.forEach(i => { document.getElementById(i).style.zIndex = i === id ? 3 : 1; });
+    apply(true);
+  }
+
+  apply(false);
+  window.addEventListener('resize', () => apply(false));
+  return { expand };
+})();
+
+/* ─── FEATURES ─── */
+
+
+// ─── AURORA BACKGROUND ───
+(function() {
+  const canvas = document.getElementById('aurora-canvas');
+  if (!canvas) return;
+  const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: true });
+  if (!gl) return;
+
+  gl.clearColor(0, 0, 0, 0);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+  const VERT = `#version 300 es
+in vec2 position;
+void main() { gl_Position = vec4(position, 0.0, 1.0); }`;
+
+  const FRAG = `#version 300 es
+precision highp float;
+uniform float uTime;
+uniform float uAmplitude;
+uniform vec3 uColorStops[3];
+uniform vec2 uResolution;
+uniform float uBlend;
+out vec4 fragColor;
+vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x,289.0); }
+float snoise(vec2 v) {
+  const vec4 C = vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);
+  vec2 i = floor(v+dot(v,C.yy));
+  vec2 x0 = v-i+dot(i,C.xx);
+  vec2 i1 = (x0.x>x0.y)?vec2(1.0,0.0):vec2(0.0,1.0);
+  vec4 x12 = x0.xyxy+C.xxzz;
+  x12.xy -= i1;
+  i = mod(i,289.0);
+  vec3 p = permute(permute(i.y+vec3(0.0,i1.y,1.0))+i.x+vec3(0.0,i1.x,1.0));
+  vec3 m = max(0.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.0);
+  m = m*m; m = m*m;
+  vec3 x = 2.0*fract(p*C.www)-1.0;
+  vec3 h = abs(x)-0.5;
+  vec3 ox = floor(x+0.5);
+  vec3 a0 = x-ox;
+  m *= 1.79284291400159-0.85373472095314*(a0*a0+h*h);
+  vec3 g;
+  g.x = a0.x*x0.x+h.x*x0.y;
+  g.yz = a0.yz*x12.xz+h.yz*x12.yw;
+  return 130.0*dot(m,g);
+}
+void main() {
+  vec2 uv = gl_FragCoord.xy/uResolution;
+  vec3 c0 = uColorStops[0], c1 = uColorStops[1], c2 = uColorStops[2];
+  vec3 rampColor = uv.x < 0.5 ? mix(c0,c1,uv.x*2.0) : mix(c1,c2,(uv.x-0.5)*2.0);
+  float height = snoise(vec2(uv.x*2.0+uTime*0.1, uTime*0.25))*0.5*uAmplitude;
+  height = exp(height);
+  height = (uv.y*2.0-height+0.2);
+  float intensity = 0.6*height;
+  float auroraAlpha = smoothstep(0.20-0.54*0.5, 0.20+0.54*0.5, intensity);
+  fragColor = vec4(intensity*rampColor*auroraAlpha, auroraAlpha);
+}`;
+
+  function makeShader(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s); return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, makeShader(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, makeShader(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog); gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,3,-1,-1,3]), gl.STATIC_DRAW);
+  const posLoc = gl.getAttribLocation(prog, 'position');
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+  const uTime      = gl.getUniformLocation(prog, 'uTime');
+  const uColorStop = gl.getUniformLocation(prog, 'uColorStops');
+  const uRes       = gl.getUniformLocation(prog, 'uResolution');
+  const uAmp       = gl.getUniformLocation(prog, 'uAmplitude');
+  const uBlend     = gl.getUniformLocation(prog, 'uBlend');
+
+  function hexRgb(h) {
+    return [parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];
+  }
+  gl.uniform3fv(uColorStop, ['#00b2a0','#004c44','#009082'].flatMap(hexRgb));
+  gl.uniform1f(uAmp, 1.0);
+  gl.uniform1f(uBlend, 0.54);
+
+  function resize() {
+    const pin = document.getElementById('hero-pin');
+    canvas.width  = pin.offsetWidth;
+    canvas.height = pin.offsetHeight || window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let start = null;
+  function render(t) {
+    if (!start) start = t;
+    gl.uniform1f(uTime, (t - start) * 0.00015 * 1.5);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+</script>
+
+
+<script type="module">
+/* ─────────────────────────────────────────
+   HYPERSPEED — shared-curve neon highway
+   All lanes follow ONE master path spline.
+   Forward motion via scrolling path function.
+   Brand: white / #00B2A0 / #004C44
+───────────────────────────────────────── */
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }     from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass }     from 'three/addons/postprocessing/OutputPass.js';
+
+(function initHyperspeed() {
+  const container = document.getElementById('speed-canvas');
+  if (!container) return;
+
+  const ROAD_LEN = 380;   // depth of visible path in world units
+  const Z_NEAR   = 40;    // how far behind camera lines extend (hides near starting point)
+  const NUM_PTS  = 300;   // points per line — more = smoother curves
+  const NUM_LANES = 16;   // total lanes (evenly spread ±LANE_HALF)
+  const LANE_HALF = 3.0;  // half-spread of bundle in world units
+
+  // ── Scene ──
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+
+  const W = container.clientWidth  || window.innerWidth;
+  const H = container.clientHeight || window.innerHeight;
+  // Camera above path looking down — path flows from off-screen bottom upward
+  // Convergence point exits off-screen top before becoming visible
+  const camera = new THREE.PerspectiveCamera(68, W / H, 0.1, 700);
+  camera.position.set(0, 22, 8);
+  camera.lookAt(0, 0, -45);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.toneMapping = THREE.ReinhardToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  container.appendChild(renderer.domElement);
+
+  // ── Shared uniforms — updated once per frame, all lanes read them ──
+  const uTime     = { value: 0 };
+  const uScrollZ  = { value: 0 };
+  const uRoadLen  = { value: ROAD_LEN };
+  const uPathX    = { value: 0 }; // lateral shift — driven by GSAP scroll story
+  const uConverge = { value: 0 }; // 0=normal, 1=all lanes collapsed to center point
+
+  // ── CSS atmospheric background — Depth Gallery mood lighting ──
+  // Each card has two radial gradient blobs that fill the whole screen.
+  // mix-blend-mode: screen on #speed-bg means black canvas → teal atmosphere, bright lines stay bright.
+  const speedBgEl = document.getElementById('speed-bg');
+  const CARD_PALETTES_CSS = [
+    // Card 1 (Speed, left):   vivid teal from left + dark teal right
+    { c1: [0, 178, 160], x1: 20, c2: [0, 60, 54],  x2: 78 },
+    // Card 2 (Accuracy, right): deep dark teal right + barely-there left
+    { c1: [0, 50, 44],   x1: 78, c2: [0, 20, 16],  x2: 22 },
+    // Card 3 (Availability, left): bright mint teal left + mid teal right
+    { c1: [0, 200, 180], x1: 20, c2: [0, 90, 80],  x2: 78 },
+    // Card 4 (Setup, right):  ocean teal right + mid teal left
+    { c1: [0, 120, 108], x1: 78, c2: [0, 160, 144], x2: 22 },
+  ];
+  function _lerpV(a, b, t) { return a + (b - a) * t; }
+  function _lerpC(a, b, t) {
+    return [
+      Math.round(_lerpV(a[0], b[0], t)),
+      Math.round(_lerpV(a[1], b[1], t)),
+      Math.round(_lerpV(a[2], b[2], t)),
+    ];
+  }
+
+  // ── Vertex shader ──
+  // All lanes evaluate the SAME master path at their Z depth.
+  // Scroll is applied by shifting the phase of the path function.
+  // position.x = lane's lateral offset (baked in geometry).
+  // position.z = static depth from 0 to -ROAD_LEN.
+  const vertexShader = `
+    uniform float uTime;
+    uniform float uScrollZ;
+    uniform float uRoadLen;
+    uniform float uPathX;
+    uniform float uConverge;
+    varying float vFade;
+
+    void main() {
+      float c = 1.0 - uConverge; // 1=normal, 0=fully converged to center
+      float p = (position.z - uScrollZ) / uRoadLen;
+
+      // Master path collapses toward center as uConverge → 1
+      float worldX = (sin(p * 3.14159 + uTime * 0.20) * 18.0
+                   + sin(p * 7.854   + uTime * 0.12) * 7.0) * c
+                   + position.x * c   // lane spread collapses
+                   + uPathX * c;      // lateral shift collapses
+
+      float worldY = (cos(p * 4.712   + uTime * 0.16) * 12.0
+                   + cos(p * 10.996  + uTime * 0.10) * 4.5) * c;
+
+      float farFade = 1.0 - smoothstep(-(uRoadLen - 200.0), -(uRoadLen - 140.0), position.z);
+      vFade = farFade;
+
+      gl_Position = projectionMatrix * viewMatrix * vec4(worldX, worldY, position.z, 1.0);
+    }
+  `;
+
+  const fragmentShader = `
+    uniform vec3 uColor;
+    varying float vFade;
+    void main() {
+      gl_FragColor = vec4(uColor, vFade);
+    }
+  `;
+
+  // ── Lane colors — brand palette distributed across lanes ──
+  // White lanes are brightest (most bloom), teal mid, dark teal subtle
+  const COLORS = [
+    0xffffff, 0x00B2A0, 0x004C44,
+    0x80E8E0, 0x00B2A0, 0xffffff,
+    0x004C44, 0x00C0AE, 0xffffff,
+    0x00B2A0, 0x006056, 0xffffff,
+    0x004C44, 0x00B2A0, 0x80E8E0, 0xffffff,
+  ];
+
+  // ── Build lane geometries ──
+  // Each lane: static Z from 0 to -ROAD_LEN, X = fixed lane offset
+  // Shader moves them along the shared master path curve at render time
+  for (let lane = 0; lane < NUM_LANES; lane++) {
+    const laneX = (lane / (NUM_LANES - 1) - 0.5) * 2 * LANE_HALF;
+    const positions = new Float32Array(NUM_PTS * 3);
+    for (let i = 0; i < NUM_PTS; i++) {
+      positions[i * 3 + 0] = laneX;
+      positions[i * 3 + 1] = 0;
+      // Z goes from +Z_NEAR (behind camera) to -ROAD_LEN (far end)
+      positions[i * 3 + 2] = Z_NEAR - (i / (NUM_PTS - 1)) * (ROAD_LEN + Z_NEAR);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime, uScrollZ, uRoadLen, uPathX, uConverge,
+        uColor: { value: new THREE.Color(COLORS[lane % COLORS.length]) },
+      },
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+      depthWrite:  false,
+      blending:    THREE.AdditiveBlending,
+    });
+
+    scene.add(new THREE.Line(geo, mat));
+  }
+
+  // ── GREEN COMETS — short streaks racing along the same master path ──
+  // Use world-space Z (via modelMatrix) so mesh.position.z drives recycling
+  const cometVS = `
+    uniform float uTime; uniform float uScrollZ; uniform float uRoadLen; uniform float uPathX; uniform float uConverge;
+    varying float vAlpha;
+    void main() {
+      float c = 1.0 - uConverge;
+      vec3 wp = (modelMatrix * vec4(position, 1.0)).xyz;
+      float p  = (wp.z - uScrollZ) / uRoadLen;
+      float worldX = (sin(p * 3.14159 + uTime * 0.20) * 18.0
+                   + sin(p * 7.854   + uTime * 0.12) * 7.0) * c
+                   + wp.x * c + uPathX * c;
+      float worldY = (cos(p * 4.712   + uTime * 0.16) * 12.0
+                   + cos(p * 10.996  + uTime * 0.10) * 4.5) * c;
+      float t       = position.y;
+      float farFade  = 1.0 - smoothstep(-(uRoadLen - 200.0), -(uRoadLen - 140.0), wp.z);
+      vAlpha = (1.0 - t * t * t) * farFade;
+      gl_Position = projectionMatrix * viewMatrix * vec4(worldX, worldY, wp.z, 1.0);
+    }
+  `;
+  const cometFS = `
+    uniform vec3 uColor; varying float vAlpha;
+    void main() { gl_FragColor = vec4(uColor, vAlpha); }
+  `;
+
+  const COMET_COUNT = 24;
+  const COMET_PTS   = 30;
+  const COMET_LEN   = 50;
+  const cometColors = [0x00FF88, 0x00B2A0, 0x44FFB0, 0x00FF88, 0x00E0A0];
+  const comets = [];
+
+  for (let i = 0; i < COMET_COUNT; i++) {
+    const laneX = (Math.random() - 0.5) * LANE_HALF * 2.5;
+    const pts = new Float32Array(COMET_PTS * 3);
+    for (let j = 0; j < COMET_PTS; j++) {
+      const t = j / (COMET_PTS - 1);
+      pts[j*3+0] = laneX;
+      pts[j*3+1] = t;            // fade coord: 0=head, 1=tail
+      pts[j*3+2] = -t * COMET_LEN;
+    }
+    const cGeo = new THREE.BufferGeometry();
+    cGeo.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+    const cMat = new THREE.ShaderMaterial({
+      uniforms: { uTime, uScrollZ, uRoadLen, uPathX, uConverge,
+        uColor: { value: new THREE.Color(cometColors[i % cometColors.length]) } },
+      vertexShader: cometVS, fragmentShader: cometFS,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const cMesh = new THREE.Line(cGeo, cMat);
+    cMesh.position.z = -Math.random() * ROAD_LEN;
+    cMesh._spd = 2.5 + Math.random() * 4.5;
+    cMesh.frustumCulled = false;
+    scene.add(cMesh);
+    comets.push(cMesh);
+  }
+
+  // ── GREEN SPARK PARTICLES — individual dots flowing along the path ──
+  const SPARK_N = 120;
+  const sparkPos = new Float32Array(SPARK_N * 3);
+  const sparkSpd = new Float32Array(SPARK_N);
+  for (let i = 0; i < SPARK_N; i++) {
+    sparkPos[i*3+0] = (Math.random() - 0.5) * LANE_HALF * 2.5;
+    sparkPos[i*3+1] = 0;
+    sparkPos[i*3+2] = -Math.random() * ROAD_LEN;
+    sparkSpd[i] = 1.5 + Math.random() * 5.5;
+  }
+  const sparkGeo = new THREE.BufferGeometry();
+  sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+  const sparkMat = new THREE.ShaderMaterial({
+    uniforms: { uTime, uScrollZ, uRoadLen, uPathX, uConverge, uColor: { value: new THREE.Color(0x00FF88) } },
+    vertexShader: `
+      uniform float uTime; uniform float uScrollZ; uniform float uRoadLen; uniform float uPathX; uniform float uConverge;
+      varying float vAlpha;
+      void main() {
+        float c = 1.0 - uConverge;
+        float p  = (position.z - uScrollZ) / uRoadLen;
+        float wx = (sin(p*3.14159+uTime*0.20)*18.0+sin(p*7.854+uTime*0.12)*7.0)*c+position.x*c+uPathX*c;
+        float wy = (cos(p*4.712+uTime*0.16)*12.0+cos(p*10.996+uTime*0.10)*4.5)*c;
+        vAlpha = 1.0-smoothstep(-(uRoadLen-200.0),-(uRoadLen-140.0),position.z);
+        gl_PointSize = 8.0 + uConverge * 16.0; // sparks swell as they converge to center
+        gl_Position = projectionMatrix*viewMatrix*vec4(wx,wy,position.z,1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor; varying float vAlpha;
+      void main() {
+        float d = length(gl_PointCoord - vec2(0.5));
+        gl_FragColor = vec4(uColor, smoothstep(0.5, 0.1, d) * vAlpha);
+      }
+    `,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const sparkPoints = new THREE.Points(sparkGeo, sparkMat);
+  sparkPoints.frustumCulled = false;
+  scene.add(sparkPoints);
+
+  // ── Post-processing — soft bloom for neon glow ──
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 1.3, 0.75, 0.0);
+  composer.addPass(bloom);
+  window.speedBloom = bloom; // exposed for external convergence control
+  composer.addPass(new OutputPass());
+
+  // ── Speed state — smooth lerp to target ──
+  let scrollSpd = 0.5, tgtScrollSpd = 0.5;
+  let timeSpd   = 0.004, tgtTimeSpd  = 0.004;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    scrollSpd += (tgtScrollSpd - scrollSpd) * 0.05;
+    timeSpd   += (tgtTimeSpd  - timeSpd)   * 0.05;
+    uScrollZ.value += scrollSpd;
+    uTime.value    += timeSpd;
+    uPathX.value    = window.speedPathProxy ? window.speedPathProxy.x : 0;
+    const conv      = window.speedConvergeProxy ? window.speedConvergeProxy.value : 0;
+    uConverge.value = conv;
+    // Rush forward as lanes converge — makes it feel like being swallowed into the point
+    if (conv > 0.01) uScrollZ.value += conv * 14;
+    // Bloom flares bright as everything collapses to center
+    bloom.strength = 1.3 + conv * 4.5;
+
+    // Update CSS atmospheric background (Depth Gallery mood lighting)
+    if (window.speedBgProxy && speedBgEl) {
+      const ci    = window.speedBgProxy.cardIdx;
+      const i0    = Math.max(0, Math.min(CARD_PALETTES_CSS.length - 1, Math.floor(ci)));
+      const i1    = Math.max(0, Math.min(CARD_PALETTES_CSS.length - 1, Math.ceil(ci)));
+      const blend = ci - Math.floor(ci);
+      const p0 = CARD_PALETTES_CSS[i0], p1 = CARD_PALETTES_CSS[i1];
+      const c1 = _lerpC(p0.c1, p1.c1, blend);
+      const c2 = _lerpC(p0.c2, p1.c2, blend);
+      const x1 = Math.round(_lerpV(p0.x1, p1.x1, blend));
+      const x2 = Math.round(_lerpV(p0.x2, p1.x2, blend));
+      speedBgEl.style.background =
+        `radial-gradient(ellipse 115% 90% at ${x1}% 50%, rgba(${c1},0.90) 0%, rgba(${c1},0.20) 48%, transparent 70%),` +
+        `radial-gradient(ellipse 80% 75% at ${x2}% 52%, rgba(${c2},0.65) 0%, transparent 62%),` +
+        `#000000`;
+    }
+
+    // Move comets — each at its own speed, recycle when past camera
+    const cBase = scrollSpd * 0.7 + 0.2;
+    for (const m of comets) {
+      m.position.z += m._spd * cBase / 3.5;
+      if (m.position.z > 2) m.position.z = -(ROAD_LEN - Math.random() * 40);
+    }
+
+    // Move spark particles
+    for (let i = 0; i < SPARK_N; i++) {
+      sparkPos[i*3+2] += sparkSpd[i] * cBase / 3.5;
+      if (sparkPos[i*3+2] > 2) sparkPos[i*3+2] = -(ROAD_LEN - Math.random() * 40);
+    }
+    sparkGeo.attributes.position.needsUpdate = true;
+
+    composer.render();
+  }
+  animate();
+
+  // ── Speed up when section enters viewport ──
+  const section = document.getElementById('speed-scrolly');
+  if (section) {
+    new IntersectionObserver(entries => {
+      const v = entries[0].isIntersecting;
+      tgtScrollSpd = v ? 3.5  : 0.5;
+      tgtTimeSpd   = v ? 0.012 : 0.004;
+    }, { threshold: 0.2 }).observe(section);
+  }
+
+  // ── Resize ──
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+    composer.setSize(w, h);
+    bloom.setSize(w, h);
+  });
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+const probSwiper = new Swiper('.prob-swiper', {
+  grabCursor: true,
+  centeredSlides: true,
+  loop: true,
+  slidesPerView: 1.2,
+  spaceBetween: 16,
+  speed: 400,
+  mousewheel: { forceToAxis: true, sensitivity: 1 },
+  freeMode: { enabled: true, sticky: true, momentum: true, momentumRatio: 0.4 },
+  autoplay: { delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true },
+  pagination: { el: '.prob-swiper .swiper-pagination', clickable: true },
+  breakpoints: {
+    480:  { slidesPerView: 1.5, spaceBetween: 16 },
+    640:  { slidesPerView: 2,   spaceBetween: 20 },
+    900:  { slidesPerView: 3,   spaceBetween: 20 },
+  },
+});
+const customSwiper = new Swiper('.custom-swiper', {
+  grabCursor: true,
+  centeredSlides: true,
+  loop: true,
+  slidesPerView: 1.5,
+  spaceBetween: 12,
+  speed: 400,
+  mousewheel: { forceToAxis: true, sensitivity: 1 },
+  freeMode: { enabled: true, sticky: true, momentum: true, momentumRatio: 0.4 },
+  autoplay: { delay: 2400, disableOnInteraction: false, pauseOnMouseEnter: true },
+  pagination: { el: '.custom-swiper .swiper-pagination', clickable: true },
+  breakpoints: {
+    480:  { slidesPerView: 2,   spaceBetween: 14 },
+    640:  { slidesPerView: 3,   spaceBetween: 16 },
+    900:  { slidesPerView: 4,   spaceBetween: 16 },
+    1100: { slidesPerView: 5,   spaceBetween: 16 },
+  },
+});
+</script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+AOS.init({
+  duration: 700,
+  easing: 'ease-out-cubic',
+  once: true,
+  offset: 60
+});
+</script>
+<script>
+/* ─── CONTACT FORM ─── */
+(function() {
+  const form    = document.getElementById('contact-form');
+  const success = document.getElementById('cta-success');
+  if (!form) return;
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name    = document.getElementById('cf-name').value.trim();
+    const email   = document.getElementById('cf-email').value.trim();
+    const website = document.getElementById('cf-website').value.trim();
+    const message = document.getElementById('cf-message').value.trim();
+    const subject = encodeURIComponent('Axyom Inquiry' + (name ? ' from ' + name : ''));
+    const body    = encodeURIComponent(
+      (name    ? 'Name: '    + name    + '\n' : '') +
+      (email   ? 'Email: '  + email   + '\n' : '') +
+      (website ? 'Website: '+ website + '\n' : '') +
+      (message ? '\n'       + message        : '')
+    );
+    window.location.href = 'mailto:hello@axyom.ai?subject=' + subject + '&body=' + body;
+    form.style.display = 'none';
+    success.style.display = 'block';
+  });
+})();
+
+/* ═══════════════════════════════════════
+   LANGUAGE SWITCHER / i18n
+   All strings are developer-controlled constants — no user data is processed.
+═══════════════════════════════════════ */
+(function() {
+  var LANGS = {
+    de: {
+      'nav.features':'Funktionen','nav.how':'So funktioniert es','nav.solutions':'Lösungen','nav.contact':'Kontakt','nav.cta':'Kontakt',
+      'hero.label':'In Aktion erleben','hero.heading.1':'Was kann Axyom','hero.heading.2':'für Sie tun?',
+      'hero.hl.1':'Ihr persönlicher KI-Assistent','hero.hl.2':'für Ihre Website',
+      'hero.sub':'Heben Sie Ihre Website auf ein neues Niveau',
+      'hero.chat.status':'Online · Kennt Ihre Produkte',
+      'hero.chat.q1':'Welches ATV hat den größten Kraftstofftank?',
+      'hm2.pre':'Der ','hm2.model':'ATV 1000','hm2.post':' führt mit 22 L, gefolgt vom ATV 650 mit 18 L.',
+      'hero.chat.q2':'Und das leichteste Modell?',
+      'hm4.pre':'Das leichteste ist der ','hm4.model':'ATV 650','hm4.post':' mit 298 kg und 14 L Tank — ideal für Agilität und Trail-Fahrten.',
+      'hero.chat.placeholder':'Fragen Sie zu einem Produkt…',
+      'story.1.num':'Schritt 01','story.1.title':'Axyom liest Ihre Website','story.1.body':'Unser Crawler scannt jede Seite — Produkte, Spezifikationen, FAQs, versteckte Bereiche. Nichts wird übersehen.',
+      'story.2.num':'Schritt 02','story.2.title':'Versteht Ihre Produkte','story.2.body':'Produktspezifikationen, Preise und Funktionen werden in strukturierte Daten umgewandelt. Die KI kennt Ihren Katalog in- und auswendig.',
+      'story.3.num':'Schritt 03','story.3.title':'Antwortet wie Ihr bester Mitarbeiter','story.3.body':'Kunden stellen Fragen in natürlicher Sprache. Axyom antwortet präzise und in Ihrer Markenstimme.',
+      'story.4.num':'Schritt 04','story.4.title':'Vergleicht, empfiehlt, verkauft','story.4.body':'Es antwortet nicht nur — es berät. Cross-Selling, Vergleiche und personalisierte Empfehlungen steigern die Conversion.',
+      'story.5.num':'Ergebnis','story.5.title':'24/7 Vertriebsintelligenz','story.5.body':'Ein immer verfügbarer KI-Mitarbeiter, der alles über Ihr Unternehmen weiß. Kein Chatbot. Ein echter Vertriebsassistent.',
+      'prob.label':'Das Problem','prob.h2.1':'Die meisten Websites lassen Besucher','prob.h2.2':'suchen, nicht finden.',
+      'prob.1.industry':'Absprungrate','prob.1.title':'Besucher gehen ohne Antworten','prob.1.body':'Besucher kommen mit echten Fragen und gehen mit leeren Händen. Sie finden nicht schnell genug, was sie suchen.','prob.1.tag1':'Hohe Absprungrate','prob.1.tag2':'Verlorene Leads',
+      'prob.2.industry':'Navigation','prob.2.title':'Informationen auf Dutzenden Seiten verteilt','prob.2.body':'Spezifikationen, Preise, Richtlinien — über viele Navigationsstufen verstreut. Kunden geben auf, bevor sie finden, was zählt.','prob.2.tag1':'Schlechte UX','prob.2.tag2':'Content-Silos',
+      'prob.3.industry':'Personalisierung','prob.3.title':'Jeder Besucher sieht dasselbe','prob.3.body':'Unabhängig von Absicht und Kontext sieht jeder Nutzer dieselbe Seite. Keine Anpassung, keine Führung.','prob.3.tag1':'Kein Kontext','prob.3.tag2':'Geringe Conversion',
+      'prob.4.industry':'Verfügbarkeit','prob.4.title':'Fragen bleiben außerhalb der Geschäftszeiten unbeantwortet','prob.4.body':'Kunden kaufen nicht nur 9–17 Uhr. Jede unbeantwortete Frage um Mitternacht ist ein Lead, der verschwindet.','prob.4.tag1':'Außer Bürozeiten','prob.4.tag2':'Entgangener Umsatz',
+      'prob.5.industry':'Support-Kosten','prob.5.title':'Support-Teams von Wiederholungsfragen überflutet','prob.5.body':'Dieselben Fragen, immer wieder. Ihr Team verbringt Stunden damit, Dinge zu beantworten, die keinen Menschen brauchen.','prob.5.tag1':'Repetitive Arbeit','prob.5.tag2':'Hohe Kosten',
+      'prob.6.industry':'Funnel-Abbruch','prob.6.title':'Komplexe Navigation tötet Conversions','prob.6.body':'Verwirrende Menüs, Sackgassen, defekte Suche. Besucher treffen auf Hürden und verlassen die Seite, bevor sie Ihren Mehrwert entdecken.','prob.6.tag1':'Abbruch','prob.6.tag2':'Reibung',
+      'speed.label':'Leistung','speed.title':'Folge dem Pfad in die Zukunft mit uns',
+      'speed.1.num':'01 / Geschwindigkeit','speed.1.title':'Antworten in Millisekunden','speed.1.body':'Ihre KI antwortet, bevor Besucher ausgetippt haben. Keine Ladezeiten, keine Warteschlangen — sofort.',
+      'speed.2.num':'02 / Genauigkeit','speed.2.title':'Basiert auf Ihren Inhalten','speed.2.body':'Jede Antwort stammt direkt von Ihrer Website. Keine Halluzinationen, kein Raten, niemals.',
+      'speed.3.num':'03 / Verfügbarkeit','speed.3.title':'24/7 ohne Ermüdung','speed.3.body':'Bearbeitet tausende Gespräche gleichzeitig. Keine Ruhezeiten, keine Warteschlangen, keine Limits.',
+      'speed.4.num':'04 / Einrichtung','speed.4.title':'In Minuten live','speed.4.body':'URL einfügen und Ihr KI-Assistent indexiert, lernt und ist gesprächsbereit. Kein Code nötig.',
+      'how.label':'So funktioniert es','how.heading':'Drei Schritte zu einer intelligenteren Website',
+      'how.1.step':'Schritt 01','how.1.title':'Ihre Domain eingeben','how.1.sub':'URL einfügen und Axyom legt los — keine technische Einrichtung erforderlich.',
+      'how.2.step':'Schritt 02','how.2.title':'Axyom scannt Ihre Website','how.2.sub':'Jede Seite, jedes Produkt und jeder Absatz wird in Minuten gecrawlt und indexiert.',
+      'how.3.step':'Schritt 03','how.3.title':'Ihr eigener persönlicher Assistent','how.3.sub':'Eine markengerechte KI geht auf Ihrer Website live — beantwortet jede Frage, Tag und Nacht.',
+      'feat.label':'Funktionen','feat.h2':'Was Axyom anders macht','feat.p':'Kein ChatGPT-Wrapper. Ein zweckgebautes Vertriebsintelligenz-System, ausschließlich auf Ihren Inhalten trainiert.',
+      'feat.1.title':'Intelligentes Crawling','feat.1.body':'Scannt Ihre gesamte Website, einschließlich dynamischer Inhalte, versteckter Tabs und JavaScript-gerenderter Elemente.',
+      'feat.2.title':'Strukturierte Extraktion','feat.2.body':'Erkennt Produktspezifikationen, technische Daten und numerische Werte. Alles normalisiert in maschinenlesbares JSON.',
+      'feat.3.title':'Hybrid RAG 2.0','feat.3.body':'Semantische Einbettungen plus Schlüsselwortabgleich. Nur fundierte Antworten — aus Ihren Daten.',
+      'feat.4.title':'Gesprächsgedächtnis','feat.4.body':'Versteht Kontext und Folgefragen über das gesamte Gespräch. „Was ist mit dem leichteren?" — die KI weiß es.',
+      'feat.5.title':'Vergleichsintelligenz','feat.5.body':'Rangiert, vergleicht und erklärt Unterschiede in Ihrem gesamten Produktkatalog. Es antwortet nicht nur — es berät.',
+      'feat.6.title':'Markenstimme','feat.6.body':'Spricht genau wie Ihr Unternehmen. Premium, technisch, freundlich — auf Ihren Ton konfiguriert.',
+      'comp.label':'Vergleich','comp.h2':'Warum kein normaler Chatbot?','comp.th.cap':'Fähigkeit','comp.th.old':'Normale Chatbots',
+      'comp.r1.cap':'Wissensquelle','comp.r1.old':'Statische FAQs, manuelle Eingabe','comp.r1.new':'Gesamte Website, live gecrawlt',
+      'comp.r2.cap':'Produktvergleich','comp.r2.old':'Nicht unterstützt','comp.r2.new':'Strukturierte Vergleiche',
+      'comp.r3.cap':'Kontextgedächtnis','comp.r3.old':'Jede Nachricht isoliert','comp.r3.new':'Versteht Folgefragen',
+      'comp.r4.cap':'Markenstimme','comp.r4.old':'Generisch (ChatGPT-Stil)','comp.r4.new':'Individuell für Ihre Marke',
+      'comp.r5.cap':'Halluzinationen','comp.r5.old':'Häufiges Problem','comp.r5.new':'Fundiert — nur Ihre Daten',
+      'comp.r6.cap':'Einrichtung','comp.r6.old':'Manuelle FAQ-Pflege','comp.r6.new':'Auto-Crawl, null Aufwand',
+      'custom.label':'Individuelle Lösungen','custom.h2.1':'Für jede Branche gebaut.','custom.h2.2':'Auf Ihre Welt trainiert.',
+      'cta.label':'Kontakt','cta.h2.1':'Lassen Sie uns Ihren','cta.h2.em':'KI-Assistenten','cta.h2.3':'gemeinsam bauen.',
+      'cta.p':'Erzählen Sie uns von Ihrer Website — wir zeigen Ihnen, was Axyom für Sie tun kann. Unverbindlich.',
+      'cta.trust1':'Schweizer Team','cta.trust2':'Antwort innerhalb 24 Stunden','cta.trust3':'Keine Verpflichtung',
+      'cta.form.name':'Name','cta.form.namePh':'Max Mustermann','cta.form.email':'E-Mail','cta.form.emailPh':'max@unternehmen.de',
+      'cta.form.website':'Website','cta.form.message':'Nachricht','cta.form.messagePh':'Erzählen Sie uns, was Sie automatisieren möchten…',
+      'cta.form.send':'Nachricht senden','cta.form.direct':'Direkt schreiben',
+      'cta.success.title':'Nachricht gesendet!','cta.success.body':'Wir melden uns innerhalb von 24 Stunden.',
+      'footer.copy.1':'© 2026 Axyom AI. Alle Rechte vorbehalten.','footer.copy.2':'Intelligente Vertriebsassistenten für das Web.',
+      'footer.privacy':'Datenschutz','footer.impressum':'Impressum','footer.contact':'Kontakt','footer.swiss':'Hergestellt in der Schweiz'
+    },
+    it: {
+      'nav.features':'Funzionalità','nav.how':'Come funziona','nav.solutions':'Soluzioni','nav.contact':'Contatti','nav.cta':'Contatti',
+      'hero.label':'Scoprilo in azione','hero.heading.1':'Cosa può fare Axyom','hero.heading.2':'per te?',
+      'hero.hl.1':'Il tuo assistente AI personale','hero.hl.2':'per il tuo sito web',
+      'hero.sub':'Porta il tuo sito web a un nuovo livello',
+      'hero.chat.status':'Online · Conosce i tuoi prodotti',
+      'hero.chat.q1':'Quale ATV ha il serbatoio più grande?',
+      'hm2.pre':'Il ','hm2.model':'ATV 1000','hm2.post':' è in testa con 22 L, seguito dall\'ATV 650 con 18 L.',
+      'hero.chat.q2':'E il più leggero?',
+      'hm4.pre':'Il più leggero è il ','hm4.model':'ATV 650','hm4.post':' con 298 kg e 14 L di serbatoio — perfetto per agilità e trail.',
+      'hero.chat.placeholder':'Fai una domanda su qualsiasi prodotto…',
+      'story.1.num':'Passo 01','story.1.title':'Axyom legge il tuo sito','story.1.body':'Il nostro crawler scansiona ogni pagina — prodotti, specifiche, FAQ, tab nascosti. Niente viene tralasciato.',
+      'story.2.num':'Passo 02','story.2.title':'Comprende i tuoi prodotti','story.2.body':'Specifiche, prezzi e caratteristiche vengono estratti in dati strutturati. L\'AI conosce il tuo catalogo a memoria.',
+      'story.3.num':'Passo 03','story.3.title':'Risponde come il tuo miglior dipendente','story.3.body':'I clienti fanno domande in linguaggio naturale. Axyom risponde con precisione nella voce del tuo brand.',
+      'story.4.num':'Passo 04','story.4.title':'Confronta, consiglia, vende','story.4.body':'Non si limita a rispondere — consiglia. Cross-selling, confronti e raccomandazioni personalizzate aumentano le conversioni.',
+      'story.5.num':'Risultato','story.5.title':'Intelligenza commerciale 24/7','story.5.body':'Un dipendente AI sempre disponibile che conosce tutto del tuo business. Non un chatbot. Un vero assistente alle vendite.',
+      'prob.label':'Il Problema','prob.h2.1':'La maggior parte dei siti lascia i visitatori','prob.h2.2':'a cercare, non a trovare.',
+      'prob.1.industry':'Frequenza di rimbalzo','prob.1.title':'I visitatori se ne vanno senza risposte','prob.1.body':'Le persone arrivano con domande reali e se ne vanno a mani vuote. Non trovano quello che cercano abbastanza in fretta.','prob.1.tag1':'Alta rimbalzata','prob.1.tag2':'Lead persi',
+      'prob.2.industry':'Navigazione','prob.2.title':'Informazioni distribuite su decine di pagine','prob.2.body':'Specifiche, prezzi, politiche — dispersi su livelli di navigazione. I clienti si arrendono prima di trovare ciò che conta.','prob.2.tag1':'UX scadente','prob.2.tag2':'Silos di contenuto',
+      'prob.3.industry':'Personalizzazione','prob.3.title':'Ogni visitatore riceve la stessa esperienza generica','prob.3.body':'Indipendentemente dall\'intenzione, ogni utente vede la stessa pagina. Nessun adattamento, nessuna guida.','prob.3.tag1':'Nessun contesto','prob.3.tag2':'Bassa conversione',
+      'prob.4.industry':'Disponibilità','prob.4.title':'Domande senza risposta fuori orario','prob.4.body':'I clienti non comprano solo dalle 9 alle 17. Ogni domanda senza risposta a mezzanotte è un lead che scompare.','prob.4.tag1':'Fuori orario','prob.4.tag2':'Ricavi persi',
+      'prob.5.industry':'Costi di supporto','prob.5.title':'Team di supporto sommersi da domande ripetitive','prob.5.body':'Le stesse domande, ancora e ancora. Il tuo team spende ore a rispondere a cose che non richiederebbero un umano.','prob.5.tag1':'Lavoro ripetitivo','prob.5.tag2':'Costi elevati',
+      'prob.6.industry':'Abbandono del funnel','prob.6.title':'La navigazione complessa uccide le conversioni','prob.6.body':'Menu confusi, vicoli ciechi, ricerca rotta. I visitatori incontrano ostacoli e se ne vanno prima di scoprire il tuo valore.','prob.6.tag1':'Abbandono','prob.6.tag2':'Attrito',
+      'speed.label':'Prestazioni','speed.title':'Segui il percorso verso il futuro con noi',
+      'speed.1.num':'01 / Velocità','speed.1.title':'Risposte in millisecondi','speed.1.body':'La tua AI risponde prima che i visitatori finiscano di digitare. Nessun caricamento, nessuna coda — istantaneo.',
+      'speed.2.num':'02 / Precisione','speed.2.title':'Basata sui tuoi contenuti','speed.2.body':'Ogni risposta è estratta direttamente dal tuo sito. Nessuna allucinazione, nessuna congettura, mai.',
+      'speed.3.num':'03 / Disponibilità','speed.3.title':'24/7 senza affaticamento','speed.3.body':'Gestisce migliaia di conversazioni simultaneamente. Nessun fuori orario, nessuna coda, nessun limite.',
+      'speed.4.num':'04 / Configurazione','speed.4.title':'Live in minuti','speed.4.body':'Incolla il tuo URL e il tuo assistente AI inizia a indicizzare, apprendere ed è pronto a rispondere.',
+      'how.label':'Come funziona','how.heading':'Tre passi per un sito più intelligente',
+      'how.1.step':'Passo 01','how.1.title':'Inserisci il tuo dominio','how.1.sub':'Incolla il tuo URL e Axyom si mette al lavoro — nessuna configurazione tecnica richiesta.',
+      'how.2.step':'Passo 02','how.2.title':'Axyom scansiona il tuo sito','how.2.sub':'Ogni pagina, prodotto e paragrafo viene scansionato e indicizzato in pochi minuti.',
+      'how.3.step':'Passo 03','how.3.title':'Il tuo assistente personale','how.3.sub':'Un\'AI consapevole del brand va live sul tuo sito — risponde a ogni domanda, giorno e notte.',
+      'feat.label':'Capacità','feat.h2':'Cosa rende Axyom diverso','feat.p':'Non un wrapper di ChatGPT. Un sistema di intelligenza commerciale costruito appositamente, addestrato sui tuoi contenuti.',
+      'feat.1.title':'Crawling intelligente','feat.1.body':'Scansiona l\'intero sito inclusi contenuti dinamici, tab nascosti ed elementi renderizzati in JavaScript.',
+      'feat.2.title':'Estrazione strutturata','feat.2.body':'Rileva specifiche prodotto, dati tecnici e valori numerici. Tutto normalizzato in JSON leggibile dalle macchine.',
+      'feat.3.title':'Hybrid RAG 2.0','feat.3.body':'Embedding semantici più corrispondenza per parole chiave. Solo risposte fondate — dai tuoi dati.',
+      'feat.4.title':'Memoria conversazionale','feat.4.body':'Comprende il contesto e le domande di follow-up nell\'intera conversazione. "E quello più leggero?" — lo sa.',
+      'feat.5.title':'Intelligenza di confronto','feat.5.body':'Classifica, confronta e spiega le differenze nell\'intero catalogo. Non risponde soltanto — consiglia.',
+      'feat.6.title':'Voce del brand','feat.6.body':'Parla esattamente come la tua azienda. Premium, tecnico, amichevole — configurato sul tuo tono.',
+      'comp.label':'Confronto','comp.h2':'Perché non un chatbot normale?','comp.th.cap':'Capacità','comp.th.old':'Chatbot normali',
+      'comp.r1.cap':'Fonte di conoscenza','comp.r1.old':'FAQ statiche, inserimento manuale','comp.r1.new':'Intero sito, crawl live',
+      'comp.r2.cap':'Confronto prodotti','comp.r2.old':'Non supportato','comp.r2.new':'Confronti strutturati',
+      'comp.r3.cap':'Memoria contestuale','comp.r3.old':'Ogni messaggio isolato','comp.r3.new':'Comprende i follow-up',
+      'comp.r4.cap':'Voce del brand','comp.r4.old':'Generica (stile ChatGPT)','comp.r4.new':'Personalizzata per il tuo brand',
+      'comp.r5.cap':'Allucinazioni','comp.r5.old':'Problema comune','comp.r5.new':'Fondata — solo i tuoi dati',
+      'comp.r6.cap':'Configurazione','comp.r6.old':'Manutenzione FAQ manuale','comp.r6.new':'Auto-crawl, zero sforzo',
+      'custom.label':'Soluzioni su misura','custom.h2.1':'Costruito per ogni settore.','custom.h2.2':'Addestrato sul tuo mondo.',
+      'cta.label':'Contatti','cta.h2.1':'Costruiamo insieme','cta.h2.em':'il tuo assistente AI','cta.h2.3':'.',
+      'cta.p':'Raccontaci del tuo sito e ti mostreremo cosa può fare Axyom per te — senza impegno.',
+      'cta.trust1':'Team svizzero','cta.trust2':'Risposta entro 24 ore','cta.trust3':'Nessun impegno',
+      'cta.form.name':'Nome','cta.form.namePh':'Mario Rossi','cta.form.email':'Email','cta.form.emailPh':'mario@azienda.it',
+      'cta.form.website':'Sito web','cta.form.message':'Messaggio','cta.form.messagePh':'Dicci cosa vorresti automatizzare…',
+      'cta.form.send':'Invia messaggio','cta.form.direct':'Scrivi direttamente',
+      'cta.success.title':'Messaggio inviato!','cta.success.body':'Ti risponderemo entro 24 ore.',
+      'footer.copy.1':'© 2026 Axyom AI. Tutti i diritti riservati.','footer.copy.2':'Assistenti alle vendite intelligenti per il web.',
+      'footer.privacy':'Privacy','footer.impressum':'Note legali','footer.contact':'Contatti','footer.swiss':'Prodotto in Svizzera'
+    },
+    fr: {
+      'nav.features':'Fonctionnalités','nav.how':'Comment ça marche','nav.solutions':'Solutions','nav.contact':'Contact','nav.cta':'Contact',
+      'hero.label':'Découvrir en action','hero.heading.1':'Que peut faire Axyom','hero.heading.2':'pour vous\u00a0?',
+      'hero.hl.1':'Votre assistant IA personnel','hero.hl.2':'pour votre site web',
+      'hero.sub':'Élevez votre site web à un niveau supérieur',
+      'hero.chat.status':'En ligne · Connaît vos produits',
+      'hero.chat.q1':'Quel ATV a le plus grand réservoir\u00a0?',
+      'hm2.pre':'Le ','hm2.model':'ATV 1000','hm2.post':' est en tête avec 22 L, suivi de l\'ATV 650 avec 18 L.',
+      'hero.chat.q2':'Et le plus léger\u00a0?',
+      'hm4.pre':'Le plus léger est le ','hm4.model':'ATV 650','hm4.post':' avec 298 kg et 14 L — idéal pour l\'agilité et le trail.',
+      'hero.chat.placeholder':'Posez une question sur n\'importe quel produit…',
+      'story.1.num':'Étape 01','story.1.title':'Axyom lit votre site','story.1.body':'Notre crawler scanne chaque page — produits, specs, FAQ, onglets cachés. Rien n\'est manqué.',
+      'story.2.num':'Étape 02','story.2.title':'Comprend vos produits','story.2.body':'Les specs, prix et caractéristiques sont extraits en données structurées. L\'IA connaît votre catalogue sur le bout des doigts.',
+      'story.3.num':'Étape 03','story.3.title':'Répond comme votre meilleur employé','story.3.body':'Les clients posent des questions en langage naturel. Axyom répond avec précision dans la voix de votre marque.',
+      'story.4.num':'Étape 04','story.4.title':'Compare, recommande, vend','story.4.body':'Il ne répond pas seulement — il conseille. Cross-selling, comparaisons et recommandations personnalisées boostent les conversions.',
+      'story.5.num':'Résultat','story.5.title':'Intelligence commerciale 24/7','story.5.body':'Un employé IA toujours disponible qui connaît tout de votre business. Pas un chatbot. Un vrai assistant commercial.',
+      'prob.label':'Le Problème','prob.h2.1':'La plupart des sites laissent les visiteurs','prob.h2.2':'chercher, sans trouver.',
+      'prob.1.industry':'Taux de rebond','prob.1.title':'Les visiteurs repartent sans réponses','prob.1.body':'Les gens arrivent avec de vraies questions et repartent les mains vides. Ils ne trouvent pas ce qu\'il faut assez vite.','prob.1.tag1':'Fort rebond','prob.1.tag2':'Leads perdus',
+      'prob.2.industry':'Navigation','prob.2.title':'Informations éparpillées sur des dizaines de pages','prob.2.body':'Specs, prix, politiques — dispersés sur plusieurs niveaux de navigation. Les clients abandonnent avant de trouver ce qui compte.','prob.2.tag1':'Mauvaise UX','prob.2.tag2':'Silos de contenu',
+      'prob.3.industry':'Personnalisation','prob.3.title':'Chaque visiteur reçoit la même expérience générique','prob.3.body':'Peu importe l\'intention, chaque utilisateur voit la même page. Aucune adaptation, aucun guidage.','prob.3.tag1':'Pas de contexte','prob.3.tag2':'Faible conversion',
+      'prob.4.industry':'Disponibilité','prob.4.title':'Questions sans réponse en dehors des heures de bureau','prob.4.body':'Les clients n\'achètent pas uniquement de 9h à 17h. Chaque question sans réponse à minuit est un lead qui disparaît.','prob.4.tag1':'Hors heures','prob.4.tag2':'Revenus manqués',
+      'prob.5.industry':'Coûts support','prob.5.title':'Équipes de support noyées dans les questions répétitives','prob.5.body':'Les mêmes questions, encore et encore. Votre équipe passe des heures à répondre à des choses qui ne nécessitent pas un humain.','prob.5.tag1':'Travail répétitif','prob.5.tag2':'Coût élevé',
+      'prob.6.industry':'Abandon du tunnel','prob.6.title':'La navigation complexe tue les conversions','prob.6.body':'Menus confus, impasses, recherche défaillante. Les visiteurs rencontrent des frictions et partent avant de découvrir votre valeur.','prob.6.tag1':'Abandon','prob.6.tag2':'Friction',
+      'speed.label':'Performance','speed.title':'Suivez le chemin vers le futur avec nous',
+      'speed.1.num':'01 / Vitesse','speed.1.title':'Réponses en millisecondes','speed.1.body':'Votre IA répond avant que les visiteurs aient fini de taper. Pas de chargement, pas de file — instantané.',
+      'speed.2.num':'02 / Précision','speed.2.title':'Fondée sur votre contenu','speed.2.body':'Chaque réponse est extraite directement de votre site. Aucune hallucination, aucune supposition, jamais.',
+      'speed.3.num':'03 / Disponibilité','speed.3.title':'24/7 sans fatigue','speed.3.body':'Gère des milliers de conversations simultanément. Pas de hors horaires, pas de files d\'attente, pas de limites.',
+      'speed.4.num':'04 / Configuration','speed.4.title':'En ligne en minutes','speed.4.body':'Collez votre URL et votre assistant IA indexe, apprend et est prêt à répondre. Zéro code.',
+      'how.label':'Comment ça marche','how.heading':'Trois étapes pour un site plus intelligent',
+      'how.1.step':'Étape 01','how.1.title':'Entrez votre domaine','how.1.sub':'Collez votre URL et Axyom se met au travail — aucune configuration technique requise.',
+      'how.2.step':'Étape 02','how.2.title':'Axyom scanne votre site','how.2.sub':'Chaque page, produit et paragraphe est crawlé et indexé en quelques minutes.',
+      'how.3.step':'Étape 03','how.3.title':'Votre assistant personnel','how.3.sub':'Une IA consciente de votre marque est mise en ligne — répondant à chaque question, jour et nuit.',
+      'feat.label':'Capacités','feat.h2':'Ce qui rend Axyom différent','feat.p':'Pas un wrapper ChatGPT. Un système d\'intelligence commerciale conçu à cet effet, entraîné exclusivement sur votre contenu.',
+      'feat.1.title':'Crawling intelligent','feat.1.body':'Scanne tout votre site y compris les contenus dynamiques, onglets cachés et éléments rendus en JavaScript.',
+      'feat.2.title':'Extraction structurée','feat.2.body':'Détecte les specs produits, données techniques et valeurs numériques. Tout normalisé en JSON lisible par machine.',
+      'feat.3.title':'Hybrid RAG 2.0','feat.3.body':'Embeddings sémantiques plus correspondance par mots-clés. Réponses fondées uniquement — de vos données.',
+      'feat.4.title':'Mémoire conversationnelle','feat.4.body':'Comprend le contexte et les questions de suivi dans toute la conversation. « Et le plus léger ? » — il sait.',
+      'feat.5.title':'Intelligence de comparaison','feat.5.body':'Classe, compare et explique les différences dans tout votre catalogue. Il ne répond pas seulement — il conseille.',
+      'feat.6.title':'Voix de marque','feat.6.body':'Parle exactement comme votre entreprise. Premium, technique, amical — configuré sur votre ton.',
+      'comp.label':'Comparaison','comp.h2':'Pourquoi pas un chatbot ordinaire\u00a0?','comp.th.cap':'Capacité','comp.th.old':'Chatbots classiques',
+      'comp.r1.cap':'Source de connaissance','comp.r1.old':'FAQ statiques, saisie manuelle','comp.r1.new':'Site entier, crawl en direct',
+      'comp.r2.cap':'Comparaison produits','comp.r2.old':'Non supporté','comp.r2.new':'Comparaisons structurées',
+      'comp.r3.cap':'Mémoire contextuelle','comp.r3.old':'Chaque message isolé','comp.r3.new':'Comprend les suivis',
+      'comp.r4.cap':'Voix de marque','comp.r4.old':'Générique (style ChatGPT)','comp.r4.new':'Personnalisée pour votre marque',
+      'comp.r5.cap':'Hallucinations','comp.r5.old':'Problème fréquent','comp.r5.new':'Fondée — vos données uniquement',
+      'comp.r6.cap':'Configuration','comp.r6.old':'Maintenance FAQ manuelle','comp.r6.new':'Auto-crawl, zéro effort',
+      'custom.label':'Solutions sur mesure','custom.h2.1':'Conçu pour chaque secteur.','custom.h2.2':'Entraîné sur votre monde.',
+      'cta.label':'Contact','cta.h2.1':'Construisons ensemble','cta.h2.em':'votre assistant IA','cta.h2.3':'.',
+      'cta.p':'Parlez-nous de votre site et nous vous montrerons ce qu\'Axyom peut faire — sans engagement.',
+      'cta.trust1':'Équipe suisse','cta.trust2':'Réponse sous 24 heures','cta.trust3':'Sans engagement',
+      'cta.form.name':'Nom','cta.form.namePh':'Jean Dupont','cta.form.email':'E-mail','cta.form.emailPh':'jean@entreprise.fr',
+      'cta.form.website':'Site web','cta.form.message':'Message','cta.form.messagePh':'Dites-nous ce que vous souhaitez automatiser…',
+      'cta.form.send':'Envoyer le message','cta.form.direct':'Écrire directement',
+      'cta.success.title':'Message envoyé\u00a0!','cta.success.body':'Nous vous répondrons dans les 24 heures.',
+      'footer.copy.1':'© 2026 Axyom AI. Tous droits réservés.','footer.copy.2':'Assistants commerciaux intelligents pour le web.',
+      'footer.privacy':'Confidentialité','footer.impressum':'Mentions légales','footer.contact':'Contact','footer.swiss':'Fabriqué en Suisse'
+    }
+  };
+
+  function applyLang(lang) {
+    var t = LANGS[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      if (t && t[key] !== undefined) {
+        el.textContent = t[key];
+      } else if (lang === 'en' && el._i18nDefault !== undefined) {
+        el.textContent = el._i18nDefault;
+      }
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      if (t && t[key] !== undefined) {
+        el.placeholder = t[key];
+      } else if (lang === 'en' && el._i18nDefaultPh !== undefined) {
+        el.placeholder = el._i18nDefaultPh;
+      }
+    });
+    document.documentElement.lang = lang;
+    document.getElementById('lang-current').textContent = lang.toUpperCase();
+    document.querySelectorAll('.lang-option').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    document.querySelectorAll('.lang-mobile-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    try { localStorage.setItem('axyom-lang', lang); } catch(e) {}
+  }
+
+  // Cache defaults on first run
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el._i18nDefault = el.textContent;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    el._i18nDefaultPh = el.placeholder;
+  });
+
+  // Dropdown toggle (desktop)
+  var switcher = document.getElementById('lang-switcher');
+  var langBtn  = document.getElementById('lang-btn');
+  langBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var open = switcher.classList.toggle('open');
+    langBtn.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', function() {
+    switcher.classList.remove('open');
+    langBtn.setAttribute('aria-expanded', 'false');
+  });
+
+  // Desktop option selection
+  document.querySelectorAll('.lang-option').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      applyLang(btn.dataset.lang);
+      switcher.classList.remove('open');
+      langBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Mobile option selection
+  document.querySelectorAll('.lang-mobile-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { applyLang(btn.dataset.lang); });
+  });
+
+  // Restore saved language on load
+  try {
+    var saved = localStorage.getItem('axyom-lang');
+    if (saved && saved !== 'en' && LANGS[saved]) applyLang(saved);
+  } catch(e) {}
+})();
+
+/* ─── MOBILE NAV ─── */
+(function() {
+  const hamburger = document.getElementById('nav-hamburger');
+  const overlay   = document.getElementById('nav-mobile-overlay');
+  if (!hamburger || !overlay) return;
+
+  function closeMenu() {
+    hamburger.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  hamburger.addEventListener('click', function() {
+    const isOpen = !overlay.classList.contains('open');
+    hamburger.classList.toggle('open', isOpen);
+    hamburger.setAttribute('aria-expanded', String(isOpen));
+    overlay.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+
+  overlay.querySelectorAll('a').forEach(function(a) {
+    a.addEventListener('click', closeMenu);
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeMenu();
+  });
+})();
+</script>
+<script src="preloader.js"></script>
+</body>
+</html>
