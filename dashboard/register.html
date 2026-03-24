@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AXYOM · Create Account</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css?v=20260324a">
+  <link rel="icon" type="image/png" href="../Assets/axyomfavicon.png">
+  <link rel="apple-touch-icon" href="../Assets/axyomfavicon.png">
+</head>
+<body class="login-page">
+
+<div class="login-scene">
+  <div class="login-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="../Assets/axyomwhitelogo.png" alt="AXYOM" style="height:28px;display:block">
+      <h1>AXYOM</h1>
+    </div>
+    <p class="login-sub">Create your customer account</p>
+
+    <form class="login-fields" onsubmit="doRegister(event)">
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="Min. 8 characters" autocomplete="new-password" required minlength="8" />
+      </div>
+      <div class="input-group">
+        <label for="confirm">Confirm Password</label>
+        <input id="confirm" type="password" placeholder="Repeat password" autocomplete="new-password" required />
+      </div>
+      <div class="error-msg" id="errMsg"></div>
+      <button class="btn-primary full" type="submit" id="registerBtn">Create account</button>
+    </form>
+
+    <div class="login-footer">
+      Already have an account? <a href="login.html">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://api.axyom.ch';
+
+  if (localStorage.getItem('customer_token')) {
+    window.location.href = 'index.html';
+  }
+
+  async function doRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('registerBtn');
+    const errMsg = document.getElementById('errMsg');
+    errMsg.textContent = '';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm').value;
+
+    if (password !== confirm) {
+      errMsg.textContent = 'Passwords do not match';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account…';
+
+    try {
+      const res = await fetch(`${API}/customer/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errMsg.textContent = data.detail || 'Registration failed';
+        return;
+      }
+
+      localStorage.setItem('customer_token', data.access_token);
+      window.location.href = 'index.html';
+    } catch (err) {
+      errMsg.textContent = 'Network error — please try again';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create account';
+    }
+  }
+</script>
+</body>
+</html>

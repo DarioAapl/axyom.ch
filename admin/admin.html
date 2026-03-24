@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AXYOM · Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=20260324a" />
+  <link rel="icon" type="image/png" href="../Assets/axyomfavicon.png">
+  <link rel="apple-touch-icon" href="../Assets/axyomfavicon.png">
+</head>
+<body class="login-page">
+
+  <div class="login-scene">
+    <!-- Animated background -->
+    <div class="login-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <main class="login-card">
+      <div class="login-brand">
+        <img src="../Assets/axyomwhitelogo.png" alt="AXYOM" style="height:36px;display:block">
+      </div>
+      <p class="login-sub">Admin access only</p>
+
+      <div class="login-fields">
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="admin@axyom.ch" autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button class="btn-primary full" onclick="login()">Sign in</button>
+        <div class="error" id="loginError"></div>
+      </div>
+
+      <p class="login-footer">Powered by AXYOM AI</p>
+    </main>
+  </div>
+
+  <script src="admin-login.js?v=20260324a"></script>
+</body>
+</html>
