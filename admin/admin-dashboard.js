@@ -663,6 +663,13 @@ async function loadWidgetConfig(websiteId, domain, cell) {
         </div>
 
         <div class="input-group" style="grid-column:1/-1">
+          <label>Header Title</label>
+          <input type="text" id="wc-header-title-${websiteId}"
+            placeholder="AI Support · domain.com (default)"
+            value="${escapeHtml(cfg.header_title || "")}" />
+        </div>
+
+        <div class="input-group" style="grid-column:1/-1">
           <label>Welcome Message</label>
           <input type="text" id="wc-welcome-${websiteId}"
             placeholder="Hi! How can I help you?"
@@ -734,16 +741,17 @@ function setWidgetPosition(websiteId, pos) {
 }
 
 async function saveWidgetConfig(websiteId) {
-  const primary  = document.getElementById(`wc-primary-${websiteId}`)?.value;
-  const textCol  = document.getElementById(`wc-text-${websiteId}`)?.value;
-  const welcome  = document.getElementById(`wc-welcome-${websiteId}`)?.value;
-  const position = widgetPositions[websiteId] || "right";
-  const msgEl    = document.getElementById(`wc-msg-${websiteId}`);
+  const primary     = document.getElementById(`wc-primary-${websiteId}`)?.value;
+  const textCol     = document.getElementById(`wc-text-${websiteId}`)?.value;
+  const welcome     = document.getElementById(`wc-welcome-${websiteId}`)?.value;
+  const headerTitle = document.getElementById(`wc-header-title-${websiteId}`)?.value || "";
+  const position    = widgetPositions[websiteId] || "right";
+  const msgEl       = document.getElementById(`wc-msg-${websiteId}`);
 
   const res = await fetch(`${API}/admin/websites/${websiteId}/widget-config`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ primary_color: primary, text_color: textCol, bubble_position: position, welcome_message: welcome }),
+    body: JSON.stringify({ primary_color: primary, text_color: textCol, bubble_position: position, welcome_message: welcome, header_title: headerTitle }),
   });
 
   if (msgEl) {

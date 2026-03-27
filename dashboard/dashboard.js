@@ -226,6 +226,7 @@ function buildWidgetForm(w) {
   const textCol = cfg.text_color || '#0b0d12';
   const pos = cfg.bubble_position || 'right';
   const welcome = cfg.welcome_message || '';
+  const headerTitle = cfg.header_title || '';
 
   return `
     <div class="widget-form" id="wform-${w.id}">
@@ -251,6 +252,10 @@ function buildWidgetForm(w) {
           <button class="pos-btn ${pos==='left'?'active':''}" id="wpos-left-${w.id}" onclick="setPos(${w.id},'left')">← Left</button>
           <button class="pos-btn ${pos==='right'?'active':''}" id="wpos-right-${w.id}" onclick="setPos(${w.id},'right')">Right →</button>
         </div>
+      </div>
+      <div class="input-group">
+        <label>Header Title</label>
+        <input type="text" id="wc-header-title-${w.id}" placeholder="AI Support · domain.com (default)" value="${escHtml(headerTitle)}"/>
       </div>
       <div class="input-group">
         <label>Welcome Message</label>
@@ -291,6 +296,7 @@ async function saveWidgetConfig(websiteId) {
       || document.getElementById(`wc-text-${websiteId}`)?.value,
     bubble_position: getSelectedPos(websiteId),
     welcome_message: document.getElementById(`wc-welcome-${websiteId}`)?.value || '',
+    header_title: document.getElementById(`wc-header-title-${websiteId}`)?.value || '',
   };
 
   try {
