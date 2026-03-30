@@ -868,6 +868,10 @@ async function loadStats(websiteId, cell) {
     const res  = await fetch(`${API}/admin/stats/${websiteId}`, { headers: authHeaders() });
     const data = await res.json();
 
+    const avgMsgs = data.total_conversations > 0
+      ? (data.total_messages / data.total_conversations).toFixed(1)
+      : "—";
+
     let topHtml = `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:4px">No queries yet.</p>`;
     if (data.top_user_messages && data.top_user_messages.length) {
       const maxCount = data.top_user_messages[0].count || 1;
@@ -907,6 +911,11 @@ async function loadStats(websiteId, cell) {
           <div class="stat-mini-icon">📅</div>
           <div class="stat-mini-label">Messages Today</div>
           <div class="stat-mini-value">${data.messages_today}</div>
+        </div>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">📈</div>
+          <div class="stat-mini-label">Avg / Session</div>
+          <div class="stat-mini-value">${avgMsgs}</div>
         </div>
       </div>
       ${topHtml}`;

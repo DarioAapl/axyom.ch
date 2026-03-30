@@ -189,30 +189,63 @@ async function loadWebsiteStats(websiteId) {
   try {
     const res = await apiFetch(`/customer/websites/${websiteId}/stats`);
     const s = await res.json();
+
+    const avgMsgs = s.total_conversations > 0
+      ? (s.total_messages / s.total_conversations).toFixed(1)
+      : '—';
+
+    let topHtml = '<p style="color:var(--text-muted);font-size:0.85rem;margin-top:4px">No queries yet.</p>';
+    if (s.top_user_messages && s.top_user_messages.length) {
+      const maxCount = s.top_user_messages[0].count || 1;
+      topHtml = `
+        <div class="queries-section">
+          <h4>Top Questions</h4>
+          ${s.top_user_messages.slice(0, 8).map(m => `
+            <div class="query-bar-item">
+              <div class="query-bar-header">
+                <span class="query-bar-text">${escHtml(m.message)}</span>
+                <span class="query-bar-count">${m.count}×</span>
+              </div>
+              <div class="query-bar-track">
+                <div class="query-bar-fill" data-width="${Math.round(m.count / maxCount * 100)}"></div>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }
+
     pane.innerHTML = `
-      <div class="mini-stats">
-        <div class="mini-stat">
-          <span class="mini-stat-label">Total Conversations</span>
-          <span class="mini-stat-value">${s.total_conversations}</span>
+      <div class="stats-mini-grid">
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">🗣️</div>
+          <div class="stat-mini-label">Conversations</div>
+          <div class="stat-mini-value">${s.total_conversations}</div>
         </div>
-        <div class="mini-stat">
-          <span class="mini-stat-label">Total Messages</span>
-          <span class="mini-stat-value">${s.total_messages}</span>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">💬</div>
+          <div class="stat-mini-label">Total Messages</div>
+          <div class="stat-mini-value">${s.total_messages}</div>
         </div>
-        <div class="mini-stat">
-          <span class="mini-stat-label">Messages Today</span>
-          <span class="mini-stat-value">${s.messages_today}</span>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">📅</div>
+          <div class="stat-mini-label">Messages Today</div>
+          <div class="stat-mini-value">${s.messages_today}</div>
+        </div>
+        <div class="stat-mini-card">
+          <div class="stat-mini-icon">📈</div>
+          <div class="stat-mini-label">Avg / Session</div>
+          <div class="stat-mini-value">${avgMsgs}</div>
         </div>
       </div>
-      ${s.top_user_messages.length ? `
-        <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">Top Questions</div>
-        <div class="top-msgs">
-          ${s.top_user_messages.slice(0,8).map(m => `
-            <div class="top-msg-row">
-              <span class="top-msg-count">${m.count}</span>
-              <span class="top-msg-text">${escHtml(m.message)}</span>
-            </div>`).join('')}
-        </div>` : '<div style="color:var(--text-muted);font-size:0.85rem;">No messages yet.</div>'}`;
+      ${topHtml}`;
+
+    // Animate bars after paint
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        pane.querySelectorAll('.query-bar-fill[data-width]').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }, 60);
+    });
   } catch {
     pane.innerHTML = '<div class="alert alert-error">Failed to load stats.</div>';
   }
@@ -234,16 +267,26 @@ function buildWidgetForm(w) {
         <div class="input-group">
           <label>Primary Color</label>
           <div class="color-row">
-            <input type="color" id="wc-primary-${w.id}" value="${escHtml(primary)}" style="width:52px;flex-shrink:0"/>
+            <input type="color" id="wc-primary-${w.id}" value="${escHtml(primary)}" style="width:52px;flex-shrink:0"
+              oninput="syncColorFromPicker(${w.id},'primary')"/>
             <input type="text" id="wc-primary-txt-${w.id}" value="${escHtml(primary)}" placeholder="#00B2A0" style="font-family:var(--mono);font-size:0.82rem" oninput="syncColor(${w.id},'primary')"/>
           </div>
         </div>
         <div class="input-group">
           <label>Text Color</label>
           <div class="color-row">
-            <input type="color" id="wc-text-${w.id}" value="${escHtml(textCol)}" style="width:52px;flex-shrink:0"/>
+            <input type="color" id="wc-text-${w.id}" value="${escHtml(textCol)}" style="width:52px;flex-shrink:0"
+              oninput="syncColorFromPicker(${w.id},'text')"/>
             <input type="text" id="wc-text-txt-${w.id}" value="${escHtml(textCol)}" placeholder="#0b0d12" style="font-family:var(--mono);font-size:0.82rem" oninput="syncColor(${w.id},'text')"/>
           </div>
+        </div>
+      </div>
+      <div class="widget-preview-area" id="wc-cust-preview-area-${w.id}">
+        <span style="font-size:0.72rem;color:var(--text-muted);font-weight:500;">Preview</span>
+        <div class="preview-bubble ${pos === 'left' ? 'left' : ''}" id="wc-cust-preview-${w.id}" style="background:${escHtml(primary)}">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="${escHtml(textCol)}">
+            <path d="M20 15a4 4 0 01-4 4H7l-3 3V7a4 4 0 014-4h8a4 4 0 014 4z"/>
+          </svg>
         </div>
       </div>
       <div class="input-group">
@@ -271,8 +314,24 @@ function buildWidgetForm(w) {
 function syncColor(websiteId, which) {
   const txt = document.getElementById(`wc-${which}-txt-${websiteId}`);
   const picker = document.getElementById(`wc-${which}-${websiteId}`);
+  const preview = document.getElementById(`wc-cust-preview-${websiteId}`);
   if (/^#[0-9a-fA-F]{6}$/.test(txt.value)) {
     picker.value = txt.value;
+    if (preview) {
+      if (which === 'primary') preview.style.background = txt.value;
+      if (which === 'text') { const svg = preview.querySelector('svg'); if (svg) svg.style.fill = txt.value; }
+    }
+  }
+}
+
+function syncColorFromPicker(websiteId, which) {
+  const picker = document.getElementById(`wc-${which}-${websiteId}`);
+  const txt = document.getElementById(`wc-${which}-txt-${websiteId}`);
+  const preview = document.getElementById(`wc-cust-preview-${websiteId}`);
+  if (txt) txt.value = picker.value;
+  if (preview) {
+    if (which === 'primary') preview.style.background = picker.value;
+    if (which === 'text') { const svg = preview.querySelector('svg'); if (svg) svg.style.fill = picker.value; }
   }
 }
 
@@ -281,6 +340,8 @@ function setPos(websiteId, pos) {
     document.getElementById(`wpos-${p}-${websiteId}`)
       ?.classList.toggle('active', p === pos);
   });
+  const preview = document.getElementById(`wc-cust-preview-${websiteId}`);
+  if (preview) preview.classList.toggle('left', pos === 'left');
 }
 
 function getSelectedPos(websiteId) {
