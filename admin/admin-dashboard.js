@@ -6,6 +6,7 @@ const sessionKeyMap  = {};  // domain -> raw api_key (only for keys created this
 const customerSubMap = {};  // customer_id -> subscription object from /billing/subscription
 const trainingPollers = {}; // website_id -> interval id
 const widgetPositions = {}; // website_id -> 'right' | 'left'
+const keyDomainsMap  = {};  // key_id -> string[] of allowed domains
 
 /* ============================================================
    UTILITIES
@@ -454,6 +455,21 @@ async function loadKeys() {
     if (k.is_active) domainKeyMap[k.domain] = sessionKeyMap[k.domain] || k.key;
   });
 
+  // Fetch allowed domains for every key in parallel
+  const domainsResults = await Promise.all(
+    data.map(k =>
+      fetch(`${API}/admin/api-keys/${k.id}/domains`, { headers: authHeaders() })
+        .then(r => r.ok ? r.json() : { allowed_domains: [] })
+        .catch(() => ({ allowed_domains: [] }))
+    )
+  );
+
+  // Populate keyDomainsMap
+  Object.keys(keyDomainsMap).forEach(k => delete keyDomainsMap[k]);
+  data.forEach((k, i) => {
+    keyDomainsMap[k.id] = domainsResults[i].allowed_domains || [];
+  });
+
   const tbody = document.getElementById("keysTable");
   tbody.innerHTML = "";
   data.forEach(k => {
@@ -470,8 +486,88 @@ async function loadKeys() {
         <td><span class="pill ${k.is_active ? "green" : "gray"}">${k.is_active ? "Active" : "Revoked"}</span></td>
         <td>${fmtDate(k.created_at)}</td>
         <td>${embedBtn}</td>
+      </tr>
+      <tr class="key-domains-row">
+        <td colspan="6">
+          <div class="key-domains-bar" id="domains-bar-${k.id}">
+            <span class="key-domains-label">Domains:</span>
+            <span id="domain-pills-${k.id}">${_renderDomainPills(k.id)}</span>
+            <button class="btn-add-domain" id="btn-add-dom-${k.id}" onclick="showAddDomainInput(${k.id})">+ Add domain</button>
+            <span class="add-domain-wrap" id="add-domain-wrap-${k.id}" style="display:none">
+              <input type="text" id="add-domain-val-${k.id}" placeholder="example.com"
+                onkeydown="if(event.key==='Enter')addDomain(${k.id});if(event.key==='Escape')hideAddDomainInput(${k.id})" />
+              <button class="btn-add-ok" onclick="addDomain(${k.id})">Add</button>
+              <button class="btn-add-cancel" onclick="hideAddDomainInput(${k.id})">✕</button>
+            </span>
+          </div>
+        </td>
       </tr>`;
   });
+}
+
+/* ============================================================
+   DOMAIN WHITELIST HELPERS
+============================================================ */
+function _renderDomainPills(keyId) {
+  const domains = keyDomainsMap[keyId] || [];
+  if (!domains.length) {
+    return `<span style="font-size:11px;color:var(--text-muted);font-style:italic">Any domain allowed</span>`;
+  }
+  return domains.map(d => `
+    <span class="domain-pill">
+      ${escapeHtml(d)}
+      <button class="domain-pill-remove" title="Remove" onclick="removeDomain(${keyId}, '${escapeHtml(d)}')">✕</button>
+    </span>`).join("");
+}
+
+function _refreshDomainPills(keyId) {
+  const el = document.getElementById(`domain-pills-${keyId}`);
+  if (el) el.innerHTML = _renderDomainPills(keyId);
+}
+
+async function _saveKeyDomains(keyId) {
+  const domains = keyDomainsMap[keyId] || [];
+  await fetch(`${API}/admin/api-keys/${keyId}/domains`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ domains }),
+  });
+}
+
+async function removeDomain(keyId, domain) {
+  keyDomainsMap[keyId] = (keyDomainsMap[keyId] || []).filter(d => d !== domain);
+  _refreshDomainPills(keyId);
+  await _saveKeyDomains(keyId);
+}
+
+function showAddDomainInput(keyId) {
+  const btn  = document.getElementById(`btn-add-dom-${keyId}`);
+  const wrap = document.getElementById(`add-domain-wrap-${keyId}`);
+  if (btn)  btn.style.display  = "none";
+  if (wrap) wrap.style.display = "inline-flex";
+  setTimeout(() => document.getElementById(`add-domain-val-${keyId}`)?.focus(), 30);
+}
+
+function hideAddDomainInput(keyId) {
+  const btn  = document.getElementById(`btn-add-dom-${keyId}`);
+  const wrap = document.getElementById(`add-domain-wrap-${keyId}`);
+  const inp  = document.getElementById(`add-domain-val-${keyId}`);
+  if (btn)  btn.style.display  = "";
+  if (wrap) wrap.style.display = "none";
+  if (inp)  inp.value          = "";
+}
+
+async function addDomain(keyId) {
+  const inp = document.getElementById(`add-domain-val-${keyId}`);
+  if (!inp) return;
+  const raw = inp.value.trim().replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
+  if (!raw) return;
+  if (!(keyDomainsMap[keyId] || []).includes(raw)) {
+    keyDomainsMap[keyId] = [...(keyDomainsMap[keyId] || []), raw];
+  }
+  hideAddDomainInput(keyId);
+  _refreshDomainPills(keyId);
+  await _saveKeyDomains(keyId);
 }
 
 function copyEmbed(apiKey) {
@@ -1026,6 +1122,25 @@ async function createKey() {
 
   // Cache raw key so the keys table can show a real Copy Embed button for this session
   sessionKeyMap[domain] = rawKey;
+
+  // Auto-set default allowed domains (domain.com + www.domain.com)
+  const baseDomain = domain.replace(/^www\./, "");
+  const defaultDomains = [baseDomain, `www.${baseDomain}`];
+  // Fetch the newly created key ID by looking it up in the keys list
+  try {
+    const keysRes = await fetch(`${API}/admin/keys`, { headers: authHeaders() });
+    if (keysRes.ok) {
+      const keysData = await keysRes.json();
+      const newKey = keysData.find(k => k.domain === domain && k.is_active);
+      if (newKey) {
+        await fetch(`${API}/admin/api-keys/${newKey.id}/domains`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ domains: defaultDomains }),
+        });
+      }
+    }
+  } catch { /* non-fatal — domains can be set manually */ }
 
   await loadKeys();
   await loadWebsites();
