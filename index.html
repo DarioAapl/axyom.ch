@@ -520,6 +520,18 @@ p { font-family: var(--font-body); }
 }
 @media (max-width: 768px) {
   .hero-screen .browser-body { min-height: 300px; }
+  .hero-screen-wrap {
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 92vw;
+  }
+  .hero-top {
+    position: relative;
+    z-index: 5;
+    padding-top: 7rem;
+  }
+  .hero-headline { font-size: clamp(1.6rem, 6vw, 2.2rem); }
 }
 
 .browser {
