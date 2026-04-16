@@ -1548,6 +1548,79 @@ footer {
 
   .feg-wrap { height: 340px; }
 }
+
+/* ═══════════════════════════════════════
+   LEGAL MODALS
+═══════════════════════════════════════ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #0d0d0d;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 2.5rem;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px var(--accent-border);
+}
+.modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+.modal-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+.modal-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  padding-right: 2.5rem;
+  letter-spacing: -0.01em;
+}
+.modal-section { margin-bottom: 1.2rem; }
+.modal-section:last-child { margin-bottom: 0; }
+.modal-section h4 {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.35rem;
+}
+.modal-section p,
+.modal-section address {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-style: normal;
+}
+.modal-section a { color: var(--accent); text-decoration: none; }
+.modal-section a:hover { text-decoration: underline; }
+@media (max-width: 480px) {
+  .modal-box { padding: 1.75rem 1.25rem; }
+}
 </style>
 </head>
 <body>
@@ -2197,15 +2270,63 @@ footer {
       <p class="footer-copy" data-aos="fade-up" data-aos-delay="100"><span data-i18n="footer.copy.1">© 2026 Axyom AI. All rights reserved.</span><br><span data-i18n="footer.copy.2">Intelligent Sales Assistants for the Web.</span></p>
     </div>
     <div class="footer-links" data-aos="fade-up" data-aos-delay="200">
-      <a href="#" data-i18n="footer.privacy">Privacy</a>
-      <a href="#" data-i18n="footer.impressum">Impressum</a>
-      <a href="#" data-i18n="footer.contact">Contact</a>
+      <a href="#" onclick="openModal('privacy-modal');return false;" data-i18n="footer.privacy">Privacy</a>
+      <a href="#" onclick="openModal('impressum-modal');return false;" data-i18n="footer.impressum">Impressum</a>
+      <a href="#cta" data-i18n="footer.contact">Contact</a>
     </div>
     <div class="footer-swiss" data-aos="fade-up" data-aos-delay="300">
       <span>🇱🇮</span> <span data-i18n="footer.swiss">Made in Liechtenstein</span>
     </div>
   </div>
 </footer>
+
+<!-- ═══ IMPRESSUM MODAL ═══ -->
+<div class="modal-overlay" id="impressum-modal" role="dialog" aria-modal="true" aria-labelledby="impressum-title">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('impressum-modal')" aria-label="Close">✕</button>
+    <h2 class="modal-title" id="impressum-title" data-i18n="modal.impressum.title">Legal Notice</h2>
+    <div class="modal-section">
+      <address data-i18n="modal.impressum.address">Dario Tino, Gapetschstrasse 29, 9494 Schaan, Principality of Liechtenstein</address>
+    </div>
+    <div class="modal-section">
+      <p>E-Mail: <a href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a></p>
+    </div>
+    <div class="modal-section">
+      <p data-i18n="modal.impressum.uid">UID: to be added</p>
+    </div>
+    <div class="modal-section">
+      <p data-i18n="modal.impressum.resp">Responsible for content: Dario Tino</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRIVACY MODAL ═══ -->
+<div class="modal-overlay" id="privacy-modal" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('privacy-modal')" aria-label="Close">✕</button>
+    <h2 class="modal-title" id="privacy-title" data-i18n="modal.privacy.title">Privacy Policy</h2>
+    <div class="modal-section">
+      <h4 data-i18n="modal.privacy.s1.title">Data Collection</h4>
+      <p data-i18n="modal.privacy.s1.body">When you use our contact form, we collect your name, email address, website URL, and message.</p>
+    </div>
+    <div class="modal-section">
+      <h4 data-i18n="modal.privacy.s2.title">Purpose of Processing</h4>
+      <p data-i18n="modal.privacy.s2.body">Your data is used exclusively to respond to your inquiry. We do not use it for any other purpose.</p>
+    </div>
+    <div class="modal-section">
+      <h4 data-i18n="modal.privacy.s3.title">No Third-Party Sharing</h4>
+      <p data-i18n="modal.privacy.s3.body">We do not share your personal data with third parties.</p>
+    </div>
+    <div class="modal-section">
+      <h4 data-i18n="modal.privacy.s4.title">Hosting</h4>
+      <p data-i18n="modal.privacy.s4.body">This website is hosted in Liechtenstein.</p>
+    </div>
+    <div class="modal-section">
+      <h4 data-i18n="modal.privacy.s5.title">Your Rights</h4>
+      <p><span data-i18n="modal.privacy.s5.body">You have the right to access, rectify, or delete your personal data. For data requests, contact us at:</span> <a href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a></p>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════
    JAVASCRIPT
@@ -3146,7 +3267,22 @@ AOS.init({
       'cta.form.send':'Nachricht senden','cta.form.direct':'Direkt schreiben',
       'cta.success.title':'Nachricht gesendet!','cta.success.body':'Wir melden uns innerhalb von 24 Stunden.',
       'footer.copy.1':'© 2026 Axyom AI. Alle Rechte vorbehalten.','footer.copy.2':'Intelligente Vertriebsassistenten für das Web.',
-      'footer.privacy':'Datenschutz','footer.impressum':'Impressum','footer.contact':'Kontakt','footer.swiss':'Hergestellt in Liechtenstein'
+      'footer.privacy':'Datenschutz','footer.impressum':'Impressum','footer.contact':'Kontakt','footer.swiss':'Hergestellt in Liechtenstein',
+      'modal.impressum.title':'Impressum',
+      'modal.impressum.address':'Dario Tino, Gapetschstrasse 29, 9494 Schaan, Fürstentum Liechtenstein',
+      'modal.impressum.uid':'UID: wird nachgetragen',
+      'modal.impressum.resp':'Verantwortlich für den Inhalt: Dario Tino',
+      'modal.privacy.title':'Datenschutzerklärung',
+      'modal.privacy.s1.title':'Datenerhebung',
+      'modal.privacy.s1.body':'Wenn Sie unser Kontaktformular nutzen, erheben wir Ihren Namen, Ihre E-Mail-Adresse, Website-URL und Ihre Nachricht.',
+      'modal.privacy.s2.title':'Zweck der Verarbeitung',
+      'modal.privacy.s2.body':'Ihre Daten werden ausschließlich zur Beantwortung Ihrer Anfrage verwendet. Eine weitere Nutzung erfolgt nicht.',
+      'modal.privacy.s3.title':'Keine Weitergabe an Dritte',
+      'modal.privacy.s3.body':'Wir geben Ihre personenbezogenen Daten nicht an Dritte weiter.',
+      'modal.privacy.s4.title':'Hosting',
+      'modal.privacy.s4.body':'Diese Website wird in Liechtenstein gehostet.',
+      'modal.privacy.s5.title':'Ihre Rechte',
+      'modal.privacy.s5.body':'Sie haben das Recht auf Auskunft, Berichtigung oder Löschung Ihrer personenbezogenen Daten. Für Datenanfragen kontaktieren Sie uns unter:'
     },
     it: {
       'nav.features':'Funzionalità','nav.how':'Come funziona','nav.solutions':'Soluzioni','nav.contact':'Contatti','nav.cta':'Contatti',
@@ -3203,7 +3339,22 @@ AOS.init({
       'cta.form.send':'Invia messaggio','cta.form.direct':'Scrivi direttamente',
       'cta.success.title':'Messaggio inviato!','cta.success.body':'Ti risponderemo entro 24 ore.',
       'footer.copy.1':'© 2026 Axyom AI. Tutti i diritti riservati.','footer.copy.2':'Assistenti alle vendite intelligenti per il web.',
-      'footer.privacy':'Privacy','footer.impressum':'Note legali','footer.contact':'Contatti','footer.swiss':'Prodotto nel Liechtenstein'
+      'footer.privacy':'Privacy','footer.impressum':'Note legali','footer.contact':'Contatti','footer.swiss':'Prodotto nel Liechtenstein',
+      'modal.impressum.title':'Note legali',
+      'modal.impressum.address':'Dario Tino, Gapetschstrasse 29, 9494 Schaan, Principato del Liechtenstein',
+      'modal.impressum.uid':'UID: da aggiungere',
+      'modal.impressum.resp':'Responsabile del contenuto: Dario Tino',
+      'modal.privacy.title':'Informativa sulla privacy',
+      'modal.privacy.s1.title':'Raccolta dei dati',
+      'modal.privacy.s1.body':'Quando utilizzi il nostro modulo di contatto, raccogliamo il tuo nome, indirizzo e-mail, URL del sito web e messaggio.',
+      'modal.privacy.s2.title':'Finalità del trattamento',
+      'modal.privacy.s2.body':'I tuoi dati vengono utilizzati esclusivamente per rispondere alla tua richiesta. Non vengono usati per altri scopi.',
+      'modal.privacy.s3.title':'Nessuna condivisione con terzi',
+      'modal.privacy.s3.body':'Non condividiamo i tuoi dati personali con terze parti.',
+      'modal.privacy.s4.title':'Hosting',
+      'modal.privacy.s4.body':'Questo sito è ospitato nel Liechtenstein.',
+      'modal.privacy.s5.title':'I tuoi diritti',
+      'modal.privacy.s5.body':'Hai il diritto di accedere, rettificare o cancellare i tuoi dati personali. Per richieste sui dati, contattaci all\'indirizzo:'
     },
     fr: {
       'nav.features':'Fonctionnalités','nav.how':'Comment ça marche','nav.solutions':'Solutions','nav.contact':'Contact','nav.cta':'Contact',
@@ -3260,7 +3411,22 @@ AOS.init({
       'cta.form.send':'Envoyer le message','cta.form.direct':'Écrire directement',
       'cta.success.title':'Message envoyé\u00a0!','cta.success.body':'Nous vous répondrons dans les 24 heures.',
       'footer.copy.1':'© 2026 Axyom AI. Tous droits réservés.','footer.copy.2':'Assistants commerciaux intelligents pour le web.',
-      'footer.privacy':'Confidentialité','footer.impressum':'Mentions légales','footer.contact':'Contact','footer.swiss':'Fabriqué au Liechtenstein'
+      'footer.privacy':'Confidentialité','footer.impressum':'Mentions légales','footer.contact':'Contact','footer.swiss':'Fabriqué au Liechtenstein',
+      'modal.impressum.title':'Mentions légales',
+      'modal.impressum.address':'Dario Tino, Gapetschstrasse 29, 9494 Schaan, Principauté du Liechtenstein',
+      'modal.impressum.uid':'IDE: à compléter',
+      'modal.impressum.resp':'Responsable du contenu: Dario Tino',
+      'modal.privacy.title':'Politique de confidentialité',
+      'modal.privacy.s1.title':'Collecte de données',
+      'modal.privacy.s1.body':'Lorsque vous utilisez notre formulaire de contact, nous collectons votre nom, adresse e-mail, URL de site web et message.',
+      'modal.privacy.s2.title':'Finalité du traitement',
+      'modal.privacy.s2.body':'Vos données sont utilisées exclusivement pour répondre à votre demande. Elles ne sont pas utilisées à d\'autres fins.',
+      'modal.privacy.s3.title':'Pas de partage avec des tiers',
+      'modal.privacy.s3.body':'Nous ne partageons pas vos données personnelles avec des tiers.',
+      'modal.privacy.s4.title':'Hébergement',
+      'modal.privacy.s4.body':'Ce site est hébergé au Liechtenstein.',
+      'modal.privacy.s5.title':'Vos droits',
+      'modal.privacy.s5.body':'Vous avez le droit d\'accéder, de rectifier ou de supprimer vos données personnelles. Pour toute demande, contactez-nous à :'
     }
   };
 
@@ -3365,6 +3531,28 @@ AOS.init({
     if (e.key === 'Escape') closeMenu();
   });
 })();
+
+/* ─── LEGAL MODALS ─── */
+function openModal(id) {
+  var m = document.getElementById(id);
+  if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
+}
+function closeModal(id) {
+  var m = document.getElementById(id);
+  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+}
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(function(m) {
+      closeModal(m.id);
+    });
+  }
+});
 </script>
 
 <script src="preloader.js"></script>
