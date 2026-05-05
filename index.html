@@ -2416,8 +2416,28 @@ if (isMobileFallback) {
   document.documentElement.classList.remove('preloader-active');
   document.body.style.overflow = 'auto';
 
-  gsap.set(['.hero-wordmark', '.hero-headline', '.hero-sub', '.hero-arrow', '.hero-btns', '.hero-screen-wrap', '#hero-screen'], {
-    opacity: 1, y: 0, x: 0, scale: 1, rotateX: 0, rotateY: 0, xPercent: 0
+  // Simple mobile intro — fade in elements one by one
+  var mobileEls = ['.hero-wordmark', '.hero-headline', '.hero-sub', '.hero-arrow', '.hero-btns', '.hero-screen-wrap'];
+
+  // Start all hidden
+  mobileEls.forEach(function(sel) {
+    var el = document.querySelector(sel);
+    if (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    }
+  });
+
+  // Fade in one by one with delay
+  mobileEls.forEach(function(sel, i) {
+    setTimeout(function() {
+      var el = document.querySelector(sel);
+      if (el) {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }
+    }, 200 + i * 150);
   });
 
   // Defer to a macrotask so triggers registered later in this script block
