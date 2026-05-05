@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=18">
+<link rel="stylesheet" href="preloader.css?v=19">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -2414,9 +2414,9 @@ if (isMobileFallback) {
         el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
         el.style.opacity = '1';
         el.style.transform = 'none';
-      }, i * 120);
+      }, i * 80);
     });
-  }, 300);
+  }, 0);
 
   if (typeof ScrollTrigger !== 'undefined') {
     ScrollTrigger.getAll().forEach(function(t) { t.kill(); });
@@ -3652,7 +3652,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=18"></script>
+<script src="preloader.js?v=19"></script>
 </div>
 </body>
 </html>
