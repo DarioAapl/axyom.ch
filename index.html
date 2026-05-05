@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=25">
+<link rel="stylesheet" href="preloader.css?v=26">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1618,9 +1618,9 @@ footer {
 
   #hero-arrow { display: none; }
 
-  #speed-scrolly { height: auto !important; }
-  #speed-pin, .speed-pin { overflow: visible !important; height: auto !important; }
-  .feg-wrap { flex-direction: column; }
+  /* Speed section: complex WebGL + scroll-pinned timeline can't run on mobile —
+     hide entirely rather than show a broken / collapsed remnant. */
+  #speed-scrolly { display: none !important; }
 
   /* CTA form stacking */
   .cta-inner { grid-template-columns: 1fr !important; gap: 3rem; }
@@ -1629,9 +1629,28 @@ footer {
   /* Section padding */
   #how, #features, #comparison, #problem, #custom, #cta { padding: 5rem 0; }
 
-  /* FEG */
-  .feg-wrap { height: auto; }
-  .feg-card { border-radius: 24px; }
+  /* FEG ("How it works" steps): vertical stack on mobile */
+  .feg-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    height: auto !important;
+    padding: 0 1.25rem !important;
+  }
+
+  .feg-card {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 280px !important;
+    position: relative !important;
+    opacity: 1 !important;
+    transform: none !important;
+    border-radius: 20px !important;
+  }
+
+  .feg-solo {
+    width: 100% !important;
+  }
 
   /* Swiper: let vertical scrolling pass through */
   .swiper, .swiper-wrapper, .swiper-slide {
@@ -3648,7 +3667,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=25"></script>
+<script src="preloader.js?v=26"></script>
 </div>
 </body>
 </html>
