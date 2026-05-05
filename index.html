@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=5">
+<link rel="stylesheet" href="preloader.css?v=6">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -2405,7 +2405,7 @@ html, body {
 <script>
 gsap.registerPlugin(ScrollTrigger);
 const isMobile = window.innerWidth <= 540;
-const isMobileFallback = window.innerWidth <= 768;
+const isMobileFallback = window.innerWidth <= 1024 || ('ontouchstart' in window);
 
 /* ─── NAV scroll state ─── */
 ScrollTrigger.create({
@@ -2434,7 +2434,12 @@ if (isMobileFallback) {
   // Stub heroTL
   window.heroTL = { play: function(){}, pause: function(){} };
 
-  // Kill ScrollTrigger when GSAP loads
+  if (typeof ScrollTrigger !== 'undefined') {
+    ScrollTrigger.getAll().forEach(function(t) { t.kill(); });
+    ScrollTrigger.refresh();
+  }
+
+  // Also kill it after load in case GSAP initialized late
   window.addEventListener('load', function() {
     if (typeof ScrollTrigger !== 'undefined') {
       ScrollTrigger.getAll().forEach(function(t) { t.kill(); });
@@ -3652,7 +3657,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=5"></script>
+<script src="preloader.js?v=6"></script>
 </div>
 </body>
 </html>
