@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=10">
+<link rel="stylesheet" href="preloader.css?v=11">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1632,6 +1632,11 @@ footer {
   /* FEG */
   .feg-wrap { height: auto; }
   .feg-card { border-radius: 24px; }
+
+  /* Swiper: let vertical scrolling pass through */
+  .swiper, .swiper-wrapper, .swiper-slide {
+    touch-action: pan-y !important;
+  }
 }
 
 html, body {
@@ -2389,6 +2394,10 @@ if (isMobileFallback) {
 
   // Stub heroTL
   window.heroTL = { play: function(){}, pause: function(){} };
+
+  // Register a passive touchmove listener so the page wins over any
+  // descendant non-passive handler that might block vertical scrolling.
+  document.addEventListener('touchmove', function(e) {}, { passive: true });
 
   if (typeof ScrollTrigger !== 'undefined') {
     ScrollTrigger.getAll().forEach(function(t) { t.kill(); });
@@ -3193,6 +3202,9 @@ const probSwiper = new Swiper('.prob-swiper', {
   slidesPerView: 1.2,
   spaceBetween: 16,
   speed: 400,
+  passiveListeners: true,
+  touchStartPreventDefault: false,
+  preventInteractionOnTransition: false,
   mousewheel: { forceToAxis: true, sensitivity: 1 },
   freeMode: { enabled: true, sticky: true, momentum: true, momentumRatio: 0.4 },
   autoplay: { delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true },
@@ -3210,6 +3222,9 @@ const customSwiper = new Swiper('.custom-swiper', {
   slidesPerView: 1.5,
   spaceBetween: 12,
   speed: 400,
+  passiveListeners: true,
+  touchStartPreventDefault: false,
+  preventInteractionOnTransition: false,
   mousewheel: { forceToAxis: true, sensitivity: 1 },
   freeMode: { enabled: true, sticky: true, momentum: true, momentumRatio: 0.4 },
   autoplay: { delay: 2400, disableOnInteraction: false, pauseOnMouseEnter: true },
@@ -3615,7 +3630,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=10"></script>
+<script src="preloader.js?v=11"></script>
 </div>
 </body>
 </html>
