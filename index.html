@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=26">
+<link rel="stylesheet" href="preloader.css?v=27">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -2724,6 +2724,9 @@ gsap.to('.speed-pin', {
 } // end !isMobileFallback (speed scrolly)
 
 /* ─── HOW IT WORKS — FLUID EXPANDING GRID ─── */
+if (isMobileFallback) {
+  window.FEG = { expand: function() {} };
+} else {
 const FEG = (() => {
   const GAP = 16;
   const IDS = ['fgc-1', 'fgc-2', 'fgc-3'];
@@ -2782,6 +2785,12 @@ const FEG = (() => {
   window.addEventListener('resize', () => apply(false));
   return { expand };
 })();
+// FEG is declared with `const` so it lives in the script's Script Lexical
+// Environment — visible to inline onclick handlers at top level, but NOT
+// from inside this `else` block. Re-publish onto window so the handlers
+// continue to resolve.
+window.FEG = FEG;
+} // end FEG mobile gate
 
 /* ─── FEATURES ─── */
 
@@ -3667,7 +3676,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=26"></script>
+<script src="preloader.js?v=27"></script>
 </div>
 </body>
 </html>
