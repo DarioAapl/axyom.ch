@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=16">
+<link rel="stylesheet" href="preloader.css?v=17">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -2381,11 +2381,6 @@ if (!isMobileFallback) ScrollTrigger.create({
 
 /* ─── HERO SCROLLYTELLING ─── */
 if (isMobileFallback) {
-  // Hide preloader immediately
-  var _pl = document.getElementById('preloader');
-  if (_pl) _pl.style.cssText = 'display:none!important;opacity:0!important;visibility:hidden!important;';
-  document.documentElement.classList.remove('preloader-active');
-  document.body.style.overflow = 'auto';
   document.body.style.overflowX = 'hidden';
 
   // Kill ALL scroll locks and pins immediately
@@ -3657,7 +3652,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=16"></script>
+<script src="preloader.js?v=17"></script>
 </div>
 </body>
 </html>
