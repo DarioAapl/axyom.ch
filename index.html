@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=14">
+<link rel="stylesheet" href="preloader.css?v=15">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1595,18 +1595,18 @@ footer {
     top: auto !important;
     left: auto !important;
     bottom: auto !important;
-    transform: none !important;
     width: 92vw !important;
     margin: 1.5rem auto 0 !important;
   }
 
   .hero-screen .browser-body { min-height: 300px; }
 
-  .hero-wordmark { width: 92vw !important; opacity: 1 !important; transform: none !important; visibility: visible !important; }
-  .hero-headline { font-size: clamp(1.6rem, 6vw, 2.2rem) !important; opacity: 1 !important; transform: none !important; visibility: visible !important; }
-  .hero-sub { opacity: 1 !important; transform: none !important; visibility: visible !important; }
-  .hero-arrow { opacity: 1 !important; visibility: visible !important; }
-  .hero-btns { opacity: 1 !important; transform: none !important; visibility: visible !important; }
+  /* opacity/transform are driven by JS fade-in — keep visibility/sizing only */
+  .hero-wordmark { width: 92vw !important; visibility: visible !important; }
+  .hero-headline { font-size: clamp(1.6rem, 6vw, 2.2rem) !important; visibility: visible !important; }
+  .hero-sub { visibility: visible !important; }
+  .hero-arrow { visibility: visible !important; }
+  .hero-btns { visibility: visible !important; }
 
   .pin-spacer { height: auto !important; padding: 0 !important; position: relative !important; }
 
@@ -1636,12 +1636,6 @@ footer {
   /* Swiper: let vertical scrolling pass through */
   .swiper, .swiper-wrapper, .swiper-slide {
     touch-action: pan-y !important;
-  }
-
-  /* AOS: start hidden — JS fade-in runs on a 100ms timeout */
-  [data-aos] {
-    opacity: 0;
-    transform: translateY(20px);
   }
 
   /* Aurora WebGL background: skipped on mobile (saves GPU) */
@@ -2408,18 +2402,26 @@ if (isMobileFallback) {
   // descendant non-passive handler that might block vertical scrolling.
   document.addEventListener('touchmove', function(e) {}, { passive: true });
 
-  // Replace AOS with CSS animations on mobile
+  // Disable AOS on mobile (defensive; real disable is via the AOS.init disable option)
   if (typeof AOS !== 'undefined') {
     AOS.init({ disable: true });
   }
-  // Immediately show all AOS elements with a simple fade-in
+
+  // Simple hero fade-in for mobile
+  var heroFadeEls = document.querySelectorAll('.hero-wordmark, .hero-headline, .hero-sub, .hero-arrow, .hero-btns, .hero-screen-wrap');
+  heroFadeEls.forEach(function(el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+  });
   setTimeout(function() {
-    document.querySelectorAll('[data-aos]').forEach(function(el, i) {
-      el.style.transition = 'opacity 0.6s ease ' + (i * 0.05) + 's, transform 0.6s ease ' + (i * 0.05) + 's';
-      el.style.opacity = '1';
-      el.style.transform = 'none';
+    heroFadeEls.forEach(function(el, i) {
+      setTimeout(function() {
+        el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+      }, i * 120);
     });
-  }, 100);
+  }, 300);
 
   if (typeof ScrollTrigger !== 'undefined') {
     ScrollTrigger.getAll().forEach(function(t) { t.kill(); });
@@ -3655,7 +3657,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=14"></script>
+<script src="preloader.js?v=15"></script>
 </div>
 </body>
 </html>
