@@ -1,3 +1,11 @@
+// Mobile bypass — skip preloader animation on small screens
+if (window.innerWidth <= 768) {
+  var _pl = document.getElementById("preloader");
+  if (_pl) { _pl.style.display = "none"; }
+  document.documentElement.classList.remove("preloader-active");
+  document.body.style.overflow = "auto";
+  if (typeof window.heroTL !== "undefined") { window.heroTL.play(); }
+} else {
 /**
  * AXYOM PRELOADER — preloader.js
  *
@@ -298,3 +306,4 @@
   };
 
 })();
+}
