@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=12">
+<link rel="stylesheet" href="preloader.css?v=13">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1644,6 +1644,9 @@ footer {
     transform: none !important;
     transition: none !important;
   }
+
+  /* Aurora WebGL background: skipped on mobile (saves GPU) */
+  #aurora-canvas { display: none !important; }
 }
 
 html, body {
@@ -2766,7 +2769,7 @@ const FEG = (() => {
 
 
 // ─── AURORA BACKGROUND ───
-(function() {
+if (!isMobileFallback) (function() {
   const canvas = document.getElementById('aurora-canvas');
   if (!canvas) return;
   const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: true });
@@ -3646,7 +3649,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=12"></script>
+<script src="preloader.js?v=13"></script>
 </div>
 </body>
 </html>
