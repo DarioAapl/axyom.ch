@@ -2395,6 +2395,18 @@ ScrollTrigger.create({
 if (isMobileFallback) {
   // Mobile fallback: ScrollTrigger pinning is unreliable on phones, so skip
   // the scrolly experience and reveal all hero content immediately.
+  // Force-hide the preloader: preloader.js's morph exit relies on FLIP
+  // measurements that can fail on mobile, leaving the overlay stuck.
+  var preloaderEl = document.getElementById('preloader') || document.querySelector('.preloader') || document.querySelector('[class*="preload"]') || document.querySelector('[id*="preload"]');
+  if (preloaderEl) {
+    preloaderEl.style.display = 'none';
+    preloaderEl.style.opacity = '0';
+    preloaderEl.style.visibility = 'hidden';
+    preloaderEl.style.pointerEvents = 'none';
+  }
+  document.documentElement.classList.remove('preloader-active');
+  document.body.style.overflow = 'auto';
+
   gsap.set(['.hero-wordmark', '.hero-headline', '.hero-sub', '.hero-arrow', '.hero-btns', '.hero-screen-wrap', '#hero-screen'], {
     opacity: 1, y: 0, x: 0, scale: 1, rotateX: 0, rotateY: 0, xPercent: 0
   });
