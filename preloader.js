@@ -1,5 +1,5 @@
 // Mobile bypass — skip preloader animation on small screens
-if (window.innerWidth <= 768) {
+if (window.innerWidth <= 1024 || "ontouchstart" in window) {
   var _pl = document.getElementById("preloader");
   if (_pl) { _pl.style.display = "none"; }
   document.documentElement.classList.remove("preloader-active");
