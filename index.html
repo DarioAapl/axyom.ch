@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=7">
+<link rel="stylesheet" href="preloader.css?v=8">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -521,22 +521,6 @@ p { font-family: var(--font-body); }
   display: flex;
   background: var(--bg-primary);
 }
-@media (max-width: 768px) {
-  .hero-screen .browser-body { min-height: 300px; }
-  .hero-screen-wrap {
-    top: auto;
-    bottom: 0;
-    transform: translateX(-50%);
-    width: 92vw;
-  }
-  .hero-top {
-    position: relative;
-    z-index: 5;
-    padding-top: 7rem;
-  }
-  .hero-headline { font-size: clamp(1.6rem, 6vw, 2.2rem); }
-}
-
 .browser {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
@@ -610,13 +594,6 @@ p { font-family: var(--font-body); }
 .mock-card-h { height: 10px; width: 60%; background: rgba(255,255,255,0.08); border-radius: 2px; margin-bottom: 0.5rem; }
 .mock-card-p { height: 7px; width: 100%; background: rgba(255,255,255,0.04); border-radius: 2px; margin-bottom: 0.35rem; }
 .mock-card-p2 { height: 7px; width: 70%; background: rgba(255,255,255,0.04); border-radius: 2px; }
-@media (max-width: 768px) {
-  .mock-site { padding: 1rem 1.25rem; }
-  .mock-hero-area h3 { font-size: 1rem; }
-  .mock-cards { display: none; }
-  .mock-nav-links { display: none; }
-}
-
 /* Chat widget inside browser */
 .chat-widget {
   position: absolute; bottom: 1.25rem; right: 1.25rem;
@@ -1451,11 +1428,6 @@ p { font-family: var(--font-body); }
 .cta-form-success h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
 .cta-form-success p  { color: var(--text-secondary); font-size: 0.9rem; }
 /* Mobile */
-@media (max-width: 768px) {
-  .cta-inner { grid-template-columns: 1fr; gap: 3rem; }
-  .cta-form-row { grid-template-columns: 1fr; }
-}
-
 /* ═══════════════════════════════════════
    FOOTER
 ═══════════════════════════════════════ */
@@ -1496,36 +1468,6 @@ footer {
 ═══════════════════════════════════════ */
 
 /* Tablet & small laptop */
-@media (max-width: 768px) {
-  #how     { padding: 5rem 0; }
-  #features{ padding: 5rem 0; }
-  #comparison { padding: 5rem 0; }
-  #problem { padding: 5rem 0; }
-  #custom  { padding: 5rem 0; }
-  #cta     { padding: 5rem 0; }
-
-  .hero-top {
-    padding-top: 0;
-    height: 100vh;
-    justify-content: center;
-    padding-bottom: 2rem;
-  }
-  #hero-arrow {
-    position: absolute;
-    bottom: 2.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 0;
-  }
-
-  /* Speed section height */
-  #speed-scrolly { height: 300vh; }
-
-  /* FEG grid height */
-  .feg-wrap { height: 420px; }
-  .feg-card { border-radius: 24px; }
-}
-
 /* Mobile phones */
 @media (max-width: 600px) {
   .hero-btns .btn { padding: 0.75rem 1.25rem; font-size: 0.84rem; }
@@ -1625,57 +1567,61 @@ footer {
   .modal-box { padding: 1.75rem 1.25rem; }
 }
 
-/* ─── Mobile fallback layout for hero (≤768px) ───
-   Mirrors the JS isMobileFallback branch: collapses the 700vh scroll-pinned
-   stage to a normal flow and stacks the screen mockup below the headline. */
+/* ─── Consolidated mobile styles (≤768px) ─── */
 @media (max-width: 768px) {
-  #hero-scrolly { height: auto; min-height: 100vh; }
+  html { scroll-behavior: auto !important; }
+
+  #hero-scrolly { height: auto !important; min-height: unset !important; }
+
   .hero-pin {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-    padding-bottom: 2rem;
+    height: auto !important;
+    min-height: 100svh;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
+
   .hero-top {
-    height: auto;
-    padding-top: 6rem;
-    padding-bottom: 1rem;
+    padding-top: 5rem;
+    height: auto !important;
     justify-content: flex-start;
+    position: relative;
+    z-index: 5;
   }
+
   .hero-screen-wrap {
-    position: relative;
-    top: auto;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    transform: none;
-    margin: 1.5rem auto 0;
-    width: 92vw;
-  }
-  #hero-arrow {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    transform: none;
-    margin: 0.5rem auto 0;
-  }
-  .hero-story-title,
-  .story-card { display: none; }
-
-  .hero-wordmark, .hero-headline, .hero-sub, .hero-arrow, .hero-btns, .hero-screen-wrap {
-    opacity: 1 !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
     transform: none !important;
-    visibility: visible !important;
+    width: 92vw !important;
+    margin: 1.5rem auto 0 !important;
   }
 
-  #hero-scrolly {
-    height: auto !important;
-  }
+  .hero-screen .browser-body { min-height: 300px; }
 
-  .pin-spacer {
-    height: auto !important;
-    padding: 0 !important;
-  }
+  .hero-wordmark { width: 92vw !important; opacity: 1 !important; transform: none !important; visibility: visible !important; }
+  .hero-headline { font-size: clamp(1.6rem, 6vw, 2.2rem) !important; opacity: 1 !important; transform: none !important; visibility: visible !important; }
+  .hero-sub { opacity: 1 !important; transform: none !important; visibility: visible !important; }
+  .hero-arrow { opacity: 1 !important; visibility: visible !important; }
+  .hero-btns { opacity: 1 !important; transform: none !important; visibility: visible !important; }
+
+  .pin-spacer { height: auto !important; padding: 0 !important; position: relative !important; }
+
+  .hero-story-title, .story-card { display: none !important; }
+
+  .mock-site { padding: 1rem 1.25rem; }
+  .mock-hero-area h3 { font-size: 1rem; }
+  .mock-cards, .mock-nav-links { display: none; }
+
+  #hero-arrow { display: none; }
+
+  #speed-scrolly { height: auto !important; }
+  .feg-wrap { flex-direction: column; }
+
+  section { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
 }
 
 html, body {
@@ -3657,7 +3603,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=7"></script>
+<script src="preloader.js?v=8"></script>
 </div>
 </body>
 </html>
