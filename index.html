@@ -2419,6 +2419,32 @@ if (isMobileFallback) {
   gsap.set(['.hero-wordmark', '.hero-headline', '.hero-sub', '.hero-arrow', '.hero-btns', '.hero-screen-wrap', '#hero-screen'], {
     opacity: 1, y: 0, x: 0, scale: 1, rotateX: 0, rotateY: 0, xPercent: 0
   });
+
+  // Defer to a macrotask so triggers registered later in this script block
+  // (speed-pin scrolly, etc.) are also killed — at this synchronous point
+  // only the nav ScrollTrigger has been registered.
+  setTimeout(function () {
+    if (typeof ScrollTrigger !== 'undefined') {
+      ScrollTrigger.getAll().forEach(function (t) { t.kill(); });
+      ScrollTrigger.clearScrollMemory();
+      ScrollTrigger.refresh();
+    }
+
+    // Also force the hero section height back to normal
+    var heroScrolly = document.getElementById('hero-scrolly');
+    if (heroScrolly) {
+      heroScrolly.style.height = 'auto';
+      heroScrolly.style.minHeight = '100vh';
+    }
+
+    // Remove any pin spacers GSAP may have injected
+    document.querySelectorAll('.pin-spacer').forEach(function (el) {
+      el.style.height = 'auto';
+      el.style.inset = 'unset';
+      el.style.position = 'relative';
+    });
+  }, 0);
+
   // preloader.js calls window.heroTL.play() — provide a no-op stub.
   window.heroTL = { play: function () {} };
 } else {
