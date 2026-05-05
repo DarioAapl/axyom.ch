@@ -246,6 +246,7 @@
 
     /* Fade out dark overlay */
     preloader.style.willChange    = 'auto';
+    preloader.style.background    = 'transparent';
     preloader.style.transition    = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
     preloader.style.opacity       = '0';
     preloader.style.pointerEvents = 'none';
