@@ -244,6 +244,13 @@
       'transform:scale(' + initialScale + ');';
     document.body.appendChild(logoWrap);
 
+    /* Belt-and-braces: clear any background/shadow that could paint a dark box
+       behind the morphing logo (cssText above already replaces inline styles
+       so these have to come after, not before). */
+    logoWrap.style.background      = 'transparent';
+    logoWrap.style.backgroundColor = 'transparent';
+    logoWrap.style.boxShadow       = 'none';
+
     /* Fade out dark overlay */
     preloader.style.willChange    = 'auto';
     preloader.style.background    = 'transparent';
