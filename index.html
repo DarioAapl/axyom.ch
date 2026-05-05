@@ -1621,6 +1621,44 @@ footer {
 @media (max-width: 480px) {
   .modal-box { padding: 1.75rem 1.25rem; }
 }
+
+/* ─── Mobile fallback layout for hero (≤768px) ───
+   Mirrors the JS isMobileFallback branch: collapses the 700vh scroll-pinned
+   stage to a normal flow and stacks the screen mockup below the headline. */
+@media (max-width: 768px) {
+  #hero-scrolly { height: auto; min-height: 100vh; }
+  .hero-pin {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    padding-bottom: 2rem;
+  }
+  .hero-top {
+    height: auto;
+    padding-top: 6rem;
+    padding-bottom: 1rem;
+    justify-content: flex-start;
+  }
+  .hero-screen-wrap {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    margin: 1.5rem auto 0;
+    width: 92vw;
+  }
+  #hero-arrow {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    margin: 0.5rem auto 0;
+  }
+  .hero-story-title,
+  .story-card { display: none; }
+}
 </style>
 </head>
 <body>
@@ -2343,6 +2381,7 @@ footer {
 <script>
 gsap.registerPlugin(ScrollTrigger);
 const isMobile = window.innerWidth <= 540;
+const isMobileFallback = window.innerWidth <= 768;
 
 /* ─── NAV scroll state ─── */
 ScrollTrigger.create({
@@ -2353,6 +2392,15 @@ ScrollTrigger.create({
 });
 
 /* ─── HERO SCROLLYTELLING ─── */
+if (isMobileFallback) {
+  // Mobile fallback: ScrollTrigger pinning is unreliable on phones, so skip
+  // the scrolly experience and reveal all hero content immediately.
+  gsap.set(['.hero-wordmark', '.hero-headline', '.hero-sub', '.hero-arrow', '.hero-btns', '.hero-screen-wrap', '#hero-screen'], {
+    opacity: 1, y: 0, x: 0, scale: 1, rotateX: 0, rotateY: 0, xPercent: 0
+  });
+  // preloader.js calls window.heroTL.play() — provide a no-op stub.
+  window.heroTL = { play: function () {} };
+} else {
 
 /* Initial load: headline reveal
    hero-wordmark is handled by the preloader morph — heroTL starts paused
@@ -2513,6 +2561,8 @@ heroScrollTL.to('#hero-screen', {
 
 // Long dark hold — screen is gone, pure black before problem section appears
 heroScrollTL.to({}, { duration: 0.5 }, lastCardFadeStart + 1.2);
+
+} // end !isMobileFallback
 
 // Refresh once after everything has loaded — preserving scroll position so
 // the pin-spacer recalculation never snaps the user back.
