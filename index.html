@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=6">
+<link rel="stylesheet" href="preloader.css?v=7">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -2408,7 +2408,7 @@ const isMobile = window.innerWidth <= 540;
 const isMobileFallback = window.innerWidth <= 1024 || ('ontouchstart' in window);
 
 /* ─── NAV scroll state ─── */
-ScrollTrigger.create({
+if (!isMobileFallback) ScrollTrigger.create({
   start: 'top -60',
   onUpdate(s) {
     document.getElementById('nav').classList.toggle('scrolled', s.scroll() > 60);
@@ -2612,7 +2612,7 @@ heroScrollTL.to({}, { duration: 0.5 }, lastCardFadeStart + 1.2);
 
 // Refresh once after everything has loaded — preserving scroll position so
 // the pin-spacer recalculation never snaps the user back.
-window.addEventListener('load', function () {
+if (!isMobileFallback) window.addEventListener('load', function () {
   var saved = window.scrollY;
   ScrollTrigger.refresh();
   window.scrollTo(0, saved);
@@ -3657,7 +3657,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=6"></script>
+<script src="preloader.js?v=7"></script>
 </div>
 </body>
 </html>
