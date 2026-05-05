@@ -80,6 +80,7 @@
      then animates to scale(1) during the morph — no upscaling ever. */
   width: 70vw;
   transform-origin: center center;
+  background: transparent !important;
 }
 
 #pl-svg {

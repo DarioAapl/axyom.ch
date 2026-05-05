@@ -258,12 +258,16 @@
 
         setTimeout(function () {
           /* Crossfade: hero wordmark fades in, preloader logo fades out */
+          heroWordmark.style.background      = 'transparent';
+          heroWordmark.style.backgroundColor = 'transparent';
           heroWordmark.style.transition = 'opacity 0.3s ease';
           heroWordmark.style.opacity    = '1';
           logoWrap.style.transition     = 'opacity 0.3s ease';
           logoWrap.style.opacity        = '0';
 
           setTimeout(function () {
+            logoWrap.style.background      = 'transparent';
+            logoWrap.style.backgroundColor = 'transparent';
             if (logoWrap.parentNode) logoWrap.parentNode.removeChild(logoWrap);
             preloader.style.display = 'none';
             document.documentElement.classList.remove('preloader-active');
