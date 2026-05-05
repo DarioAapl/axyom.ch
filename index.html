@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=4">
+<link rel="stylesheet" href="preloader.css?v=5">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1661,6 +1661,21 @@ footer {
   }
   .hero-story-title,
   .story-card { display: none; }
+
+  .hero-wordmark, .hero-headline, .hero-sub, .hero-arrow, .hero-btns, .hero-screen-wrap {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+  }
+
+  #hero-scrolly {
+    height: auto !important;
+  }
+
+  .pin-spacer {
+    height: auto !important;
+    padding: 0 !important;
+  }
 }
 
 html, body {
@@ -2402,71 +2417,30 @@ ScrollTrigger.create({
 
 /* ─── HERO SCROLLYTELLING ─── */
 if (isMobileFallback) {
-  // Mobile fallback: ScrollTrigger pinning is unreliable on phones, so skip
-  // the scrolly experience and reveal all hero content immediately.
-  // Force-hide the preloader: preloader.js's morph exit relies on FLIP
-  // measurements that can fail on mobile, leaving the overlay stuck.
-  var preloaderEl = document.getElementById('preloader') || document.querySelector('.preloader') || document.querySelector('[class*="preload"]') || document.querySelector('[id*="preload"]');
-  if (preloaderEl) {
-    preloaderEl.style.display = 'none';
-    preloaderEl.style.opacity = '0';
-    preloaderEl.style.visibility = 'hidden';
-    preloaderEl.style.pointerEvents = 'none';
-  }
+  // Hide preloader immediately
+  var _pl = document.getElementById('preloader');
+  if (_pl) _pl.style.cssText = 'display:none!important;opacity:0!important;visibility:hidden!important;';
   document.documentElement.classList.remove('preloader-active');
   document.body.style.overflow = 'auto';
+  document.body.style.overflowX = 'hidden';
 
-  // Simple mobile intro — fade in elements one by one
-  var mobileEls = ['.hero-wordmark', '.hero-headline', '.hero-sub', '.hero-arrow', '.hero-btns', '.hero-screen-wrap'];
-
-  // Start all hidden
-  mobileEls.forEach(function(sel) {
-    var el = document.querySelector(sel);
-    if (el) {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(20px)';
-      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    }
+  // Kill ALL scroll locks and pins immediately
+  document.querySelectorAll('.pin-spacer').forEach(function(el) {
+    el.style.cssText = 'height:auto!important;padding:0!important;';
   });
+  var heroScrolly = document.getElementById('hero-scrolly');
+  if (heroScrolly) heroScrolly.style.cssText = 'height:auto!important;min-height:100vh;';
 
-  // Fade in one by one with delay
-  mobileEls.forEach(function(sel, i) {
-    setTimeout(function() {
-      var el = document.querySelector(sel);
-      if (el) {
-        el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
-      }
-    }, 200 + i * 150);
-  });
+  // Stub heroTL
+  window.heroTL = { play: function(){}, pause: function(){} };
 
-  // Defer to a macrotask so triggers registered later in this script block
-  // (speed-pin scrolly, etc.) are also killed — at this synchronous point
-  // only the nav ScrollTrigger has been registered.
-  setTimeout(function () {
+  // Kill ScrollTrigger when GSAP loads
+  window.addEventListener('load', function() {
     if (typeof ScrollTrigger !== 'undefined') {
-      ScrollTrigger.getAll().forEach(function (t) { t.kill(); });
-      ScrollTrigger.clearScrollMemory();
+      ScrollTrigger.getAll().forEach(function(t) { t.kill(); });
       ScrollTrigger.refresh();
     }
-
-    // Also force the hero section height back to normal
-    var heroScrolly = document.getElementById('hero-scrolly');
-    if (heroScrolly) {
-      heroScrolly.style.height = 'auto';
-      heroScrolly.style.minHeight = '100vh';
-    }
-
-    // Remove any pin spacers GSAP may have injected
-    document.querySelectorAll('.pin-spacer').forEach(function (el) {
-      el.style.height = 'auto';
-      el.style.inset = 'unset';
-      el.style.position = 'relative';
-    });
-  }, 0);
-
-  // preloader.js calls window.heroTL.play() — provide a no-op stub.
-  window.heroTL = { play: function () {} };
+  });
 } else {
 
 /* Initial load: headline reveal
@@ -3678,7 +3652,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=4"></script>
+<script src="preloader.js?v=5"></script>
 </div>
 </body>
 </html>
