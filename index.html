@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="preloader.css?v=9">
+<link rel="stylesheet" href="preloader.css?v=10">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1619,9 +1619,8 @@ footer {
   #hero-arrow { display: none; }
 
   #speed-scrolly { height: auto !important; }
+  #speed-pin, .speed-pin { overflow: visible !important; height: auto !important; }
   .feg-wrap { flex-direction: column; }
-
-  section { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
 
   /* CTA form stacking */
   .cta-inner { grid-template-columns: 1fr !important; gap: 3rem; }
@@ -2579,6 +2578,7 @@ if (!isMobileFallback) window.addEventListener('load', function () {
 }, { once: true });
 
 /* ─── SPEED SCROLLYTELLING ─── */
+if (!isMobileFallback) {
 const speedTL = gsap.timeline({
   scrollTrigger: {
     trigger: '#speed-scrolly',
@@ -2678,6 +2678,7 @@ gsap.to('.speed-pin', {
     scrub: 1,
   }
 });
+} // end !isMobileFallback (speed scrolly)
 
 /* ─── HOW IT WORKS — FLUID EXPANDING GRID ─── */
 const FEG = (() => {
@@ -3614,7 +3615,7 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script src="preloader.js?v=9"></script>
+<script src="preloader.js?v=10"></script>
 </div>
 </body>
 </html>
