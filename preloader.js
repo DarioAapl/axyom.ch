@@ -1,10 +1,47 @@
-// Mobile bypass — skip preloader animation on small screens
+// Mobile bypass — show a simplified static preloader on small/touch devices
 if (window.innerWidth <= 1024 || "ontouchstart" in window) {
-  var _pl = document.getElementById("preloader");
-  if (_pl) { _pl.style.display = "none"; }
-  document.documentElement.classList.remove("preloader-active");
-  document.body.style.overflow = "auto";
-  if (typeof window.heroTL !== "undefined") { window.heroTL.play(); }
+  var _pl = document.getElementById('preloader');
+  var _bar = document.getElementById('pl-bar-fill');
+  var _logo = document.querySelector('.pl-logo-wrap');
+
+  if (_pl && _logo) {
+    // Show logo with fade-in
+    _logo.style.transition = 'opacity 0.8s ease';
+    _logo.style.opacity = '0';
+
+    // Make all logo paths visible immediately
+    document.querySelectorAll('#preloader svg path').forEach(function(p) {
+      p.setAttribute('fill-opacity', '1');
+    });
+
+    setTimeout(function() {
+      _logo.style.opacity = '1';
+    }, 100);
+
+    // Animate progress bar
+    if (_bar) {
+      _bar.style.transition = 'width 1.2s cubic-bezier(0.4,0,0.2,1)';
+      _bar.style.width = '0%';
+      setTimeout(function() { _bar.style.width = '100%'; }, 200);
+    }
+
+    // Fade out preloader
+    setTimeout(function() {
+      _pl.style.transition = 'opacity 0.6s ease';
+      _pl.style.opacity = '0';
+      setTimeout(function() {
+        _pl.style.display = 'none';
+        document.documentElement.classList.remove('preloader-active');
+        document.body.style.overflow = 'auto';
+        if (typeof window.heroTL !== 'undefined') window.heroTL.play();
+      }, 650);
+    }, 1800);
+  } else {
+    // Fallback if elements not found
+    if (_pl) _pl.style.display = 'none';
+    document.documentElement.classList.remove('preloader-active');
+    document.body.style.overflow = 'auto';
+  }
 } else {
 /**
  * AXYOM PRELOADER — preloader.js
