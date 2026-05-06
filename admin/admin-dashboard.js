@@ -719,6 +719,8 @@ async function loadWidgetConfig(websiteId, domain, cell) {
     const pos    = widgetPositions[websiteId];
     const pColor = cfg.primary_color || "#00B2A0";
     const tColor = cfg.text_color    || "#0b0d12";
+    const bColor = cfg.bubble_color  || "#0b0d12";
+    const dTheme = (cfg.default_theme === "light") ? "light" : "dark";
 
     cell.innerHTML = `
       <div class="detail-panel-header">
@@ -744,6 +746,23 @@ async function loadWidgetConfig(websiteId, domain, cell) {
             <input type="color" class="inline-picker" id="wc-text-${websiteId}" value="${escapeHtml(tColor)}" />
             <span id="wc-text-hex-${websiteId}" class="mono">${escapeHtml(tColor)}</span>
           </div>
+        </div>
+
+        <div class="input-group">
+          <label>Bubble-Farbe</label>
+          <div class="color-picker-row">
+            <div class="color-swatch" id="wc-swatch-bubble-${websiteId}" style="background:${escapeHtml(bColor)}" onclick="document.getElementById('wc-bubble-${websiteId}').click()"></div>
+            <input type="color" class="inline-picker" id="wc-bubble-${websiteId}" value="${escapeHtml(bColor)}" />
+            <span id="wc-bubble-hex-${websiteId}" class="mono">${escapeHtml(bColor)}</span>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Standard-Theme</label>
+          <select id="wc-theme-${websiteId}">
+            <option value="dark"${dTheme === "dark" ? " selected" : ""}>Dark</option>
+            <option value="light"${dTheme === "light" ? " selected" : ""}>Light</option>
+          </select>
         </div>
 
         <div class="input-group">
@@ -773,7 +792,7 @@ async function loadWidgetConfig(websiteId, domain, cell) {
         </div>
 
         <div class="widget-preview-area" id="wc-preview-area-${websiteId}">
-          <div class="preview-bubble ${pos === "left" ? "left" : ""}" id="wc-preview-${websiteId}" style="background:${escapeHtml(pColor)}">
+          <div class="preview-bubble ${pos === "left" ? "left" : ""}" id="wc-preview-${websiteId}" style="background:${escapeHtml(bColor)};border:3px solid ${escapeHtml(pColor)}">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="${escapeHtml(tColor)}">
               <path d="M20 15a4 4 0 01-4 4H7l-3 3V7a4 4 0 014-4h8a4 4 0 014 4z"/>
             </svg>
@@ -787,9 +806,12 @@ async function loadWidgetConfig(websiteId, domain, cell) {
 
       </div>`;
 
-    // Live updates: hex label, swatch, preview bubble
+    // Live updates: hex label, swatch, preview bubble.
+    // Preview accurately models the launcher: bubble_color = inner fill,
+    // primary_color = outer brand-coloured border, text_color = icon fill.
     const primaryInput = document.getElementById(`wc-primary-${websiteId}`);
     const textInput    = document.getElementById(`wc-text-${websiteId}`);
+    const bubbleInput  = document.getElementById(`wc-bubble-${websiteId}`);
 
     if (primaryInput) {
       primaryInput.addEventListener("input", () => {
@@ -797,9 +819,9 @@ async function loadWidgetConfig(websiteId, domain, cell) {
         const hexEl   = document.getElementById(`wc-primary-hex-${websiteId}`);
         const swatch  = document.getElementById(`wc-swatch-primary-${websiteId}`);
         const preview = document.getElementById(`wc-preview-${websiteId}`);
-        if (hexEl)   hexEl.textContent     = v;
+        if (hexEl)   hexEl.textContent       = v;
         if (swatch)  swatch.style.background = v;
-        if (preview) preview.style.background = v;
+        if (preview) preview.style.borderColor = v;
       });
     }
     if (textInput) {
@@ -808,9 +830,20 @@ async function loadWidgetConfig(websiteId, domain, cell) {
         const hexEl  = document.getElementById(`wc-text-hex-${websiteId}`);
         const swatch = document.getElementById(`wc-swatch-text-${websiteId}`);
         const svg    = document.querySelector(`#wc-preview-${websiteId} svg`);
-        if (hexEl)  hexEl.textContent      = v;
+        if (hexEl)  hexEl.textContent       = v;
         if (swatch) swatch.style.background = v;
-        if (svg)    svg.style.fill         = v;
+        if (svg)    svg.style.fill          = v;
+      });
+    }
+    if (bubbleInput) {
+      bubbleInput.addEventListener("input", () => {
+        const v = bubbleInput.value;
+        const hexEl   = document.getElementById(`wc-bubble-hex-${websiteId}`);
+        const swatch  = document.getElementById(`wc-swatch-bubble-${websiteId}`);
+        const preview = document.getElementById(`wc-preview-${websiteId}`);
+        if (hexEl)   hexEl.textContent       = v;
+        if (swatch)  swatch.style.background = v;
+        if (preview) preview.style.background = v;
       });
     }
 
@@ -839,6 +872,8 @@ function setWidgetPosition(websiteId, pos) {
 async function saveWidgetConfig(websiteId) {
   const primary     = document.getElementById(`wc-primary-${websiteId}`)?.value;
   const textCol     = document.getElementById(`wc-text-${websiteId}`)?.value;
+  const bubbleCol   = document.getElementById(`wc-bubble-${websiteId}`)?.value;
+  const defaultTheme = document.getElementById(`wc-theme-${websiteId}`)?.value || "dark";
   const welcome     = document.getElementById(`wc-welcome-${websiteId}`)?.value;
   const headerTitle = document.getElementById(`wc-header-title-${websiteId}`)?.value || "";
   const position    = widgetPositions[websiteId] || "right";
@@ -847,7 +882,15 @@ async function saveWidgetConfig(websiteId) {
   const res = await fetch(`${API}/admin/websites/${websiteId}/widget-config`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ primary_color: primary, text_color: textCol, bubble_position: position, welcome_message: welcome, header_title: headerTitle }),
+    body: JSON.stringify({
+      primary_color: primary,
+      text_color: textCol,
+      bubble_color: bubbleCol,
+      default_theme: defaultTheme,
+      bubble_position: position,
+      welcome_message: welcome,
+      header_title: headerTitle,
+    }),
   });
 
   if (msgEl) {
