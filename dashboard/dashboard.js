@@ -172,9 +172,9 @@ function switchTab(websiteId, tabName, el) {
   tabs.forEach(t => t.classList.remove('active'));
   el.classList.add('active');
 
-  // Hide all panes
-  const content = el.closest('.panel-content');
-  content.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  // .panel-content is a sibling of .panel-tabs, not an ancestor — closest() can't see it.
+  const wrapper = el.closest('.website-panel');
+  wrapper.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   const pane = document.getElementById(`tab-${websiteId}-${tabName}`);
   pane.classList.add('active');
 
