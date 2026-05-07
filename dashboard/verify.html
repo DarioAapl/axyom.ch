@@ -51,6 +51,12 @@
 <script>
 const API = "https://api.axyom.ch";
 
+function friendlyError(detail, fallback) {
+  if (!detail || typeof detail !== 'string') return fallback;
+  if (/\/[a-z]+\/|GET\s|POST\s|Call\s/.test(detail)) return fallback;
+  return detail;
+}
+
 (async () => {
   const token = new URLSearchParams(location.search).get("token");
 
@@ -66,7 +72,7 @@ const API = "https://api.axyom.ch";
 
     if (!res.ok) {
       show("stateError");
-      document.getElementById("errorMsg").textContent = data.detail || "Verification failed.";
+      document.getElementById("errorMsg").textContent = friendlyError(data.detail, "The link is invalid or has expired.");
       return;
     }
 

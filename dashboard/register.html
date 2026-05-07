@@ -40,6 +40,10 @@
         <label for="confirm">Confirm Password</label>
         <input id="confirm" type="password" placeholder="Repeat password" autocomplete="new-password" required />
       </div>
+      <div class="input-group">
+        <label for="captcha">Security check: <span id="captchaQuestion" style="font-family:ui-monospace,monospace;color:var(--accent,#00B2A0)">Loading…</span></label>
+        <input id="captcha" type="text" inputmode="numeric" pattern="-?[0-9]+" placeholder="Your answer" autocomplete="off" required />
+      </div>
       <div class="error-msg" id="errMsg"></div>
       <button class="btn-primary full" type="submit" id="registerBtn">Create account</button>
     </form>
@@ -57,6 +61,33 @@
     window.location.href = 'index.html';
   }
 
+  let captchaId = null;
+
+  async function loadCaptcha() {
+    const qEl = document.getElementById('captchaQuestion');
+    const ansEl = document.getElementById('captcha');
+    qEl.textContent = 'Loading…';
+    ansEl.value = '';
+    try {
+      const res = await fetch(`${API}/customer/captcha`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      captchaId = data.captcha_id;
+      qEl.textContent = data.question;
+    } catch {
+      captchaId = null;
+      qEl.textContent = 'Could not load — please refresh.';
+    }
+  }
+
+  loadCaptcha();
+
+  function friendlyError(detail, fallback) {
+    if (!detail || typeof detail !== 'string') return fallback;
+    if (/\/[a-z]+\/|GET\s|POST\s|Call\s/.test(detail)) return fallback;
+    return detail;
+  }
+
   async function doRegister(e) {
     e.preventDefault();
     const btn = document.getElementById('registerBtn');
@@ -66,9 +97,18 @@
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirm = document.getElementById('confirm').value;
+    const captchaAnswer = document.getElementById('captcha').value.trim();
 
     if (password !== confirm) {
       errMsg.textContent = 'Passwords do not match';
+      return;
+    }
+    if (!captchaId) {
+      errMsg.textContent = 'Security check unavailable — please refresh the page.';
+      return;
+    }
+    if (!captchaAnswer) {
+      errMsg.textContent = 'Please answer the security check.';
       return;
     }
 
@@ -79,12 +119,18 @@
       const res = await fetch(`${API}/customer/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          captcha_id: captchaId,
+          captcha_answer: parseInt(captchaAnswer, 10),
+        }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        errMsg.textContent = data.detail || 'Registration failed';
+        await loadCaptcha();
+        errMsg.textContent = friendlyError(data.detail, 'Registration failed. Please try again.');
         return;
       }
 

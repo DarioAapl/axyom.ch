@@ -54,6 +54,12 @@
     window.location.href = 'index.html';
   }
 
+  function friendlyError(detail, fallback) {
+    if (!detail || typeof detail !== 'string') return fallback;
+    if (/\/[a-z]+\/|GET\s|POST\s|Call\s/.test(detail)) return fallback;
+    return detail;
+  }
+
   async function doLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('loginBtn');
@@ -74,7 +80,7 @@
       const data = await res.json();
 
       if (!res.ok) {
-        errMsg.textContent = data.detail || 'Login failed';
+        errMsg.textContent = friendlyError(data.detail, 'Login failed. Please try again.');
         return;
       }
 
