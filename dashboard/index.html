@@ -34,6 +34,17 @@
 
 <main class="dashboard">
 
+  <!-- Email-verification notice (shown when /me returns email_verified=false) -->
+  <div id="verifyBanner" style="display:none;background:rgba(0,178,160,0.08);border:1px solid rgba(0,178,160,0.3);border-radius:8px;padding:14px 18px;margin-bottom:20px;align-items:center;gap:12px;color:var(--text)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00B2A0" stroke-width="2" style="flex-shrink:0">
+      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    <div style="flex:1">
+      <strong>Verify your email to unlock all features.</strong>
+      <span style="color:var(--text-muted);margin-left:8px">Check your inbox for the verification link. Some actions are read-only until you verify.</span>
+    </div>
+  </div>
+
   <!-- ═══ Stats Row ═══ -->
   <section class="stats-grid">
     <div class="stat-card">

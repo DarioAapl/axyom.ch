@@ -18,10 +18,23 @@ function authHeaders() {
 }
 
 async function apiFetch(path, opts = {}) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { ...authHeaders(), ...(opts.headers || {}) },
-    ...opts,
-  });
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(() => ctrl.abort(), 10000);
+  let res;
+  try {
+    res = await fetch(`${API}${path}`, {
+      headers: { ...authHeaders(), ...(opts.headers || {}) },
+      signal: ctrl.signal,
+      ...opts,
+    });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out — please try again.');
+    }
+    throw err;
+  }
+  clearTimeout(timeoutId);
   if (res.status === 401) {
     localStorage.removeItem('customer_token');
     window.location.href = 'login.html';
@@ -51,15 +64,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadDashboard() {
-  const res = await apiFetch('/customer/me');
-  const me = await res.json();
+  let me;
+  try {
+    const res = await apiFetch('/customer/me');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || `Couldn't load your account (HTTP ${res.status}).`);
+    }
+    me = await res.json();
+  } catch (err) {
+    if (err.message === 'Unauthorized') return;
+    showLoadError(err.message);
+    return;
+  }
 
   // Nav email pill
   document.getElementById('customerEmail').textContent = me.email;
 
+  // Email-verification banner
+  if (me.email_verified === false) {
+    const banner = document.getElementById('verifyBanner');
+    if (banner) banner.style.display = 'flex';
+  }
+
   // Stats
-  const sub = me.subscription;
-  document.getElementById('statWebsites').textContent = me.websites.length;
+  const sub = me.subscription || {};
+  const websites = me.websites || [];
+  document.getElementById('statWebsites').textContent = websites.length;
   document.getElementById('statPlan').textContent = sub.plan
     ? sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1)
     : 'No plan';
@@ -70,14 +101,25 @@ async function loadDashboard() {
     ? `${used} / ${limit}`
     : used;
 
-  const trained = me.websites.filter(w => w.is_trained).length;
+  const trained = websites.filter(w => w.is_trained).length;
   document.getElementById('statTrained').textContent = trained;
 
-  // Websites section
-  renderWebsites(me.websites, sub);
-
-  // Billing section
+  renderWebsites(websites, sub);
   await loadBilling();
+}
+
+function showLoadError(msg) {
+  ['statWebsites', 'statConvos', 'statTrained', 'statPlan'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+  const safe = escHtml(String(msg || '').slice(0, 200));
+  const list = document.getElementById('websitesList');
+  if (list) list.innerHTML =
+    `<div class="alert alert-error" style="padding:16px">Couldn't load your account: ${safe}<br><a href="login.html" style="color:var(--accent,#00B2A0);margin-top:8px;display:inline-block">Sign in again</a></div>`;
+  const billing = document.getElementById('billingSection');
+  if (billing) billing.innerHTML =
+    `<div class="alert alert-error">Couldn't load billing info. Please refresh or sign in again.</div>`;
 }
 
 // ── Websites ──────────────────────────────────────────────────────────────────
