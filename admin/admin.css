@@ -1701,3 +1701,94 @@ input[type="color"] {
    ════════════════════════════════════════════════ */
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══ Documents panel ═══ */
+
+.upload-quota-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 14px;
+}
+.upload-quota-label { font-size: 0.85rem; font-weight: 500; }
+.upload-quota-count {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.upload-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.upload-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.upload-status {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.upload-empty {
+  padding: 28px 16px;
+  text-align: center;
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+.upload-empty-title { margin: 0 0 6px; font-size: 0.9rem; }
+.upload-empty-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.upload-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.upload-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+}
+.upload-info { flex: 1; min-width: 0; }
+.upload-filename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.upload-filename-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+.upload-meta {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.pill.pill-pdf { background: rgba(232,67,67,0.15);  color: #e84343; }
+.pill.pill-txt { background: rgba(100,150,220,0.15); color: #6496dc; }

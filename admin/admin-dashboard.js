@@ -651,6 +651,7 @@ async function loadWebsites() {
             <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'widget')">🎨 Widget</button>
             <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'chats')">💬 Chats</button>
             <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'stats')">📊 Stats</button>
+            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'documents')">📄 Documents</button>
             <button class="btn-danger btn-sm" onclick="deleteWebsite(${w.id})">🗑️ Delete</button>
           </div>
         </td>
@@ -694,6 +695,7 @@ function toggleDetail(websiteId, domain, type) {
   if (type === "widget") loadWidgetConfig(websiteId, domain, cell);
   else if (type === "chats") loadConversations(websiteId, cell);
   else if (type === "stats") loadStats(websiteId, cell);
+  else if (type === "documents") loadDocuments(websiteId, domain, cell);
 }
 
 /* ============================================================
@@ -1241,5 +1243,182 @@ async function inspectWebsite(id) {
   } catch (err) {
     finishProgress(id);
     await showAlert("Inspect crashed: " + err.message);
+  }
+}
+
+/* ============================================================
+   DOCUMENTS  (admin uploads — PDF / TXT — backed by Phase A API)
+============================================================ */
+const UPLOAD_MAX_FILES = 20;
+const UPLOAD_MAX_BYTES = 25 * 1024 * 1024;
+
+function fmtFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+async function loadDocuments(websiteId, domain, cell) {
+  cell.innerHTML = `
+    <div class="detail-panel-header">
+      <span class="detail-panel-title">📄 Documents</span>
+      <button class="detail-close" onclick="closeDetail(${websiteId})">✕</button>
+    </div>
+    <div id="upload-area-${websiteId}">
+      <p style="color:var(--text-muted);font-size:0.85rem">Loading…</p>
+    </div>`;
+
+  try {
+    const res = await fetch(`${API}/admin/websites/${websiteId}/uploads`, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const uploads = await res.json();
+    renderDocumentsPanel(websiteId, domain, uploads);
+  } catch (err) {
+    const area = document.getElementById(`upload-area-${websiteId}`);
+    if (area) area.innerHTML =
+      `<p style="color:#e84343;font-size:0.85rem">Failed to load documents: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function renderDocumentsPanel(websiteId, domain, uploads) {
+  const count = uploads.length;
+  const quotaColor =
+    count >= UPLOAD_MAX_FILES ? "#e84343" :
+    count >= UPLOAD_MAX_FILES * 0.8 ? "#f5a623" :
+    "var(--text-muted)";
+
+  let html = `
+    <div class="upload-quota-row">
+      <span class="upload-quota-label">Documents indexed for this site</span>
+      <span class="upload-quota-count" style="color:${quotaColor}">${count} / ${UPLOAD_MAX_FILES}</span>
+    </div>
+
+    <div class="upload-controls">
+      <input type="file" id="upload-input-${websiteId}" accept=".pdf,.txt"
+        data-domain="${escapeHtml(domain)}" style="display:none"
+        onchange="uploadDocument(${websiteId})" />
+      <button id="upload-btn-${websiteId}" class="btn-primary btn-sm"
+        ${count >= UPLOAD_MAX_FILES ? "disabled" : ""}
+        onclick="document.getElementById('upload-input-${websiteId}').click()">
+        📤 Upload Document
+      </button>
+      <span class="upload-hint">PDF or TXT, max 25 MB · embedding takes 5-30 seconds</span>
+      <span id="upload-status-${websiteId}" class="upload-status"></span>
+    </div>`;
+
+  if (uploads.length === 0) {
+    html += `
+      <div class="upload-empty">
+        <p class="upload-empty-title">No documents uploaded yet.</p>
+        <p class="upload-empty-hint">Upload a PDF or TXT file to enrich the AI's knowledge for this website.<br>
+        Chunks land in the same search index as crawled pages and survive re-crawls.</p>
+      </div>`;
+  } else {
+    html += `<ul class="upload-list">`;
+    uploads.forEach(u => {
+      const pillCls = u.file_type === "pdf" ? "pill-pdf" : "pill-txt";
+      const pagesStr = u.page_count ? ` · ${u.page_count} page${u.page_count !== 1 ? "s" : ""}` : "";
+      const filenameEsc = escapeHtml(u.filename).replace(/'/g, "\\'");
+      html += `
+        <li class="upload-row">
+          <div class="upload-info">
+            <div class="upload-filename">
+              <span class="pill ${pillCls}">${u.file_type.toUpperCase()}</span>
+              <span class="upload-filename-text">${escapeHtml(u.filename)}</span>
+            </div>
+            <div class="upload-meta">
+              ${fmtFileSize(u.file_size_bytes)}${pagesStr} · ${u.chunk_count} chunk${u.chunk_count !== 1 ? "s" : ""} · uploaded ${fmtDate(u.uploaded_at)}
+            </div>
+          </div>
+          <button class="btn-danger btn-sm" onclick="deleteUploadDoc(${websiteId}, '${escapeHtml(domain)}', ${u.id}, '${filenameEsc}')">🗑️ Delete</button>
+        </li>`;
+    });
+    html += `</ul>`;
+  }
+
+  const area = document.getElementById(`upload-area-${websiteId}`);
+  if (area) area.innerHTML = html;
+}
+
+async function uploadDocument(websiteId) {
+  const fileInput = document.getElementById(`upload-input-${websiteId}`);
+  const file = fileInput?.files?.[0];
+  if (!file) return;
+  const domain = fileInput.dataset.domain;
+
+  // Client-side validation (server enforces too, but fail fast for clear UX)
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  if (!["pdf", "txt"].includes(ext)) {
+    fileInput.value = "";
+    await showAlert("Only PDF and TXT files are supported.");
+    return;
+  }
+  if (file.size > UPLOAD_MAX_BYTES) {
+    fileInput.value = "";
+    await showAlert("File is too large (max 25 MB).");
+    return;
+  }
+
+  const btn = document.getElementById(`upload-btn-${websiteId}`);
+  const statusEl = document.getElementById(`upload-status-${websiteId}`);
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Uploading & embedding…"; }
+  if (statusEl) {
+    statusEl.textContent = `Processing ${file.name} — this can take 5-30 seconds.`;
+    statusEl.style.color = "var(--text-muted)";
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch(`${API}/admin/websites/${websiteId}/uploads`, {
+      method: "POST",
+      headers: authHeaders(),  // no Content-Type — fetch sets it w/ boundary for FormData
+      body: formData,
+    });
+
+    if (!res.ok) {
+      let msg = "Upload failed. Please try again.";
+      if      (res.status === 409) msg = "A file with this name is already uploaded. Delete it first to re-upload.";
+      else if (res.status === 413) msg = "File is too large (max 25 MB).";
+      else if (res.status === 415) msg = "Only PDF and TXT files are supported.";
+      else if (res.status === 422) msg = "Couldn't extract text from this file. It may be image-only or corrupted.";
+      else if (res.status === 429) msg = `Upload limit reached (${UPLOAD_MAX_FILES} documents per website).`;
+      else {
+        try { const d = await res.json(); if (d?.detail) msg = d.detail; } catch {}
+      }
+      throw new Error(msg);
+    }
+
+    // Success → re-render the list (new row + updated quota IS the success indicator)
+    fileInput.value = "";
+    const cell = document.getElementById(`detail-cell-${websiteId}`);
+    if (cell) await loadDocuments(websiteId, domain, cell);
+
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = "📤 Upload Document"; }
+    if (statusEl) statusEl.textContent = "";
+    fileInput.value = "";
+    await showAlert(err.message);
+  }
+}
+
+async function deleteUploadDoc(websiteId, domain, uploadId, filename) {
+  if (!await showConfirm(`Delete "${filename}"?\n\nThis removes the file, its chunks from the search index, and the DB record. Cannot be undone.`)) return;
+
+  try {
+    const res = await fetch(`${API}/admin/websites/${websiteId}/uploads/${uploadId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    if (!res.ok && res.status !== 204) {
+      let msg = "Delete failed.";
+      try { const d = await res.json(); if (d?.detail) msg = d.detail; } catch {}
+      throw new Error(msg);
+    }
+    const cell = document.getElementById(`detail-cell-${websiteId}`);
+    if (cell) await loadDocuments(websiteId, domain, cell);
+  } catch (err) {
+    await showAlert(err.message);
   }
 }
