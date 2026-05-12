@@ -735,66 +735,6 @@ textarea {
   flex-wrap: wrap;
 }
 
-/* ═══ Conversations / chat history ═══ */
-
-.session-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-.session-item {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  transition: border-color var(--transition);
-}
-
-.session-item:hover { border-color: var(--teal-border); }
-
-.session-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  user-select: none;
-  transition: background var(--transition);
-}
-
-.session-header:hover { background: var(--surface-3); }
-
-.session-messages { display: none; padding: 0 14px 14px; }
-.session-messages.open { display: block; }
-
-.chat-bubble {
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 0.83rem;
-  line-height: 1.5;
-  max-width: 85%;
-  margin-bottom: 6px;
-}
-
-.chat-bubble.user {
-  background: var(--teal-ghost);
-  color: var(--text);
-  border: 1px solid var(--teal-border);
-  margin-left: auto;
-  text-align: right;
-}
-
-.chat-bubble.assistant {
-  background: var(--surface-3);
-  color: var(--text-dim);
-  border: 1px solid var(--border);
-}
-
 /* ═══ Billing ═══ */
 
 .plan-display {

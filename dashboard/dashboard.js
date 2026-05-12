@@ -167,7 +167,6 @@ function renderWebsites(websites, sub) {
           <div class="panel-tab active" onclick="switchTab(${w.id},'stats',this)">Stats</div>
           <div class="panel-tab" onclick="switchTab(${w.id},'widget',this)">Widget</div>
           <div class="panel-tab" onclick="switchTab(${w.id},'embed',this)">Embed</div>
-          <div class="panel-tab" onclick="switchTab(${w.id},'chats',this)">Conversations</div>
           <div class="panel-tab" onclick="switchTab(${w.id},'retrain',this)">Retrain</div>
         </div>
         <div class="panel-content">
@@ -179,9 +178,6 @@ function renderWebsites(websites, sub) {
           </div>
           <div class="tab-pane" id="tab-${w.id}-embed">
             <div class="loading-row"><div class="loader"></div>Loading embed code…</div>
-          </div>
-          <div class="tab-pane" id="tab-${w.id}-chats">
-            <div class="loading-row"><div class="loader"></div>Loading conversations…</div>
           </div>
           <div class="tab-pane" id="tab-${w.id}-retrain">
             ${buildRetrainPane(w)}
@@ -219,9 +215,6 @@ function switchTab(websiteId, tabName, el) {
   wrapper.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   const pane = document.getElementById(`tab-${websiteId}-${tabName}`);
   pane.classList.add('active');
-
-  // Lazy-load on demand
-  if (tabName === 'chats') loadConversations(websiteId);
 }
 
 // ── Stats tab ─────────────────────────────────────────────────────────────────
@@ -459,52 +452,6 @@ function copyEmbed(websiteId) {
     const btn = el.nextElementSibling?.querySelector('button');
     if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy snippet`, 2000); }
   });
-}
-
-// ── Conversations tab ─────────────────────────────────────────────────────────
-
-async function loadConversations(websiteId) {
-  const pane = document.getElementById(`tab-${websiteId}-chats`);
-  if (pane.dataset.loaded) return;
-  pane.innerHTML = '<div class="loading-row"><div class="loader"></div>Loading conversations…</div>';
-
-  try {
-    const res = await apiFetch(`/customer/websites/${websiteId}/conversations`);
-    const sessions = await res.json();
-
-    if (!sessions.length) {
-      pane.innerHTML = '<div class="empty-state"><div>No conversations yet.</div></div>';
-      pane.dataset.loaded = '1';
-      return;
-    }
-
-    pane.innerHTML = `<div class="session-list">${sessions.map((s, i) => {
-      const firstUser = s.messages.find(m => m.role === 'user');
-      const ts = s.messages[0]?.created_at
-        ? new Date(s.messages[0].created_at).toLocaleString()
-        : '';
-      const preview = firstUser ? firstUser.message.slice(0, 60) : 'Empty session';
-      return `
-        <div class="session-item">
-          <div class="session-header" onclick="toggleSession(this)">
-            <span style="color:var(--text-dim)">${escHtml(preview)}${firstUser?.message.length > 60 ? '…' : ''}</span>
-            <span style="font-size:0.72rem;color:var(--text-muted)">${ts} · ${s.messages.length} msgs</span>
-          </div>
-          <div class="session-messages">
-            ${s.messages.map(m => `
-              <div class="chat-bubble ${m.role}">${escHtml(m.message)}</div>`).join('')}
-          </div>
-        </div>`;
-    }).join('')}</div>`;
-    pane.dataset.loaded = '1';
-  } catch {
-    pane.innerHTML = '<div class="alert alert-error">Failed to load conversations.</div>';
-  }
-}
-
-function toggleSession(header) {
-  const messages = header.nextElementSibling;
-  messages.classList.toggle('open');
 }
 
 // ── Retrain tab ───────────────────────────────────────────────────────────────
