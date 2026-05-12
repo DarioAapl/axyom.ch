@@ -735,6 +735,87 @@ textarea {
   flex-wrap: wrap;
 }
 
+/* ═══ Documents tab ═══ */
+
+.doc-usage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.83rem;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.doc-upload-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  margin-bottom: 16px;
+}
+.doc-upload-zone:hover { border-color: var(--teal-border); background: var(--surface-2); }
+.doc-upload-zone.dragover {
+  border-color: var(--teal);
+  background: var(--teal-ghost);
+}
+.doc-upload-zone.disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  background: var(--surface-2);
+}
+.doc-upload-zone.disabled:hover {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.doc-status { min-height: 24px; }
+
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: border-color var(--transition);
+}
+.doc-item:hover { border-color: var(--teal-border); }
+
+.doc-info { min-width: 0; flex: 1; }
+
+.doc-filename {
+  font-size: 0.88rem;
+  color: var(--text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-meta {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.doc-delete {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ═══ Billing ═══ */
 
 .plan-display {

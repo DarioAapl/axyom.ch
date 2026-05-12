@@ -167,6 +167,7 @@ function renderWebsites(websites, sub) {
           <div class="panel-tab active" onclick="switchTab(${w.id},'stats',this)">Stats</div>
           <div class="panel-tab" onclick="switchTab(${w.id},'widget',this)">Widget</div>
           <div class="panel-tab" onclick="switchTab(${w.id},'embed',this)">Embed</div>
+          <div class="panel-tab" onclick="switchTab(${w.id},'documents',this)">Documents</div>
           <div class="panel-tab" onclick="switchTab(${w.id},'retrain',this)">Retrain</div>
         </div>
         <div class="panel-content">
@@ -178,6 +179,9 @@ function renderWebsites(websites, sub) {
           </div>
           <div class="tab-pane" id="tab-${w.id}-embed">
             <div class="loading-row"><div class="loader"></div>Loading embed code…</div>
+          </div>
+          <div class="tab-pane" id="tab-${w.id}-documents">
+            <div class="loading-row"><div class="loader"></div>Loading documents…</div>
           </div>
           <div class="tab-pane" id="tab-${w.id}-retrain">
             ${buildRetrainPane(w)}
@@ -215,6 +219,8 @@ function switchTab(websiteId, tabName, el) {
   wrapper.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   const pane = document.getElementById(`tab-${websiteId}-${tabName}`);
   pane.classList.add('active');
+
+  if (tabName === 'documents') loadDocuments(websiteId);
 }
 
 // ── Stats tab ─────────────────────────────────────────────────────────────────
@@ -710,5 +716,138 @@ async function resendVerification() {
     setTimeout(() => {
       if (btn) { btn.disabled = false; btn.textContent = originalText; }
     }, 10000);
+  }
+}
+
+// ── Documents tab ─────────────────────────────────────────────────────────────
+
+async function loadDocuments(websiteId) {
+  const pane = document.getElementById(`tab-${websiteId}-documents`);
+  pane.innerHTML = '<div class="loading-row"><div class="loader"></div>Loading documents…</div>';
+
+  try {
+    const res = await apiFetch(`/customer/websites/${websiteId}/documents`);
+    const data = await res.json();
+    renderDocuments(websiteId, pane, data);
+  } catch (e) {
+    pane.innerHTML = '<div class="alert alert-error">Failed to load documents.</div>';
+  }
+}
+
+function renderDocuments(websiteId, pane, data) {
+  const docs = data.documents || [];
+  const lim = data.limits;
+  const atLimit = data.used >= lim.max_documents;
+  const planLabel = lim.plan.charAt(0).toUpperCase() + lim.plan.slice(1);
+
+  const usageBar = `
+    <div class="doc-usage">
+      <span><strong>${data.used}</strong> of <strong>${lim.max_documents}</strong> documents
+        <span style="color:var(--text-muted)">· ${planLabel} plan · up to ${lim.max_file_size_mb} MB per file</span>
+      </span>
+    </div>`;
+
+  const dropzone = atLimit
+    ? `<div class="doc-upload-zone disabled">
+         <div style="color:var(--text-muted)">Document limit reached.
+           Delete an unused document or upgrade your plan to add more.</div>
+       </div>`
+    : `<div class="doc-upload-zone" id="dropzone-${websiteId}"
+            ondragover="docDragOver(event,${websiteId})"
+            ondragleave="docDragLeave(event,${websiteId})"
+            ondrop="docDrop(event,${websiteId})"
+            onclick="document.getElementById('docfile-${websiteId}').click()">
+         <input type="file" id="docfile-${websiteId}" accept="application/pdf,.pdf"
+                style="display:none"
+                onchange="uploadDocument(${websiteId}, this.files[0])"/>
+         <div style="font-weight:600;color:var(--text)">Drop a PDF here, or click to browse</div>
+         <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px">
+           PDF only · max ${lim.max_file_size_mb} MB
+         </div>
+       </div>`;
+
+  const list = docs.length === 0
+    ? `<div class="empty-state"><div>No documents uploaded yet.</div></div>`
+    : `<div class="doc-list">${docs.map(d => `
+        <div class="doc-item">
+          <div class="doc-info">
+            <div class="doc-filename">${escHtml(d.filename)}</div>
+            <div class="doc-meta">
+              ${formatBytes(d.file_size_bytes)}${d.page_count ? ` · ${d.page_count} page${d.page_count === 1 ? '' : 's'}` : ''} · ${d.chunk_count} chunk${d.chunk_count === 1 ? '' : 's'} · ${new Date(d.uploaded_at).toLocaleDateString()}
+            </div>
+          </div>
+          <button class="btn-danger doc-delete" onclick="deleteDocument(${websiteId}, ${d.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+            Delete
+          </button>
+        </div>`).join('')}</div>`;
+
+  pane.innerHTML = usageBar + dropzone + `<div id="doc-status-${websiteId}" class="doc-status"></div>` + list;
+}
+
+function formatBytes(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function docDragOver(e, id)  { e.preventDefault(); document.getElementById(`dropzone-${id}`)?.classList.add('dragover'); }
+function docDragLeave(e, id) { document.getElementById(`dropzone-${id}`)?.classList.remove('dragover'); }
+function docDrop(e, id) {
+  e.preventDefault();
+  document.getElementById(`dropzone-${id}`)?.classList.remove('dragover');
+  const f = e.dataTransfer.files?.[0];
+  if (f) uploadDocument(id, f);
+}
+
+async function uploadDocument(websiteId, file) {
+  if (!file) return;
+  const status = document.getElementById(`doc-status-${websiteId}`);
+
+  if (!file.name.toLowerCase().endsWith('.pdf')) {
+    status.innerHTML = '<div class="alert alert-error">Only PDF files are accepted.</div>';
+    return;
+  }
+
+  status.innerHTML = `<div class="loading-row"><div class="loader"></div>Uploading ${escHtml(file.name)}…</div>`;
+
+  const form = new FormData();
+  form.append('file', file);
+
+  try {
+    const res = await apiFetch(`/customer/websites/${websiteId}/documents`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      status.innerHTML = `<div class="alert alert-error">${escHtml(err.detail || 'Upload failed.')}</div>`;
+      return;
+    }
+    status.innerHTML = '';
+    await loadDocuments(websiteId);
+  } catch (e) {
+    status.innerHTML = '<div class="alert alert-error">Network error during upload.</div>';
+  }
+}
+
+async function deleteDocument(websiteId, uploadId) {
+  if (!confirm('Delete this document? The chatbot will lose access to its content.')) return;
+
+  try {
+    const res = await apiFetch(`/customer/websites/${websiteId}/documents/${uploadId}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok && res.status !== 204) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.detail || 'Failed to delete document.');
+      return;
+    }
+    await loadDocuments(websiteId);
+  } catch (e) {
+    alert('Network error deleting document.');
   }
 }
