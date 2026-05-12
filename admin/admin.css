@@ -1792,3 +1792,21 @@ input[type="color"] {
 
 .pill.pill-pdf { background: rgba(232,67,67,0.15);  color: #e84343; }
 .pill.pill-txt { background: rgba(100,150,220,0.15); color: #6496dc; }
+
+/* ═══ Last-trained timestamp (websites table) ═══ */
+.last-trained {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-family: "IBM Plex Mono", monospace;
+  cursor: default;
+}
+.never-trained {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #f5a623;
+  font-family: "IBM Plex Mono", monospace;
+}

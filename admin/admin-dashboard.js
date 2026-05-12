@@ -31,6 +31,31 @@ function fmtDate(iso) {
   });
 }
 
+function formatRelativeTime(isoString) {
+  if (!isoString) return null;  // caller handles "never trained" state
+  const then = new Date(isoString);
+  const diffMs = Date.now() - then.getTime();
+  if (isNaN(diffMs)) return null;
+  const min = Math.floor(diffMs / 60000);
+  const hr  = Math.floor(diffMs / 3600000);
+  const day = Math.floor(diffMs / 86400000);
+  if (min < 1)   return "Just now";
+  if (min < 60)  return `${min} min ago`;
+  if (hr  < 24)  return `${hr} hour${hr !== 1 ? "s" : ""} ago`;
+  if (day < 30)  return `${day} day${day !== 1 ? "s" : ""} ago`;
+  const mo = Math.floor(day / 30);
+  return `${mo} month${mo !== 1 ? "s" : ""} ago`;
+}
+
+function formatExactTimestamp(isoString) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return isoString;
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ` +
+         `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+}
+
 /* ============================================================
    MODAL  (new HTML: modalOverlay / modalTitle / modalBody / modalFooter)
 ============================================================ */
@@ -633,7 +658,12 @@ async function loadWebsites() {
     table.innerHTML += `
       <tr id="row-${w.id}">
         <td>${w.id}</td>
-        <td>${escapeHtml(w.domain)}</td>
+        <td>
+          ${escapeHtml(w.domain)}
+          ${w.last_trained_at
+            ? `<div class="last-trained" title="${escapeHtml(formatExactTimestamp(w.last_trained_at))}">Last trained: ${escapeHtml(formatRelativeTime(w.last_trained_at))}</div>`
+            : `<div class="never-trained">Never trained</div>`}
+        </td>
         <td>${verdictBadge}</td>
         <td>${usageCell}</td>
         <td>
