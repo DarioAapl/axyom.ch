@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="dashboard.css?v=20260329a">
+  <link rel="stylesheet" href="dashboard.css?v=20260513">
   <link rel="icon" type="image/png" href="../Assets/axyomfavicon.png">
   <link rel="apple-touch-icon" href="../Assets/axyomfavicon.png">
 </head>
@@ -40,8 +40,14 @@
       <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
     </svg>
     <div style="flex:1">
-      <strong>Verify your email to unlock all features.</strong>
-      <span style="color:var(--text-muted);margin-left:8px">Check your inbox for the verification link. Some actions are read-only until you verify.</span>
+      <div>
+        <strong>Verify your email to unlock all features.</strong>
+        <span style="color:var(--text-muted);margin-left:8px">Check your inbox for the verification link. Some actions are read-only until you verify.</span>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button id="resendVerifyBtn" class="resend-verify-btn" onclick="resendVerification()">Resend email</button>
+        <span id="resendVerifyStatus" class="resend-verify-status"></span>
+      </div>
     </div>
   </div>
 
@@ -204,6 +210,6 @@
   </div>
 </div>
 
-<script src="dashboard.js?v=20260329a"></script>
+<script src="dashboard.js?v=20260513"></script>
 </body>
 </html>

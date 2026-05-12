@@ -1135,3 +1135,26 @@ textarea {
   .mini-stats { gap: 14px; }
   .stat-value { font-size: 1.3rem; }
 }
+
+/* Resend verification button (inside verifyBanner) */
+.resend-verify-btn {
+  background: #00B2A0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.resend-verify-btn:hover:not(:disabled) { background: #00958A; }
+.resend-verify-btn:disabled {
+  background: rgba(0, 178, 160, 0.3);
+  cursor: not-allowed;
+}
+.resend-verify-status {
+  font-size: 0.78rem;
+  line-height: 1.4;
+}

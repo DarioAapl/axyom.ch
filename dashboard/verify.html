@@ -78,8 +78,8 @@ function friendlyError(detail, fallback) {
 
     // Store the new verified token and redirect to dashboard
     if (data.access_token) {
-      localStorage.setItem("axyom_token", data.access_token);
-      localStorage.setItem("axyom_customer_id", data.customer_id);
+      localStorage.setItem("customer_token", data.access_token);
+      localStorage.setItem("customer_id", data.customer_id);
     }
 
     show("stateSuccess");

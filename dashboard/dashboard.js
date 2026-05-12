@@ -721,3 +721,47 @@ function escHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+
+async function resendVerification() {
+  const btn = document.getElementById('resendVerifyBtn');
+  const statusEl = document.getElementById('resendVerifyStatus');
+  if (!btn || btn.disabled) return;
+
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  if (statusEl) statusEl.textContent = '';
+
+  try {
+    const res = await apiFetch('/customer/resend-verification', { method: 'POST' });
+    if (res.ok) {
+      if (statusEl) {
+        statusEl.textContent = 'Email sent ✓ — please check your inbox.';
+        statusEl.style.color = '#3fb950';
+      }
+    } else {
+      let msg = 'Could not send the verification email.';
+      if      (res.status === 429) msg = 'Please wait a few minutes before requesting another email.';
+      else if (res.status === 400) msg = 'Your email is already verified. Please refresh the page.';
+      else if (res.status === 500) msg = 'Could not send email right now. Please try again later or contact support.';
+      else {
+        try { const d = await res.json(); if (d?.detail) msg = d.detail; } catch {}
+      }
+      if (statusEl) {
+        statusEl.textContent = msg;
+        statusEl.style.color = '#e84343';
+      }
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = err.message || 'Network error — please try again.';
+      statusEl.style.color = '#e84343';
+    }
+  } finally {
+    // Re-enable after 10s regardless of success/failure
+    setTimeout(() => {
+      if (btn) { btn.disabled = false; btn.textContent = originalText; }
+    }, 10000);
+  }
+}
