@@ -294,11 +294,25 @@ function startProgressPolling(websiteId, jobId) {
    CUSTOMERS
 ============================================================ */
 function _planPill(sub) {
-  if (!sub || !sub.plan) return '<span class="pill gray">None</span>';
-  const cls = { active: "green", trialing: "green", past_due: "orange", cancelled: "red", canceled: "red" }[sub.status] || "gray";
-  const label = { starter: "Starter", pro: "Pro", business: "Business" }[sub.plan] || escapeHtml(sub.plan);
-  const statusLabel = sub.status === "past_due" ? " ⚠" : sub.status === "cancelled" ? " ✕" : "";
-  return `<span class="pill ${cls}">${label}${statusLabel}</span>`;
+  if (!sub || !sub.plan) {
+    return '<span class="pill gray">⚪ NO PLAN</span>';
+  }
+  const label = ({ starter: "Starter", pro: "Pro", business: "Business" }[sub.plan]) || escapeHtml(sub.plan);
+
+  const deactivated = sub.active === false || ["cancelled", "canceled"].includes(sub.status);
+  if (deactivated) {
+    return `<span class="pill red">🔴 ${label} · DEACTIVATED</span>`;
+  }
+
+  const isActive = sub.active !== false && ["active", "trialing"].includes(sub.status);
+  if (isActive) {
+    if (sub.paid) {
+      return `<span class="pill green">🟢 ${label} · ✅ PAID</span>`;
+    }
+    return `<span class="pill yellow">🟢 ${label} · ❌ UNPAID</span>`;
+  }
+
+  return `<span class="pill orange">⚠ ${label} · ${escapeHtml(sub.status || "unknown")}</span>`;
 }
 
 async function loadCustomers() {
@@ -337,6 +351,9 @@ async function loadCustomers() {
         <td>${fmtDate(c.created_at)}</td>
         <td>
           <button class="btn-ghost btn-sm" onclick="openSubscribeModal(${c.id}, '${escapeHtml(c.email)}')">💳 Subscribe</button>
+          ${(sub && sub.subscription_id && sub.active && ["active","trialing"].includes(sub.status))
+            ? `<button class="btn-ghost btn-sm" style="color:var(--red)" onclick="deactivateSubscription(${sub.subscription_id}, '${escapeHtml(c.email)}')">✕ Deactivate</button>`
+            : ``}
           <button class="btn-danger btn-sm" onclick="deleteCustomer(${c.id})">Delete</button>
           ${progressBar("customer-" + c.id)}
         </td>
@@ -346,9 +363,9 @@ async function loadCustomers() {
 
 async function openSubscribeModal(customerId, email) {
   await openModal(
-    "💳 Subscribe Customer",
+    "💳 Activate Subscription",
     `<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px">
-      Create a Stripe Checkout link for <strong style="color:var(--text)">${escapeHtml(email)}</strong>
+      Activate a plan for <strong style="color:var(--text)">${escapeHtml(email)}</strong>. Plan becomes active immediately on a trust basis — customer pays via the Stripe link in their dashboard.
     </p>
 
     <p style="font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Plan</p>
@@ -403,8 +420,9 @@ async function openSubscribeModal(customerId, email) {
       </label>
     </div>
 
-    <button class="btn-primary" id="checkoutBtn" style="width:100%" onclick="createCheckout(${customerId}, this)">
-      Create Checkout Link
+    <button class="btn-primary" id="activateBtn" style="width:100%;padding:14px;font-size:1rem"
+            onclick="activateSubscription(${customerId}, '${escapeHtml(email)}', this)">
+      ✅ Activate Subscription
     </button>
     <div id="checkoutResult" style="margin-top:14px"></div>`,
     [{ label: "Close", className: "btn-ghost" }],
@@ -412,19 +430,19 @@ async function openSubscribeModal(customerId, email) {
   );
 }
 
-async function createCheckout(customerId, btn) {
+async function activateSubscription(customerId, email, btn) {
   const plan     = document.querySelector('input[name="subPlan"]:checked')?.value;
   const currency = document.querySelector('input[name="subCurrency"]:checked')?.value;
   if (!plan || !currency) return;
 
   btn.disabled = true;
-  btn.innerHTML = `<span class="btn-spinner"></span> Creating…`;
+  btn.innerHTML = `<span class="btn-spinner"></span> Activating…`;
 
   try {
-    const res  = await fetch(`${API}/billing/checkout`, {
+    const res  = await fetch(`${API}/admin/customers/${customerId}/activate-subscription`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ customer_id: customerId, plan, currency }),
+      body: JSON.stringify({ plan, currency }),
     });
     const data = await res.json();
 
@@ -434,23 +452,40 @@ async function createCheckout(customerId, btn) {
       return;
     }
 
-    const url = data.checkout_url;
     document.getElementById("checkoutResult").innerHTML = `
-      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px">Send this link to the customer:</p>
-      <div style="display:flex;gap:8px;align-items:center">
-        <code style="flex:1;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:0.72rem;word-break:break-all;user-select:all">${escapeHtml(url)}</code>
-        <button class="btn-ghost btn-sm" style="flex-shrink:0"
-          onclick="navigator.clipboard.writeText('${url.replace(/'/g,"\\'")}').then(()=>this.textContent='✓ Copied')">
-          📋 Copy
-        </button>
+      <div class="alert-success">
+        ✅ Subscription activated for <strong>${escapeHtml(email)}</strong> · plan: <strong>${escapeHtml(data.plan)}</strong>.<br>
+        <span style="font-size:0.8rem;color:var(--text-muted)">Customer can now pay via the Stripe link in their dashboard.</span>
       </div>`;
+
+    setTimeout(async () => {
+      closeModal();
+      await loadCustomers();
+    }, 1500);
   } catch (e) {
     document.getElementById("checkoutResult").innerHTML =
       `<p style="color:var(--red);font-size:0.82rem">Network error</p>`;
   } finally {
     btn.disabled = false;
-    btn.innerHTML = "Create Checkout Link";
-    btn.textContent = "Create Checkout Link";
+    btn.innerHTML = "✅ Activate Subscription";
+  }
+}
+
+async function deactivateSubscription(subId, customerEmail) {
+  if (!confirm(`Deactivate subscription for ${customerEmail}? They'll lose access to their plan features.`)) return;
+  try {
+    const res = await fetch(`${API}/admin/subscriptions/${subId}/deactivate`, {
+      method: "POST",
+      headers: authHeaders(),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      alert(d.detail || "Failed to deactivate");
+      return;
+    }
+    await loadCustomers();
+  } catch {
+    alert("Network error");
   }
 }
 

@@ -514,7 +514,8 @@ async function loadBilling() {
     const sub = data.subscription;
 
     let planPill = '';
-    if (sub.status === 'active') planPill = `<span class="pill pill-green">Active</span>`;
+    if (sub.status === 'active' && sub.paid) planPill = `<span class="pill pill-green">Active · Paid</span>`;
+    else if (sub.status === 'active' && !sub.paid) planPill = `<span class="pill pill-yellow">Payment pending</span>`;
     else if (sub.status === 'trialing') planPill = `<span class="pill pill-teal">Trialing</span>`;
     else if (sub.status === 'past_due') planPill = `<span class="pill pill-orange">Past due</span>`;
     else planPill = `<span class="pill pill-muted">No plan</span>`;
@@ -538,6 +539,17 @@ async function loadBilling() {
         ${planPill}
         ${sub.current_period_end ? `<span style="font-size:0.78rem;color:var(--text-muted)">Renews ${periodEnd}</span>` : ''}
       </div>
+
+      ${(sub.status === 'active' && !sub.paid) ? `
+      <div class="payment-pending-banner">
+        <div class="payment-pending-text">
+          <strong>Payment pending.</strong>
+          Your access is active. Please complete payment to continue using ${escHtml(planName)} features.
+        </div>
+        <button class="btn-primary btn-complete-payment" onclick="openFreshCheckout(this)">
+          Complete payment →
+        </button>
+      </div>` : ''}
 
       ${limit ? `
       <div class="usage-bar-wrap">
@@ -849,5 +861,32 @@ async function deleteDocument(websiteId, uploadId) {
     await loadDocuments(websiteId);
   } catch (e) {
     alert('Network error deleting document.');
+  }
+}
+
+// ── Complete payment (refreshes Stripe Checkout URL on demand) ───────────────
+// Stripe URLs expire after 24h; fetch a fresh one every click so the customer
+// never lands on an expired Stripe page.
+async function openFreshCheckout(btn) {
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = 'Loading…';
+  try {
+    const res = await apiFetch('/customer/billing/refresh-checkout', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.detail || 'Could not refresh payment link. Please contact support.');
+      return;
+    }
+    if (data.checkout_url) {
+      window.open(data.checkout_url, '_blank', 'noopener');
+    } else {
+      alert('No checkout link available. Please contact support.');
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
   }
 }

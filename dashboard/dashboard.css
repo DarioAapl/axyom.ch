@@ -816,6 +816,39 @@ textarea {
   gap: 6px;
 }
 
+/* New pill color for payment-pending state (yellow/amber) */
+.pill-yellow {
+  background: rgba(252, 211, 77, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(252, 211, 77, 0.35);
+}
+
+/* ═══ Payment-pending banner ═══ */
+.payment-pending-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: rgba(252, 211, 77, 0.08);
+  border: 1px solid rgba(252, 211, 77, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin: 12px 0 20px;
+}
+.payment-pending-text {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.5;
+  flex: 1;
+  min-width: 240px;
+}
+.btn-complete-payment {
+  white-space: nowrap;
+  padding: 9px 16px;
+  font-size: 0.85rem;
+}
+
 /* ═══ Billing ═══ */
 
 .plan-display {
