@@ -293,6 +293,10 @@ function startProgressPolling(websiteId, jobId) {
 /* ============================================================
    CUSTOMERS
 ============================================================ */
+function navigateToCustomer(id) {
+  location.href = `customer.html?id=${id}`;
+}
+
 function _planPill(sub) {
   if (!sub || !sub.plan) {
     return '<span class="pill gray">⚪ NO PLAN</span>';
@@ -345,7 +349,8 @@ async function loadCustomers() {
     tbody.innerHTML += `
       <tr>
         <td>${c.id}</td>
-        <td>${escapeHtml(c.email)}</td>
+        <td class="clickable-email" onclick="navigateToCustomer(${c.id})">${escapeHtml(c.email)}</td>
+        <td>${c.website_count > 0 ? c.website_count : '<span style="color:var(--text-muted)">—</span>'}</td>
         <td><span class="pill ${c.is_active ? "green" : "gray"}">${c.is_active ? "Active" : "Disabled"}</span></td>
         <td>${_planPill(sub)}</td>
         <td>${fmtDate(c.created_at)}</td>

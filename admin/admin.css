@@ -875,6 +875,17 @@ input[type="color"] {
   vertical-align: middle;
 }
 
+.clickable-email {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text);
+  transition: color var(--transition);
+}
+.clickable-email:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 /* ════════════════════════════════════════════════
    ACTION ROWS
    ════════════════════════════════════════════════ */
