@@ -1,5 +1,6 @@
 const API = "https://api.axyom.ch";
-const ADMIN_KEY = "axyom_admin_token";
+const ADMIN_KEY = "admin_token";
+const ADMIN_LOGIN_URL = "admin.html";
 const CUSTOMER_ID = new URLSearchParams(location.search).get("id");
 
 let CURRENT = null;  // most recent customer detail snapshot
@@ -11,7 +12,8 @@ function authHeaders() {
 
 function logout() {
   localStorage.removeItem(ADMIN_KEY);
-  location.href = "login.html";
+  localStorage.removeItem("admin_email");
+  location.href = ADMIN_LOGIN_URL;
 }
 
 function escapeHtml(s) {
@@ -32,7 +34,7 @@ if (!CUSTOMER_ID) {
   document.getElementById("custHeader").innerHTML =
     '<div class="alert alert-error">No customer id in URL.</div>';
 } else if (!localStorage.getItem(ADMIN_KEY)) {
-  location.href = "login.html";
+  location.href = ADMIN_LOGIN_URL;
 } else {
   loadCustomer();
 }
