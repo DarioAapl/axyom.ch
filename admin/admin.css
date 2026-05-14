@@ -759,6 +759,123 @@ input[type="color"] {
 }
 
 /* ════════════════════════════════════════════════
+   CUSTOMER DETAIL PAGE
+   ════════════════════════════════════════════════ */
+
+.cust-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 18px;
+}
+.cust-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.cust-email {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.cust-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cust-header-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.tab-row {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.tab-btn {
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition), border-color var(--transition);
+}
+.tab-btn:hover { color: var(--text-dim); }
+.tab-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.tab-pane .card + .card { margin-top: 14px; }
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px 24px;
+  padding: 16px 18px;
+}
+.info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.info-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.info-value {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.info-value.mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.78rem;
+}
+
+.action-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+}
+
+.placeholder {
+  padding: 24px 18px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.loader-inline {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(0,178,160,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* ════════════════════════════════════════════════
    ACTION ROWS
    ════════════════════════════════════════════════ */
 
