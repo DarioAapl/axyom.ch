@@ -267,6 +267,7 @@ function openActivateModal() {
     <div class="currency-toggle" style="margin-bottom:24px">
       <label class="currency-btn"><input type="radio" name="subCurrency" value="chf" checked><span>CHF 🇨🇭</span></label>
       <label class="currency-btn"><input type="radio" name="subCurrency" value="eur"><span>EUR 🇪🇺</span></label>
+      <label class="currency-btn"><input type="radio" name="subCurrency" value="usd"><span>USD 🇺🇸</span></label>
     </div>
     <button class="btn-primary" style="width:100%;padding:14px" id="activateBtn" onclick="doActivate(this)">
       ✅ Activate Subscription

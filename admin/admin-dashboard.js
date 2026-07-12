@@ -423,6 +423,10 @@ async function openSubscribeModal(customerId, email) {
         <input type="radio" name="subCurrency" value="eur">
         <span>EUR 🇪🇺</span>
       </label>
+      <label class="currency-btn">
+        <input type="radio" name="subCurrency" value="usd">
+        <span>USD 🇺🇸</span>
+      </label>
     </div>
 
     <button class="btn-primary" id="activateBtn" style="width:100%;padding:14px;font-size:1rem"
