@@ -656,6 +656,51 @@ function copyEmbedPlaceholder(maskedKey) {
 /* ============================================================
    WEBSITES
 ============================================================ */
+
+/* Which lane the last crawl actually took, and why it was slow.
+   Previously this only existed in the container's stdout, so answering
+   "why did this site take 9 minutes to train?" meant reading docker logs. */
+const ROUTE_LABELS = {
+  shopify_fastpath:  { label: "Shopify fast path", cls: "green"  },
+  static_only:       { label: "Static fast lane",  cls: "green"  },
+  legacy_static:     { label: "Full crawl",        cls: "gray"   },
+  legacy_playwright: { label: "Playwright",        cls: "orange" },
+};
+
+const ESCALATION_LABELS = {
+  thin_content:   "escalated: under 50 chunks from the static crawl",
+  missing_prices: "escalated: commerce site with no priced products extracted",
+};
+
+function routingInfo(analysis) {
+  if (!analysis || !analysis.route_taken) return "";
+
+  const route = ROUTE_LABELS[analysis.route_taken]
+    || { label: analysis.route_taken, cls: "gray" };
+  const q = analysis.crawl_quality || {};
+
+  // Tooltip carries the detail; the row stays scannable.
+  const tip = [
+    `Route: ${analysis.route_taken}`,
+    analysis.site_type ? `Analyzer: ${analysis.site_type} / ${analysis.confidence || "?"}` : null,
+    `Sitemap: ${analysis.has_sitemap ? "yes" : "no"}`,
+    q.expects_products !== undefined ? `Sells products: ${q.expects_products ? "yes" : "no"}` : null,
+    q.pages_crawled !== undefined ? `Pages crawled: ${q.pages_crawled}` : null,
+    q.chunks_indexed !== undefined ? `Chunks indexed: ${q.chunks_indexed}` : null,
+    q.products_found !== undefined ? `Products: ${q.products_found} (${q.priced_products ?? 0} priced)` : null,
+    q.escalation_reason ? ESCALATION_LABELS[q.escalation_reason] || q.escalation_reason : null,
+    analysis.last_crawl_at ? `Crawled: ${formatExactTimestamp(analysis.last_crawl_at)}` : null,
+  ].filter(Boolean).join("\n");
+
+  const why = q.escalation_reason
+    ? ` <span style="color:var(--text-muted)">· ${escapeHtml(q.escalation_reason.replace("_", " "))}</span>`
+    : "";
+
+  return `<div style="margin-top:3px;font-size:0.75rem" title="${escapeHtml(tip)}">
+    <span class="pill ${route.cls}">${escapeHtml(route.label)}</span>${why}
+  </div>`;
+}
+
 async function loadWebsites() {
   const res      = await fetch(`${API}/admin/websites`, { headers: authHeaders() });
   const websites = await res.json();
@@ -714,6 +759,7 @@ async function loadWebsites() {
           ${analysis
             ? `<span style="font-size:0.8rem;color:var(--text-muted)">${analysis.estimated_pages} pages · ${analysis.estimated_chunks} chunks</span>`
             : `<span style="color:var(--text-muted)">—</span>`}
+          ${routingInfo(analysis)}
         </td>
         <td>
           <div class="action-row">
