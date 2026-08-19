@@ -80,3 +80,40 @@
 
 .empty-state{padding:36px 16px;text-align:center;color:var(--text-muted,#8b95a7);font-size:13.5px}
 tr.filtered-out{display:none}
+
+/* ── Spend view ──────────────────────────────────────────────────────── */
+.budget-wrap{background:var(--surface-2,#12151c);border:1px solid var(--border,#232936);
+             border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.budget-head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:9px}
+.budget-pct{font-weight:700;font-variant-numeric:tabular-nums}
+.budget-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.budget-fill{height:100%;border-radius:99px;background:var(--teal,#00B2A0);
+             width:0;transition:width .5s ease}
+.budget-fill.warn{background:#f5a623}
+.budget-fill.over{background:#e35d5d}
+
+.spend-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px}
+@media(max-width:900px){.spend-grid{grid-template-columns:1fr}}
+.spend-card{background:var(--surface-2,#12151c);border:1px solid var(--border,#232936);
+            border-radius:10px;padding:16px}
+.spend-card h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;
+               color:var(--text-muted,#8b95a7);margin:0 0 12px;font-weight:600}
+
+/* Bar chart drawn with divs — no charting library, so nothing to keep updated
+   and no third-party script on an authenticated page. */
+.chart{display:flex;align-items:flex-end;gap:3px;height:140px}
+.chart .bar{flex:1;min-width:3px;background:var(--teal,#00B2A0);border-radius:2px 2px 0 0;
+            opacity:.85;position:relative;transition:height .4s ease;min-height:2px}
+.chart .bar:hover{opacity:1}
+.chart .bar::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;
+                   transform:translateX(-50%);background:#000;color:#fff;font-size:11px;
+                   padding:3px 7px;border-radius:5px;white-space:nowrap;opacity:0;
+                   pointer-events:none;transition:.12s;margin-bottom:5px}
+.chart .bar:hover::after{opacity:1}
+.chart-empty{color:var(--text-muted,#8b95a7);font-size:13px;padding:44px 0;text-align:center}
+
+.brk{display:flex;justify-content:space-between;align-items:center;padding:7px 0;
+     border-bottom:1px solid var(--border,#232936);font-size:13px}
+.brk:last-child{border-bottom:0}
+.brk .nm{color:var(--text-muted,#8b95a7)}
+.brk .vl{font-weight:600;font-variant-numeric:tabular-nums}

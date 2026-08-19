@@ -12,6 +12,7 @@ const VIEW_TITLES = {
   direct:   "Direct customers",
   shopify:  "Shopify merchants",
   keys:     "API keys",
+  spend:    "Model spend",
 };
 
 let currentView = "overview";
@@ -31,6 +32,8 @@ function switchView(view) {
   // for reasons the user can no longer see.
   const s = document.getElementById("globalSearch");
   if (s) { s.value = ""; applySearch(""); }
+
+  if (view === "spend") loadSpend();
 
   try { localStorage.setItem("admin_view", view); } catch (e) {}
 }
@@ -107,6 +110,95 @@ function refreshDerived() {
     : `<tr><td colspan="4" class="empty-state">Everything is trained and answering.</td></tr>`;
 }
 
+
+
+/* ── Spend view ───────────────────────────────────────────────────────────
+   Charts are plain divs rather than a charting library: nothing extra to load
+   on an authenticated page, and no dependency to keep patched.
+   ──────────────────────────────────────────────────────────────────────── */
+let spendRange = 30;
+
+const usd = n => "$" + Number(n || 0).toFixed(2);
+const compact = n => {
+  n = Number(n || 0);
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + "k";
+  return String(n);
+};
+
+async function loadSpend() {
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  try {
+    const r = await fetch(`${API}/admin/usage?days=${spendRange}`, { headers: authHeaders() });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+
+    set("spendMTD", usd(d.month_to_date.cost_usd));
+    set("spendProjected", usd(d.projected_month_usd));
+    set("spendWindow", usd(d.total.cost_usd));
+    set("spendTokens", compact(d.total.tokens));
+
+    // Budget bar. Colour shifts before the ceiling, not at it — the point is to
+    // notice the trend while there is still time to act on it.
+    const pct = Math.min(d.budget_used_pct || 0, 100);
+    set("budgetLabel", usd(d.month_to_date.cost_usd) + " of " + usd(d.budget_usd));
+    set("budgetPct", (d.budget_used_pct || 0).toFixed(1) + "%");
+    const fill = document.getElementById("budgetFill");
+    if (fill) {
+      fill.style.width = pct + "%";
+      fill.className = "budget-fill" + (d.budget_used_pct >= 100 ? " over"
+                                      : d.budget_used_pct >= 75 ? " warn" : "");
+    }
+    set("budgetNote", d.projected_month_usd > d.budget_usd
+      ? `At the current rate this month lands near ${usd(d.projected_month_usd)} — over budget.`
+      : `At the current rate this month lands near ${usd(d.projected_month_usd)}.`);
+
+    // Daily chart
+    const chart = document.getElementById("spendChart");
+    if (chart) {
+      if (!d.daily.length) {
+        chart.className = "chart-empty";
+        chart.textContent = "No usage recorded yet in this window.";
+      } else {
+        chart.className = "chart";
+        const max = Math.max(...d.daily.map(x => x.cost_usd), 0.0001);
+        chart.innerHTML = d.daily.map(x =>
+          `<div class="bar" style="height:${Math.max((x.cost_usd / max) * 100, 2)}%"
+                data-tip="${escapeHtml(x.day)} · ${usd(x.cost_usd)} · ${compact(x.tokens)} tok"></div>`
+        ).join("");
+      }
+    }
+
+    const brk = rows => rows.length
+      ? rows.map(x => `<div class="brk"><span class="nm">${escapeHtml(x.label)}</span>
+           <span class="vl">${usd(x.cost_usd)}</span></div>`).join("")
+      : '<div class="brk"><span class="nm">Nothing recorded yet</span></div>';
+
+    document.getElementById("spendByKind").innerHTML =
+      brk(d.by_kind.map(k => ({ label: k.kind, cost_usd: k.cost_usd })));
+    document.getElementById("spendByModel").innerHTML =
+      brk(d.by_model.map(m => ({ label: m.model, cost_usd: m.cost_usd })));
+
+    // Cost per website — resolve ids to domains from the already-loaded table.
+    const domains = {};
+    document.querySelectorAll("#websitesTable tr[data-source]").forEach(tr => {
+      domains[tr.id.replace("row-", "")] = (tr.dataset.search || "").split(" ")[0];
+    });
+    const sites = document.getElementById("spendSites");
+    sites.innerHTML = d.top_websites.length
+      ? d.top_websites.map(w => `<tr>
+          <td>${escapeHtml(domains[w.website_id] || ("#" + w.website_id))}</td>
+          <td>${compact(w.tokens)}</td><td>${usd(w.cost_usd)}</td></tr>`).join("")
+      : `<tr><td colspan="3" class="empty-state">No attributed usage yet.</td></tr>`;
+
+    document.getElementById("spendNote").textContent = d.prices_note +
+      " Only calls made since spend tracking was added are included.";
+  } catch (e) {
+    set("budgetNote", "Could not load usage: " + e.message);
+  }
+}
+
 /* Create-key moved out of a permanent card into a modal: it is an occasional
    action that was taking up the top of every page load. The hidden inputs it
    writes to still exist, so createKey() itself is unchanged. */
@@ -146,6 +238,7 @@ async function refreshAll() {
     await loadWebsites();
     refreshDerived();
     applyWebsiteFilter(websiteFilter);
+    if (currentView === "spend") await loadSpend();
   } finally {
     if (b) { b.disabled = false; b.textContent = "Refresh"; }
   }
@@ -156,6 +249,14 @@ document.addEventListener("DOMContentLoaded", () => {
     b.onclick = () => switchView(b.dataset.view));
   document.querySelectorAll("[data-wfilter]").forEach(b =>
     b.onclick = () => applyWebsiteFilter(b.dataset.wfilter));
+
+  document.querySelectorAll("[data-spend-range]").forEach(b =>
+    b.onclick = () => {
+      spendRange = parseInt(b.dataset.spendRange, 10);
+      document.querySelectorAll("[data-spend-range]").forEach(x =>
+        x.classList.toggle("on", x === b));
+      loadSpend();
+    });
 
   const s = document.getElementById("globalSearch");
   if (s) s.addEventListener("input", e => applySearch(e.target.value));

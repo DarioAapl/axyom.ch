@@ -36,6 +36,10 @@
     <button class="nav-item" data-view="shopify">
       <span class="ico">◑</span> Shopify <span class="count" id="navShopify">–</span></button>
 
+    <div class="nav-sep">Operations</div>
+    <button class="nav-item" data-view="spend">
+      <span class="ico">◎</span> Spend</button>
+
     <div class="nav-sep">Access</div>
     <button class="nav-item" data-view="keys">
       <span class="ico">⚿</span> API keys <span class="count" id="navKeys">–</span></button>
@@ -136,6 +140,58 @@
           <tbody id="shopifyTable"></tbody>
         </table>
       </div>
+    </section>
+
+
+    <!-- ── Spend ── -->
+    <section class="view" id="view-spend" hidden>
+      <div class="view-head">
+        <h2>Model spend</h2>
+        <p class="sub">OpenAI + Anthropic usage. Recorded per call — providers are
+          pay-as-you-go, so this is spend against a budget you set, not a balance.</p>
+        <div class="spacer"></div>
+        <button class="chip on" data-spend-range="30">30 days</button>
+        <button class="chip" data-spend-range="7">7 days</button>
+        <button class="chip" data-spend-range="1">Today</button>
+      </div>
+
+      <div class="statstrip">
+        <div class="stat"><div class="n" id="spendMTD">–</div><div class="l">Month to date</div></div>
+        <div class="stat"><div class="n" id="spendProjected">–</div><div class="l">Projected month</div></div>
+        <div class="stat"><div class="n" id="spendWindow">–</div><div class="l">Selected window</div></div>
+        <div class="stat"><div class="n" id="spendTokens">–</div><div class="l">Tokens</div></div>
+      </div>
+
+      <div class="budget-wrap">
+        <div class="budget-head">
+          <span>Budget <b id="budgetLabel">–</b></span>
+          <span id="budgetPct" class="budget-pct">–</span>
+        </div>
+        <div class="budget-bar"><div class="budget-fill" id="budgetFill"></div></div>
+        <p class="sub" id="budgetNote" style="margin:8px 0 0"></p>
+      </div>
+
+      <div class="spend-grid">
+        <div class="spend-card">
+          <h3>Daily spend</h3>
+          <div id="spendChart" class="chart"></div>
+        </div>
+        <div class="spend-card">
+          <h3>By type</h3>
+          <div id="spendByKind"></div>
+          <h3 style="margin-top:18px">By model</h3>
+          <div id="spendByModel"></div>
+        </div>
+      </div>
+
+      <div class="view-head" style="margin-top:22px"><h2>Cost per website</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Website</th><th>Tokens</th><th>Cost</th></tr></thead>
+          <tbody id="spendSites"></tbody>
+        </table>
+      </div>
+      <p class="sub" id="spendNote" style="margin-top:14px"></p>
     </section>
 
     <!-- ── API keys ── -->
