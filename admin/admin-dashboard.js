@@ -342,12 +342,21 @@ async function loadCustomers() {
   const statEl = document.getElementById("statActiveSubs");
   if (statEl) statEl.textContent = activeSubs;
 
-  const tbody = document.getElementById("customersTable");
+  // Direct customers and Shopify merchants render into separate tables: they
+  // bill through different systems (Stripe vs Shopify) and the useful columns
+  // differ, so one combined list meant reading past rows you could not act on.
+  const tbody   = document.getElementById("customersTable");
+  const shopTbl = document.getElementById("shopifyTable");
   tbody.innerHTML = "";
+  if (shopTbl) shopTbl.innerHTML = "";
+
+  window._customerRows = data;   // consumed by the shell for counts and search
+
   data.forEach((c, i) => {
     const sub = subs[i];
+    if (c.source === "shopify" && shopTbl) { renderShopifyCustomerRow(shopTbl, c, sub); return; }
     tbody.innerHTML += `
-      <tr>
+      <tr data-search="${escapeHtml((c.email || "") + " " + c.id)}">
         <td>${c.id}</td>
         <td class="clickable-email" onclick="navigateToCustomer(${c.id})">${escapeHtml(c.email)}</td>
         <td>${c.website_count > 0 ? c.website_count : '<span style="color:var(--text-muted)">—</span>'}</td>
@@ -512,6 +521,39 @@ async function deleteCustomer(id) {
 /* ============================================================
    API KEYS
 ============================================================ */
+
+
+/* Shopify merchants get their own columns: the shop domain, whether the app is
+   still installed, the Shopify subscription status, and when their catalog was
+   last synced. None of that applies to a direct Stripe customer, and the Stripe
+   plan pill is meaningless here. */
+function renderShopifyCustomerRow(tbody, c, sub) {
+  const sh = c.shopify || {};
+  const installed = sh.shop_status === "active";
+  const subStatus = sh.subscription_status || null;
+
+  // ACTIVE is the only status that entitles a merchant to service; FROZEN means
+  // a payment problem and is recoverable, so it reads amber rather than red.
+  let planPill = '<span class="pill gray">No plan</span>';
+  if (subStatus === "ACTIVE")      planPill = `<span class="pill green">${escapeHtml(sh.plan || "active")}</span>`;
+  else if (subStatus === "FROZEN") planPill = '<span class="pill orange">Frozen · payment</span>';
+  else if (subStatus)              planPill = `<span class="pill gray">${escapeHtml(subStatus)}</span>`;
+
+  tbody.innerHTML += `
+    <tr data-search="${escapeHtml((c.email || "") + " " + (sh.shop_domain || "") + " " + c.id)}">
+      <td>${c.id}</td>
+      <td class="mono" style="font-size:12.5px">${escapeHtml(sh.shop_domain || "—")}</td>
+      <td class="clickable-email" onclick="navigateToCustomer(${c.id})">${escapeHtml(c.email)}</td>
+      <td><span class="pill ${installed ? "green" : "red"}">${installed ? "Installed" : "Uninstalled"}</span></td>
+      <td>${planPill}</td>
+      <td>${sh.last_synced_at ? escapeHtml(formatRelativeTime(sh.last_synced_at) || "—") : '<span style="color:var(--text-muted)">Never</span>'}</td>
+      <td>
+        <button class="btn-danger btn-sm" onclick="deleteCustomer(${c.id})">Delete</button>
+        ${progressBar("customer-" + c.id)}
+      </td>
+    </tr>`;
+}
+
 async function loadKeys() {
   const res  = await fetch(`${API}/admin/keys`, { headers: authHeaders() });
   const data = await res.json();
@@ -745,10 +787,13 @@ async function loadWebsites() {
     }
 
     table.innerHTML += `
-      <tr id="row-${w.id}">
+      <tr id="row-${w.id}" data-source="${w.source || 'direct'}"
+          data-trained="${w.is_trained ? '1' : '0'}"
+          data-search="${escapeHtml(w.domain + ' ' + w.id)}">
         <td>${w.id}</td>
         <td>
           ${escapeHtml(w.domain)}
+          ${w.source === 'shopify' ? '<span class="srcbadge shopify">Shopify</span>' : ''}
           ${w.last_trained_at
             ? `<div class="last-trained" title="${escapeHtml(formatExactTimestamp(w.last_trained_at))}">Last trained: ${escapeHtml(formatRelativeTime(w.last_trained_at))}</div>`
             : `<div class="never-trained">Never trained</div>`}
@@ -777,7 +822,7 @@ async function loadWebsites() {
         </td>
       </tr>
       <tr id="detail-${w.id}" class="detail-row" style="display:none">
-        <td colspan="5" class="detail-cell" id="detail-cell-${w.id}"></td>
+        <td colspan="6" class="detail-cell" id="detail-cell-${w.id}"></td>
       </tr>`;
   });
 

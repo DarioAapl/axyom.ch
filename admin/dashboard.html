@@ -9,166 +9,158 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=20260514b">
+  <link rel="stylesheet" href="admin.css?v=20260819a">
+  <link rel="stylesheet" href="admin-layout.css?v=20260819a">
   <link rel="icon" type="image/png" href="../Assets/axyomfavicon.png">
   <link rel="apple-touch-icon" href="../Assets/axyomfavicon.png">
 </head>
 
 <body class="dashboard-page">
 
-<!-- ═══ Top Nav ═══ -->
-<header class="nav">
-  <div class="brand">
-    <div class="brand-mark">
-      <img src="../Assets/axyomwhitelogo.png" alt="AXYOM" style="height:22px;display:block">
+<div class="shell">
+
+  <!-- ═══ Sidebar ═══ -->
+  <nav class="side">
+    <div class="side-brand">
+      <img src="../Assets/axyomwhitelogo.png" alt="AXYOM">
     </div>
+
+    <button class="nav-item on" data-view="overview">
+      <span class="ico">◈</span> Overview</button>
+    <button class="nav-item" data-view="websites">
+      <span class="ico">◉</span> Websites <span class="count" id="navWebsites">–</span></button>
+
+    <div class="nav-sep">Customers</div>
+    <button class="nav-item" data-view="direct">
+      <span class="ico">◐</span> Direct <span class="count" id="navDirect">–</span></button>
+    <button class="nav-item" data-view="shopify">
+      <span class="ico">◑</span> Shopify <span class="count" id="navShopify">–</span></button>
+
+    <div class="nav-sep">Access</div>
+    <button class="nav-item" data-view="keys">
+      <span class="ico">⚿</span> API keys <span class="count" id="navKeys">–</span></button>
+
+    <div class="side-foot">
+      <div id="adminEmail"></div>
+      <div id="deployInfo" style="opacity:.7">Deploy: —</div>
+      <button class="chip" style="margin-top:8px" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <!-- ═══ Main ═══ -->
+  <div class="main">
+    <header class="topbar">
+      <h1 id="viewTitle">Overview</h1>
+      <div class="spacer"></div>
+      <div class="searchbox">
+        <input id="globalSearch" placeholder="Filter current view…" autocomplete="off">
+      </div>
+      <button class="chip" onclick="openCreateKey()">+ API key</button>
+      <button class="chip" onclick="refreshAll()" id="refreshBtn">Refresh</button>
+    </header>
+
+    <!-- ── Overview ── -->
+    <section class="view" id="view-overview">
+      <div class="statstrip">
+        <div class="stat"><div class="n" id="statCustomers">–</div><div class="l">Customers</div></div>
+        <div class="stat"><div class="n" id="statKeys">–</div><div class="l">API keys</div></div>
+        <div class="stat"><div class="n" id="statActiveSubs">–</div><div class="l">Active subs</div></div>
+        <div class="stat"><div class="n" id="statUptime">–</div><div class="l">Uptime</div></div>
+      </div>
+      <div class="statstrip">
+        <div class="stat"><div class="n" id="statDirect">–</div><div class="l">Direct customers</div></div>
+        <div class="stat"><div class="n" id="statShopify">–</div><div class="l">Shopify merchants</div></div>
+        <div class="stat"><div class="n" id="statTrained">–</div><div class="l">Trained sites</div></div>
+        <div class="stat"><div class="n" id="statUntrained">–</div><div class="l">Untrained</div></div>
+      </div>
+
+      <div class="view-head" style="margin-top:22px">
+        <h2>Needs attention</h2>
+        <p class="sub">Sites that are registered but not yet answering customers.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Domain</th><th>Source</th><th>Why</th></tr></thead>
+          <tbody id="attentionTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Websites ── -->
+    <section class="view" id="view-websites" hidden>
+      <div class="view-head">
+        <h2>Websites</h2>
+        <div class="spacer"></div>
+        <button class="chip on" data-wfilter="all">All</button>
+        <button class="chip" data-wfilter="direct">Direct</button>
+        <button class="chip" data-wfilter="shopify">Shopify</button>
+        <button class="chip" data-wfilter="untrained">Untrained</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>ID</th><th>Domain</th><th>Analysis</th><th>Usage</th><th>Info</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="websitesTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Direct customers ── -->
+    <section class="view" id="view-direct" hidden>
+      <div class="view-head">
+        <h2>Direct customers</h2>
+        <p class="sub">Signed up on axyom.ch · billed through Stripe</p>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>ID</th><th>Email</th><th>Sites</th><th>Status</th><th>Plan</th><th>Created</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="customersTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Shopify merchants ── -->
+    <section class="view" id="view-shopify" hidden>
+      <div class="view-head">
+        <h2>Shopify merchants</h2>
+        <p class="sub">Installed via the Shopify App Store · billed through Shopify</p>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>ID</th><th>Shop</th><th>Email</th><th>Install</th><th>Plan</th><th>Last sync</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="shopifyTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── API keys ── -->
+    <section class="view" id="view-keys" hidden>
+      <div class="view-head">
+        <h2>API keys</h2>
+        <p class="sub">Each key is locked to its allowed domains.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>ID</th><th>Key</th><th>Website</th><th>Status</th><th>Created</th><th>Action</th>
+          </tr></thead>
+          <tbody id="keysTable"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
-  <div class="nav-right">
-    <span class="nav-pill" id="adminEmail"></span>
-    <span class="nav-pill muted" id="deployInfo">Deploy: —</span>
-    <button class="btn-nav" onclick="logout()" title="Logout">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-    </button>
-  </div>
-</header>
+</div>
 
-<main class="dashboard">
-
-  <!-- ═══ Stats Row ═══ -->
-  <section class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div class="stat-content">
-        <span class="stat-label">Customers</span>
-        <strong class="stat-value" id="statCustomers">—</strong>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-      </div>
-      <div class="stat-content">
-        <span class="stat-label">API Keys</span>
-        <strong class="stat-value" id="statKeys">—</strong>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div class="stat-content">
-        <span class="stat-label">Uptime</span>
-        <strong class="stat-value" id="statUptime">—</strong>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      </div>
-      <div class="stat-content">
-        <span class="stat-label">Active Subscriptions</span>
-        <strong class="stat-value" id="statActiveSubs">—</strong>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ Create Key ═══ -->
-  <section class="card">
-    <div class="card-header">
-      <h2>Create API Key</h2>
-      <span class="badge">New</span>
-    </div>
-    <div class="form-row">
-      <div class="input-group">
-        <label for="newEmail">Email</label>
-        <input id="newEmail" type="email" placeholder="customer@company.com" />
-      </div>
-      <div class="input-group">
-        <label for="newDomain">Domain</label>
-        <input id="newDomain" placeholder="example.com" />
-      </div>
-      <button class="btn-primary" onclick="createKey()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Create Key
-      </button>
-    </div>
-    <div class="feedback" id="createKeyMsg"></div>
-  </section>
-
-  <!-- ═══ Customers ═══ -->
-  <section class="card">
-    <div class="card-header">
-      <h2>Customers</h2>
-    </div>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Email</th>
-            <th>Websites</th>
-            <th>Status</th>
-            <th>Plan</th>
-            <th>Created</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="customersTable"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ═══ API Keys ═══ -->
-  <section class="card">
-    <div class="card-header">
-      <h2>API Keys</h2>
-    </div>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Key</th>
-            <th>Website</th>
-            <th>Status</th>
-            <th>Created</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="keysTable"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ═══ Websites ═══ -->
-  <section class="card">
-    <div class="card-header">
-      <h2>Websites</h2>
-    </div>
-    <div class="table-wrap">
-      <table class="table websites">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Domain</th>
-            <th>Analysis</th>
-            <th>Usage</th>
-            <th>Info</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="websitesTable"></tbody>
-      </table>
-    </div>
-  </section>
-
-</main>
+<!-- Create-key inputs live here so the existing createKey() keeps working;
+     the form itself is now a modal rather than a permanent card. -->
+<div style="display:none">
+  <input id="newEmail"><input id="newDomain"><div id="createKeyMsg"></div>
+</div>
 
 <!-- ═══ Modal Overlay ═══ -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
@@ -184,6 +176,7 @@
   </div>
 </div>
 
-<script src="admin-dashboard.js?v=20260514b"></script>
+<script src="admin-dashboard.js?v=20260819a"></script>
+<script src="admin-shell.js?v=20260819a"></script>
 </body>
 </html>
