@@ -319,6 +319,32 @@ function _planPill(sub) {
   return `<span class="pill orange">⚠ ${label} · ${escapeHtml(sub.status || "unknown")}</span>`;
 }
 
+/* ============================================================
+   ICONS
+   Inline SVG on currentColor. Replaces the emoji that used to label row
+   actions: emoji pick up the platform's own colour rather than the button's,
+   render differently on every OS, and lose all detail at 12px.
+============================================================ */
+const _SVG = (p) => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const ICON = {
+  bolt:      _SVG('<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>'),
+  refresh:   _SVG('<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>'),
+  search:    _SVG('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>'),
+  warn:      _SVG('<path d="M12 3 2 20h20L12 3z"/><path d="M12 9.5v4.5"/><path d="M12 17.4v.2"/>'),
+  scan:      _SVG('<path d="M3 8V5a2 2 0 0 1 2-2h3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><circle cx="12" cy="12" r="3"/>'),
+  sliders:   _SVG('<path d="M4 7h16"/><path d="M4 17h16"/><circle cx="9" cy="7" r="2.4"/><circle cx="15" cy="17" r="2.4"/>'),
+  chat:      _SVG('<path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.4-4.4A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/>'),
+  chart:     _SVG('<path d="M3 21h18"/><path d="M6 21V11"/><path d="M12 21V4"/><path d="M18 21v-6"/>'),
+  doc:       _SVG('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>'),
+  trash:     _SVG('<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 12.2A2 2 0 0 0 9 21h6a2 2 0 0 0 2-1.8L18 7"/><path d="M9.5 7V4.5h5V7"/>'),
+  card:      _SVG('<rect x="2.5" y="5" width="19" height="14" rx="2.4"/><path d="M2.5 10h19"/>'),
+  xcircle:   _SVG('<circle cx="12" cy="12" r="8.6"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>'),
+  clipboard: _SVG('<rect x="9" y="3" width="11.5" height="14" rx="2.2"/><path d="M5.5 7.5V19a2 2 0 0 0 2 2h8"/>'),
+  plus:      _SVG('<path d="M12 5.5v13"/><path d="M5.5 12h13"/>'),
+  check:     _SVG('<path d="m4.5 12.5 5 5 10-11"/>'),
+  x:         _SVG('<path d="M6 6l12 12"/><path d="M18 6 6 18"/>'),
+};
+
 async function loadCustomers() {
   const res  = await fetch(`${API}/admin/customers`, { headers: authHeaders() });
   const data = await res.json();
@@ -364,11 +390,14 @@ async function loadCustomers() {
         <td>${_planPill(sub)}</td>
         <td>${fmtDate(c.created_at)}</td>
         <td>
-          <button class="btn-ghost btn-sm" onclick="openSubscribeModal(${c.id}, '${escapeHtml(c.email)}')">💳 Subscribe</button>
-          ${(sub && sub.subscription_id && sub.active && ["active","trialing"].includes(sub.status))
-            ? `<button class="btn-ghost btn-sm" style="color:var(--red)" onclick="deactivateSubscription(${sub.subscription_id}, '${escapeHtml(c.email)}')">✕ Deactivate</button>`
-            : ``}
-          <button class="btn-danger btn-sm" onclick="deleteCustomer(${c.id})">Delete</button>
+          <div class="action-cluster">
+            <button class="abtn" onclick="openSubscribeModal(${c.id}, '${escapeHtml(c.email)}')">${ICON.card}Subscribe</button>
+            ${(sub && sub.subscription_id && sub.active && ["active","trialing"].includes(sub.status))
+              ? `<button class="abtn abtn--caution" onclick="deactivateSubscription(${sub.subscription_id}, '${escapeHtml(c.email)}')">${ICON.xcircle}Deactivate</button>`
+              : ``}
+            <div class="action-sep"></div>
+            <button class="abtn abtn--danger abtn--icon" title="Delete customer" aria-label="Delete customer" onclick="deleteCustomer(${c.id})">${ICON.trash}</button>
+          </div>
           ${progressBar("customer-" + c.id)}
         </td>
       </tr>`;
@@ -548,7 +577,9 @@ function renderShopifyCustomerRow(tbody, c, sub) {
       <td>${planPill}</td>
       <td>${sh.last_synced_at ? escapeHtml(formatRelativeTime(sh.last_synced_at) || "—") : '<span style="color:var(--text-muted)">Never</span>'}</td>
       <td>
-        <button class="btn-danger btn-sm" onclick="deleteCustomer(${c.id})">Delete</button>
+        <div class="action-cluster">
+          <button class="abtn abtn--danger abtn--icon" title="Delete merchant" aria-label="Delete merchant" onclick="deleteCustomer(${c.id})">${ICON.trash}</button>
+        </div>
         ${progressBar("customer-" + c.id)}
       </td>
     </tr>`;
@@ -586,8 +617,8 @@ async function loadKeys() {
   data.forEach(k => {
     const rawKey = sessionKeyMap[k.domain];
     const embedBtn = rawKey
-      ? `<button class="btn-ghost btn-sm" onclick="copyEmbed('${rawKey}')">📋 Embed</button>`
-      : `<button class="btn-ghost btn-sm" onclick="copyEmbedPlaceholder('${escapeHtml(k.key)}')">📋 Embed</button>`;
+      ? `<button class="abtn" onclick="copyEmbed('${rawKey}')">${ICON.clipboard}Embed</button>`
+      : `<button class="abtn" onclick="copyEmbedPlaceholder('${escapeHtml(k.key)}')">${ICON.clipboard}Embed</button>`;
 
     tbody.innerHTML += `
       <tr>
@@ -603,12 +634,12 @@ async function loadKeys() {
           <div class="key-domains-bar" id="domains-bar-${k.id}">
             <span class="key-domains-label">Domains:</span>
             <span id="domain-pills-${k.id}">${_renderDomainPills(k.id)}</span>
-            <button class="btn-add-domain" id="btn-add-dom-${k.id}" onclick="showAddDomainInput(${k.id})">+ Add domain</button>
+            <button class="abtn abtn--dashed" id="btn-add-dom-${k.id}" onclick="showAddDomainInput(${k.id})">${ICON.plus}Add domain</button>
             <span class="add-domain-wrap" id="add-domain-wrap-${k.id}" style="display:none">
               <input type="text" id="add-domain-val-${k.id}" placeholder="example.com"
                 onkeydown="if(event.key==='Enter')addDomain(${k.id});if(event.key==='Escape')hideAddDomainInput(${k.id})" />
-              <button class="btn-add-ok" onclick="addDomain(${k.id})">Add</button>
-              <button class="btn-add-cancel" onclick="hideAddDomainInput(${k.id})">✕</button>
+              <button class="abtn abtn--primary" onclick="addDomain(${k.id})">${ICON.check}Add</button>
+              <button class="abtn abtn--icon" title="Cancel" aria-label="Cancel" onclick="hideAddDomainInput(${k.id})">${ICON.x}</button>
             </span>
           </div>
         </td>
@@ -764,13 +795,14 @@ async function loadWebsites() {
     if (w.is_trained) {
       mainBtn = `
         <span class="pill green">Trained</span>
-        <button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">🔄 Retrain</button>`;
+        <button class="abtn" onclick="trainWebsite(${w.id}, true)">${ICON.refresh}Retrain</button>`;
     } else if (!analysis) {
-      mainBtn = `<button class="btn-ghost btn-sm" onclick="analyzeWebsite(${w.id})">🔍 Analyze</button>`;
+      mainBtn = `<button class="abtn" onclick="analyzeWebsite(${w.id})">${ICON.search}Analyze</button>`;
     } else if (analysis.verdict === "ok") {
-      mainBtn = `<button class="btn-primary btn-sm" onclick="trainWebsite(${w.id})">⚡ Train</button>`;
+      mainBtn = `<button class="abtn abtn--primary" onclick="trainWebsite(${w.id})">${ICON.bolt}Train</button>`;
     } else {
-      mainBtn = `<button class="btn-ghost btn-sm" onclick="trainWebsite(${w.id}, true)">⚠️ Force Train</button>`;
+      // Deliberately amber, not teal: the analyzer said this site looks unfit.
+      mainBtn = `<button class="abtn abtn--warn" onclick="trainWebsite(${w.id}, true)">${ICON.warn}Force train</button>`;
     }
 
     // Usage column: conversations used vs limit from customerSubMap
@@ -811,13 +843,16 @@ async function loadWebsites() {
             ${mainBtn}
             ${progressBar(w.id)}
           </div>
-          <div class="action-secondary">
-            <button class="btn-ghost btn-sm" onclick="inspectWebsite(${w.id})">🔬 Inspect</button>
-            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'widget')">🎨 Widget</button>
-            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'chats')">💬 Chats</button>
-            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'stats')">📊 Stats</button>
-            <button class="btn-ghost btn-sm" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'documents')">📄 Documents</button>
-            <button class="btn-danger btn-sm" onclick="deleteWebsite(${w.id})">🗑️ Delete</button>
+          <div class="action-secondary action-cluster">
+            <button class="abtn" onclick="inspectWebsite(${w.id})">${ICON.scan}Inspect</button>
+            <div class="abtn-seg" id="segs-${w.id}">
+              <button class="abtn" data-seg="widget"    title="Widget appearance"  onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'widget')">${ICON.sliders}<span>Widget</span></button>
+              <button class="abtn" data-seg="chats"     title="Conversations"      onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'chats')">${ICON.chat}<span>Chats</span></button>
+              <button class="abtn" data-seg="stats"     title="Usage statistics"   onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'stats')">${ICON.chart}<span>Stats</span></button>
+              <button class="abtn" data-seg="documents" title="Uploaded documents" onclick="toggleDetail(${w.id}, '${escapeHtml(w.domain)}', 'documents')">${ICON.doc}<span>Docs</span></button>
+            </div>
+            <div class="action-sep"></div>
+            <button class="abtn abtn--danger abtn--icon" title="Delete website" aria-label="Delete website" onclick="deleteWebsite(${w.id})">${ICON.trash}</button>
           </div>
         </td>
       </tr>
@@ -836,9 +871,19 @@ async function loadWebsites() {
 /* ============================================================
    DETAIL ROW TOGGLE  (widget / chats / stats)
 ============================================================ */
+/* Keep the segmented control in step with the panel underneath it. Without
+   this the buttons look identical whether a panel is open or not. */
+function _syncSeg(websiteId, type) {
+  const seg = document.getElementById(`segs-${websiteId}`);
+  if (!seg) return;
+  seg.querySelectorAll("[data-seg]").forEach(b =>
+    b.classList.toggle("is-active", !!type && b.dataset.seg === type));
+}
+
 function closeDetail(websiteId) {
   const row = document.getElementById(`detail-${websiteId}`);
   if (row) { row.style.display = "none"; row.dataset.activeType = ""; }
+  _syncSeg(websiteId, null);
 }
 
 function toggleDetail(websiteId, domain, type) {
@@ -850,11 +895,13 @@ function toggleDetail(websiteId, domain, type) {
   if (row.dataset.activeType === type && row.style.display !== "none") {
     row.style.display = "none";
     row.dataset.activeType = "";
+    _syncSeg(websiteId, null);
     return;
   }
 
   row.style.display = "";
   row.dataset.activeType = type;
+  _syncSeg(websiteId, type);
   cell.innerHTML = `<span style="color:var(--text-muted);font-size:0.85rem">Loading…</span>`;
 
   if (type === "widget") loadWidgetConfig(websiteId, domain, cell);
@@ -1366,12 +1413,12 @@ async function createKey() {
     <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">API Key for <strong>${escapeHtml(domain)}</strong>:</p>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
       <code id="newRawKey" style="flex:1;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;word-break:break-all;user-select:all">${escapeHtml(rawKey)}</code>
-      <button class="btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('newRawKey').textContent).then(()=>this.textContent='✓ Copied')">📋 Copy</button>
+      <button class="abtn" onclick="navigator.clipboard.writeText(document.getElementById('newRawKey').textContent).then(()=>this.innerHTML=ICON.check+'Copied')">${ICON.clipboard}Copy</button>
     </div>
     <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px">Embed script:</p>
     <div style="display:flex;gap:8px;align-items:flex-start">
       <pre id="newEmbedScript" style="flex:1;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:0.75rem;white-space:pre-wrap;word-break:break-all;margin:0">${escapeHtml(embedScript)}</pre>
-      <button class="btn-ghost btn-sm" style="flex-shrink:0" onclick="navigator.clipboard.writeText(\`${embedScript.replace(/`/g,'\\`')}\`).then(()=>this.textContent='✓ Copied')">📋 Copy</button>
+      <button class="abtn" style="flex-shrink:0" onclick="navigator.clipboard.writeText(\`${embedScript.replace(/`/g,'\\`')}\`).then(()=>this.innerHTML=ICON.check+'Copied')">${ICON.clipboard}Copy</button>
     </div>`,
     [{ label: "Done", className: "btn-primary" }]
   );
@@ -1495,7 +1542,7 @@ function renderDocumentsPanel(websiteId, domain, uploads) {
               ${fmtFileSize(u.file_size_bytes)}${pagesStr} · ${u.chunk_count} chunk${u.chunk_count !== 1 ? "s" : ""} · uploaded ${fmtDate(u.uploaded_at)}
             </div>
           </div>
-          <button class="btn-danger btn-sm" onclick="deleteUploadDoc(${websiteId}, '${escapeHtml(domain)}', ${u.id}, '${filenameEsc}')">🗑️ Delete</button>
+          <button class="abtn abtn--danger abtn--icon" title="Delete document" aria-label="Delete document" onclick="deleteUploadDoc(${websiteId}, '${escapeHtml(domain)}', ${u.id}, '${filenameEsc}')">${ICON.trash}</button>
         </li>`;
     });
     html += `</ul>`;
