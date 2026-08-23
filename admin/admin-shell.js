@@ -77,7 +77,10 @@ function applyWebsiteFilter(kind) {
 function refreshDerived() {
   const customers = window._customerRows || [];
   const direct  = customers.filter(c => c.source !== "shopify").length;
-  const shopify = customers.filter(c => c.source === "shopify").length;
+  // Counted from the shops endpoint, not from Customer rows: a shop whose first
+  // sync never ran has no Customer, and counting customers would report zero
+  // installs while merchants were sitting there stuck.
+  const shopify = (window._shopifyShops || []).length;
 
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   set("navDirect", direct);   set("statDirect", direct);
@@ -234,6 +237,7 @@ async function refreshAll() {
     // Order matters: loadWebsites reads customerSubMap, which loadCustomers
     // fills, and the widget panel reads domainKeyMap, which loadKeys fills.
     await loadCustomers();
+    await loadShopifyShops();
     await loadKeys();
     await loadWebsites();
     refreshDerived();

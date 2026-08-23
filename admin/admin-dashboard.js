@@ -191,6 +191,7 @@ function logout() {
   if (emailEl) emailEl.textContent = localStorage.getItem("admin_email");
 
   await loadCustomers();
+  await loadShopifyShops();
   await loadKeys();
   await loadWebsites();
 })();
@@ -380,7 +381,9 @@ async function loadCustomers() {
 
   data.forEach((c, i) => {
     const sub = subs[i];
-    if (c.source === "shopify" && shopTbl) { renderShopifyCustomerRow(shopTbl, c, sub); return; }
+    // Shopify merchants render from loadShopifyShops() instead: deriving them
+    // from Customer rows hid every shop whose first catalog sync never ran.
+    if (c.source === "shopify") return;
     tbody.innerHTML += `
       <tr data-search="${escapeHtml((c.email || "") + " " + c.id)}">
         <td>${c.id}</td>
@@ -543,6 +546,7 @@ async function deleteCustomer(id) {
   finishProgress("customer-" + id);
   if (!res.ok) { await showAlert("Delete failed"); return; }
   await loadCustomers();
+  await loadShopifyShops();
   await loadWebsites();
   await loadKeys();
 }
@@ -552,37 +556,109 @@ async function deleteCustomer(id) {
 ============================================================ */
 
 
-/* Shopify merchants get their own columns: the shop domain, whether the app is
-   still installed, the Shopify subscription status, and when their catalog was
-   last synced. None of that applies to a direct Stripe customer, and the Stripe
-   plan pill is meaningless here. */
-function renderShopifyCustomerRow(tbody, c, sub) {
-  const sh = c.shopify || {};
-  const installed = sh.shop_status === "active";
-  const subStatus = sh.subscription_status || null;
+/* ── Shopify merchants ──────────────────────────────────────────────────────
+   Sourced from /admin/shopify/shops rather than /admin/customers. install()
+   writes only a ShopifyShop row; the Customer/Website pair — and the bridge
+   between them — is created by the first catalog sync. Deriving this view from
+   Customer therefore made a failed first sync indistinguishable from no
+   install at all: no row anywhere, and `docker logs` as the only diagnosis.
+   Here an unbridged shop is a visible state, not an absence. */
 
-  // ACTIVE is the only status that entitles a merchant to service; FROZEN means
-  // a payment problem and is recoverable, so it reads amber rather than red.
-  let planPill = '<span class="pill gray">No plan</span>';
-  if (subStatus === "ACTIVE")      planPill = `<span class="pill green">${escapeHtml(sh.plan || "active")}</span>`;
-  else if (subStatus === "FROZEN") planPill = '<span class="pill orange">Frozen · payment</span>';
-  else if (subStatus)              planPill = `<span class="pill gray">${escapeHtml(subStatus)}</span>`;
+const _SHOP_STATE = {
+  synced:               { pill: "green",  label: "Synced" },
+  bridged_never_synced: { pill: "orange", label: "Never synced" },
+  installed_not_synced: { pill: "orange", label: "Sync pending" },
+  uninstalled:          { pill: "red",    label: "Uninstalled" },
+};
 
-  tbody.innerHTML += `
-    <tr data-search="${escapeHtml((c.email || "") + " " + (sh.shop_domain || "") + " " + c.id)}">
-      <td>${c.id}</td>
-      <td class="mono" style="font-size:12.5px">${escapeHtml(sh.shop_domain || "—")}</td>
-      <td class="clickable-email" onclick="navigateToCustomer(${c.id})">${escapeHtml(c.email)}</td>
-      <td><span class="pill ${installed ? "green" : "red"}">${installed ? "Installed" : "Uninstalled"}</span></td>
-      <td>${planPill}</td>
-      <td>${sh.last_synced_at ? escapeHtml(formatRelativeTime(sh.last_synced_at) || "—") : '<span style="color:var(--text-muted)">Never</span>'}</td>
-      <td>
-        <div class="action-cluster">
-          <button class="abtn abtn--danger abtn--icon" title="Delete merchant" aria-label="Delete merchant" onclick="deleteCustomer(${c.id})">${ICON.trash}</button>
-        </div>
-        ${progressBar("customer-" + c.id)}
-      </td>
-    </tr>`;
+async function loadShopifyShops() {
+  const tbody = document.getElementById("shopifyTable");
+  if (!tbody) return;
+
+  const res = await fetch(`${API}/admin/shopify/shops`, { headers: authHeaders() });
+  if (res.status === 401) { logout(); return; }
+  const shops = res.ok ? await res.json() : [];
+  window._shopifyShops = shops;
+
+  tbody.innerHTML = "";
+  if (!shops.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="placeholder">
+      No Shopify installs yet. A merchant appears here the moment they install,
+      before any catalog sync has run.</td></tr>`;
+    return;
+  }
+
+  shops.forEach(sh => {
+    const st = _SHOP_STATE[sh.sync_state] || { pill: "gray", label: sh.sync_state };
+
+    // ACTIVE is the only status that entitles a merchant to service. FROZEN is a
+    // recoverable payment problem, so it reads amber rather than red.
+    let planPill = '<span class="pill gray">No plan</span>';
+    if (sh.subscription_status === "ACTIVE")      planPill = `<span class="pill green">${escapeHtml(sh.plan || "active")}</span>`;
+    else if (sh.subscription_status === "FROZEN") planPill = '<span class="pill orange">Frozen · payment</span>';
+    else if (sh.subscription_status)              planPill = `<span class="pill gray">${escapeHtml(sh.subscription_status)}</span>`;
+    if (sh.subscription_test) planPill += ' <span class="pill gray">test</span>';
+
+    // Why a shop is stuck matters more than that it is stuck.
+    let note = "";
+    if (sh.sync_state !== "synced" && sh.sync_state !== "uninstalled") {
+      const jobMsg = sh.last_job && sh.last_job.status === "error" && sh.last_job.message;
+      note = `<div class="never-trained">${escapeHtml(
+        jobMsg ? `Last sync failed: ${jobMsg}`
+               : "Installed, but the catalog has never synced — the assistant cannot answer yet."
+      )}</div>`;
+    }
+
+    const canDelete = sh.customer_id !== null && sh.customer_id !== undefined;
+
+    tbody.innerHTML += `
+      <tr data-search="${escapeHtml((sh.shop_domain || "") + " " + (sh.customer_email || "") + " " + sh.id)}">
+        <td>${sh.id}</td>
+        <td class="mono" style="font-size:12.5px">${escapeHtml(sh.shop_domain || "—")}${note}</td>
+        <td>${sh.customer_email
+              ? `<span class="clickable-email" onclick="navigateToCustomer(${sh.customer_id})">${escapeHtml(sh.customer_email)}</span>`
+              : '<span style="color:var(--text-muted)">— not yet known</span>'}</td>
+        <td><span class="pill ${st.pill}">${escapeHtml(st.label)}</span></td>
+        <td>${planPill}</td>
+        <td>${sh.last_synced_at
+              ? escapeHtml(formatRelativeTime(sh.last_synced_at) || "—")
+              : '<span style="color:var(--text-muted)">Never</span>'}</td>
+        <td>
+          <div class="action-cluster">
+            <button class="abtn" onclick="resyncShop(${sh.id}, '${escapeHtml(sh.shop_domain)}')">${ICON.refresh}Resync</button>
+            ${canDelete ? `
+              <div class="action-sep"></div>
+              <button class="abtn abtn--danger abtn--icon" title="Delete merchant" aria-label="Delete merchant"
+                      onclick="deleteCustomer(${sh.customer_id})">${ICON.trash}</button>` : ``}
+          </div>
+          ${progressBar("shop-" + sh.id)}
+        </td>
+      </tr>`;
+  });
+}
+
+/* The recovery path for a shop stuck at "Sync pending". Without it the only
+   fix is asking the merchant to reopen the embedded app, which is the one
+   action you cannot take on their behalf. */
+async function resyncShop(shopId, domain) {
+  startProgress("shop-" + shopId, "Syncing…");
+  try {
+    const res = await fetch(`${API}/admin/shopify/shops/${shopId}/resync`, {
+      method: "POST", headers: authHeaders(),
+    });
+    finishProgress("shop-" + shopId);
+    if (res.status === 401) { logout(); return; }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      await showAlert(`Resync failed: ${err.detail || res.status}`);
+      return;
+    }
+    await showAlert(`Catalog sync started for ${domain}. It runs in the background — refresh in a minute to see the result.`);
+    setTimeout(loadShopifyShops, 4000);
+  } catch (e) {
+    finishProgress("shop-" + shopId);
+    await showAlert("Resync failed: " + e.message);
+  }
 }
 
 async function loadKeys() {
