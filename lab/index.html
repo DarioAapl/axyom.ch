@@ -64,6 +64,27 @@
   button.send{padding:12px 20px;border-radius:10px;border:0;background:var(--accent);
               color:#04120f;font-weight:600;cursor:pointer;font:inherit}
   button.send:disabled{opacity:.5;cursor:default}
+  .bot{position:relative}
+  .bot .hint{color:var(--muted);font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .bot .del{position:absolute;top:8px;right:8px;width:20px;height:20px;border:0;border-radius:5px;
+            background:transparent;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;
+            opacity:0;transition:.12s}
+  .bot:hover .del{opacity:1}
+  .bot .del:hover{background:#3a1d1d;color:var(--bad)}
+  .addbot{margin-top:10px}
+  .addbot summary{cursor:pointer;font-size:12px;color:var(--accent);list-style:none;padding:6px 0}
+  .addbot summary::-webkit-details-marker{display:none}
+  .addbot summary:hover{text-decoration:underline}
+  .addbot input,.addbot select{width:100%;padding:8px 10px;margin-bottom:6px;border-radius:8px;
+       border:1px solid var(--line);background:var(--panel2);color:var(--text);font:13px inherit}
+  .addbot button{width:100%;padding:9px;border-radius:8px;border:0;background:var(--accent);
+       color:#04120f;font-weight:600;cursor:pointer;font:13px inherit}
+  .addbot .hintline{font-size:11px;color:var(--muted);line-height:1.45;margin:2px 0 8px}
+  .keywarn{margin-top:14px;padding:10px 12px;border-radius:8px;background:#2a1f0a;
+       border:1px solid #4a3a12;color:#d9c08a;font-size:11.5px;line-height:1.5}
+  .keywarn button{margin-top:7px;background:transparent;border:1px solid #4a3a12;color:#d9c08a;
+       border-radius:6px;padding:4px 8px;font:11px inherit;cursor:pointer}
+  .keywarn button:hover{border-color:var(--warn);color:var(--warn)}
   .note{font-size:12px;color:var(--muted);margin-top:16px;padding-top:14px;
         border-top:1px solid var(--line);line-height:1.5}
 </style>
@@ -78,6 +99,26 @@
 <aside>
   <p class="lbl">Test bot</p>
   <div id="bots"></div>
+
+  <details class="addbot">
+    <summary>+ Add a bot</summary>
+    <p class="hintline">Admin dashboard &rarr; API keys &rarr; create one for the site,
+       and copy it there — the plaintext is shown once and never again.<br><br>
+       The key must also allow <b>axyom.ch</b>: this page runs on axyom.ch, so that is the
+       Origin the whitelist sees, not the shop's domain. Add it under
+       <b>Domains &rarr; + Add domain</b> on the API keys view.</p>
+    <input id="nb-label" placeholder="Label, e.g. Ridge Wallet" autocomplete="off">
+    <input id="nb-key" placeholder="axyom_live_…" autocomplete="off" spellcheck="false">
+    <select id="nb-probes"></select>
+    <button id="nb-save">Save bot</button>
+  </details>
+
+  <div class="keywarn">
+    Keys are kept in this browser only (localStorage) and never leave it except as the
+    <code>x-api-key</code> header on your own requests. They are not in the page source
+    and not in the repo.
+    <button id="clear-bots">Forget all bots on this browser</button>
+  </div>
 
   <div class="probes">
     <p class="lbl">Probe questions</p>
@@ -99,24 +140,40 @@
 <script>
 const API = "https://api.axyom.ch";
 
-// Each bot is a trained site plus the probes that stress it. The probes are not
-// decoration: each one targets a specific failure this stack has actually had,
-// so a regression shows up as a wrong answer to a named question.
-const BOTS = {
-  shopify: {
-    label: "Alpine Board Co",
-    sub: "Synthetic Shopify shop — tests the Shopify ingest",
-    key: "axyom_live_o2aUlGa5Zg0PXYkt18GaQReisggMSYTg",
-    note: "Synthetic data on purpose. Pointing this page at a real customer's bot " +
-          "would spend their paid conversation quota on our testing and let anyone " +
-          "chat with their assistant.",
+// ── Probe sets ─────────────────────────────────────────────────────────────
+// The probes are not decoration: each targets a specific failure this stack has
+// actually had, so a regression shows up as a wrong answer to a named question.
+// They live here because they contain nothing secret. API keys do NOT: they are
+// held per-browser in localStorage. Two live keys used to be hardcoded in this
+// file, which is served publicly and committed to a public repo — anyone could
+// read them and spend against them, since the domain whitelist deliberately
+// allows requests that send no Origin header.
+const PROBE_SETS = {
+  shopify_generic: {
+    label: "Shopify storefront (any shop)",
+    probes: [
+      ["What do you sell?", "grounding — must not invent a catalogue"],
+      ["What currency are your prices in?", "currency — the #1 hallucination here"],
+      ["What sizes or variants do you have?", "variants must not collapse to one"],
+      ["Is that in stock right now?", "stock, and backorder \u2260 out of stock"],
+      ["Anything on sale at the moment?", "compare-at pricing"],
+      ["What's your return policy?", "policy retrieval + Liquid must be resolved"],
+      ["How much is shipping, and where do you ship?", "policy retrieval"],
+      ["Recommend something for a beginner.", "reasoning over specs"],
+      ["Wie viel kostet euer g\u00fcnstigstes Produkt?", "German must keep the shop's currency"],
+      ["Do you sell live animals?", "must refuse, not invent"],
+      ["How do I contact you?", "shop contact details"]
+    ]
+  },
+  alpine: {
+    label: "Alpine Board demo (synthetic)",
     probes: [
       ["What sizes does the Alpine Ridge T-Shirt come in and which are in stock?",
        "variants + per-variant stock"],
-      ["How much is the Alpine Ridge tee?", "currency — must say CHF, never $ or €"],
-      ["Was kostet das Glacier Snowboard und ist es verfügbar?",
-       "German must still quote CHF, not €"],
-      ["Is the 155cm Glacier available?", "backorder ≠ out of stock"],
+      ["How much is the Alpine Ridge tee?", "currency — must say CHF, never $ or \u20ac"],
+      ["Was kostet das Glacier Snowboard und ist es verf\u00fcgbar?",
+       "German must still quote CHF, not \u20ac"],
+      ["Is the 155cm Glacier available?", "backorder \u2260 out of stock"],
       ["Which snowboard do you recommend for a beginner?", "reasoning over specs"],
       ["Anything on sale right now?", "compare-at pricing"],
       ["What's your return policy for a snowboard I've ridden?",
@@ -127,10 +184,7 @@ const BOTS = {
     ]
   },
   axyom: {
-    label: "axyom.ch",
-    sub: "Our own site — the live production bot",
-    key: "axyom_live_RZFzo6L5Ke9jX2R_sYlC68KLpl5YmU53",
-    note: "This is the same bot running on the public axyom.ch homepage.",
+    label: "axyom.ch (our own site)",
     probes: [
       ["What does Axyom AI do?", "core positioning"],
       ["How much does it cost?", "pricing — check it doesn't invent numbers"],
@@ -138,32 +192,117 @@ const BOTS = {
       ["Can it work on a Shopify store?", "capability claim accuracy"],
       ["Who runs this company?", "should decline if not on the site"]
     ]
-  }
+  },
+  none: { label: "No probes — free chat", probes: [] }
 };
 
-let current = "shopify";
+// ── Bot storage ────────────────────────────────────────────────────────────
+// Per-browser. Nothing here is committed, deployed, or shared between machines.
+const STORE = "axyom-lab-bots-v1";
+let BOTS = {};
+
+function loadBots(){
+  try { BOTS = JSON.parse(localStorage.getItem(STORE) || "{}"); }
+  catch (e) { BOTS = {}; }
+}
+function saveBots(){ localStorage.setItem(STORE, JSON.stringify(BOTS)); }
+
+function addBot(label, key, probeSet){
+  const id = "b" + Date.now().toString(36);
+  BOTS[id] = {
+    label: label,
+    sub: (PROBE_SETS[probeSet] || PROBE_SETS.none).label,
+    key: key,
+    probeSet: probeSet,
+    // Only the last four characters are ever shown, so a shoulder-surfer or a
+    // screenshot cannot reconstruct the key.
+    hint: key.slice(-4)
+  };
+  saveBots();
+  return id;
+}
+
+function probesFor(id){
+  const b = BOTS[id];
+  return b ? (PROBE_SETS[b.probeSet] || PROBE_SETS.none).probes : [];
+}
+
+let current = null;
 let session = "lab-" + Math.random().toString(36).slice(2);
 const log = document.getElementById("log");
 
 function renderBots(){
-  document.getElementById("bots").innerHTML = Object.entries(BOTS).map(([id,b]) =>
-    `<button class="bot ${id===current?'on':''}" data-bot="${id}">
-       <b>${b.label}</b><small>${b.sub}</small></button>`).join("");
-  document.querySelectorAll("[data-bot]").forEach(el =>
-    el.onclick = () => { current = el.dataset.bot;
-      session = "lab-" + Math.random().toString(36).slice(2);
-      log.innerHTML = '<div class="empty">Switched to <b>'+BOTS[current].label+
-        '</b>. Fresh conversation.</div>';
-      renderBots(); renderProbes(); });
+  const host = document.getElementById("bots");
+  const ids = Object.keys(BOTS);
+
+  if (!ids.length) {
+    host.innerHTML = `<p class="hintline" style="margin:0">
+      No bots yet. Add one below — you need an API key from the admin dashboard for a
+      site that has already been trained.</p>`;
+    current = null;
+    renderProbes();
+    return;
+  }
+
+  if (!current || !BOTS[current]) current = ids[0];
+
+  host.innerHTML = ids.map(id => {
+    const b = BOTS[id];
+    return `<button class="bot ${id===current?'on':''}" data-bot="${id}">
+       <b>${esc(b.label)}</b><small>${esc(b.sub || "")}</small>
+       <span class="hint">key …${esc(b.hint || "")}</span>
+       <span class="del" data-del="${id}" title="Forget this bot">&times;</span>
+     </button>`;
+  }).join("");
+
+  host.querySelectorAll("[data-bot]").forEach(el => {
+    el.onclick = ev => {
+      if (ev.target.dataset.del) return;          // the × handles itself
+      current = el.dataset.bot;
+      newSession("Switched to <b>" + esc(BOTS[current].label) + "</b>. Fresh conversation.");
+      renderBots(); renderProbes();
+    };
+  });
+
+  host.querySelectorAll("[data-del]").forEach(el => {
+    el.onclick = ev => {
+      ev.stopPropagation();
+      const id = el.dataset.del;
+      if (!confirm(`Forget "${BOTS[id].label}"? The key is removed from this browser.`)) return;
+      delete BOTS[id];
+      saveBots();
+      if (current === id) current = null;
+      renderBots(); renderProbes();
+    };
+  });
 }
 
 function renderProbes(){
-  document.getElementById("probes").innerHTML = BOTS[current].probes.map(([q,why]) =>
-    `<button class="probe" data-q="${q.replace(/"/g,'&quot;')}">${q}<em>${why}</em></button>`
-  ).join("");
+  const probes = probesFor(current);
+  document.getElementById("probes").innerHTML = probes.length
+    ? probes.map(([q,why]) =>
+        `<button class="probe" data-q="${q.replace(/"/g,'&quot;')}">${esc(q)}<em>${esc(why)}</em></button>`
+      ).join("")
+    : `<p class="hintline" style="margin:0">No probes for this bot — ask your own questions.</p>`;
+
   document.querySelectorAll("[data-q]").forEach(el =>
     el.onclick = () => { document.getElementById("q").value = el.dataset.q; ask(); });
-  document.getElementById("note").textContent = BOTS[current].note;
+
+  document.getElementById("note").textContent = current
+    ? "Pointing this page at a customer's live bot spends their conversation quota and " +
+      "lets you read answers meant for their shoppers. Prefer sites you own or have " +
+      "permission to test."
+    : "";
+}
+
+function newSession(msg){
+  session = "lab-" + Math.random().toString(36).slice(2);
+  log.innerHTML = '<div class="empty">' + (msg || "Fresh conversation.") + '</div>';
+}
+
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
 function bubble(role, html, meta){
@@ -186,6 +325,10 @@ async function ask(){
   const input = document.getElementById("q");
   const text = input.value.trim();
   if (!text) return;
+  if (!current || !BOTS[current]) {
+    log.innerHTML = '<div class="empty">Add a bot first — a label and an API key from the admin dashboard.</div>';
+    return;
+  }
   input.value = "";
   document.getElementById("send").disabled = true;
 
@@ -203,8 +346,27 @@ async function ask(){
     const d = await r.json().catch(() => ({}));
 
     if (!r.ok) {
-      pending.querySelector(".body").innerHTML =
-        `<p style="color:var(--bad)">HTTP ${r.status} — ${d.detail || "request failed"}</p>`;
+      let msg = `HTTP ${r.status} — ${esc(d.detail || "request failed")}`;
+
+      // The predictable failure: the key is scoped to the shop's own domain, but the
+      // request comes from axyom.ch because that is where this page is served.
+      if (r.status === 403 && /domain not authorized/i.test(d.detail || "")) {
+        msg = `<b>This key doesn't allow axyom.ch.</b><br>` +
+              `The whitelist sees the Origin of this page, not the shop's domain. ` +
+              `Admin dashboard &rarr; API keys &rarr; that key &rarr; ` +
+              `<b>Domains &rarr; + Add domain &rarr; axyom.ch</b>, then try again.`;
+      } else if (r.status === 403) {
+        msg = `<b>Key rejected.</b> It may have been revoked or deleted — keys live in ` +
+              `this browser, so a key deleted server-side still shows up here until you ` +
+              `forget the bot.`;
+      } else if (r.status === 404) {
+        msg = `<b>Site not found or inactive.</b> The website behind this key may have ` +
+              `been deleted.`;
+      } else if (r.status === 429) {
+        msg = `<b>Rate limited</b> — 30 messages a minute per key. Wait a moment.`;
+      }
+
+      pending.querySelector(".body").innerHTML = `<p style="color:var(--bad)">${msg}</p>`;
     } else {
       const srcs = (d.sources || []).length
         ? `<div class="src">sources: ${d.sources.slice(0,3).join(" · ")}</div>` : "";
@@ -222,7 +384,39 @@ async function ask(){
 }
 
 document.getElementById("f").onsubmit = e => { e.preventDefault(); ask(); };
-renderBots(); renderProbes();
+
+// ── Add-bot form ───────────────────────────────────────────────────────────
+document.getElementById("nb-probes").innerHTML = Object.entries(PROBE_SETS)
+  .map(([id,p]) => `<option value="${id}">${esc(p.label)}</option>`).join("");
+
+document.getElementById("nb-save").onclick = () => {
+  const label = document.getElementById("nb-label").value.trim();
+  const key   = document.getElementById("nb-key").value.trim();
+  const set   = document.getElementById("nb-probes").value;
+
+  if (!label) { alert("Give it a label so you can tell your bots apart."); return; }
+  if (!/^axyom_live_\S+$/.test(key)) {
+    alert("That doesn't look like an Axyom key. They start with axyom_live_ and the\n" +
+          "plaintext is only shown when you create the key in the admin dashboard.");
+    return;
+  }
+
+  current = addBot(label, key, set);
+  document.getElementById("nb-label").value = "";
+  document.getElementById("nb-key").value = "";
+  document.querySelector(".addbot").open = false;
+  newSession("Added <b>" + esc(label) + "</b>. Fresh conversation.");
+  renderBots(); renderProbes();
+};
+
+document.getElementById("clear-bots").onclick = () => {
+  if (!confirm("Remove every saved bot and its key from this browser?")) return;
+  BOTS = {}; saveBots(); current = null;
+  newSession("All bots forgotten.");
+  renderBots(); renderProbes();
+};
+
+loadBots(); renderBots(); renderProbes();
 </script>
 </body>
 </html>
