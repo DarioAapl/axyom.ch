@@ -8,6 +8,26 @@
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ============================================================
+     Shopify CTA target — THE ONE LINE TO FLIP
+     The app is not on the Shopify App Store yet, so there is no public
+     listing to link to. While this constant is empty every CTA marked
+     [data-shopify-cta] keeps its markup href and sends people to the
+     #contact form. Set it when the App Store listing is live and the
+     same CTAs point at the listing instead — that is the only change
+     needed here.
+     ============================================================ */
+  const SHOPIFY_LISTING_URL = ''; // set when the App Store listing is live
+
+  if (SHOPIFY_LISTING_URL) {
+    document.querySelectorAll('[data-shopify-cta]').forEach(function (a) {
+      a.setAttribute('href', SHOPIFY_LISTING_URL);
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    });
+  }
+
+
   /* ---------- sticky header shade ---------- */
   var hdr = document.getElementById('hdr');
   var onScroll = function () {

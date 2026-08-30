@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Axyom AI — The assistant that knows your website</title>
-<meta name="description" content="Axyom reads every page, product and spec on your website, then answers customer questions with grounded, accurate replies in your brand voice, around the clock. Made in Liechtenstein." />
+<title>Axyom AI — The AI assistant for your Shopify store</title>
+<meta name="description" content="Axyom installs into your Shopify store and answers customer questions from the real catalogue — products, variants, prices, stock and policies — in your brand voice, around the clock. Made in Liechtenstein." />
 <meta name="theme-color" content="#ffffff" />
 <meta name="color-scheme" content="light" />
 <link rel="canonical" href="https://axyom.ch/" />
@@ -12,8 +12,8 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Axyom AI" />
 <meta property="og:url" content="https://axyom.ch/" />
-<meta property="og:title" content="Axyom AI — The assistant that knows your website" />
-<meta property="og:description" content="Axyom reads every page, product and spec on your website, then answers customer questions with grounded, accurate replies in your brand voice, around the clock." />
+<meta property="og:title" content="Axyom AI — The AI assistant for your Shopify store" />
+<meta property="og:description" content="Axyom installs into your Shopify store and answers customer questions from the real catalogue — products, variants, prices, stock and policies — in your brand voice, around the clock." />
 <meta property="og:image" content="https://axyom.ch/Assets/axyomlogo.png" />
 <meta property="og:image:width" content="1664" />
 <meta property="og:image:height" content="749" />
@@ -23,15 +23,15 @@
 <meta property="og:locale:alternate" content="it" />
 <meta property="og:locale:alternate" content="fr" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Axyom AI — The assistant that knows your website" />
-<meta name="twitter:description" content="Axyom reads every page, product and spec on your website, then answers customer questions with grounded, accurate replies in your brand voice, around the clock." />
+<meta name="twitter:title" content="Axyom AI — The AI assistant for your Shopify store" />
+<meta name="twitter:description" content="Axyom installs into your Shopify store and answers customer questions from the real catalogue — products, variants, prices, stock and policies — in your brand voice, around the clock." />
 <meta name="twitter:image" content="https://axyom.ch/Assets/axyomlogo.png" />
 
 <link rel="icon" type="image/png" sizes="32x32" href="Assets/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="256x256" href="Assets/axyomfavicon.png" />
 <link rel="apple-touch-icon" href="Assets/apple-touch-icon.png" />
 
-<link rel="stylesheet" href="css/home.css?v=2" />
+<link rel="stylesheet" href="css/home.css?v=3" />
 </head>
 
 <body>
@@ -47,7 +47,7 @@
       </a>
 
       <nav class="navlinks" data-i18n-aria="a11y.primarynav" aria-label="Primary navigation">
-        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#shopify" data-i18n="nav.shopify">Shopify</a>
         <a href="#capabilities" data-i18n="nav.features">Capabilities</a>
         <a href="#industries" data-i18n="nav.solutions">Industries</a>
         <a href="#compare" data-i18n="nav.compare">Why Axyom</a>
@@ -60,8 +60,9 @@
           <button type="button" data-l="it" lang="it">IT</button>
           <button type="button" data-l="fr" lang="fr">FR</button>
         </div>
-        <a href="dashboard/login.html" class="btn btn-ghost btn-sm" data-i18n="nav.login">Log in</a>
-        <a href="dashboard/register.html" class="btn btn-primary btn-sm" data-i18n="nav.getstarted">Get started</a>
+        <!-- href is rewritten to the App Store listing by js/home.js once
+             SHOPIFY_LISTING_URL is set; until then it stays on #contact. -->
+        <a href="#contact" class="btn btn-primary btn-sm" data-shopify-cta data-i18n="nav.earlyaccess">Request access</a>
         <button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="mobile-nav">
           <span class="bars" aria-hidden="true"></span>
           <span class="vh" data-i18n="nav.menu">Menu</span>
@@ -70,14 +71,13 @@
     </div>
 
     <nav class="mobile-nav" id="mobile-nav" data-i18n-aria="a11y.mobilenav" aria-label="Mobile navigation" hidden>
-      <a href="#how" data-i18n="nav.how">How it works</a>
+      <a href="#shopify" data-i18n="nav.shopify">Shopify</a>
       <a href="#capabilities" data-i18n="nav.features">Capabilities</a>
       <a href="#industries" data-i18n="nav.solutions">Industries</a>
       <a href="#compare" data-i18n="nav.compare">Why Axyom</a>
       <a href="#contact" data-i18n="footer.contact">Contact</a>
       <div class="mob-cta">
-        <a href="dashboard/login.html" class="btn btn-ghost" data-i18n="nav.login">Log in</a>
-        <a href="dashboard/register.html" class="btn btn-primary" data-i18n="nav.getstarted">Get started</a>
+        <a href="#contact" class="btn btn-primary" data-shopify-cta data-i18n="nav.earlyaccess">Request access</a>
       </div>
     </nav>
   </div>
@@ -100,70 +100,59 @@
     <h1 data-i18n-html="hero.title">An assistant that <span class="u">actually knows</span> your website.</h1>
     <p class="lead" data-i18n="hero.sub">Axyom reads every page, product and spec on your site, then answers customer questions with grounded, accurate replies — in your brand voice, around the clock. Not a chatbot. A sales employee that never forgets a detail.</p>
     <div class="hero-cta">
-      <a href="dashboard/register.html" class="btn btn-primary" data-i18n="hero.getstarted">Get started →</a>
+      <a href="#contact" class="btn btn-primary" data-shopify-cta data-i18n="hero.earlyaccess">Request early access →</a>
       <a href="#contact" class="btn btn-ghost" data-i18n="hero.cta1">Book a demo</a>
     </div>
 
   </div>
 </section>
 
-<!-- ==================== METRICS + BUILT FOR ==================== -->
-<section class="strip" aria-labelledby="metrics-h">
-  <h2 id="metrics-h" class="vh" data-i18n="strip.label">Built for</h2>
-  <div class="wrap">
-    <div class="metrics reveal">
-      <div><b>&lt;1s</b><span data-i18n="hero.m1">Time to answer</span></div>
-      <div><b>0</b><span data-i18n="hero.m2">Hallucinated facts</span></div>
-      <div><b>24/7</b><span data-i18n="hero.m3">Always on</span></div>
-    </div>
-  </div>
-</section>
-<div class="strip">
-  <div class="wrap">
-    <div class="strip-in">
-      <span data-i18n="strip.label">Built for</span>
-      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i1">E-commerce</b>
-      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i2">Automotive</b>
-      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i3">Real estate</b>
-      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i4">B2B / SaaS</b>
-      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i5">Hospitality</b>
-      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i6">Manufacturing</b>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== PROBLEM ==================== -->
-<section class="block" id="problem" aria-labelledby="problem-h">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="eyebrow" data-i18n="prob.eyebrow">The problem</span>
-      <h2 id="problem-h" data-i18n="prob.title">Most websites leave visitors searching, not finding.</h2>
-      <p class="lead" data-i18n="prob.sub">People arrive with a real question. They scroll, they dig through menus, they hit a dead end — and they leave. Every unanswered question is a lead that quietly disappears.</p>
-    </div>
-    <div class="prob-grid">
-      <div class="prob-cell reveal"><div class="k" data-i18n="prob.c1.k">BOUNCE</div><h3 data-i18n="prob.c1.title">Visitors leave without finding answers</h3><p data-i18n="prob.c1.body">People can't find what they need fast enough, so they bounce before they reach your value.</p></div>
-      <div class="prob-cell reveal" style="--d:60ms"><div class="k" data-i18n="prob.c2.k">NAVIGATION</div><h3 data-i18n="prob.c2.title">Information buried across dozens of pages</h3><p data-i18n="prob.c2.body">Specs, pricing and policies scattered across layers of menus. Customers give up first.</p></div>
-      <div class="prob-cell reveal" style="--d:120ms"><div class="k" data-i18n="prob.c3.k">AVAILABILITY</div><h3 data-i18n="prob.c3.title">Questions go unanswered after hours</h3><p data-i18n="prob.c3.body">Customers don't shop 9-to-5. Every midnight question with no answer is missed revenue.</p></div>
-      <div class="prob-cell reveal"><div class="k" data-i18n="prob.c4.k">SUPPORT COST</div><h3 data-i18n="prob.c4.title">Teams buried in repetitive questions</h3><p data-i18n="prob.c4.body">The same questions, over and over. Hours spent on things that never needed a human.</p></div>
-      <div class="prob-cell reveal" style="--d:60ms"><div class="k" data-i18n="prob.c5.k">SAMENESS</div><h3 data-i18n="prob.c5.title">Every visitor gets the same generic page</h3><p data-i18n="prob.c5.body">No adaptation to intent or context. No guidance, no relevance, low conversion.</p></div>
-      <div class="prob-cell reveal" style="--d:120ms"><div class="k" data-i18n="prob.c6.k">FRICTION</div><h3 data-i18n="prob.c6.title">Complex navigation kills conversions</h3><p data-i18n="prob.c6.body">Confusing menus and broken search. Visitors hit friction and drop off the funnel.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ==================== HOW IT WORKS ==================== -->
-<section class="block tinted" id="how" aria-labelledby="how-h">
+<!-- ==================== SHOPIFY ==================== -->
+<section class="block tinted" id="shopify" aria-labelledby="shopify-h">
   <div class="wrap">
     <div class="sec-head center reveal">
-      <span class="eyebrow" data-i18n="how.eyebrow">How it works</span>
-      <h2 id="how-h" data-i18n="how.title">Paste a URL. Get a sales expert.</h2>
-      <p class="lead" data-i18n="how.sub">Four steps from a plain web address to a brand-aware assistant that knows your catalog inside and out. No code, no manual FAQ entry.</p>
+      <span class="eyebrow" data-i18n="shop.eyebrow">Built for Shopify</span>
+      <h2 id="shopify-h" data-i18n-html="shop.title">The Axyom app for <span class="u">Shopify</span>.</h2>
+      <p class="lead" data-i18n="shop.sub">Install it from Shopify and the catalogue syncs itself. The assistant answers from your real products, prices and policies — and you switch it on in the theme editor, without touching theme code.</p>
     </div>
-    <div class="steps">
-      <div class="step reveal"><div class="num" aria-hidden="true">01</div><h3 data-i18n="how.s1.title">Reads your website</h3><p data-i18n="how.s1.body">The crawler scans every page — products, specs, FAQs, hidden tabs — and handles JavaScript-rendered content automatically.</p></div>
-      <div class="step reveal" style="--d:70ms"><div class="num" aria-hidden="true">02</div><h3 data-i18n="how.s2.title">Understands your products</h3><p data-i18n="how.s2.body">Specs, prices and features are extracted into structured, machine-readable data. The AI learns your full catalog.</p></div>
-      <div class="step reveal" style="--d:140ms"><div class="num" aria-hidden="true">03</div><h3 data-i18n="how.s3.title">Answers like your best employee</h3><p data-i18n="how.s3.body">Customers ask in natural language. Axyom replies with accurate, grounded answers in your brand voice.</p></div>
-      <div class="step reveal" style="--d:210ms"><div class="num" aria-hidden="true">04</div><h3 data-i18n="how.s4.title">Compares, recommends, sells</h3><p data-i18n="how.s4.body">It doesn't just answer — it advises. Comparisons, cross-sells and personalised recommendations drive conversion.</p></div>
+
+    <!-- Illustration only: pure CSS, no screenshots, no external images.
+         Every claim it depicts is stated in the list below, so it is
+         hidden from assistive tech rather than duplicated to it. -->
+    <div class="shop-mock reveal" aria-hidden="true">
+      <div class="mock-embed">
+        <span class="mock-ico"></span>
+        <span class="mock-name" data-i18n="shop.mock.app">Axyom assistant</span>
+        <span class="mock-tag" data-i18n="shop.mock.embed">App embed</span>
+        <span class="mock-switch"><span class="mock-knob"></span></span>
+      </div>
+      <div class="mock-chat">
+        <p class="mock-ask" data-i18n="shop.mock.ask">Do you have this in medium?</p>
+        <div class="mock-card">
+          <span class="mock-thumb"></span>
+          <span class="mock-body">
+            <b data-i18n="shop.mock.prod">Merino crew sweater</b>
+            <span class="mock-avail" data-i18n="shop.mock.avail">CHF 129 · Medium in stock</span>
+            <span class="mock-link" data-i18n="shop.mock.view">View product</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="shop-grid">
+      <div class="shop-cell reveal"><div class="k" data-i18n="shop.c1.k">Install</div><h3 data-i18n="shop.c1.title">Install from Shopify, no code.</h3><p data-i18n="shop.c1.body">The catalogue syncs itself — products, variants, prices, stock, pages and policies.</p></div>
+      <div class="shop-cell reveal" style="--d:60ms"><div class="k" data-i18n="shop.c2.k">Answers</div><h3 data-i18n="shop.c2.title">Answers come from the real catalogue.</h3><p data-i18n="shop.c2.body">Prices and availability are read from the store, not typed into an FAQ. Replies include product cards with images and links.</p></div>
+      <div class="shop-cell reveal" style="--d:120ms"><div class="k" data-i18n="shop.c3.k">Orders</div><h3 data-i18n="shop.c3.title">Order tracking.</h3><p data-i18n="shop.c3.body">A shopper signs in with their own Shopify account and asks where their order is — the assistant reads it live from their account. Order data is never stored.</p></div>
+      <div class="shop-cell reveal"><div class="k" data-i18n="shop.c4.k">Theme</div><h3 data-i18n="shop.c4.title">Turn it on in the theme editor.</h3><p data-i18n="shop.c4.body">An app embed block, so merchants never edit theme code.</p></div>
+      <div class="shop-cell reveal" style="--d:60ms"><div class="k" data-i18n="shop.c5.k">Design</div><h3 data-i18n="shop.c5.title">Match your store's look.</h3><p data-i18n="shop.c5.body">Colours and style are set in the app: glass, solid or minimal.</p></div>
+      <div class="shop-cell reveal" style="--d:120ms"><div class="k" data-i18n="shop.c6.k">Compliance</div><h3 data-i18n="shop.c6.title">Built to Shopify's rules.</h3><p data-i18n="shop.c6.body">GDPR compliance webhooks, session-token auth, and the assistant answers only from the merchant's own content.</p></div>
+    </div>
+
+    <div class="shop-foot reveal">
+      <!-- href is rewritten to the App Store listing by js/home.js once
+           SHOPIFY_LISTING_URL is set; until then it stays on #contact. -->
+      <a href="#contact" class="btn btn-primary" data-shopify-cta data-i18n="hero.earlyaccess">Request early access →</a>
+      <p class="shop-note" data-i18n="shop.note">Coming to the Shopify App Store. The app is not publicly listed yet — tell us about your store and we will set you up directly.</p>
     </div>
   </div>
 </section>
@@ -310,7 +299,7 @@
       </div>
       <div class="foot-col">
         <h3 data-i18n="footer.product">Product</h3>
-        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#shopify" data-i18n="nav.shopify">Shopify</a>
         <a href="#capabilities" data-i18n="nav.features">Capabilities</a>
         <a href="#compare" data-i18n="nav.compare">Why Axyom</a>
         <a href="#industries" data-i18n="nav.solutions">Industries</a>
@@ -358,8 +347,8 @@
 {"@context":"https://schema.org","@type":"Organization","name":"Axyom AI","url":"https://axyom.ch/","logo":"https://axyom.ch/Assets/axyomlogo.png","email":"kontakt@axyom.ch","address":{"@type":"PostalAddress","streetAddress":"Gapetschstrasse 29","postalCode":"9494","addressLocality":"Schaan","addressCountry":"LI"}}
 </script>
 
-<script src="translations.js?v=2"></script>
-<script src="js/home.js?v=2" defer></script>
+<script src="translations.js?v=3"></script>
+<script src="js/home.js?v=3" defer></script>
 <!-- 3D mark: deferred module, never blocks first paint. If it fails to load,
      the hero keeps its static fallback image and the page stays complete. -->
 <script type="module" src="js/hero.js?v=2"></script>

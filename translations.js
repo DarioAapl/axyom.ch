@@ -1,42 +1,32 @@
 /* Axyom.ch translations — reconciled against the live site's LANGS object
    (live-site/translations.js). Keys match the redesigned page. Strings reused
    verbatim from the live site wherever the English copy matches; new copy
-   (hero, demo, strip, comparison rows, industries) translated in the same tone:
-   DE formal "Sie", FR formal "vous", IT informal "tu".
+   (hero, Shopify section, comparison rows, industries) translated in the same
+   tone: DE formal "Sie", FR formal "vous", IT informal "tu".
    All modal.* legal strings are verbatim from the live site. */
 const LANGS = {
   de: {
     /* UI chrome + accessibility labels (added with the 2026 homepage rebuild) */
     'a11y.skip':'Zum Inhalt springen','a11y.home':'Axyom Startseite','a11y.primarynav':'Hauptnavigation','a11y.mobilenav':'Mobile Navigation','a11y.lang':'Sprache','a11y.close':'Schließen','a11y.mark':'Axyom Logo',
     'nav.menu':'Menü',
-    'nav.how':'So funktioniert es','nav.features':'Funktionen','nav.solutions':'Branchen','nav.compare':'Warum Axyom','nav.login':'Anmelden','nav.getstarted':'Jetzt starten',
+    'nav.shopify':'Shopify','nav.features':'Funktionen','nav.solutions':'Branchen','nav.compare':'Warum Axyom','nav.earlyaccess':'Zugang anfragen',
 
     'hero.eyebrow':'Intelligenter Vertriebsassistent · Hergestellt in Liechtenstein',
     'hero.title':'Ein Assistent, der Ihre Website <span class="u">wirklich kennt</span>.',
     'hero.sub':'Axyom liest jede Seite, jedes Produkt und jede Spezifikation Ihrer Website und beantwortet Kundenfragen präzise und fundiert — in Ihrer Markenstimme, rund um die Uhr. Kein Chatbot. Ein Vertriebsmitarbeiter, der kein Detail vergisst.',
-    'hero.getstarted':'Jetzt starten →','hero.cta1':'Demo buchen',
-    'hero.m1':'Antwortzeit','hero.m2':'Halluzinierte Fakten','hero.m3':'Immer verfügbar',
+    'hero.earlyaccess':'Frühzugang anfragen →','hero.cta1':'Demo buchen',
 
-
-    'strip.label':'Gebaut für','strip.i1':'E-Commerce','strip.i2':'Automobil','strip.i3':'Immobilien','strip.i4':'B2B / SaaS','strip.i5':'Hotellerie','strip.i6':'Fertigung',
-
-    'prob.eyebrow':'Das Problem',
-    'prob.title':'Die meisten Websites lassen Besucher suchen, nicht finden.',
-    'prob.sub':'Besucher kommen mit einer echten Frage. Sie scrollen, graben sich durch Menüs, landen in einer Sackgasse — und gehen. Jede unbeantwortete Frage ist ein Lead, der still verschwindet.',
-    'prob.c1.k':'ABSPRUNG','prob.c1.title':'Besucher gehen ohne Antworten','prob.c1.body':'Besucher finden nicht schnell genug, was sie brauchen — und springen ab, bevor sie Ihren Mehrwert erreichen.',
-    'prob.c2.k':'NAVIGATION','prob.c2.title':'Informationen auf Dutzenden Seiten verteilt','prob.c2.body':'Spezifikationen, Preise und Richtlinien über viele Menüebenen verstreut. Kunden geben vorher auf.',
-    'prob.c3.k':'VERFÜGBARKEIT','prob.c3.title':'Fragen bleiben außerhalb der Geschäftszeiten unbeantwortet','prob.c3.body':'Kunden kaufen nicht nur von 9 bis 17 Uhr. Jede unbeantwortete Frage um Mitternacht ist entgangener Umsatz.',
-    'prob.c4.k':'SUPPORTKOSTEN','prob.c4.title':'Teams von Wiederholungsfragen überflutet','prob.c4.body':'Dieselben Fragen, immer wieder. Stunden für Dinge, die nie einen Menschen gebraucht hätten.',
-    'prob.c5.k':'GLEICHFÖRMIGKEIT','prob.c5.title':'Jeder Besucher sieht dieselbe generische Seite','prob.c5.body':'Keine Anpassung an Absicht oder Kontext. Keine Führung, keine Relevanz, geringe Conversion.',
-    'prob.c6.k':'REIBUNG','prob.c6.title':'Komplexe Navigation tötet Conversions','prob.c6.body':'Verwirrende Menüs und defekte Suche. Besucher treffen auf Reibung und verlassen den Funnel.',
-
-    'how.eyebrow':'So funktioniert es',
-    'how.title':'URL einfügen. Vertriebsexperten erhalten.',
-    'how.sub':'Vier Schritte von einer einfachen Webadresse zu einem markengerechten Assistenten, der Ihren Katalog in- und auswendig kennt. Kein Code, keine manuelle FAQ-Pflege.',
-    'how.s1.title':'Liest Ihre Website','how.s1.body':'Der Crawler scannt jede Seite — Produkte, Spezifikationen, FAQs, versteckte Tabs — und verarbeitet JavaScript-gerenderte Inhalte automatisch.',
-    'how.s2.title':'Versteht Ihre Produkte','how.s2.body':'Spezifikationen, Preise und Funktionen werden in strukturierte, maschinenlesbare Daten extrahiert. Die KI lernt Ihren gesamten Katalog.',
-    'how.s3.title':'Antwortet wie Ihr bester Mitarbeiter','how.s3.body':'Kunden fragen in natürlicher Sprache. Axyom antwortet präzise und fundiert in Ihrer Markenstimme.',
-    'how.s4.title':'Vergleicht, empfiehlt, verkauft','how.s4.body':'Es antwortet nicht nur — es berät. Vergleiche, Cross-Selling und personalisierte Empfehlungen steigern die Conversion.',
+    'shop.eyebrow':'Für Shopify entwickelt',
+    'shop.title':'Die Axyom-App für <span class="u">Shopify</span>.',
+    'shop.sub':'Sie installieren die App in Shopify — und der Katalog synchronisiert sich von selbst. Der Assistent antwortet aus Ihren echten Produkten, Preisen und Richtlinien, und Sie aktivieren ihn im Theme-Editor, ohne den Theme-Code anzufassen.',
+    'shop.mock.app':'Axyom Assistent','shop.mock.embed':'App-Embed','shop.mock.ask':'Gibt es das in Größe M?','shop.mock.prod':'Merino-Pullover','shop.mock.avail':'CHF 129 · Größe M auf Lager','shop.mock.view':'Produkt ansehen',
+    'shop.c1.k':'Installation','shop.c1.title':'Aus Shopify installiert, ohne Code.','shop.c1.body':'Der Katalog synchronisiert sich selbst — Produkte, Varianten, Preise, Lagerbestand, Seiten und Richtlinien.',
+    'shop.c2.k':'Antworten','shop.c2.title':'Antworten aus dem echten Katalog.','shop.c2.body':'Preise und Verfügbarkeit werden aus dem Shop gelesen, nicht in ein FAQ getippt. Antworten enthalten Produktkarten mit Bild und Link.',
+    'shop.c3.k':'Bestellungen','shop.c3.title':'Bestellstatus abfragen.','shop.c3.body':'Kunden melden sich mit ihrem eigenen Shopify-Konto an und fragen, wo ihre Bestellung bleibt — der Assistent liest sie live aus ihrem Konto. Bestelldaten werden nie gespeichert.',
+    'shop.c4.k':'Theme','shop.c4.title':'Aktivierung im Theme-Editor.','shop.c4.body':'Ein App-Embed-Block — Händler bearbeiten nie Theme-Code.',
+    'shop.c5.k':'Design','shop.c5.title':'Passend zum Look Ihres Shops.','shop.c5.body':'Farben und Stil stellen Sie in der App ein: Glas, Solid oder Minimal.',
+    'shop.c6.k':'Compliance','shop.c6.title':'Nach den Regeln von Shopify gebaut.','shop.c6.body':'DSGVO-Compliance-Webhooks, Session-Token-Authentifizierung — und der Assistent antwortet ausschließlich aus den eigenen Inhalten des Händlers.',
+    'shop.note':'Demnächst im Shopify App Store. Die App ist noch nicht öffentlich gelistet — erzählen Sie uns von Ihrem Shop, und wir richten Sie direkt ein.',
 
     'feat.eyebrow':'Funktionen',
     'feat.title':'Kein ChatGPT-Wrapper. Ein zweckgebautes Vertriebssystem.',
@@ -106,34 +96,24 @@ const LANGS = {
     /* UI chrome + etichette di accessibilità (aggiunte con il rifacimento della homepage 2026) */
     'a11y.skip':'Vai al contenuto','a11y.home':'Home Axyom','a11y.primarynav':'Navigazione principale','a11y.mobilenav':'Navigazione mobile','a11y.lang':'Lingua','a11y.close':'Chiudi','a11y.mark':'Logo Axyom',
     'nav.menu':'Menu',
-    'nav.how':'Come funziona','nav.features':'Funzionalità','nav.solutions':'Settori','nav.compare':'Perché Axyom','nav.login':'Accedi','nav.getstarted':'Inizia ora',
+    'nav.shopify':'Shopify','nav.features':'Funzionalità','nav.solutions':'Settori','nav.compare':'Perché Axyom','nav.earlyaccess':'Richiedi accesso',
 
     'hero.eyebrow':'Assistente alle vendite intelligente · Prodotto nel Liechtenstein',
     'hero.title':'Un assistente che <span class="u">conosce davvero</span> il tuo sito web.',
     'hero.sub':'Axyom legge ogni pagina, prodotto e specifica del tuo sito e risponde alle domande dei clienti con risposte fondate e precise — nella voce del tuo brand, 24 ore su 24. Non un chatbot. Un venditore che non dimentica mai un dettaglio.',
-    'hero.getstarted':'Inizia ora →','hero.cta1':'Prenota una demo',
-    'hero.m1':'Tempo di risposta','hero.m2':'Fatti allucinati','hero.m3':'Sempre attivo',
+    'hero.earlyaccess':'Richiedi accesso anticipato →','hero.cta1':'Prenota una demo',
 
-
-    'strip.label':'Costruito per','strip.i1':'E-commerce','strip.i2':'Automotive','strip.i3':'Immobiliare','strip.i4':'B2B / SaaS','strip.i5':'Ospitalità','strip.i6':'Manifattura',
-
-    'prob.eyebrow':'Il Problema',
-    'prob.title':'La maggior parte dei siti lascia i visitatori a cercare, non a trovare.',
-    'prob.sub':'Le persone arrivano con una domanda reale. Scorrono, scavano nei menu, finiscono in un vicolo cieco — e se ne vanno. Ogni domanda senza risposta è un lead che svanisce in silenzio.',
-    'prob.c1.k':'RIMBALZO','prob.c1.title':'I visitatori se ne vanno senza risposte','prob.c1.body':'Le persone non trovano abbastanza in fretta ciò che cercano e rimbalzano prima di scoprire il tuo valore.',
-    'prob.c2.k':'NAVIGAZIONE','prob.c2.title':'Informazioni distribuite su decine di pagine','prob.c2.body':'Specifiche, prezzi e politiche dispersi su più livelli di menu. I clienti si arrendono prima.',
-    'prob.c3.k':'DISPONIBILITÀ','prob.c3.title':'Domande senza risposta fuori orario','prob.c3.body':'I clienti non comprano solo dalle 9 alle 17. Ogni domanda senza risposta a mezzanotte è fatturato perso.',
-    'prob.c4.k':'COSTI DI SUPPORTO','prob.c4.title':'Team sommersi da domande ripetitive','prob.c4.body':'Le stesse domande, ancora e ancora. Ore spese per cose che non avrebbero mai richiesto un umano.',
-    'prob.c5.k':'UNIFORMITÀ','prob.c5.title':'Ogni visitatore riceve la stessa pagina generica','prob.c5.body':'Nessun adattamento a intenzione o contesto. Nessuna guida, nessuna rilevanza, bassa conversione.',
-    'prob.c6.k':'ATTRITO','prob.c6.title':'La navigazione complessa uccide le conversioni','prob.c6.body':'Menu confusi e ricerca rotta. I visitatori incontrano attrito e abbandonano il funnel.',
-
-    'how.eyebrow':'Come funziona',
-    'how.title':'Incolla un URL. Ottieni un esperto di vendite.',
-    'how.sub':'Quattro passi da un semplice indirizzo web a un assistente consapevole del brand che conosce il tuo catalogo a memoria. Niente codice, nessun inserimento manuale di FAQ.',
-    'how.s1.title':'Legge il tuo sito','how.s1.body':'Il crawler scansiona ogni pagina — prodotti, specifiche, FAQ, tab nascosti — e gestisce automaticamente i contenuti renderizzati in JavaScript.',
-    'how.s2.title':'Comprende i tuoi prodotti','how.s2.body':'Specifiche, prezzi e caratteristiche vengono estratti in dati strutturati e leggibili dalle macchine. L\'AI impara l\'intero catalogo.',
-    'how.s3.title':'Risponde come il tuo miglior dipendente','how.s3.body':'I clienti chiedono in linguaggio naturale. Axyom risponde con risposte precise e fondate nella voce del tuo brand.',
-    'how.s4.title':'Confronta, consiglia, vende','how.s4.body':'Non si limita a rispondere — consiglia. Confronti, cross-selling e raccomandazioni personalizzate aumentano le conversioni.',
+    'shop.eyebrow':'Creata per Shopify',
+    'shop.title':'L\'app Axyom per <span class="u">Shopify</span>.',
+    'shop.sub':'Installa l\'app da Shopify e il catalogo si sincronizza da solo. L\'assistente risponde partendo dai tuoi prodotti, prezzi e politiche reali, e lo attivi dall\'editor del tema senza toccare il codice.',
+    'shop.mock.app':'Assistente Axyom','shop.mock.embed':'App embed','shop.mock.ask':'Lo avete in taglia M?','shop.mock.prod':'Maglione in merino','shop.mock.avail':'CHF 129 · Taglia M disponibile','shop.mock.view':'Vedi prodotto',
+    'shop.c1.k':'Installazione','shop.c1.title':'Si installa da Shopify, senza codice.','shop.c1.body':'Il catalogo si sincronizza da solo — prodotti, varianti, prezzi, scorte, pagine e politiche.',
+    'shop.c2.k':'Risposte','shop.c2.title':'Le risposte vengono dal catalogo reale.','shop.c2.body':'Prezzi e disponibilità sono letti dallo store, non digitati in una FAQ. Le risposte includono schede prodotto con immagini e link.',
+    'shop.c3.k':'Ordini','shop.c3.title':'Tracciamento degli ordini.','shop.c3.body':'Il cliente accede con il proprio account Shopify e chiede dov\'è il suo ordine — l\'assistente lo legge in tempo reale dal suo account. I dati degli ordini non vengono mai memorizzati.',
+    'shop.c4.k':'Tema','shop.c4.title':'Si attiva dall\'editor del tema.','shop.c4.body':'Un blocco app embed: i merchant non modificano mai il codice del tema.',
+    'shop.c5.k':'Design','shop.c5.title':'In linea con il look del tuo store.','shop.c5.body':'Colori e stile si impostano nell\'app: glass, solid o minimal.',
+    'shop.c6.k':'Conformità','shop.c6.title':'Costruita secondo le regole di Shopify.','shop.c6.body':'Webhook di conformità GDPR, autenticazione con session token e un assistente che risponde solo dai contenuti del merchant.',
+    'shop.note':'Presto sullo Shopify App Store. L\'app non è ancora pubblicata — raccontaci del tuo store e ti configuriamo direttamente.',
 
     'feat.eyebrow':'Capacità',
     'feat.title':'Non un wrapper di ChatGPT. Un motore di vendita costruito appositamente.',
@@ -203,34 +183,24 @@ const LANGS = {
     /* Interface + libellés d'accessibilité (ajoutés avec la refonte de la page d'accueil 2026) */
     'a11y.skip':'Aller au contenu','a11y.home':'Accueil Axyom','a11y.primarynav':'Navigation principale','a11y.mobilenav':'Navigation mobile','a11y.lang':'Langue','a11y.close':'Fermer','a11y.mark':'Logo Axyom',
     'nav.menu':'Menu',
-    'nav.how':'Comment ça marche','nav.features':'Fonctionnalités','nav.solutions':'Secteurs','nav.compare':'Pourquoi Axyom','nav.login':'Se connecter','nav.getstarted':'Commencer',
+    'nav.shopify':'Shopify','nav.features':'Fonctionnalités','nav.solutions':'Secteurs','nav.compare':'Pourquoi Axyom','nav.earlyaccess':'Demander l\'accès',
 
     'hero.eyebrow':'Assistant commercial intelligent · Fabriqué au Liechtenstein',
     'hero.title':'Un assistant qui <span class="u">connaît vraiment</span> votre site web.',
     'hero.sub':'Axyom lit chaque page, produit et spec de votre site, puis répond aux questions des clients avec des réponses fondées et précises — dans la voix de votre marque, jour et nuit. Pas un chatbot. Un commercial qui n\'oublie jamais un détail.',
-    'hero.getstarted':'Commencer →','hero.cta1':'Réserver une démo',
-    'hero.m1':'Temps de réponse','hero.m2':'Faits hallucinés','hero.m3':'Toujours disponible',
+    'hero.earlyaccess':'Demander un accès anticipé →','hero.cta1':'Réserver une démo',
 
-
-    'strip.label':'Conçu pour','strip.i1':'E-commerce','strip.i2':'Automobile','strip.i3':'Immobilier','strip.i4':'B2B / SaaS','strip.i5':'Hôtellerie','strip.i6':'Industrie',
-
-    'prob.eyebrow':'Le Problème',
-    'prob.title':'La plupart des sites laissent les visiteurs chercher, sans trouver.',
-    'prob.sub':'Les gens arrivent avec une vraie question. Ils scrollent, fouillent les menus, tombent dans une impasse — et partent. Chaque question sans réponse est un lead qui disparaît en silence.',
-    'prob.c1.k':'REBOND','prob.c1.title':'Les visiteurs repartent sans réponses','prob.c1.body':'Les visiteurs ne trouvent pas assez vite ce qu\'il leur faut et repartent avant de découvrir votre valeur.',
-    'prob.c2.k':'NAVIGATION','prob.c2.title':'Informations éparpillées sur des dizaines de pages','prob.c2.body':'Specs, prix et politiques dispersés sur plusieurs niveaux de menus. Les clients abandonnent avant.',
-    'prob.c3.k':'DISPONIBILITÉ','prob.c3.title':'Questions sans réponse en dehors des heures de bureau','prob.c3.body':'Les clients n\'achètent pas uniquement de 9h à 17h. Chaque question sans réponse à minuit est un revenu manqué.',
-    'prob.c4.k':'COÛTS SUPPORT','prob.c4.title':'Équipes noyées dans les questions répétitives','prob.c4.body':'Les mêmes questions, encore et encore. Des heures passées sur des choses qui n\'avaient jamais besoin d\'un humain.',
-    'prob.c5.k':'UNIFORMITÉ','prob.c5.title':'Chaque visiteur reçoit la même page générique','prob.c5.body':'Aucune adaptation à l\'intention ou au contexte. Aucun guidage, aucune pertinence, faible conversion.',
-    'prob.c6.k':'FRICTION','prob.c6.title':'La navigation complexe tue les conversions','prob.c6.body':'Menus confus et recherche défaillante. Les visiteurs rencontrent des frictions et quittent le tunnel.',
-
-    'how.eyebrow':'Comment ça marche',
-    'how.title':'Collez une URL. Obtenez un expert commercial.',
-    'how.sub':'Quatre étapes d\'une simple adresse web à un assistant conscient de votre marque qui connaît votre catalogue sur le bout des doigts. Pas de code, pas de FAQ manuelle.',
-    'how.s1.title':'Lit votre site','how.s1.body':'Le crawler scanne chaque page — produits, specs, FAQ, onglets cachés — et gère automatiquement le contenu rendu en JavaScript.',
-    'how.s2.title':'Comprend vos produits','how.s2.body':'Les specs, prix et caractéristiques sont extraits en données structurées et lisibles par machine. L\'IA apprend tout votre catalogue.',
-    'how.s3.title':'Répond comme votre meilleur employé','how.s3.body':'Les clients posent leurs questions en langage naturel. Axyom répond avec précision, dans la voix de votre marque.',
-    'how.s4.title':'Compare, recommande, vend','how.s4.body':'Il ne répond pas seulement — il conseille. Comparaisons, cross-selling et recommandations personnalisées boostent la conversion.',
+    'shop.eyebrow':'Conçue pour Shopify',
+    'shop.title':'L\'app Axyom pour <span class="u">Shopify</span>.',
+    'shop.sub':'Vous l\'installez depuis Shopify et le catalogue se synchronise tout seul. L\'assistant répond à partir de vos vrais produits, prix et politiques, et vous l\'activez dans l\'éditeur de thème, sans toucher au code.',
+    'shop.mock.app':'Assistant Axyom','shop.mock.embed':'Intégration app','shop.mock.ask':'Vous l\'avez en taille M ?','shop.mock.prod':'Pull en mérinos','shop.mock.avail':'CHF 129 · Taille M en stock','shop.mock.view':'Voir le produit',
+    'shop.c1.k':'Installation','shop.c1.title':'Installée depuis Shopify, sans code.','shop.c1.body':'Le catalogue se synchronise tout seul — produits, variantes, prix, stock, pages et politiques.',
+    'shop.c2.k':'Réponses','shop.c2.title':'Les réponses viennent du vrai catalogue.','shop.c2.body':'Prix et disponibilité sont lus dans la boutique, pas saisis dans une FAQ. Les réponses incluent des fiches produit avec images et liens.',
+    'shop.c3.k':'Commandes','shop.c3.title':'Suivi de commande.','shop.c3.body':'Le client se connecte avec son propre compte Shopify et demande où en est sa commande — l\'assistant la lit en direct depuis son compte. Les données de commande ne sont jamais stockées.',
+    'shop.c4.k':'Thème','shop.c4.title':'Activation dans l\'éditeur de thème.','shop.c4.body':'Un bloc d\'intégration d\'app : les marchands ne modifient jamais le code du thème.',
+    'shop.c5.k':'Design','shop.c5.title':'À l\'image de votre boutique.','shop.c5.body':'Couleurs et style se règlent dans l\'app : glass, solid ou minimal.',
+    'shop.c6.k':'Conformité','shop.c6.title':'Construite selon les règles de Shopify.','shop.c6.body':'Webhooks de conformité RGPD, authentification par session token, et un assistant qui répond uniquement à partir des contenus du marchand.',
+    'shop.note':'Bientôt sur le Shopify App Store. L\'app n\'est pas encore publiée — parlez-nous de votre boutique et nous vous installons directement.',
 
     'feat.eyebrow':'Capacités',
     'feat.title':'Pas un wrapper ChatGPT. Un moteur de vente conçu à cet effet.',
