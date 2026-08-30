@@ -2,11 +2,17 @@
  * logo3d.js — Axyom 3D hero mark
  * =============================================================================
  *
- * Renders the four-pointed Axyom sparkle in WebGL as a real extruded solid with
- * a physical material, studio lighting and a procedural environment. Nothing is
- * traced from, or textured with, the PNG; the silhouette is four cubic Beziers
- * whose control points were least-squares fitted to the logo's traced contour
- * (IoU 0.93 against the artwork, RMS ~3.5px on a 1664px-wide source).
+ * Renders the COMPLETE Axyom logo — the "axyom" wordmark AND the four-pointed
+ * sparkle, composed exactly as they sit in the artwork — in WebGL, as real
+ * extruded solids with physical materials, studio lighting and a procedural
+ * environment. Nothing is textured with the PNG.
+ *
+ * The vector source is Assets/axyom-logo.svg (potrace of Assets/axyomlogo.png,
+ * viewBox 0 0 1664 749), inlined verbatim below as LOGO_SVG so the module makes
+ * no network request at all. It is parsed with the vendored three.js SVGLoader,
+ * turned into filled Shapes by SVGLoader.createShapes() — which is what gets the
+ * counters of "a" and "o" assigned as holes rather than filled — and extruded
+ * with ExtrudeGeometry.
  *
  * USAGE
  * -----
@@ -19,11 +25,13 @@
  *
  * The container should have a non-zero size from CSS (the module fills it and
  * watches it with a ResizeObserver; it never sets the container's own size).
- * A container of 320-720px square works well. Calling mountLogo3D twice on the
- * same element is safe only if you destroy() the first handle.
+ * The logo is ~2.23:1, so a wide container suits it; in a container narrower
+ * than that the fit falls back to filling the width (see `padding` below).
+ * Calling mountLogo3D twice on the same element is safe only if you destroy()
+ * the first handle.
  *
- * CONTRACT
- * --------
+ * CONTRACT (unchanged)
+ * --------------------
  *   mountLogo3D(container: HTMLElement, options?: Object) -> handle
  *
  *   handle.destroy()            Idempotent. Stops the loop, disconnects every
@@ -45,53 +53,108 @@
  *                               increasing while the mark is off-screen or the
  *                               document is hidden.
  *
+ * UNITS
+ * -----
+ * Everything spatial is expressed in "logo units": the composed logo's ink
+ * bounding box is centred on the origin and is exactly 2.0 wide, so x runs
+ * -1..1 and y runs about -0.449..0.449. (The previous revision used units where
+ * the sparkle's long point was 1.0 from the centre; every length option below
+ * therefore has a different numeric range now, even where its meaning survived.)
+ *
  * OPTIONS (all optional; defaults shown)
  * --------------------------------------
- *   color:            0x00B39C   Base teal of the mark (hex number or CSS string).
- *   rotationZ:        0          In-plane roll, radians. 0 = long axis vertical
- *                                (the mark stood upright). Pass -0.75347
- *                                (= -43.17 deg) to reproduce the diagonal
- *                                orientation the sparkle has in the wordmark.
- *   depth:            0.26       Front-to-back thickness at the thickest point,
- *                                in units where the long point is 1.0 from the
- *                                centre. This sets the ridge height, so it is
- *                                what controls how sculpted the mark looks.
- *   rim:              0.026      Height of the vertical band along the
- *                                silhouette. Small, but it is what the rim light
- *                                catches and what keeps the edge from looking
- *                                infinitely thin.
- *   tipRound:         0.014      Radius of the fillet at each of the four points.
- *                                0 gives razor tips (and aliasing on them).
- *   outlinePoints:    640        Outline samples, spaced by arc length. Drives
- *                                the triangle count (~6 tris per sample).
- *   padding:          0.10       Fraction of extra room around the mark when
- *                                fitting the camera. Larger = smaller mark.
- *   fov:              26         Camera field of view, degrees.
+ *   color:            0x00B39C   Base teal of the SPARKLE. Meaning preserved —
+ *                                it is still "the base colour of the mark" —
+ *                                but it now colours only the star, because the
+ *                                wordmark has its own colour (`wordColor`).
+ *   wordColor:        0x060C11   NEW. Near-black of the wordmark.
+ *   starGradient:     0.82       NEW. 0..1. How much of the artwork's teal
+ *                                gradient (bright at the top-right point, deep
+ *                                at the bottom-left) to bake in as vertex
+ *                                colour on top of the shading. 0 = flat teal.
+ *   rotationZ:        0          In-plane roll, radians. MEANING CHANGED: it is
+ *                                now the roll of the WHOLE composed logo, and 0
+ *                                is the artwork's own orientation (wordmark
+ *                                level, sparkle lying diagonally across the x).
+ *                                The old "pass -0.75347 to tilt the sparkle"
+ *                                advice is obsolete — the tilt comes from the
+ *                                vector source now.
+ *   depth:            0.115      Total front-to-back thickness of the wordmark
+ *                                (bevels included), in logo units.
+ *   starDepthScale:   1.45       NEW. Sparkle thickness as a multiple of
+ *                                `depth`. >1 is what puts it in front.
+ *   rim:              0.0055     MEANING CHANGED, purpose preserved: this used
+ *                                to be the height of the vertical band along
+ *                                the silhouette; it is now the ExtrudeGeometry
+ *                                bevel size (lateral inset), which is the band
+ *                                the rim light catches. bevelThickness is
+ *                                derived from it as rim * 1.25.
+ *   bevelSegments:    3          NEW. Facets across the bevel.
+ *   tipRound:         0.010      Radius of the fillet at each of the sparkle's
+ *                                four points, in logo units. Meaning preserved.
+ *                                0 gives razor tips — and, because a bevel is
+ *                                offset along the corner bisector, razor tips
+ *                                make the bevel shoot a spike out of each point.
+ *                                Keep this comfortably larger than `rim`.
+ *   outlinePoints:    512        Arc-length-spaced samples taken around the
+ *                                sparkle outline. Meaning preserved (it drives
+ *                                the sparkle's triangle count) but it no longer
+ *                                affects the wordmark — see `curveSegments`.
+ *   curveSegments:    8          NEW. Subdivisions per source Bezier for the
+ *                                wordmark contours.
+ *   creaseAngle:      32         NEW. Degrees. Vertex normals are averaged only
+ *                                across faces closer than this, so letter walls
+ *                                shade smooth while the bevel stays crisp.
+ *   cullOccluded:     0.6        NEW. Drop wordmark subpaths with at least this
+ *                                fraction of their outline inside the sparkle.
+ *                                potrace assigns the sparkle's darkest tip to
+ *                                the black path; that fragment is invisible in
+ *                                the artwork (the sparkle covers it) and would
+ *                                otherwise be a black chip on the lower-left
+ *                                point. Set > 1 to keep everything.
+ *   padding:          0.10       Fraction of extra room around the logo when
+ *                                fitting the camera. Larger = smaller logo. The
+ *                                fit is "contain": in a container narrower than
+ *                                the logo's 2.23:1 the width constraint binds,
+ *                                so the logo fills the width and is centred
+ *                                vertically, which is what a tall phone
+ *                                container should do.
+ *   fov:              20         Camera field of view, degrees. Low, on
+ *                                purpose: at 2.23:1 the logo is wide enough
+ *                                that a wider lens visibly splays its ends.
  *   maxPixelRatio:    2          devicePixelRatio cap.
  *   antialias:        true       MSAA on the default framebuffer.
  *   exposure:         1.0        Tone-mapping exposure (Khronos PBR Neutral).
  *   shadow:           true       Draw the soft contact shadow plane.
- *   shadowOpacity:    0.22       Peak alpha of that shadow.
+ *   shadowOpacity:    0.18       Peak alpha of that shadow.
  *   entry:            true       Play the entry animation on first reveal.
  *   entryDuration:    1500       Entry length in ms (total choreography <1.6s).
  *   idle:             true       Keep a very slow drift alive once settled.
  *   idleAmount:       1          Multiplier on the idle drift amplitude.
- *   progressYaw:      0.62       rotation.y in radians at setProgress(1).
- *   progressPitch:   -0.20       rotation.x in radians at setProgress(1).
- *   progressScale:    0.82       Uniform scale at setProgress(1).
+ *   progressYaw:      0.46       rotation.y in radians at setProgress(1).
+ *   progressPitch:   -0.16       rotation.x in radians at setProgress(1).
+ *   progressScale:    0.86       Uniform scale at setProgress(1).
+ *   svgSource:        LOGO_SVG   NEW. Override the vector source with your own
+ *                                SVG markup (a string). Must contain a dark
+ *                                wordmark path and a lighter sparkle path;
+ *                                id="word" / id="star" are used when present,
+ *                                otherwise the darkest path is taken as the
+ *                                wordmark.
  *   fallbackSrc:      'Assets/axyomlogo.png'   Used when WebGL is unavailable.
  *   fallbackAlt:      'Axyom'                  alt text for that image.
  *   onReady:          null       Called with the handle once the first frame
  *                                has been drawn (never called in the fallback
  *                                path; use handle.isFallback for that).
  *
- * BEHAVIOUR GUARANTEES
- * --------------------
+ * BEHAVIOUR GUARANTEES (unchanged)
+ * --------------------------------
  *   - No WebGL / context creation throws / context lost at runtime -> the
- *     fallback <img> is swapped in and every handle method keeps working.
- *   - prefers-reduced-motion: reduce -> one static, fully-lit frame is drawn at
- *     the settled pose. No entry, no idle drift, no scroll rotation, no rAF
- *     loop. Resizes redraw that single frame.
+ *     fallback <img> is swapped in and every handle method keeps working. A
+ *     failure to parse or build the vector source degrades the same way.
+ *   - prefers-reduced-motion: reduce -> exactly one static, fully-lit frame is
+ *     drawn at the settled pose. No entry, no idle drift, no scroll rotation,
+ *     no rAF loop. A resize that actually changes the pixel size redraws that
+ *     single frame; a resize notification that does not is ignored.
  *   - Rendering is suspended when the container leaves the viewport
  *     (IntersectionObserver) and when document.hidden becomes true. The entry
  *     clock is suspended with it, so a hero scrolled past and returned to still
@@ -99,8 +162,9 @@
  *   - GL initialisation is deferred to the next animation frame, so calling
  *     mountLogo3D() never blocks first paint.
  *
- * three.js is vendored at ../vendor/three.module.min.js (r169). No network
- * imports, no external HDR, no extra dependencies.
+ * three.js is vendored at ../vendor/three.module.min.js (r169) and its
+ * SVGLoader at ../vendor/SVGLoader.js. No network imports, no external HDR, no
+ * extra dependencies.
  */
 
 import {
@@ -109,8 +173,10 @@ import {
   PerspectiveCamera,
   WebGLRenderer,
   Shape,
+  Path,
+  ExtrudeGeometry,
   BufferGeometry,
-  Float32BufferAttribute,
+  BufferAttribute,
   PlaneGeometry,
   SphereGeometry,
   Mesh,
@@ -128,332 +194,739 @@ import {
   BackSide,
   DoubleSide,
   MathUtils,
-  Vector2,
-  Vector4
+  Vector2
 } from '../vendor/three.module.min.js';
 
+import { SVGLoader } from '../vendor/SVGLoader.js';
+
 /* ---------------------------------------------------------------------------
- * 1. The silhouette
+ * 1. The vector source
  * ---------------------------------------------------------------------------
- * Measured off Assets/axyomlogo.png: the teal mask was isolated by channel
- * threshold, the outline traced with Moore neighbourhood tracing, the two axes
- * intersected to find the true centre (431.8, 394.3 px) and the four tips
- * located by ray marching. Each of the four edges was then fitted as a cubic
- * Bezier with free control points (coordinate descent on point-to-curve
- * distance). Everything below is normalised so the longest point sits at
- * radius 1, and rotated +43.17 deg so that long axis is vertical.
+ * Verbatim copy of Assets/axyom-logo.svg. Inlined rather than fetched so the
+ * module keeps its "no network request" guarantee and its synchronous, single
+ * failure path. If the asset is ever re-traced, re-paste it here (or pass the
+ * new markup as options.svgSource).
  *
- * Resulting proportions, which are what actually make it read as the Axyom
- * mark: long point 1.000, opposite point 0.853, side points 0.729 and 0.725,
- * the horizontal axis tilted ~2.4 deg off perpendicular, and a waist that
- * pinches to ~0.15 of the tip radius. That last number is why the edges look
- * this concave.
+ * Structure, which the builder below relies on:
+ *   <g transform="translate(0,749) scale(0.1,-0.1)">   <- potrace, note the Y flip
+ *     <path id="word" fill="#020a10" .../>   7 subpaths; 2 of them (the "a" and
+ *                                            "o" counters) are holes
+ *     <path id="star" fill="#00b3a1" .../>   1 subpath, lying diagonally
+ * SVGLoader applies the group matrix, so the points arrive in viewBox space
+ * with y pointing DOWN; every point is passed through toLogoUnits() below,
+ * which is where the y flip back to three.js' y-up happens.
  */
-const TIP_UP = [-0.00007, 0.99934];
-const TIP_RIGHT = [0.72887, -0.03023];
-const TIP_DOWN = [0.00037, -0.85328];
-const TIP_LEFT = [-0.72495, 0.03010];
+const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 749" width="1664" height="749">
+<g transform="translate(0.000000,749.000000) scale(0.100000,-0.100000)">
+<path id="word" fill="#020a10" d="M9720 5449 c-441 -51 -771 -212 -1007 -492 -314 -375 -471 -853 -449
+-1372 14 -332 74 -581 203 -840 194 -391 475 -649 839 -771 390 -131 928 -135
+1314 -12 224 71 400 177 555 333 356 357 544 878 521 1445 -13 344 -80 607
+-223 879 -268 512 -656 769 -1252 830 -119 13 -392 12 -501 0z m495 -764 c49
+-14 117 -40 150 -58 82 -43 208 -171 262 -267 133 -237 182 -618 128 -990 -58
+-396 -256 -655 -565 -737 -92 -25 -340 -24 -428 0 -215 60 -361 184 -462 392
+-56 114 -83 203 -106 354 -20 131 -23 409 -5 541 73 534 358 812 816 796 91
+-3 142 -11 210 -31z M1250 5420 c-262 -32 -508 -114 -670 -223 -263 -177 -428
+-482 -465 -859 l-7 -68 424 0 423 0 23 83 c57 208 153 308 339 354 93 23 347
+22 458 -1 197 -42 280 -116 306 -273 23 -140 -24 -235 -148 -300 -96 -50 -172
+-66 -643 -133 -190 -27 -390 -61 -444 -75 -498 -130 -764 -401 -833 -850 -16
+-109 -13 -311 7 -420 32 -175 110 -332 222 -451 177 -186 412 -291 700 -313
+406 -30 731 87 1061 384 59 54 109 96 111 94 2 -2 9 -51 15 -109 7 -58 25
+-141 39 -185 l27 -80 71 -3 72 -3 161 238 c88 131 228 326 310 433 l150 195 1
+687 0 686 -63 79 c-130 160 -244 321 -615 860 -150 218 -123 198 -322 235 -82
+15 -162 20 -370 23 -146 2 -299 0 -340 -5z m827 -2090 c-4 -191 -7 -237 -26
+-304 -55 -199 -150 -314 -331 -404 -280 -138 -576 -130 -730 19 -152 147 -141
+473 20 623 96 90 213 130 606 205 229 44 283 60 389 114 l70 35 3 -32 c2 -17
+2 -132 -1 -256z M13436 5414 c-230 -31 -409 -116 -550 -259 -34 -34 -97 -112
+-141 -174 l-80 -112 -3 236 -2 235 -424 0 -423 0 -6 -97 c-9 -128 -9 -2073 0
+-2735 l6 -518 431 0 c237 0 436 4 443 8 10 6 13 261 16 1132 3 1048 4 1129 21
+1184 70 233 224 342 498 354 73 3 141 0 180 -7 176 -35 287 -140 332 -315 33
+-127 36 -223 36 -1288 l0 -1068 443 2 442 3 5 1100 c6 1194 2 1118 60 1264 82
+209 260 321 510 321 265 0 421 -121 477 -371 14 -66 17 -200 20 -1196 l4
+-1123 450 0 450 0 -4 1243 c-3 1082 -6 1254 -20 1332 -78 440 -338 723 -764
+831 -309 78 -704 10 -964 -167 -86 -58 -205 -181 -274 -283 l-59 -86 -47 91
+c-63 119 -104 173 -194 257 -128 120 -290 186 -518 211 -122 14 -226 12 -351
+-5z M5160 5345 c0 -7 70 -199 75 -203 4 -4 235 197 235 205 0 1 -70 3 -155 3
+-85 0 -155 -2 -155 -5z M7512 5168 c-480 -1718 -638 -2274 -643 -2265 -10 19
+-371 1219 -560 1860 -24 81 -46 147 -49 147 -7 0 -627 -842 -635 -862 -4 -10
+388 -1142 689 -1988 22 -62 77 -147 327 -505 165 -236 306 -436 313 -443 11
+-11 29 22 99 180 126 286 215 528 512 1383 154 444 886 2541 919 2633 l15 42
+-468 0 -468 0 -51 -182z M6030 1355 c-31 -8 -127 -13 -222 -14 l-168 -1 0
+-348 0 -349 128 -6 c320 -17 535 -6 702 34 102 25 254 96 293 137 l29 30 -342
+266 c-188 146 -347 265 -353 265 -7 -1 -37 -7 -67 -14z M1627 683 c-14 -14
+-17 -15 -18 -3 0 10 -4 8 -9 -5 -8 -19 -9 -19 -9 -1 -1 16 -3 17 -18 5 -15
+-12 -16 -12 -8 1 6 12 5 12 -5 3 -7 -6 -18 -10 -24 -7 -6 2 -18 -7 -27 -19
+-259 -360 -429 -598 -439 -616 -11 -22 -11 -23 7 -10 58 42 723 635 723 645 0
+7 -5 16 -12 20 -7 4 -8 3 -4 -4 5 -8 0 -12 -13 -12 -12 0 -21 5 -21 11 0 8 -6
+7 -17 -2 -9 -8 -24 -13 -34 -11 -9 2 -20 -2 -24 -8 -5 -8 -11 -8 -21 1 -7 6
+-11 15 -8 20 8 14 0 10 -19 -8z"/>
+<path id="star" fill="#00b3a1" d="M6155 5835 c-1029 -910 -1875 -1654 -1882 -1653 -7 2 -616 491 -1353
+1086 -738 596 -1344 1081 -1347 1078 -4 -3 2 -19 14 -34 11 -15 462 -645 1002
+-1400 l982 -1374 -387 -541 c-214 -298 -774 -1081 -1245 -1739 -472 -658 -863
+-1207 -870 -1220 -12 -22 -11 -22 7 -8 20 16 3171 2787 3215 2827 l26 24 1359
+-1062 c1472 -1149 1414 -1105 1414 -1091 0 5 -429 619 -953 1363 -524 745
+-967 1375 -985 1401 l-33 48 1432 1942 c788 1069 1443 1958 1457 1976 13 17
+23 32 20 32 -2 0 -845 -745 -1873 -1655z"/>
+</g></svg>`;
 
-/** Four cubic segments, walking the outline U -> R -> D -> L -> U. */
-const EDGES = [
-  { a: TIP_UP, c1: [0.18014, -0.15490], c2: [-0.12575, 0.18365], b: TIP_RIGHT },
-  { a: TIP_RIGHT, c1: [-0.15119, -0.15384], c2: [0.16194, 0.16697], b: TIP_DOWN },
-  { a: TIP_DOWN, c1: [-0.17460, 0.06959], c2: [0.15879, -0.16024], b: TIP_LEFT },
-  { a: TIP_LEFT, c1: [0.16309, 0.12902], c2: [-0.15723, -0.16281], b: TIP_UP }
-];
+/* ---------------------------------------------------------------------------
+ * 2. Small geometry helpers
+ * ------------------------------------------------------------------------- */
+const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+const easeOutQuint = (x) => 1 - Math.pow(1 - clamp01(x), 5);
+const easeOutExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -9 * x));
+const easeInOutCubic = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const stagger = (t, start, span) => clamp01((t - start) / span);
 
-/** Unit vectors toward each of the four points, for the entry shader. */
-const TIP_DIRS = [TIP_UP, TIP_RIGHT, TIP_DOWN, TIP_LEFT].map((t) => {
-  const len = Math.hypot(t[0], t[1]);
-  return [t[0] / len, t[1] / len];
-});
-
-/** Bounding box of the outline above, used to centre the mark and fit the camera. */
-const BOX = { minX: -0.7250, maxX: 0.7289, minY: -0.8533, maxY: 0.9993 };
-const BOX_W = BOX.maxX - BOX.minX;
-const BOX_H = BOX.maxY - BOX.minY;
-const BOX_CY = (BOX.maxY + BOX.minY) / 2;
-
-const lerp2 = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
-
-/** de Casteljau: return the piece of a cubic on [t, 1]. */
-function cubicAfter(a, c1, c2, b, t) {
-  const p01 = lerp2(a, c1, t);
-  const p12 = lerp2(c1, c2, t);
-  const p23 = lerp2(c2, b, t);
-  const p012 = lerp2(p01, p12, t);
-  const p123 = lerp2(p12, p23, t);
-  const p = lerp2(p012, p123, t);
-  return { a: p, c1: p123, c2: p23, b };
+/** Even-odd crossing test. `poly` is an array of {x, y}. */
+function pointInPolygon(px, py, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i];
+    const b = poly[j];
+    if (
+      a.y > py !== b.y > py &&
+      px < ((b.x - a.x) * (py - a.y)) / (b.y - a.y || 1e-12) + a.x
+    ) {
+      inside = !inside;
+    }
+  }
+  return inside;
 }
 
-/** de Casteljau: return the piece of a cubic on [0, t]. */
-function cubicBefore(a, c1, c2, b, t) {
-  const p01 = lerp2(a, c1, t);
-  const p12 = lerp2(c1, c2, t);
-  const p23 = lerp2(c2, b, t);
-  const p012 = lerp2(p01, p12, t);
-  const p123 = lerp2(p12, p23, t);
-  const p = lerp2(p012, p123, t);
-  return { a, c1: p01, c2: p012, b: p };
+/** Drop consecutive duplicates and an explicit closing point. */
+function cleanRing(pts) {
+  const out = [];
+  for (const p of pts) {
+    const last = out[out.length - 1];
+    if (!last || Math.hypot(p.x - last.x, p.y - last.y) > 1e-7) out.push({ x: p.x, y: p.y });
+  }
+  while (
+    out.length > 2 &&
+    Math.hypot(out[0].x - out[out.length - 1].x, out[0].y - out[out.length - 1].y) < 1e-7
+  ) {
+    out.pop();
+  }
+  return out;
 }
 
 /**
- * Build the outline as a THREE.Shape.
+ * Locate the four points of the sparkle: the vertices where the ring turns
+ * hardest.
  *
- * `tipRound` trims a short piece off each end of every edge and rejoins the two
- * trimmed ends with a quadratic through the original tip. Geometrically this is
- * a tiny fillet — invisible at hero size — but it keeps the turn angle at the
- * needles finite, which matters both for the rim band and for anti-aliasing at
- * a 9-degree point.
+ * Deliberately comparative rather than absolute — the turn measured at a needle
+ * depends on the sample spacing (2.7 rad at 256 samples, 1.8 at 512 for the
+ * shallowest of the four), so a fixed threshold is a trap. Take the `wanted`
+ * hardest turns instead, with non-maximum suppression over a window wide enough
+ * that one needle cannot supply two of them. The concave waists in between are
+ * a clear step down (around 1.0 rad) and never displace a point.
  */
-function buildShape(tipRound) {
-  const segs = EDGES.map((e) => ({ a: e.a, c1: e.c1, c2: e.c2, b: e.b }));
+function findTips(ring, wanted) {
+  const n = ring.length;
+  if (n < wanted * 4) return [];
+  const turn = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const a = ring[(i - 1 + n) % n];
+    const m = ring[i];
+    const c = ring[(i + 1) % n];
+    const v1x = m.x - a.x;
+    const v1y = m.y - a.y;
+    const v2x = c.x - m.x;
+    const v2y = c.y - m.y;
+    turn[i] = Math.abs(Math.atan2(v1x * v2y - v1y * v2x, v1x * v2x + v1y * v2y));
+  }
+  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => turn[b] - turn[a]);
+  const minSep = Math.max(2, Math.floor(n / (wanted * 3)));
+  const picked = [];
+  for (const i of order) {
+    if (turn[i] < 0.9) break;
+    let clear = true;
+    for (const j of picked) {
+      const d = Math.min((i - j + n) % n, (j - i + n) % n);
+      if (d <= minSep) {
+        clear = false;
+        break;
+      }
+    }
+    if (clear) picked.push(i);
+    if (picked.length === wanted) break;
+  }
+  return picked;
+}
 
-  if (tipRound > 0) {
-    for (let i = 0; i < segs.length; i++) {
-      const s = segs[i];
-      // Approximate arc length near each endpoint by the control-net speed.
-      const speedA = 3 * Math.hypot(s.c1[0] - s.a[0], s.c1[1] - s.a[1]);
-      const speedB = 3 * Math.hypot(s.b[0] - s.c2[0], s.b[1] - s.c2[1]);
-      const tA = Math.min(0.2, tipRound / Math.max(speedA, 1e-4));
-      const tB = Math.min(0.2, tipRound / Math.max(speedB, 1e-4));
-      let cut = cubicAfter(s.a, s.c1, s.c2, s.b, tA);
-      cut = cubicBefore(cut.a, cut.c1, cut.c2, cut.b, 1 - tB);
-      segs[i] = { ...cut, tipStart: s.a, tipEnd: s.b };
+function roundTips(ring, tipIndices, radius) {
+  const tipPoints = tipIndices.map((i) => ring[i]);
+  if (!(radius > 0) || tipIndices.length < 2) return { ring, tips: tipPoints };
+  const n = ring.length;
+
+  // Rotate so index 0 sits as far from every tip as possible, which stops any
+  // fillet window from wrapping past the end of the array.
+  let bestOffset = 0;
+  let bestGap = -1;
+  for (let o = 0; o < n; o++) {
+    let gap = n;
+    for (const t of tipIndices) {
+      const d = Math.min((t - o + n) % n, (o - t + n) % n);
+      if (d < gap) gap = d;
+    }
+    if (gap > bestGap) {
+      bestGap = gap;
+      bestOffset = o;
     }
   }
+  const rot = ring.slice(bestOffset).concat(ring.slice(0, bestOffset));
+  const tips = tipIndices.map((t) => (t - bestOffset + n) % n).sort((a, b) => a - b);
 
-  const shape = new Shape();
-  shape.moveTo(segs[0].a[0], segs[0].a[1]);
-  for (let i = 0; i < segs.length; i++) {
-    const s = segs[i];
-    shape.bezierCurveTo(s.c1[0], s.c1[1], s.c2[0], s.c2[1], s.b[0], s.b[1]);
-    if (tipRound > 0) {
-      const next = segs[(i + 1) % segs.length];
-      // Round the point: quadratic from this edge's end, through the real tip,
-      // to the next edge's start.
-      shape.quadraticCurveTo(s.tipEnd[0], s.tipEnd[1], next.a[0], next.a[1]);
+  // A fillet may never eat more than half the run between two neighbouring
+  // points, or two windows would overlap and the splice would tear the ring.
+  let minSpan = n;
+  for (let i = 0; i < tips.length; i++) {
+    const d = (tips[(i + 1) % tips.length] - tips[i] + n) % n;
+    if (d > 0 && d < minSpan) minSpan = d;
+  }
+  const capM = Math.max(1, Math.floor(minSpan / 2) - 1);
+
+  let perim = 0;
+  for (let i = 0; i < n; i++) {
+    perim += Math.hypot(rot[(i + 1) % n].x - rot[i].x, rot[(i + 1) % n].y - rot[i].y);
+  }
+  const seg = perim / n;
+  const m = Math.max(1, Math.min(capM, Math.round(radius / Math.max(seg, 1e-9))));
+
+  const skip = new Uint8Array(n);
+  const fillet = new Map();
+  for (const t of tips) {
+    for (let d = -m; d <= m; d++) skip[(t + d + n) % n] = 1;
+    fillet.set((t - m + n) % n, t);
+  }
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    if (fillet.has(i)) {
+      const t = fillet.get(i);
+      const p0 = rot[i];
+      const p1 = rot[t];
+      const p2 = rot[(t + m) % n];
+      const steps = 2 * m;
+      for (let s = 0; s <= steps; s++) {
+        const u = s / steps;
+        const w = 1 - u;
+        out.push({
+          x: w * w * p0.x + 2 * w * u * p1.x + u * u * p2.x,
+          y: w * w * p0.y + 2 * w * u * p1.y + u * u * p2.y
+        });
+      }
+      continue;
+    }
+    if (!skip[i]) out.push(rot[i]);
+  }
+  return { ring: cleanRing(out), tips: tipPoints };
+}
+
+/** Intersection of the lines (a,b) and (c,d); null when parallel. */
+function lineIntersect(a, b, c, d) {
+  const r1x = b.x - a.x;
+  const r1y = b.y - a.y;
+  const r2x = d.x - c.x;
+  const r2y = d.y - c.y;
+  const den = r1x * r2y - r1y * r2x;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((c.x - a.x) * r2y - (c.y - a.y) * r2x) / den;
+  return { x: a.x + r1x * t, y: a.y + r1y * t };
+}
+
+/**
+ * Per-vertex normals with a crease threshold, on a non-indexed geometry.
+ *
+ * ExtrudeGeometry finishes with computeVertexNormals(), and because its output
+ * has no index that yields flat per-face normals — every segment of a letter's
+ * curved wall shades as its own facet, which with a clearcoat reads as banding.
+ * Averaging everything instead would round the edge between the front face and
+ * the bevel, which is the one edge that has to stay sharp. So: average only
+ * across faces that meet at less than `angleDeg`. Walls go smooth, the bevel
+ * facets and the cap edges stay crisp.
+ */
+function creaseNormals(geo, angleDeg) {
+  const pos = geo.attributes.position.array;
+  const vCount = pos.length / 3;
+  const tCount = vCount / 3;
+  const fn = new Float32Array(tCount * 3);
+  for (let t = 0; t < tCount; t++) {
+    const i = t * 9;
+    const ax = pos[i + 3] - pos[i];
+    const ay = pos[i + 4] - pos[i + 1];
+    const az = pos[i + 5] - pos[i + 2];
+    const bx = pos[i + 6] - pos[i];
+    const by = pos[i + 7] - pos[i + 1];
+    const bz = pos[i + 8] - pos[i + 2];
+    fn[t * 3] = ay * bz - az * by;
+    fn[t * 3 + 1] = az * bx - ax * bz;
+    fn[t * 3 + 2] = ax * by - ay * bx;
+  }
+  const keys = new Array(vCount);
+  const buckets = new Map();
+  const Q = 1e4;
+  for (let v = 0; v < vCount; v++) {
+    const k =
+      Math.round(pos[v * 3] * Q) + '|' + Math.round(pos[v * 3 + 1] * Q) + '|' + Math.round(pos[v * 3 + 2] * Q);
+    keys[v] = k;
+    let list = buckets.get(k);
+    if (!list) buckets.set(k, (list = []));
+    list.push(v);
+  }
+  const cosT = Math.cos((angleDeg * Math.PI) / 180);
+  const out = new Float32Array(vCount * 3);
+  for (let v = 0; v < vCount; v++) {
+    const t = (v / 3) | 0;
+    const nx = fn[t * 3];
+    const ny = fn[t * 3 + 1];
+    const nz = fn[t * 3 + 2];
+    const nl = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+    let ax = 0;
+    let ay = 0;
+    let az = 0;
+    const list = buckets.get(keys[v]);
+    for (let q = 0; q < list.length; q++) {
+      const u = (list[q] / 3) | 0;
+      const mx = fn[u * 3];
+      const my = fn[u * 3 + 1];
+      const mz = fn[u * 3 + 2];
+      const ml = Math.sqrt(mx * mx + my * my + mz * mz) || 1;
+      if ((nx * mx + ny * my + nz * mz) / (nl * ml) >= cosT) {
+        ax += mx;
+        ay += my;
+        az += mz;
+      }
+    }
+    const al = Math.sqrt(ax * ax + ay * ay + az * az);
+    if (al > 1e-12) {
+      out[v * 3] = ax / al;
+      out[v * 3 + 1] = ay / al;
+      out[v * 3 + 2] = az / al;
+    } else {
+      out[v * 3] = nx / nl;
+      out[v * 3 + 1] = ny / nl;
+      out[v * 3 + 2] = nz / nl;
     }
   }
-  shape.closePath();
+  geo.setAttribute('normal', new BufferAttribute(out, 3));
+  return geo;
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Vector source -> logo-unit outlines
+ * ---------------------------------------------------------------------------
+ * Cached at module scope: parsing, flattening and filleting is pure and
+ * deterministic, and the tests mount and destroy the module two dozen times in
+ * a row. Only the GPU buffers are rebuilt per mount.
+ */
+let vectorCache = null;
+
+function prepareVectors(opts) {
+  const key = [
+    opts.svgSource.length,
+    opts.curveSegments,
+    opts.outlinePoints,
+    opts.tipRound,
+    opts.cullOccluded
+  ].join('/');
+  if (vectorCache && vectorCache.key === key && vectorCache.src === opts.svgSource) {
+    return vectorCache.value;
+  }
+
+  const parsed = new SVGLoader().parse(opts.svgSource);
+  if (!parsed.paths.length) throw new Error('logo3d: no paths in the vector source');
+
+  // Prefer the ids the asset carries; fall back to luminance (the wordmark is
+  // the dark path) so a re-export without ids still composes correctly.
+  let wordPath = null;
+  let starPath = null;
+  for (const p of parsed.paths) {
+    const id = (p.userData && p.userData.node && p.userData.node.getAttribute('id')) || '';
+    if (id === 'word') wordPath = p;
+    else if (id === 'star') starPath = p;
+  }
+  if (!wordPath || !starPath) {
+    const lum = (p) => {
+      const c = p.color || new Color(0);
+      return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+    };
+    const sorted = parsed.paths.slice().sort((a, b) => lum(a) - lum(b));
+    wordPath = wordPath || sorted[0];
+    starPath = starPath || sorted[sorted.length - 1];
+    if (wordPath === starPath) throw new Error('logo3d: could not separate wordmark from sparkle');
+  }
+
+  // -- sparkle: one ring, arc-length sampled, then its four points located ----
+  const starShapes = SVGLoader.createShapes(starPath);
+  if (!starShapes.length) throw new Error('logo3d: sparkle path produced no shape');
+  const rawRing = cleanRing(starShapes[0].getSpacedPoints(Math.max(64, opts.outlinePoints | 0)));
+  const tipIdx = findTips(rawRing, 4);
+  if (tipIdx.length < 4) throw new Error('logo3d: sparkle does not have four points');
+  const rawTips = tipIdx.map((i) => rawRing[i]);
+
+  // The convergence point is where the two axes through opposite points cross.
+  // Ordering the four tips by angle about the ring's centroid makes 0/2 and 1/3
+  // the opposite pairs.
+  let bx = 0;
+  let by = 0;
+  for (const p of rawRing) {
+    bx += p.x;
+    by += p.y;
+  }
+  bx /= rawRing.length;
+  by /= rawRing.length;
+  const byAngle = rawTips
+    .slice()
+    .sort((a, b) => Math.atan2(a.y - by, a.x - bx) - Math.atan2(b.y - by, b.x - bx));
+  let centre = { x: bx, y: by };
+  const crossing = lineIntersect(byAngle[0], byAngle[2], byAngle[1], byAngle[3]);
+  if (crossing) centre = crossing;
+
+  // -- wordmark: every filled subpath with its counters as holes --------------
+  const wordShapes = SVGLoader.createShapes(wordPath);
+  const cs = Math.max(1, opts.curveSegments | 0);
+  const wordParts = [];
+  for (const sh of wordShapes) {
+    const ep = sh.extractPoints(cs);
+    const contour = cleanRing(ep.shape);
+    if (contour.length < 3) continue;
+    const holes = (ep.holes || []).map(cleanRing).filter((h) => h.length >= 3);
+    // potrace hands the sparkle's darkest point to the black path. Anything
+    // that lives entirely under the sparkle is invisible in the artwork, so
+    // keeping it would only risk a black chip peeking out of a teal needle.
+    let insideCount = 0;
+    for (const p of contour) if (pointInPolygon(p.x, p.y, rawRing)) insideCount++;
+    if (insideCount / contour.length >= opts.cullOccluded) continue;
+    wordParts.push({ contour, holes });
+  }
+  if (!wordParts.length) throw new Error('logo3d: wordmark produced no shapes');
+
+  // -- one common frame: ink bbox centred on origin, 2.0 units wide -----------
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  const grow = (pts) => {
+    for (const p of pts) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+  };
+  for (const w of wordParts) grow(w.contour);
+  grow(rawRing);
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const S = 2 / (maxX - minX || 1);
+
+  // Fillet the four points only now, because tipRound is quoted in logo units
+  // and the source-to-logo scale is only known once the bounding box is.
+  const starRing = roundTips(rawRing, tipIdx, opts.tipRound / S).ring;
+
+  // y is negated here: SVG is y-down, three.js is y-up. Doing it on the points
+  // rather than with a negative object scale keeps every matrix determinant
+  // positive, so winding, culling and normals need no special-casing anywhere.
+  const tf = (p) => new Vector2((p.x - cx) * S, -(p.y - cy) * S);
+
+  const parts = wordParts.map((w) => {
+    const contour = w.contour.map(tf);
+    const holes = w.holes.map((h) => h.map(tf));
+    let sx = 0;
+    let sy = 0;
+    for (const p of contour) {
+      sx += p.x;
+      sy += p.y;
+    }
+    return { contour, holes, cx: sx / contour.length, cy: sy / contour.length };
+  });
+  parts.sort((a, b) => a.cx - b.cx);
+
+  const starCentre = tf(centre);
+  const star = starRing.map(tf).map((p) => new Vector2(p.x - starCentre.x, p.y - starCentre.y));
+  const tips = rawTips
+    .map(tf)
+    .map((p) => new Vector2(p.x - starCentre.x, p.y - starCentre.y))
+    .sort((a, b) => b.length() - a.length());
+
+  const value = {
+    parts,
+    star,
+    starCentre,
+    tips,
+    box: {
+      minX: (minX - cx) * S,
+      maxX: (maxX - cx) * S,
+      minY: -(maxY - cy) * S,
+      maxY: -(minY - cy) * S
+    }
+  };
+  vectorCache = { key, src: opts.svgSource, value };
+  return value;
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Outlines -> solids
+ * ------------------------------------------------------------------------- */
+function toShape(contour, holes) {
+  const shape = new Shape(contour);
+  for (const h of holes || []) shape.holes.push(new Path(h));
   return shape;
 }
 
+function extrude(shape, total, opts) {
+  const bevelThickness = opts.rim * 1.25;
+  // `depth` is the total thickness; ExtrudeGeometry adds a bevel at each end on
+  // top of its own `depth`, so the flat core is what is left over.
+  const core = Math.max(total - 2 * bevelThickness, total * 0.2);
+  const geo = new ExtrudeGeometry(shape, {
+    steps: 1,
+    depth: core,
+    curveSegments: 1, // the shapes arrive already flattened to polygons
+    bevelEnabled: opts.rim > 0,
+    bevelThickness,
+    bevelSize: opts.rim,
+    bevelOffset: 0,
+    bevelSegments: Math.max(1, opts.bevelSegments | 0)
+  });
+  geo.translate(0, 0, -core / 2);
+  return creaseNormals(geo, opts.creaseAngle);
+}
+
 /**
- * Build the solid.
- *
- * Not a flat extrusion: a slab facing the camera reads as a sticker no matter
- * how good the material is. And not a simple cone to a central apex either —
- * these points are 1.0 long and only ~0.10 wide, so a central apex would give
- * the whole face a 7-degree slope and shade almost flat.
- *
- * The section used here is a roof over the medial axis: height above the rim is
- * proportional to the distance from the silhouette, so every point gets a ridge
- * running along its own centreline out to its tip, and each waist gets a
- * valley. The cross-slope is then set by the point's half-width — around 40
- * degrees — which is what makes the two flanks of every point read as clearly
- * different surfaces.
- *
- * Construction: for each outline sample, find which of the four points it
- * belongs to (nearest tip direction), project it onto that point's axis, and
- * raise that projection by k * half-width. Those projections form a closed
- * ridge loop that runs out and back along each of the four axes, enclosing zero
- * area, so one triangle strip from the outline ring to the ridge loop tiles the
- * whole face with no holes and no centre fan.
- *
- * That geometry is also where the colour gradient comes from. Eight flanks all
- * face different ways, so one key light puts the upper-right of the mark near
- * #00b3a1 and the lower-left near #0d6155 — the logo's own gradient, but
- * produced by shading, so it reorganises itself as the mark turns.
- *
- * Deliberately non-indexed: computeVertexNormals() on unshared vertices yields
- * per-face normals, so the ridges and the waist valleys stay crisp instead of
- * being smoothed into a blob.
+ * The wordmark: one solid per subpath, merged into a single non-indexed buffer
+ * so the whole word is one draw call, but carrying two extra attributes —
+ * `aDelay` (when this letter's entry starts) and `aCentroid` (what it pivots
+ * about) — so the entry can still animate each letter independently.
  */
-function buildGeometry(opts) {
-  const shape = buildShape(opts.tipRound);
-  // Spaced, not uniform-in-t: a cubic covers most of its parameter range near
-  // the waist and races through the tip, so getPoints() leaves the points
-  // coarsely faceted exactly where the silhouette is sharpest.
-  const raw = shape.getSpacedPoints(opts.outlinePoints);
-
-  // Drop duplicated join points and the repeated closing point.
-  const ring = [];
-  for (const p of raw) {
-    const last = ring[ring.length - 1];
-    if (!last || Math.hypot(p.x - last.x, p.y - last.y) > 1e-6) ring.push(p);
-  }
-  while (
-    ring.length > 2 &&
-    Math.hypot(ring[0].x - ring[ring.length - 1].x, ring[0].y - ring[ring.length - 1].y) < 1e-6
-  ) {
-    ring.pop();
+function buildWord(vec, opts) {
+  const entries = [];
+  let total = 0;
+  const n = vec.parts.length;
+  for (let i = 0; i < n; i++) {
+    const part = vec.parts[i];
+    const geo = extrude(toShape(part.contour, part.holes), opts.depth, opts);
+    const count = geo.attributes.position.count;
+    total += count;
+    entries.push({ geo, count, delay: 0.02 + i * (0.38 / Math.max(1, n - 1)), cx: part.cx, cy: part.cy });
   }
 
-  // Force counter-clockwise so front faces point at +Z.
-  let area = 0;
-  for (let i = 0; i < ring.length; i++) {
-    const a = ring[i];
-    const b = ring[(i + 1) % ring.length];
-    area += a.x * b.y - b.x * a.y;
+  const pos = new Float32Array(total * 3);
+  const nor = new Float32Array(total * 3);
+  const del = new Float32Array(total);
+  const cen = new Float32Array(total * 2);
+  let o = 0;
+  for (const e of entries) {
+    pos.set(e.geo.attributes.position.array, o * 3);
+    nor.set(e.geo.attributes.normal.array, o * 3);
+    for (let i = 0; i < e.count; i++) {
+      del[o + i] = e.delay;
+      cen[(o + i) * 2] = e.cx;
+      cen[(o + i) * 2 + 1] = e.cy;
+    }
+    o += e.count;
+    e.geo.dispose();
   }
-  if (area < 0) ring.reverse();
+  const geo = new BufferGeometry();
+  geo.setAttribute('position', new BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new BufferAttribute(nor, 3));
+  geo.setAttribute('aDelay', new BufferAttribute(del, 1));
+  geo.setAttribute('aCentroid', new BufferAttribute(cen, 2));
+  geo.computeBoundingSphere();
+  return geo;
+}
 
-  const N = ring.length;
-  const t = opts.rim / 2;
+/**
+ * The sparkle: one solid, thicker than the wordmark and pushed forward so it
+ * occludes the letters exactly as it does in the artwork.
+ *
+ * Three extra attributes drive the entry: which of the four axes a vertex rides
+ * out along (`aTipAxis`), when that point fires (`aTipDelay`), and how much of
+ * the extension it takes (`aHold`, ramped from 0 at the convergence point so
+ * the four blades stay knitted together instead of tearing apart at the waist).
+ * Doing the axis lookup here rather than in the shader keeps the vertex program
+ * branch-free.
+ *
+ * The same pass bakes the artwork's teal gradient into a colour attribute:
+ * bright at the long top-right point, deep at the bottom-left one.
+ */
+function buildStar(vec, opts) {
+  const total = opts.depth * opts.starDepthScale;
+  const geo = extrude(toShape(vec.star, null), total, opts);
+  const pos = geo.attributes.position.array;
+  const count = geo.attributes.position.count;
 
-  // Ridge partner for every outline sample: which point it belongs to, where it
-  // lands on that point's axis, and how far it is from the axis.
-  const ridge = new Array(N);
-  const flanks = [[[], []], [[], []], [[], []], [[], []]];
-  for (let i = 0; i < N; i++) {
-    const p = ring[i];
-    const r = Math.hypot(p.x, p.y) || 1e-6;
-    let q = 0;
+  const dirs = vec.tips.map((t) => t.clone().normalize());
+  const radii = vec.tips.map((t) => t.length());
+  const maxR = Math.max.apply(null, radii) || 1;
+  // Longest point first (that is how prepareVectors sorted them), so the
+  // staggered schedule reads as "the long axis fires, then the short one".
+  const delays = [0.3, 0.345, 0.32, 0.365];
+
+  const axis = new Float32Array(count * 2);
+  const delay = new Float32Array(count);
+  const hold = new Float32Array(count);
+  const col = new Float32Array(count * 3);
+
+  // Gradient axis: from the deep point to the bright one, in the artwork that
+  // is bottom-left -> top-right, i.e. the two ends of the longest diagonal.
+  const gA = vec.tips[0];
+  const gB = vec.tips.length > 1 ? vec.tips[1] : new Vector2(-gA.x, -gA.y);
+  const gx = gA.x - gB.x;
+  const gy = gA.y - gB.y;
+  const gLen2 = gx * gx + gy * gy || 1;
+  const dark = 1 - 0.78 * clamp01(opts.starGradient);
+  const bright = 1 + 0.12 * clamp01(opts.starGradient);
+
+  for (let v = 0; v < count; v++) {
+    const x = pos[v * 3];
+    const y = pos[v * 3 + 1];
+    const r = Math.hypot(x, y) || 1e-6;
     let best = -2;
-    for (let j = 0; j < 4; j++) {
-      const d = (p.x * TIP_DIRS[j][0] + p.y * TIP_DIRS[j][1]) / r;
+    let q = 0;
+    for (let j = 0; j < dirs.length; j++) {
+      const d = (x * dirs[j].x + y * dirs[j].y) / r;
       if (d > best) {
         best = d;
         q = j;
       }
     }
-    const u = TIP_DIRS[q];
-    const s = p.x * u[0] + p.y * u[1];
-    const ax = u[0] * s;
-    const ay = u[1] * s;
-    const hw = Math.hypot(p.x - ax, p.y - ay);
-    const side = u[0] * p.y - u[1] * p.x >= 0 ? 0 : 1;
-    ridge[i] = { x: ax, y: ay, s, hw, q };
-    flanks[q][side].push({ s, hw });
+    axis[v * 2] = dirs[q].x;
+    axis[v * 2 + 1] = dirs[q].y;
+    delay[v] = delays[q % delays.length];
+    const h = (r / maxR - 0.08) / 0.34;
+    hold[v] = h <= 0 ? 0 : h >= 1 ? 1 : h * h * (3 - 2 * h);
+    const t = clamp01(((x - gB.x) * gx + (y - gB.y) * gy) / gLen2);
+    const m = dark + (bright - dark) * (t * t * (3 - 2 * t));
+    col[v * 3] = m;
+    col[v * 3 + 1] = m;
+    col[v * 3 + 2] = m;
   }
 
-  // The two flanks of a point meet along its axis, but they are sampled at
-  // different stations and the point is not perfectly symmetric, so evaluating
-  // the ridge height from each flank's own half-width leaves them disagreeing
-  // by a few thousandths — which renders as a hairline crack straight down the
-  // middle of every point. Average the two flanks into one height profile per
-  // point instead, so both halves land on exactly the same 3D curve.
-  for (const sides of flanks) for (const list of sides) list.sort((a, b) => a.s - b.s);
-  const sample = (list, s) => {
-    if (!list.length) return 0;
-    if (s <= list[0].s) return list[0].hw;
-    if (s >= list[list.length - 1].s) return list[list.length - 1].hw;
-    let lo = 0;
-    let hi = list.length - 1;
-    while (hi - lo > 1) {
-      const mid = (lo + hi) >> 1;
-      if (list[mid].s <= s) lo = mid;
-      else hi = mid;
-    }
-    const span = list[hi].s - list[lo].s;
-    const f = span > 1e-9 ? (s - list[lo].s) / span : 0;
-    return list[lo].hw + (list[hi].hw - list[lo].hw) * f;
-  };
-
-  // One evenly-spaced height table per point, evaluated by both flanks. Sharing
-  // the table matters: both halves then terminate on the same piecewise-linear
-  // ridge curve, vertex for vertex, instead of on two curves that differ by a
-  // few thousandths and leak a hairline of background between them.
-  const TABLE = 128;
-  const tables = [];
-  for (let q = 0; q < 4; q++) {
-    const a = flanks[q][0];
-    const b = flanks[q][1];
-    const sMin = Math.min(a.length ? a[0].s : 0, b.length ? b[0].s : 0);
-    const sMax = Math.max(a.length ? a[a.length - 1].s : 1, b.length ? b[b.length - 1].s : 1);
-    const hw = new Float64Array(TABLE + 1);
-    for (let j = 0; j <= TABLE; j++) {
-      const sv = sMin + ((sMax - sMin) * j) / TABLE;
-      hw[j] = 0.5 * (sample(a, sv) + sample(b, sv));
-    }
-    tables.push({ sMin, sMax, hw });
-  }
-  const ridgeHalfWidth = (q, s) => {
-    const tb = tables[q];
-    const span = tb.sMax - tb.sMin || 1;
-    const f = Math.min(TABLE, Math.max(0, ((s - tb.sMin) / span) * TABLE));
-    const lo = Math.min(TABLE - 1, Math.floor(f));
-    return tb.hw[lo] + (tb.hw[lo + 1] - tb.hw[lo]) * (f - lo);
-  };
-
-  let maxHalfWidth = 0;
-  for (let i = 0; i < N; i++) {
-    const g = ridge[i];
-    g.hw = ridgeHalfWidth(g.q, g.s);
-    if (g.hw > maxHalfWidth) maxHalfWidth = g.hw;
-  }
-  const k = (opts.depth / 2 - t) / (maxHalfWidth || 1);
-  for (let i = 0; i < N; i++) ridge[i].z = t + k * ridge[i].hw;
-  // Where the ridge loop hands over from one point's axis to the next it cuts a
-  // chord across the middle, so the loop encloses a small quadrilateral at the
-  // centre. Four triangles to a centre apex close it.
-  const apexZ = opts.depth / 2;
-
-  const pos = [];
-  const push = (x, y, z) => pos.push(x, y, z);
-
-  for (let i = 0; i < N; i++) {
-    const a = ring[i];
-    const b = ring[(i + 1) % N];
-    const ra = ridge[i];
-    const rb = ridge[(i + 1) % N];
-
-    // Front roof: outline ring -> ridge loop.
-    push(a.x, a.y, t);
-    push(b.x, b.y, t);
-    push(rb.x, rb.y, rb.z);
-    push(a.x, a.y, t);
-    push(rb.x, rb.y, rb.z);
-    push(ra.x, ra.y, ra.z);
-
-    // Back roof: the mirror, wound the other way.
-    push(b.x, b.y, -t);
-    push(a.x, a.y, -t);
-    push(rb.x, rb.y, -rb.z);
-    push(rb.x, rb.y, -rb.z);
-    push(a.x, a.y, -t);
-    push(ra.x, ra.y, -ra.z);
-
-    // Rim band along the silhouette.
-    push(a.x, a.y, t);
-    push(a.x, a.y, -t);
-    push(b.x, b.y, -t);
-    push(a.x, a.y, t);
-    push(b.x, b.y, -t);
-    push(b.x, b.y, t);
-
-    // Close the centre quad where the ridge changes axis.
-    if (ra.q !== rb.q) {
-      push(0, 0, apexZ);
-      push(ra.x, ra.y, ra.z);
-      push(rb.x, rb.y, rb.z);
-      push(0, 0, -apexZ);
-      push(rb.x, rb.y, -rb.z);
-      push(ra.x, ra.y, -ra.z);
-    }
-  }
-
-  const geo = new BufferGeometry();
-  geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
-  geo.computeVertexNormals();
+  geo.setAttribute('aTipAxis', new BufferAttribute(axis, 2));
+  geo.setAttribute('aTipDelay', new BufferAttribute(delay, 1));
+  geo.setAttribute('aHold', new BufferAttribute(hold, 1));
+  geo.setAttribute('color', new BufferAttribute(col, 3));
   geo.computeBoundingSphere();
   return geo;
 }
 
 /* ---------------------------------------------------------------------------
- * 2. Easing
- * ------------------------------------------------------------------------- */
-const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
-const easeOutQuint = (x) => 1 - Math.pow(1 - x, 5);
-const easeOutExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -9 * x));
-// Slow start, long glide, hard stop — the "engineered, not bouncy" curve.
-const easeInOutCubic = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
-const stagger = (t, start, span) => clamp01((t - start) / span);
+ * 5. Entry deformation, injected into the physical materials
+ * ---------------------------------------------------------------------------
+ * Both injections read a per-vertex delay, so a single shared material animates
+ * six letters (or four points) on six (four) different schedules without any
+ * uniform-array indexing — which GLSL ES 1.0 only conditionally allows — and
+ * without splitting the mesh into six draw calls.
+ *
+ * At uEntry = 1 every displacement is exactly zero, so the settled frame is the
+ * extruded geometry untouched.
+ */
+const EASE_GLSL = `
+float axyEase( float x ) {
+  x = clamp( x, 0.0, 1.0 );
+  float m = 1.0 - x;
+  return 1.0 - m * m * m * m * m;
+}`;
+
+function uniqueKey() {
+  uniqueKey.n = (uniqueKey.n || 0) + 1;
+  return 'axyom-logo3d-' + uniqueKey.n;
+}
+
+/** Wordmark: each letter flips up about its own vertical axis and rises. */
+function installWordEntry(material, uniforms) {
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        attribute float aDelay;
+        attribute vec2 aCentroid;
+        uniform float uEntry;
+        uniform float uSpan;
+        uniform float uSpin;
+        uniform float uRise;
+        uniform float uShrink;
+        uniform float uDepthScale;
+        varying float vFade;
+        ${EASE_GLSL}
+        float axyK() { return axyEase( ( uEntry - aDelay ) / max( uSpan, 1e-4 ) ); }`
+      )
+      .replace(
+        '#include <beginnormal_vertex>',
+        `vec3 objectNormal = vec3( normal );
+        {
+          float ang = ( 1.0 - axyK() ) * uSpin;
+          float cs = cos( ang );
+          float sn = sin( ang );
+          objectNormal = vec3(
+            objectNormal.x * cs + objectNormal.z * sn,
+            objectNormal.y,
+            -objectNormal.x * sn + objectNormal.z * cs );
+        }`
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `vec3 transformed = vec3( position );
+        {
+          float k = axyK();
+          vFade = clamp( k * 3.0, 0.0, 1.0 );
+          float ang = ( 1.0 - k ) * uSpin;
+          float cs = cos( ang );
+          float sn = sin( ang );
+          vec3 q = vec3( transformed.xy - aCentroid, transformed.z );
+          q.xy *= mix( uShrink, 1.0, k );
+          q.z *= uDepthScale;
+          transformed = vec3(
+            aCentroid.x + q.x * cs + q.z * sn,
+            aCentroid.y + q.y - ( 1.0 - k ) * uRise,
+            -q.x * sn + q.z * cs );
+        }`
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vFade;')
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= vFade;');
+  };
+  const key = uniqueKey();
+  material.customProgramCacheKey = () => key;
+}
+
+/** Sparkle: the four points extend along their own axes on staggered clocks. */
+function installStarEntry(material, uniforms) {
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        attribute vec2 aTipAxis;
+        attribute float aTipDelay;
+        attribute float aHold;
+        uniform float uEntry;
+        uniform float uSpan;
+        uniform float uStub;
+        uniform float uDepthScale;
+        ${EASE_GLSL}`
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `vec3 transformed = vec3( position );
+        {
+          float k = mix( uStub, 1.0, axyEase( ( uEntry - aTipDelay ) / max( uSpan, 1e-4 ) ) );
+          float s = mix( 1.0, k, aHold );
+          float along = dot( transformed.xy, aTipAxis );
+          transformed.xy = ( transformed.xy - aTipAxis * along ) + aTipAxis * ( along * s );
+          transformed.z *= uDepthScale;
+        }`
+      );
+  };
+  const key = uniqueKey();
+  material.customProgramCacheKey = () => key;
+}
 
 /* ---------------------------------------------------------------------------
- * 3. Procedural studio environment (no HDR files)
+ * 6. Procedural studio environment (no HDR files)
  * ------------------------------------------------------------------------- */
 const ENV_VERT = `
 varying vec3 vDir;
@@ -467,13 +940,15 @@ varying vec3 vDir;
 void main() {
   vec3 d = normalize(vDir);
   // Bright, slightly cool ceiling falling to a warm neutral floor: a seamless
-  // cyclorama, the way a white-cove product shot actually looks.
+  // cyclorama, the way a white-cove product shot actually looks. The near-black
+  // wordmark lives almost entirely off this: on white, a black solid only reads
+  // as a solid because of what it reflects.
   float up = d.y * 0.5 + 0.5;
-  vec3 sky = mix(vec3(0.16, 0.17, 0.18), vec3(0.86, 0.88, 0.90), pow(up, 0.9));
+  vec3 sky = mix(vec3(0.13, 0.14, 0.15), vec3(0.94, 0.96, 0.98), pow(up, 0.85));
   // Soft key glow high on the right so reflections carry a direction.
   float key = pow(max(dot(d, normalize(vec3(0.62, 0.68, 0.40))), 0.0), 5.0);
-  sky += vec3(1.05, 1.02, 0.98) * key * 1.1;
-  // Cool bounce low-left, so the deep side of the mark stays green-teal
+  sky += vec3(1.05, 1.02, 0.98) * key * 1.25;
+  // Cool bounce low-left, so the deep side of the sparkle stays green-teal
   // instead of going muddy grey.
   float bounce = pow(max(dot(d, normalize(vec3(-0.70, -0.45, 0.35))), 0.0), 4.0);
   sky += vec3(0.30, 0.44, 0.42) * bounce * 0.55;
@@ -494,16 +969,16 @@ function buildEnvironment(renderer) {
   );
   envScene.add(dome);
 
-  // Two explicit softboxes give crisp, believable specular shapes on the bevel.
-  // The two grazing panels are the important ones. The roof flanks are tilted
-  // ~48 degrees, so what they mirror into the camera is whatever sits almost in
-  // the plane of the mark, not what is in front of it.
+  // Explicit softboxes give crisp, believable specular shapes on the bevel.
+  // The grazing panels are the important ones: a bevel is only a couple of
+  // millimetres of surface, tilted ~45 degrees, so what it mirrors into the
+  // camera is whatever sits almost in the plane of the logo.
   const boxes = [
     { size: 9, pos: [7.5, 8.5, 6.5], color: 0xffffff, intensity: 1.8 },
     { size: 7, pos: [10.0, 3.5, -1.5], color: 0xffffff, intensity: 3.4 },
     { size: 7, pos: [3.5, 10.0, -1.5], color: 0xf4fffd, intensity: 2.6 },
-    { size: 7, pos: [-8.0, 2.0, 5.0], color: 0xe8fbf6, intensity: 0.45 },
-    { size: 8, pos: [-1.5, -7.5, 4.0], color: 0xd7f2ec, intensity: 0.2 }
+    { size: 9, pos: [-9.0, 4.0, 4.0], color: 0xeef7ff, intensity: 1.1 },
+    { size: 8, pos: [-1.5, -7.5, 4.0], color: 0xd7f2ec, intensity: 0.35 }
   ];
   const temp = [];
   for (const b of boxes) {
@@ -532,7 +1007,7 @@ function buildEnvironment(renderer) {
 }
 
 /* ---------------------------------------------------------------------------
- * 4. Contact shadow
+ * 7. Contact shadow
  * ------------------------------------------------------------------------- */
 function buildShadowTexture() {
   const S = 256;
@@ -559,55 +1034,7 @@ function buildShadowTexture() {
 }
 
 /* ---------------------------------------------------------------------------
- * 5. Entry deformation, injected into the physical material
- * ---------------------------------------------------------------------------
- * Each of the four points is scaled along its own axis, from a stub to full
- * length, on its own schedule. A smoothstep on radius freezes the vertices near
- * the convergence point so the four blades stay knitted together instead of
- * tearing at the waists. At uK* = 1 the displacement is exactly zero, so the
- * settled geometry is the fitted shape, untouched.
- */
-function installEntryDeformation(material, uniforms) {
-  material.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = shader.vertexShader
-      .replace(
-        '#include <common>',
-        `#include <common>
-        uniform vec2 uTip0; uniform vec2 uTip1; uniform vec2 uTip2; uniform vec2 uTip3;
-        uniform vec4 uTipK;
-        uniform float uDepthScale;`
-      )
-      .replace(
-        '#include <begin_vertex>',
-        `vec3 transformed = vec3( position );
-        {
-          vec2 p = transformed.xy;
-          float r = length( p );
-          vec2 n = r > 1e-5 ? p / r : vec2( 0.0, 1.0 );
-          vec2 axis = uTip0; float k = uTipK.x;
-          float d = dot( n, uTip0 ); float best = d;
-          d = dot( n, uTip1 ); if ( d > best ) { best = d; axis = uTip1; k = uTipK.y; }
-          d = dot( n, uTip2 ); if ( d > best ) { best = d; axis = uTip2; k = uTipK.z; }
-          d = dot( n, uTip3 ); if ( d > best ) { best = d; axis = uTip3; k = uTipK.w; }
-          float hold = smoothstep( 0.08, 0.42, r );
-          float s = mix( 1.0, k, hold );
-          float along = dot( p, axis );
-          vec2 perp = p - axis * along;
-          transformed.xy = perp + axis * ( along * s );
-          transformed.z *= uDepthScale;
-        }`
-      );
-  };
-  // A unique key per material instance: onBeforeCompile mutations are invisible
-  // to three's default program cache, so without this a plain
-  // MeshPhysicalMaterial elsewhere on the page could hand us its program.
-  const key = 'axyom-logo3d-' + (installEntryDeformation.n = (installEntryDeformation.n || 0) + 1);
-  material.customProgramCacheKey = () => key;
-}
-
-/* ---------------------------------------------------------------------------
- * 6. Fallback path
+ * 8. Fallback path
  * ------------------------------------------------------------------------- */
 function mountFallback(container, opts, reducedMotion) {
   const img = document.createElement('img');
@@ -647,7 +1074,7 @@ function webglAvailable() {
 }
 
 /* ---------------------------------------------------------------------------
- * 7. Entry point
+ * 9. Entry point
  * ------------------------------------------------------------------------- */
 export function mountLogo3D(container, options = {}) {
   if (!container || !container.appendChild) {
@@ -656,25 +1083,33 @@ export function mountLogo3D(container, options = {}) {
 
   const opts = {
     color: 0x00b39c,
+    wordColor: 0x060c11,
+    starGradient: 0.82,
     rotationZ: 0,
-    depth: 0.26,
-    rim: 0.026,
-    tipRound: 0.014,
-    outlinePoints: 640,
+    depth: 0.115,
+    starDepthScale: 1.45,
+    rim: 0.0055,
+    bevelSegments: 3,
+    tipRound: 0.01,
+    outlinePoints: 512,
+    curveSegments: 8,
+    creaseAngle: 32,
+    cullOccluded: 0.6,
     padding: 0.1,
-    fov: 26,
+    fov: 20,
     maxPixelRatio: 2,
     antialias: true,
     exposure: 1.0,
     shadow: true,
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.18,
     entry: true,
     entryDuration: 1500,
     idle: true,
     idleAmount: 1,
-    progressYaw: 0.62,
-    progressPitch: -0.2,
-    progressScale: 0.82,
+    progressYaw: 0.46,
+    progressPitch: -0.16,
+    progressScale: 0.86,
+    svgSource: LOGO_SVG,
     fallbackSrc: 'Assets/axyomlogo.png',
     fallbackAlt: 'Axyom',
     onReady: null,
@@ -704,31 +1139,43 @@ export function mountLogo3D(container, options = {}) {
   let idleClock = 0;
   let frames = 0;
   let needsRender = true;
+  let booting = true; // suppress redraws until init has finished building
+  let lastW = 0;
+  let lastH = 0;
+  let lastDpr = 0;
 
   let renderer = null;
   let scene = null;
   let camera = null;
-  let markGroup = null; // rotated / scaled
-  let centreGroup = null; // translated so the outline's bbox is centred
-  let mesh = null;
-  let geometry = null;
-  let material = null;
+  let logoGroup = null; // rotated / scaled as a whole
+  let wordMesh = null;
+  let starMesh = null;
+  let wordGeo = null;
+  let starGeo = null;
+  let wordMat = null;
+  let starMat = null;
   let shadowMesh = null;
   let shadowTex = null;
   let envTarget = null;
   let sweepLight = null;
-  let keyLight = null;
   let resizeObs = null;
   let interObs = null;
   let canvas = null;
   let fallbackHandle = null;
+  let box = null;
 
-  const uniforms = {
-    uTip0: { value: new Vector2(TIP_DIRS[0][0], TIP_DIRS[0][1]) },
-    uTip1: { value: new Vector2(TIP_DIRS[1][0], TIP_DIRS[1][1]) },
-    uTip2: { value: new Vector2(TIP_DIRS[2][0], TIP_DIRS[2][1]) },
-    uTip3: { value: new Vector2(TIP_DIRS[3][0], TIP_DIRS[3][1]) },
-    uTipK: { value: new Vector4(1, 1, 1, 1) },
+  const wordUniforms = {
+    uEntry: { value: 1 },
+    uSpan: { value: 0.5 },
+    uSpin: { value: -1.15 },
+    uRise: { value: 0.1 },
+    uShrink: { value: 0.86 },
+    uDepthScale: { value: 1 }
+  };
+  const starUniforms = {
+    uEntry: { value: 1 },
+    uSpan: { value: 0.58 },
+    uStub: { value: 0.14 },
     uDepthScale: { value: 1 }
   };
 
@@ -758,6 +1205,7 @@ export function mountLogo3D(container, options = {}) {
    */
   function requestFrame() {
     needsRender = true;
+    if (booting) return;
     if (reducedMotion) {
       drawOnce();
       return;
@@ -772,13 +1220,22 @@ export function mountLogo3D(container, options = {}) {
     return { w, h };
   }
 
+  /**
+   * Contain-fit. The logo is ~2.23:1, so in any container narrower than that —
+   * every phone — the width term wins and the logo fills the width with the
+   * padding respected, sitting centred in the leftover height. That is the
+   * right answer for a tall container: fitting the height instead would leave
+   * the mark a fifth of the width it could have had.
+   */
   function fitCamera(w, h) {
+    if (!camera || !box) return;
     const aspect = w / h;
     camera.aspect = aspect;
     const halfFov = MathUtils.degToRad(opts.fov) / 2;
-    // Extra room below for the contact shadow.
-    const halfH = (BOX_H / 2) * (1 + opts.padding) * 1.06;
-    const halfW = (BOX_W / 2) * (1 + opts.padding);
+    // ExtrudeGeometry's bevel pushes the flat core `rim` proud of the source
+    // outline, so the real silhouette is a touch wider than the ink box.
+    const halfH = ((box.maxY - box.minY) / 2 + opts.rim) * (1 + opts.padding) * 1.1; // room for the shadow
+    const halfW = ((box.maxX - box.minX) / 2 + opts.rim) * (1 + opts.padding);
     const distH = halfH / Math.tan(halfFov);
     const distW = halfW / (Math.tan(halfFov) * aspect);
     camera.position.set(0, 0, Math.max(distH, distW));
@@ -786,10 +1243,20 @@ export function mountLogo3D(container, options = {}) {
     camera.updateProjectionMatrix();
   }
 
+  /**
+   * Idempotent: a ResizeObserver fires once on observe() and again on every
+   * layout pass that merely touches the element, and under reduced motion each
+   * of those would repaint the one static frame for nothing.
+   */
   function resize() {
     if (!renderer) return;
     const { w, h } = containerSize();
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.maxPixelRatio));
+    const dpr = Math.min(window.devicePixelRatio || 1, opts.maxPixelRatio);
+    if (w === lastW && h === lastH && dpr === lastDpr) return;
+    lastW = w;
+    lastH = h;
+    lastDpr = dpr;
+    renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     fitCamera(w, h);
     requestFrame();
@@ -834,55 +1301,97 @@ export function mountLogo3D(container, options = {}) {
     scene.environment = envTarget.texture;
 
     // -- geometry ----------------------------------------------------------
-    geometry = buildGeometry(opts);
+    // A malformed or missing vector source must not leave a blank hero.
+    let vec;
+    try {
+      vec = prepareVectors(opts);
+      wordGeo = buildWord(vec, opts);
+      starGeo = buildStar(vec, opts);
+    } catch (err) {
+      // A broken vector source is a bug, not an environment condition, and it
+      // is invisible from the outside (the hero simply shows the PNG), so say
+      // so once rather than degrading in silence.
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('logo3d: could not build the logo geometry, falling back to the image.', err);
+      }
+      degradeToFallback();
+      return;
+    }
+    box = vec.box;
 
-    // -- material ----------------------------------------------------------
-    material = new MeshPhysicalMaterial({
-      color: new Color(opts.color),
-      metalness: 0.05,
-      roughness: 0.16,
-      clearcoat: 0.7,
-      clearcoatRoughness: 0.04,
-      reflectivity: 0.55,
+    // -- materials ---------------------------------------------------------
+    // Near-black with a clearcoat: on a white page a black solid collapses to a
+    // flat silhouette unless its bevel and its walls can catch the environment.
+    // The roughness therefore stays low — but the environment contribution is
+    // deliberately held well under 1, because a black object that mirrors a
+    // white studio at full strength stops reading as black and starts reading
+    // as 1990s chrome.
+    wordMat = new MeshPhysicalMaterial({
+      color: new Color(opts.wordColor),
+      metalness: 0.0,
+      roughness: 0.27,
+      clearcoat: 0.42,
+      clearcoatRoughness: 0.07,
+      reflectivity: 0.4,
       envMapIntensity: 0.5,
       specularIntensity: 1,
       transparent: true,
       depthWrite: true,
       opacity: 1
     });
-    installEntryDeformation(material, uniforms);
+    installWordEntry(wordMat, wordUniforms);
 
-    mesh = new Mesh(geometry, material);
+    starMat = new MeshPhysicalMaterial({
+      color: new Color(opts.color),
+      vertexColors: true,
+      metalness: 0.06,
+      roughness: 0.16,
+      clearcoat: 0.6,
+      clearcoatRoughness: 0.045,
+      reflectivity: 0.35,
+      envMapIntensity: 0.3,
+      specularIntensity: 1,
+      transparent: true,
+      depthWrite: true,
+      opacity: 1
+    });
+    installStarEntry(starMat, starUniforms);
 
-    markGroup = new Group();
-    markGroup.add(mesh);
-    markGroup.rotation.z = opts.rotationZ;
+    wordMesh = new Mesh(wordGeo, wordMat);
+    starMesh = new Mesh(starGeo, starMat);
+    // Back faces very nearly coplanar would z-fight where the two solids
+    // overlap, so the sparkle sits a hair proud at the back as well as
+    // standing clearly in front.
+    const lift = (opts.depth * (opts.starDepthScale - 1)) / 2 + 0.004;
+    starMesh.position.set(vec.starCentre.x, vec.starCentre.y, lift);
+    starMesh.renderOrder = 1;
 
-    centreGroup = new Group();
-    centreGroup.position.y = -BOX_CY;
-    centreGroup.add(markGroup);
-    scene.add(centreGroup);
+    logoGroup = new Group();
+    logoGroup.add(wordMesh);
+    logoGroup.add(starMesh);
+    logoGroup.rotation.z = opts.rotationZ;
+    scene.add(logoGroup);
 
     // -- lights (key / fill / rim + the entry sweep) ------------------------
     // Point lights, not directionals, for key and fill: the inverse-square
-    // falloff across the mark is part of what tips the upper right brighter
-    // than the lower left.
-    keyLight = new PointLight(0xffffff, 22, 0, 2);
-    keyLight.position.set(2.4, 2.3, 1.1);
-    scene.add(keyLight);
+    // falloff across a 2-unit-wide logo is part of what tips the right-hand
+    // letters brighter than the left-hand ones.
+    const key = new PointLight(0xffffff, 13, 0, 2);
+    key.position.set(1.9, 2.2, 2.0);
+    scene.add(key);
 
-    const fill = new PointLight(0x9ed8cd, 2.2, 0, 2);
-    fill.position.set(-2.4, -2.0, 1.2);
+    const fill = new PointLight(0xbfe4dc, 4.2, 0, 2);
+    fill.position.set(-2.4, -1.4, 1.9);
     scene.add(fill);
 
-    const rim = new DirectionalLight(0x6fe6cf, 0.5);
-    rim.position.set(-1.5, 1.5, -1.9);
+    const rim = new DirectionalLight(0x6fe6cf, 0.45);
+    rim.position.set(-1.4, 1.2, -1.9);
     scene.add(rim);
 
-    // Face-on fill. The flanks are steep enough to live off grazing light, but
-    // the flat facets at the centre would read as a dark knot without this.
-    const front = new DirectionalLight(0xffffff, 0.9);
-    front.position.set(0.7, 0.9, 3.0);
+    // Face-on fill. The front faces are flat and parallel, so without this the
+    // whole word would sit in one flat tone.
+    const front = new DirectionalLight(0xffffff, 0.42);
+    front.position.set(0.5, 0.8, 3.0);
     scene.add(front);
 
     scene.add(new AmbientLight(0xcfeee8, 0.05));
@@ -894,8 +1403,9 @@ export function mountLogo3D(container, options = {}) {
     // -- contact shadow ----------------------------------------------------
     if (opts.shadow) {
       shadowTex = buildShadowTexture();
+      const w = (box.maxX - box.minX) * 1.35;
       shadowMesh = new Mesh(
-        new PlaneGeometry(1.9, 0.72),
+        new PlaneGeometry(w, w * 0.24),
         new MeshBasicMaterial({
           map: shadowTex,
           transparent: true,
@@ -904,22 +1414,20 @@ export function mountLogo3D(container, options = {}) {
           toneMapped: false
         })
       );
-      shadowMesh.position.set(0.02, -1.02, -0.22);
+      shadowMesh.position.set(0, box.minY - 0.055, -0.16);
       scene.add(shadowMesh);
     }
 
     resize();
 
-    resizeObs =
-      typeof ResizeObserver === 'function'
-        ? new ResizeObserver(() => resize())
-        : null;
+    resizeObs = typeof ResizeObserver === 'function' ? new ResizeObserver(() => resize()) : null;
     if (resizeObs) resizeObs.observe(container);
     window.addEventListener('resize', resize, { passive: true });
     document.addEventListener('visibilitychange', onVisibility, false);
 
     if (reducedMotion) {
       applyPose(1, 1);
+      booting = false;
       drawOnce();
       if (opts.onReady) opts.onReady(handle);
       return;
@@ -943,6 +1451,7 @@ export function mountLogo3D(container, options = {}) {
     // Render one frame immediately so the mark is present even if the loop is
     // suspended a moment later.
     applyPose(entryClock / opts.entryDuration, 1);
+    booting = false;
     drawOnce();
     if (opts.onReady) opts.onReady(handle);
     syncLoop();
@@ -950,60 +1459,62 @@ export function mountLogo3D(container, options = {}) {
 
   /* --- animation ---------------------------------------------------------- */
   /**
-   * Places the mark for a given entry phase (0..1) and applies idle drift and
+   * Places the logo for a given entry phase (0..1) and applies idle drift and
    * scroll progress. Kept as one function so the reduced-motion still frame and
    * the animated path cannot drift apart.
+   *
+   * Choreography, in units of the entry phase:
+   *   0.00-0.55  thickness extrudes; the sparkle's core X is already present
+   *   0.02-0.90  the six wordmark parts flip up and fade in, left to right
+   *   0.30-0.98  the four sparkle points shoot out along their own axes
+   *   0.08-0.90  a hard specular band sweeps across, resolving as it settles
+   *   0.00-1.00  a controlled quarter turn coming to rest square-on
    */
   function applyPose(entry, settle) {
     const e = clamp01(entry);
 
-    // The four points extend on staggered schedules: long vertical pair leads,
-    // horizontal pair follows a beat later. easeOutQuint = fast commit, long
-    // deceleration, no overshoot.
-    const k = uniforms.uTipK.value;
-    k.x = 0.16 + 0.84 * easeOutQuint(stagger(e, 0.0, 0.72));
-    k.y = 0.16 + 0.84 * easeOutQuint(stagger(e, 0.16, 0.72));
-    k.z = 0.16 + 0.84 * easeOutQuint(stagger(e, 0.08, 0.72));
-    k.w = 0.16 + 0.84 * easeOutQuint(stagger(e, 0.22, 0.72));
-
-    // Thickness extrudes first: the mark gains its solidity before it settles.
-    uniforms.uDepthScale.value = 0.05 + 0.95 * easeOutExpo(stagger(e, 0.0, 0.6));
+    wordUniforms.uEntry.value = e;
+    starUniforms.uEntry.value = e;
+    const depthScale = 0.06 + 0.94 * easeOutExpo(stagger(e, 0.0, 0.55));
+    wordUniforms.uDepthScale.value = depthScale;
+    starUniforms.uDepthScale.value = depthScale;
 
     // Settling rotation: a controlled quarter turn coming to rest square-on.
     const s = easeInOutCubic(e);
-    const entryYaw = (1 - s) * -0.78;
-    const entryPitch = (1 - s) * 0.3;
-    const entryRoll = (1 - s) * 0.12;
-    const entryScale = 0.86 + 0.14 * easeOutQuint(stagger(e, 0.05, 0.8));
+    const entryYaw = (1 - s) * -0.52;
+    const entryPitch = (1 - s) * 0.22;
+    const entryRoll = (1 - s) * 0.06;
+    const entryScale = 0.9 + 0.1 * easeOutQuint(stagger(e, 0.05, 0.8));
 
     // Idle drift, only once settled and only if enabled.
     const idleGain = opts.idle && !reducedMotion ? settle * opts.idleAmount : 0;
-    const driftYaw = Math.sin(idleClock / 6400) * 0.105 * idleGain;
-    const driftPitch = Math.sin(idleClock / 8900 + 1.1) * 0.048 * idleGain;
-    const driftRoll = Math.sin(idleClock / 11700 + 2.3) * 0.022 * idleGain;
+    const driftYaw = Math.sin(idleClock / 6400) * 0.075 * idleGain;
+    const driftPitch = Math.sin(idleClock / 8900 + 1.1) * 0.034 * idleGain;
+    const driftRoll = Math.sin(idleClock / 11700 + 2.3) * 0.014 * idleGain;
 
     // Scroll progress.
     const p = progress;
     const scale = entryScale * (1 + (opts.progressScale - 1) * p);
 
-    markGroup.rotation.y = entryYaw + driftYaw + opts.progressYaw * p;
-    markGroup.rotation.x = entryPitch + driftPitch + opts.progressPitch * p;
-    markGroup.rotation.z = opts.rotationZ + entryRoll + driftRoll;
-    markGroup.scale.setScalar(scale);
+    logoGroup.rotation.y = entryYaw + driftYaw + opts.progressYaw * p;
+    logoGroup.rotation.x = entryPitch + driftPitch + opts.progressPitch * p;
+    logoGroup.rotation.z = opts.rotationZ + entryRoll + driftRoll;
+    logoGroup.scale.setScalar(scale);
 
-    material.opacity = clamp01(stagger(e, 0.0, 0.34));
+    // The wordmark fades per letter inside the shader; the sparkle fades whole.
+    starMat.opacity = clamp01(stagger(e, 0.06, 0.3));
 
     // Light sweep: a hard specular band crossing the face, peaking mid-entry
-    // and resolving to nothing exactly as the mark stops moving.
+    // and resolving to nothing exactly as the logo stops moving.
     const sweepPhase = stagger(e, 0.08, 0.82);
     const env = Math.sin(Math.PI * sweepPhase);
-    sweepLight.intensity = env * env * 5.2;
+    sweepLight.intensity = env * env * 2.6;
     sweepLight.position.set(-3.4 + 6.8 * sweepPhase, 0.9 - 0.6 * sweepPhase, 2.6);
 
     if (shadowMesh) {
       shadowMesh.material.opacity = opts.shadowOpacity * easeOutQuint(stagger(e, 0.2, 0.7));
-      const sw = 0.6 + 0.4 * easeOutQuint(stagger(e, 0.2, 0.7));
-      shadowMesh.scale.set(sw * (1 - 0.12 * p), sw, 1);
+      const sw = 0.7 + 0.3 * easeOutQuint(stagger(e, 0.2, 0.7));
+      shadowMesh.scale.set(sw * (1 - 0.1 * p), sw, 1);
     }
   }
 
@@ -1091,8 +1602,10 @@ export function mountLogo3D(container, options = {}) {
     window.removeEventListener('resize', resize);
     document.removeEventListener('visibilitychange', onVisibility, false);
 
-    if (geometry) geometry.dispose();
-    if (material) material.dispose();
+    if (wordGeo) wordGeo.dispose();
+    if (starGeo) starGeo.dispose();
+    if (wordMat) wordMat.dispose();
+    if (starMat) starMat.dispose();
     if (shadowMesh) {
       shadowMesh.geometry.dispose();
       shadowMesh.material.dispose();
@@ -1119,14 +1632,19 @@ export function mountLogo3D(container, options = {}) {
     renderer = null;
     scene = null;
     camera = null;
-    mesh = null;
-    geometry = null;
-    material = null;
+    lastW = 0;
+    lastH = 0;
+    lastDpr = 0;
+    wordMesh = null;
+    starMesh = null;
+    wordGeo = null;
+    starGeo = null;
+    wordMat = null;
+    starMat = null;
     shadowMesh = null;
     shadowTex = null;
     envTarget = null;
-    markGroup = null;
-    centreGroup = null;
+    logoGroup = null;
     canvas = null;
   }
 
