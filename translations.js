@@ -6,6 +6,9 @@
    All modal.* legal strings are verbatim from the live site. */
 const LANGS = {
   de: {
+    /* UI chrome + accessibility labels (added with the 2026 homepage rebuild) */
+    'a11y.skip':'Zum Inhalt springen','a11y.home':'Axyom Startseite','a11y.primarynav':'Hauptnavigation','a11y.mobilenav':'Mobile Navigation','a11y.lang':'Sprache','a11y.close':'Schließen','a11y.mark':'Axyom Logo',
+    'nav.menu':'Menü',
     'nav.how':'So funktioniert es','nav.features':'Funktionen','nav.solutions':'Branchen','nav.compare':'Warum Axyom','nav.login':'Anmelden','nav.getstarted':'Jetzt starten',
 
     'hero.eyebrow':'Intelligenter Vertriebsassistent · Hergestellt in Liechtenstein',
@@ -100,6 +103,9 @@ const LANGS = {
   },
 
   it: {
+    /* UI chrome + etichette di accessibilità (aggiunte con il rifacimento della homepage 2026) */
+    'a11y.skip':'Vai al contenuto','a11y.home':'Home Axyom','a11y.primarynav':'Navigazione principale','a11y.mobilenav':'Navigazione mobile','a11y.lang':'Lingua','a11y.close':'Chiudi','a11y.mark':'Logo Axyom',
+    'nav.menu':'Menu',
     'nav.how':'Come funziona','nav.features':'Funzionalità','nav.solutions':'Settori','nav.compare':'Perché Axyom','nav.login':'Accedi','nav.getstarted':'Inizia ora',
 
     'hero.eyebrow':'Assistente alle vendite intelligente · Prodotto nel Liechtenstein',
@@ -194,6 +200,9 @@ const LANGS = {
   },
 
   fr: {
+    /* Interface + libellés d'accessibilité (ajoutés avec la refonte de la page d'accueil 2026) */
+    'a11y.skip':'Aller au contenu','a11y.home':'Accueil Axyom','a11y.primarynav':'Navigation principale','a11y.mobilenav':'Navigation mobile','a11y.lang':'Langue','a11y.close':'Fermer','a11y.mark':'Logo Axyom',
+    'nav.menu':'Menu',
     'nav.how':'Comment ça marche','nav.features':'Fonctionnalités','nav.solutions':'Secteurs','nav.compare':'Pourquoi Axyom','nav.login':'Se connecter','nav.getstarted':'Commencer',
 
     'hero.eyebrow':'Assistant commercial intelligent · Fabriqué au Liechtenstein',

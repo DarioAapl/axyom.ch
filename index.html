@@ -2,481 +2,349 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Axyom AI — The assistant that knows your website</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+<meta name="description" content="Axyom reads every page, product and spec on your website, then answers customer questions with grounded, accurate replies in your brand voice, around the clock. Made in Liechtenstein." />
+<meta name="theme-color" content="#ffffff" />
+<meta name="color-scheme" content="light" />
+<link rel="canonical" href="https://axyom.ch/" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Axyom AI" />
+<meta property="og:url" content="https://axyom.ch/" />
+<meta property="og:title" content="Axyom AI — The assistant that knows your website" />
+<meta property="og:description" content="Axyom reads every page, product and spec on your website, then answers customer questions with grounded, accurate replies in your brand voice, around the clock." />
+<meta property="og:image" content="https://axyom.ch/Assets/axyomlogo.png" />
+<meta property="og:image:width" content="1664" />
+<meta property="og:image:height" content="749" />
+<meta property="og:image:alt" content="Axyom" />
+<meta property="og:locale" content="en" />
+<meta property="og:locale:alternate" content="de" />
+<meta property="og:locale:alternate" content="it" />
+<meta property="og:locale:alternate" content="fr" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Axyom AI — The assistant that knows your website" />
+<meta name="twitter:description" content="Axyom reads every page, product and spec on your website, then answers customer questions with grounded, accurate replies in your brand voice, around the clock." />
+<meta name="twitter:image" content="https://axyom.ch/Assets/axyomlogo.png" />
+
 <link rel="icon" type="image/png" sizes="32x32" href="Assets/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="256x256" href="Assets/axyomfavicon.png" />
 <link rel="apple-touch-icon" href="Assets/apple-touch-icon.png" />
-<style>
-  :root{
-    /* === Axyom brand (extracted from live axyom.ch, see BRANDING.md) === */
-    --bg-primary:#000000;
-    --bg-secondary:#000000;
-    --bg-card:#0a0a0a;
-    --bg-card-2:#111118;
-    --accent:#00B2A0;
-    --accent-bright:#00D4BF;
-    --accent-deep:#007A6E;
-    --accent-glow:rgba(0,178,160,0.15);
-    --accent-dim:rgba(0,178,160,0.08);
-    --accent-border:rgba(0,178,160,0.25);
-    --cyan:#18CBFF;
-    --text-primary:#E8E8F0;
-    --text-secondary:#6B6B80;
-    --border:rgba(255,255,255,0.06);
-    --border-hover:rgba(255,255,255,0.12);
-    --success:#00FF9D;
-    --error:#FF4C6A;
-    --font-display:'Inter',sans-serif;
-    --font-body:'Inter',sans-serif;
-    --radius:16px;
-    --radius-sm:10px;
-    --maxw:1180px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth;overflow-x:hidden}
-  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
-  body{
-    font-family:var(--font-body);
-    background:var(--bg-primary);
-    color:var(--text-primary);
-    line-height:1.55;
-    -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
-  }
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
-  a{color:inherit;text-decoration:none}
-  ::selection{background:var(--accent);color:#001512}
 
-  .eyebrow{
-    font-size:11px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);
-  }
-  h1,h2,h3{font-family:var(--font-display);font-weight:650;letter-spacing:-.025em;line-height:1.08}
-  h2{font-size:clamp(28px,4vw,46px)}
-  .lead{font-size:clamp(16px,1.6vw,19px);color:var(--text-secondary);max-width:60ch}
-
-  /* ---------- HEADER ---------- */
-  header{
-    position:fixed;top:0;left:0;right:0;z-index:50;
-    transition:background .3s,border-color .3s,backdrop-filter .3s;
-    border-bottom:1px solid transparent;
-  }
-  header.scrolled{
-    background:rgba(0,0,0,.72);
-    backdrop-filter:saturate(160%) blur(14px);
-    border-bottom:1px solid var(--border);
-  }
-  .nav{display:flex;align-items:center;justify-content:space-between;height:68px}
-  .brand img{height:24px;display:block}
-  .navlinks{display:flex;gap:30px;align-items:center}
-  .navlinks a{font-size:14px;color:var(--text-secondary);font-weight:500;transition:color .2s}
-  .navlinks a:hover{color:var(--text-primary)}
-  .navright{display:flex;align-items:center;gap:14px}
-  .lang{display:flex;gap:2px;font-size:11px;font-weight:600;letter-spacing:.06em}
-  .lang button{background:none;border:none;cursor:pointer;padding:5px 7px;border-radius:6px;color:var(--text-secondary)}
-  .lang button.on{background:var(--accent);color:#001512}
-  .btn{
-    display:inline-flex;align-items:center;gap:8px;cursor:pointer;
-    font-family:var(--font-body);font-weight:650;font-size:14px;
-    padding:11px 20px;border-radius:var(--radius-sm);border:1px solid transparent;white-space:nowrap;
-    transition:transform .15s,background .2s,box-shadow .2s,border-color .2s;
-  }
-  .btn-primary{background:var(--accent);color:#001512;box-shadow:0 6px 24px -6px var(--accent-glow)}
-  .btn-primary:hover{background:var(--accent-bright);transform:translateY(-1px);box-shadow:0 10px 30px -8px rgba(0,178,160,.5)}
-  .btn-ghost{background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border)}
-  .btn-ghost:hover{border-color:var(--accent-border);transform:translateY(-1px)}
-
-  /* ---------- HERO ---------- */
-  .hero{padding:130px 0 70px;position:relative}
-  .hero::before{
-    content:"";position:absolute;top:-200px;left:50%;transform:translateX(-50%);
-    width:900px;height:600px;border-radius:50%;pointer-events:none;
-    background:radial-gradient(ellipse at center,var(--accent-glow),transparent 65%);
-    filter:blur(30px);
-  }
-  .hero-grid{display:grid;grid-template-columns:1fr;gap:54px;align-items:center;position:relative}
-  .hero h1{font-size:clamp(38px,5.4vw,64px)}
-  .hero h1 .u{position:relative;white-space:nowrap;color:var(--accent-bright)}
-  .hero h1 .u::after{content:"";position:absolute;left:0;right:0;bottom:.06em;height:.1em;background:var(--accent);border-radius:2px;transform:scaleX(0);transform-origin:left;animation:underline 1s .5s cubic-bezier(.2,.7,.2,1) forwards;opacity:.5}
-  @keyframes underline{to{transform:scaleX(1)}}
-  .hero .lead{margin-top:22px}
-  .hero-cta{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
-  .hero-meta{display:flex;gap:26px;margin-top:34px;flex-wrap:wrap}
-  .hero-meta div{display:flex;flex-direction:column;gap:2px}
-  .hero-meta b{font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--accent-bright)}
-  .hero-meta span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary)}
-
-  /* ---------- TRUST STRIP ---------- */
-  .strip{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:22px 0;margin-top:30px}
-  .strip-in{display:flex;align-items:center;gap:30px;flex-wrap:wrap;justify-content:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary)}
-  .strip-in b{color:var(--text-primary);font-weight:600}
-  .strip-dot{width:4px;height:4px;border-radius:50%;background:var(--accent-deep)}
-
-  section.block{padding:96px 0}
-  .sec-head{max-width:760px;margin-bottom:50px}
-  .sec-head h2{margin-top:14px}
-  .sec-head p{margin-top:16px;color:var(--text-secondary)}
-
-  /* ---------- PROBLEM ---------- */
-  .problem{background:linear-gradient(180deg,#050E0D 0%,var(--bg-primary) 100%)}
-  .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-  .prob-cell{background:var(--bg-card);padding:30px 26px;transition:background .25s}
-  .prob-cell:hover{background:var(--bg-card-2)}
-  .prob-cell .n{font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:.14em}
-  .prob-cell h3{font-size:18px;margin:14px 0 9px}
-  .prob-cell p{font-size:14px;color:var(--text-secondary);line-height:1.55}
-
-  /* ---------- HOW ---------- */
-  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;counter-reset:s}
-  .step{position:relative;padding-top:26px;border-top:2px solid var(--accent-deep)}
-  .step::before{counter-increment:s;content:"0" counter(s);position:absolute;top:0;left:0;font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--accent);background:var(--bg-primary);padding-right:12px;transform:translateY(-50%)}
-  .step h3{font-size:18px;margin:6px 0 10px}
-  .step p{font-size:14.5px;color:var(--text-secondary)}
-
-  /* ---------- CAPABILITIES ---------- */
-  .caps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .cap{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;transition:transform .2s,box-shadow .2s,border-color .2s}
-  .cap:hover{transform:translateY(-3px);box-shadow:0 18px 40px -20px var(--accent-glow);border-color:var(--accent-border)}
-  .cap .ico{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--accent-dim);border:1px solid var(--accent-border);display:grid;place-items:center;margin-bottom:16px}
-  .cap .ico svg{width:20px;height:20px;stroke:var(--accent)}
-  .cap h3{font-size:17px;margin-bottom:9px}
-  .cap p{font-size:14px;color:var(--text-secondary)}
-
-  /* ---------- COMPARISON ---------- */
-  .cmp{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-  table{width:100%;border-collapse:collapse}
-  thead th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-align:left;padding:18px 22px;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary)}
-  thead th:last-child{color:var(--accent-bright);background:var(--accent-dim)}
-  tbody td{padding:16px 22px;font-size:14.5px;border-bottom:1px solid var(--border)}
-  tbody tr:last-child td{border-bottom:none}
-  tbody td:first-child{font-weight:600}
-  tbody td:nth-child(2){color:var(--text-secondary)}
-  tbody td:last-child{background:var(--accent-dim);font-weight:500}
-  .yes{color:var(--accent-bright);font-weight:650}
-  .no{color:var(--text-secondary)}
-
-  /* ---------- INDUSTRIES ---------- */
-  .ind-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .ind{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:22px;transition:border-color .2s,transform .2s}
-  .ind:hover{border-color:var(--accent-border);transform:translateY(-2px)}
-  .ind .k{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
-  .ind h3{font-size:15.5px;margin-bottom:8px}
-  .ind p{font-size:13px;color:var(--text-secondary);line-height:1.5}
-
-  /* ---------- CTA ---------- */
-  .cta{background:var(--bg-card);border:1px solid var(--accent-border);border-radius:var(--radius);padding:clamp(36px,5vw,64px);position:relative;overflow:hidden}
-  .cta::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,var(--accent-glow),transparent 70%);top:-180px;right:-110px;filter:blur(20px)}
-  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;position:relative}
-  .cta h2{font-size:clamp(28px,3.6vw,42px)}
-  .cta .cta-em{color:var(--accent-bright)}
-  .cta p{color:var(--text-secondary);margin-top:16px;font-size:16px}
-  .cta-points{display:flex;gap:8px;flex-direction:column;margin-top:26px}
-  .cta-points li{list-style:none;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-primary);letter-spacing:.01em}
-  .cta-points svg{width:16px;height:16px;stroke:var(--success);flex:none}
-  .form{display:flex;flex-direction:column;gap:12px}
-  .form input,.form textarea{
-    background:var(--bg-card-2);border:1px solid var(--border);border-radius:var(--radius-sm);
-    padding:13px 15px;color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:border .2s;width:100%;resize:vertical;
-  }
-  .form input::placeholder,.form textarea::placeholder{color:var(--text-secondary)}
-  .form input:focus,.form textarea:focus{border-color:var(--accent)}
-  .form .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .form button{margin-top:4px;justify-content:center}
-  .form-note{font-size:11px;color:var(--text-secondary);text-align:center;letter-spacing:.04em}
-
-  /* ---------- FOOTER ---------- */
-  footer{padding:60px 0 40px;border-top:1px solid var(--border);margin-top:40px}
-  .foot{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:30px}
-  .foot .brand img{height:26px}
-  .foot p{font-size:13px;color:var(--text-secondary);max-width:34ch;margin-top:14px}
-  .foot-links{display:flex;gap:40px;flex-wrap:wrap}
-  .foot-col h4{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:14px}
-  .foot-col a,.foot-col button{display:block;font-size:14px;color:var(--text-secondary);margin-bottom:9px;background:none;border:none;cursor:pointer;font-family:var(--font-body);text-align:left;padding:0;transition:color .2s}
-  .foot-col a:hover,.foot-col button:hover{color:var(--accent-bright)}
-  .foot-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:46px;padding-top:24px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text-secondary);flex-wrap:wrap;gap:14px}
-  .made{display:flex;align-items:center;gap:7px;letter-spacing:.04em}
-
-  /* ---------- MODALS ---------- */
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:24px}
-  .modal-bg.open{display:flex}
-  .modal{background:var(--bg-card);border:1px solid var(--border-hover);border-radius:var(--radius);max-width:560px;width:100%;max-height:84vh;overflow-y:auto;padding:38px}
-  .modal h3{font-size:24px;margin-bottom:20px}
-  .modal h4{font-size:15px;font-weight:650;margin:18px 0 6px}
-  .modal p{font-size:14px;color:var(--text-secondary);margin-bottom:8px}
-  .modal a{color:var(--accent-bright)}
-  .modal-close{position:sticky;top:0;float:right;background:var(--bg-card-2);border:1px solid var(--border);width:34px;height:34px;border-radius:var(--radius-sm);cursor:pointer;font-size:16px;color:var(--text-secondary);display:grid;place-items:center}
-
-  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
-  .reveal.in{opacity:1;transform:none}
-  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.hero h1 .u::after{animation:none;transform:scaleX(1)}}
-
-  /* ---------- RESPONSIVE ---------- */
-  @media(max-width:960px){
-    .hero-grid{grid-template-columns:1fr;gap:40px}
-    .prob-grid,.steps,.caps,.ind-grid{grid-template-columns:1fr 1fr}
-    .cta-grid{grid-template-columns:1fr;gap:34px}
-    .navlinks{display:none}
-  }
-  @media(max-width:600px){
-    .prob-grid,.steps,.caps,.ind-grid,.form .row{grid-template-columns:1fr}
-    .hero{padding:108px 0 50px}
-    section.block{padding:64px 0}
-    .hero-meta{gap:20px}
-    .foot{flex-direction:column}
-    .cmp{overflow-x:auto}
-    table{min-width:520px}
-    /* mobile header: fit logo + lang switcher + both CTAs on a narrow row */
-    .wrap{padding:0 16px}
-    .navright{gap:6px}
-    .lang{gap:0}
-    .lang button{padding:4px 5px;font-size:10px}
-    .nav .btn{padding:7px 11px;font-size:11.5px}
-  }
-</style>
+<link rel="stylesheet" href="css/home.css?v=2" />
 </head>
+
 <body>
 
-<!-- HEADER -->
-<header id="hdr">
-  <div class="wrap nav">
-    <a class="brand" href="#top" aria-label="Axyom home">
-      <img src="Assets/axyomwhitelogo.png" alt="axyom" />
-    </a>
-    <nav class="navlinks">
+<a class="skip" href="#main" data-i18n="a11y.skip">Skip to content</a>
+
+<!-- ==================== HEADER ==================== -->
+<header class="hdr" id="hdr">
+  <div class="wrap">
+    <div class="nav">
+      <a class="brand" href="#top" data-i18n-aria="a11y.home" aria-label="Axyom home">
+        <img src="Assets/axyomlogo.png" alt="Axyom" width="1664" height="749" />
+      </a>
+
+      <nav class="navlinks" data-i18n-aria="a11y.primarynav" aria-label="Primary navigation">
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#capabilities" data-i18n="nav.features">Capabilities</a>
+        <a href="#industries" data-i18n="nav.solutions">Industries</a>
+        <a href="#compare" data-i18n="nav.compare">Why Axyom</a>
+      </nav>
+
+      <div class="navright">
+        <div class="lang" id="lang" role="group" data-i18n-aria="a11y.lang" aria-label="Language">
+          <button type="button" class="on" data-l="en" lang="en">EN</button>
+          <button type="button" data-l="de" lang="de">DE</button>
+          <button type="button" data-l="it" lang="it">IT</button>
+          <button type="button" data-l="fr" lang="fr">FR</button>
+        </div>
+        <a href="dashboard/login.html" class="btn btn-ghost btn-sm" data-i18n="nav.login">Log in</a>
+        <a href="dashboard/register.html" class="btn btn-primary btn-sm" data-i18n="nav.getstarted">Get started</a>
+        <button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="mobile-nav">
+          <span class="bars" aria-hidden="true"></span>
+          <span class="vh" data-i18n="nav.menu">Menu</span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="mobile-nav" id="mobile-nav" data-i18n-aria="a11y.mobilenav" aria-label="Mobile navigation" hidden>
       <a href="#how" data-i18n="nav.how">How it works</a>
       <a href="#capabilities" data-i18n="nav.features">Capabilities</a>
       <a href="#industries" data-i18n="nav.solutions">Industries</a>
       <a href="#compare" data-i18n="nav.compare">Why Axyom</a>
-    </nav>
-    <div class="navright">
-      <div class="lang" id="lang">
-        <button class="on" data-l="en">EN</button>
-        <button data-l="de">DE</button>
-        <button data-l="it">IT</button>
-        <button data-l="fr">FR</button>
+      <a href="#contact" data-i18n="footer.contact">Contact</a>
+      <div class="mob-cta">
+        <a href="dashboard/login.html" class="btn btn-ghost" data-i18n="nav.login">Log in</a>
+        <a href="dashboard/register.html" class="btn btn-primary" data-i18n="nav.getstarted">Get started</a>
       </div>
-      <a href="dashboard/login.html" class="btn btn-ghost" data-i18n="nav.login">Log in</a>
-      <a href="dashboard/register.html" class="btn btn-primary" data-i18n="nav.getstarted">Get started</a>
-    </div>
+    </nav>
   </div>
 </header>
 
-<!-- HERO -->
-<a id="top"></a>
-<section class="hero">
-  <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow" data-i18n="hero.eyebrow">Intelligent Sales Assistant · Made in Liechtenstein</span>
-      <h1 style="margin-top:18px" data-i18n-html="hero.title">An assistant that <span class="u">actually knows</span> your website.</h1>
-      <p class="lead" data-i18n="hero.sub">Axyom reads every page, product and spec on your site, then answers customer questions with grounded, accurate replies — in your brand voice, around the clock. Not a chatbot. A sales employee that never forgets a detail.</p>
-      <div class="hero-cta">
-        <a href="dashboard/register.html" class="btn btn-primary" data-i18n="hero.getstarted">Get started →</a>
-        <a href="#contact" class="btn btn-ghost" data-i18n="hero.cta1">Book a demo</a>
-      </div>
-      <div class="hero-meta">
-        <div><b>&lt;1s</b><span data-i18n="hero.m1">Time to answer</span></div>
-        <div><b>0</b><span data-i18n="hero.m2">Hallucinated facts</span></div>
-        <div><b>24/7</b><span data-i18n="hero.m3">Always on</span></div>
-      </div>
-    </div>
-  </div>
+<main id="main">
 
-  <div class="wrap" style="margin-top:6px">
-    <div class="strip">
-      <div class="strip-in">
-        <span data-i18n="strip.label">Built for</span>
-        <span class="strip-dot"></span><b data-i18n="strip.i1">E-commerce</b>
-        <span class="strip-dot"></span><b data-i18n="strip.i2">Automotive</b>
-        <span class="strip-dot"></span><b data-i18n="strip.i3">Real estate</b>
-        <span class="strip-dot"></span><b data-i18n="strip.i4">B2B / SaaS</b>
-        <span class="strip-dot"></span><b data-i18n="strip.i5">Hospitality</b>
-        <span class="strip-dot"></span><b data-i18n="strip.i6">Manufacturing</b>
-      </div>
+<!-- ==================== HERO ==================== -->
+<span id="top"></span>
+<section class="hero">
+  <div class="wrap hero-inner">
+    <!-- 3D mark mounts here. The image below is the no-JS / no-module
+         fallback and is faded out only once mountLogo3D() succeeds.
+         Height is fixed in CSS, so mounting causes no layout shift. -->
+    <div class="stage" id="logo3d">
+      <img class="stage-fallback" src="Assets/axyomlogo.png" alt="Axyom logo" data-i18n-alt="a11y.mark" width="1664" height="749" />
     </div>
+
+    <span class="eyebrow" data-i18n="hero.eyebrow">Intelligent Sales Assistant · Made in Liechtenstein</span>
+    <h1 data-i18n-html="hero.title">An assistant that <span class="u">actually knows</span> your website.</h1>
+    <p class="lead" data-i18n="hero.sub">Axyom reads every page, product and spec on your site, then answers customer questions with grounded, accurate replies — in your brand voice, around the clock. Not a chatbot. A sales employee that never forgets a detail.</p>
+    <div class="hero-cta">
+      <a href="dashboard/register.html" class="btn btn-primary" data-i18n="hero.getstarted">Get started →</a>
+      <a href="#contact" class="btn btn-ghost" data-i18n="hero.cta1">Book a demo</a>
+    </div>
+
   </div>
 </section>
 
-<!-- PROBLEM -->
-<section class="block problem">
+<!-- ==================== METRICS + BUILT FOR ==================== -->
+<section class="strip" aria-labelledby="metrics-h">
+  <h2 id="metrics-h" class="vh" data-i18n="strip.label">Built for</h2>
+  <div class="wrap">
+    <div class="metrics reveal">
+      <div><b>&lt;1s</b><span data-i18n="hero.m1">Time to answer</span></div>
+      <div><b>0</b><span data-i18n="hero.m2">Hallucinated facts</span></div>
+      <div><b>24/7</b><span data-i18n="hero.m3">Always on</span></div>
+    </div>
+  </div>
+</section>
+<div class="strip">
+  <div class="wrap">
+    <div class="strip-in">
+      <span data-i18n="strip.label">Built for</span>
+      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i1">E-commerce</b>
+      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i2">Automotive</b>
+      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i3">Real estate</b>
+      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i4">B2B / SaaS</b>
+      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i5">Hospitality</b>
+      <span class="strip-dot" aria-hidden="true"></span><b data-i18n="strip.i6">Manufacturing</b>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PROBLEM ==================== -->
+<section class="block" id="problem" aria-labelledby="problem-h">
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow" data-i18n="prob.eyebrow">The problem</span>
-      <h2 data-i18n="prob.title">Most websites leave visitors searching, not finding.</h2>
-      <p data-i18n="prob.sub">People arrive with a real question. They scroll, they dig through menus, they hit a dead end — and they leave. Every unanswered question is a lead that quietly disappears.</p>
+      <h2 id="problem-h" data-i18n="prob.title">Most websites leave visitors searching, not finding.</h2>
+      <p class="lead" data-i18n="prob.sub">People arrive with a real question. They scroll, they dig through menus, they hit a dead end — and they leave. Every unanswered question is a lead that quietly disappears.</p>
     </div>
-    <div class="prob-grid reveal">
-      <div class="prob-cell"><div class="n" data-i18n="prob.c1.k">BOUNCE</div><h3 data-i18n="prob.c1.title">Visitors leave without finding answers</h3><p data-i18n="prob.c1.body">People can't find what they need fast enough, so they bounce before they reach your value.</p></div>
-      <div class="prob-cell"><div class="n" data-i18n="prob.c2.k">NAVIGATION</div><h3 data-i18n="prob.c2.title">Information buried across dozens of pages</h3><p data-i18n="prob.c2.body">Specs, pricing and policies scattered across layers of menus. Customers give up first.</p></div>
-      <div class="prob-cell"><div class="n" data-i18n="prob.c3.k">AVAILABILITY</div><h3 data-i18n="prob.c3.title">Questions go unanswered after hours</h3><p data-i18n="prob.c3.body">Customers don't shop 9-to-5. Every midnight question with no answer is missed revenue.</p></div>
-      <div class="prob-cell"><div class="n" data-i18n="prob.c4.k">SUPPORT COST</div><h3 data-i18n="prob.c4.title">Teams buried in repetitive questions</h3><p data-i18n="prob.c4.body">The same questions, over and over. Hours spent on things that never needed a human.</p></div>
-      <div class="prob-cell"><div class="n" data-i18n="prob.c5.k">SAMENESS</div><h3 data-i18n="prob.c5.title">Every visitor gets the same generic page</h3><p data-i18n="prob.c5.body">No adaptation to intent or context. No guidance, no relevance, low conversion.</p></div>
-      <div class="prob-cell"><div class="n" data-i18n="prob.c6.k">FRICTION</div><h3 data-i18n="prob.c6.title">Complex navigation kills conversions</h3><p data-i18n="prob.c6.body">Confusing menus and broken search. Visitors hit friction and drop off the funnel.</p></div>
+    <div class="prob-grid">
+      <div class="prob-cell reveal"><div class="k" data-i18n="prob.c1.k">BOUNCE</div><h3 data-i18n="prob.c1.title">Visitors leave without finding answers</h3><p data-i18n="prob.c1.body">People can't find what they need fast enough, so they bounce before they reach your value.</p></div>
+      <div class="prob-cell reveal" style="--d:60ms"><div class="k" data-i18n="prob.c2.k">NAVIGATION</div><h3 data-i18n="prob.c2.title">Information buried across dozens of pages</h3><p data-i18n="prob.c2.body">Specs, pricing and policies scattered across layers of menus. Customers give up first.</p></div>
+      <div class="prob-cell reveal" style="--d:120ms"><div class="k" data-i18n="prob.c3.k">AVAILABILITY</div><h3 data-i18n="prob.c3.title">Questions go unanswered after hours</h3><p data-i18n="prob.c3.body">Customers don't shop 9-to-5. Every midnight question with no answer is missed revenue.</p></div>
+      <div class="prob-cell reveal"><div class="k" data-i18n="prob.c4.k">SUPPORT COST</div><h3 data-i18n="prob.c4.title">Teams buried in repetitive questions</h3><p data-i18n="prob.c4.body">The same questions, over and over. Hours spent on things that never needed a human.</p></div>
+      <div class="prob-cell reveal" style="--d:60ms"><div class="k" data-i18n="prob.c5.k">SAMENESS</div><h3 data-i18n="prob.c5.title">Every visitor gets the same generic page</h3><p data-i18n="prob.c5.body">No adaptation to intent or context. No guidance, no relevance, low conversion.</p></div>
+      <div class="prob-cell reveal" style="--d:120ms"><div class="k" data-i18n="prob.c6.k">FRICTION</div><h3 data-i18n="prob.c6.title">Complex navigation kills conversions</h3><p data-i18n="prob.c6.body">Confusing menus and broken search. Visitors hit friction and drop off the funnel.</p></div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
-<section class="block" id="how">
+<!-- ==================== HOW IT WORKS ==================== -->
+<section class="block tinted" id="how" aria-labelledby="how-h">
   <div class="wrap">
-    <div class="sec-head reveal">
+    <div class="sec-head center reveal">
       <span class="eyebrow" data-i18n="how.eyebrow">How it works</span>
-      <h2 data-i18n="how.title">Paste a URL. Get a sales expert.</h2>
-      <p data-i18n="how.sub">Four steps from a plain web address to a brand-aware assistant that knows your catalog inside and out. No code, no manual FAQ entry.</p>
+      <h2 id="how-h" data-i18n="how.title">Paste a URL. Get a sales expert.</h2>
+      <p class="lead" data-i18n="how.sub">Four steps from a plain web address to a brand-aware assistant that knows your catalog inside and out. No code, no manual FAQ entry.</p>
     </div>
-    <div class="steps reveal">
-      <div class="step"><h3 data-i18n="how.s1.title">Reads your website</h3><p data-i18n="how.s1.body">The crawler scans every page — products, specs, FAQs, hidden tabs — and handles JavaScript-rendered content automatically.</p></div>
-      <div class="step"><h3 data-i18n="how.s2.title">Understands your products</h3><p data-i18n="how.s2.body">Specs, prices and features are extracted into structured, machine-readable data. The AI learns your full catalog.</p></div>
-      <div class="step"><h3 data-i18n="how.s3.title">Answers like your best employee</h3><p data-i18n="how.s3.body">Customers ask in natural language. Axyom replies with accurate, grounded answers in your brand voice.</p></div>
-      <div class="step"><h3 data-i18n="how.s4.title">Compares, recommends, sells</h3><p data-i18n="how.s4.body">It doesn't just answer — it advises. Comparisons, cross-sells and personalised recommendations drive conversion.</p></div>
+    <div class="steps">
+      <div class="step reveal"><div class="num" aria-hidden="true">01</div><h3 data-i18n="how.s1.title">Reads your website</h3><p data-i18n="how.s1.body">The crawler scans every page — products, specs, FAQs, hidden tabs — and handles JavaScript-rendered content automatically.</p></div>
+      <div class="step reveal" style="--d:70ms"><div class="num" aria-hidden="true">02</div><h3 data-i18n="how.s2.title">Understands your products</h3><p data-i18n="how.s2.body">Specs, prices and features are extracted into structured, machine-readable data. The AI learns your full catalog.</p></div>
+      <div class="step reveal" style="--d:140ms"><div class="num" aria-hidden="true">03</div><h3 data-i18n="how.s3.title">Answers like your best employee</h3><p data-i18n="how.s3.body">Customers ask in natural language. Axyom replies with accurate, grounded answers in your brand voice.</p></div>
+      <div class="step reveal" style="--d:210ms"><div class="num" aria-hidden="true">04</div><h3 data-i18n="how.s4.title">Compares, recommends, sells</h3><p data-i18n="how.s4.body">It doesn't just answer — it advises. Comparisons, cross-sells and personalised recommendations drive conversion.</p></div>
     </div>
   </div>
 </section>
 
-<!-- CAPABILITIES -->
-<section class="block" id="capabilities">
+<!-- ==================== CAPABILITIES ==================== -->
+<section class="block" id="capabilities" aria-labelledby="capabilities-h">
   <div class="wrap">
-    <div class="sec-head reveal">
+    <div class="sec-head center reveal">
       <span class="eyebrow" data-i18n="feat.eyebrow">Capabilities</span>
-      <h2 data-i18n="feat.title">Not a ChatGPT wrapper. A purpose-built sales engine.</h2>
-      <p data-i18n="feat.sub">Trained exclusively on your content, with retrieval and reasoning designed for accuracy over improvisation.</p>
+      <h2 id="capabilities-h" data-i18n="feat.title">Not a ChatGPT wrapper. A purpose-built sales engine.</h2>
+      <p class="lead" data-i18n="feat.sub">Trained exclusively on your content, with retrieval and reasoning designed for accuracy over improvisation.</p>
     </div>
     <div class="caps">
-      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="M16 16l5 5" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c1.title">Intelligent crawling</h3><p data-i18n="feat.c1.body">Scans your entire site including dynamic content, hidden tabs and JavaScript-rendered elements — automatically.</p></div>
-      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c2.title">Structured extraction</h3><p data-i18n="feat.c2.body">Detects product specs, technical data and numeric values, normalised into machine-readable JSON for precision.</p></div>
-      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke-width="2" stroke-linejoin="round"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" stroke-width="2"/></svg></div><h3 data-i18n="feat.c3.title">Hybrid RAG 2.0</h3><p data-i18n="feat.c3.body">Semantic embeddings plus keyword matching with diversified retrieval. Grounded answers only — sourced from your data.</p></div>
-      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke-width="2" stroke-linejoin="round"/></svg></div><h3 data-i18n="feat.c4.title">Conversation memory</h3><p data-i18n="feat.c4.body">Remembers recent context and follow-up questions within a conversation, so dialogue feels natural.</p></div>
-      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18V8m6 10V4m6 14v-7" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c5.title">Comparison intelligence</h3><p data-i18n="feat.c5.body">Ranks, compares and explains differences across your entire product catalog. It advises, not just answers.</p></div>
-      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2a4 4 0 014 4v4a4 4 0 01-8 0V6a4 4 0 014-4z" stroke-width="2"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c6.title">Brand voice</h3><p data-i18n="feat.c6.body">Trained on your content for a consistent voice that fits your company — never generic, off-the-shelf AI.</p></div>
+      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="M16 16l5 5" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c1.title">Intelligent crawling</h3><p data-i18n="feat.c1.body">Scans your entire site including dynamic content, hidden tabs and JavaScript-rendered elements — automatically.</p></div>
+      <div class="cap reveal" style="--d:60ms"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c2.title">Structured extraction</h3><p data-i18n="feat.c2.body">Detects product specs, technical data and numeric values, normalised into machine-readable JSON for precision.</p></div>
+      <div class="cap reveal" style="--d:120ms"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke-width="2" stroke-linejoin="round"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" stroke-width="2"/></svg></div><h3 data-i18n="feat.c3.title">Hybrid RAG 2.0</h3><p data-i18n="feat.c3.body">Semantic embeddings plus keyword matching with diversified retrieval. Grounded answers only — sourced from your data.</p></div>
+      <div class="cap reveal"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke-width="2" stroke-linejoin="round"/></svg></div><h3 data-i18n="feat.c4.title">Conversation memory</h3><p data-i18n="feat.c4.body">Remembers recent context and follow-up questions within a conversation, so dialogue feels natural.</p></div>
+      <div class="cap reveal" style="--d:60ms"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V8m6 10V4m6 14v-7" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c5.title">Comparison intelligence</h3><p data-i18n="feat.c5.body">Ranks, compares and explains differences across your entire product catalog. It advises, not just answers.</p></div>
+      <div class="cap reveal" style="--d:120ms"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a4 4 0 014 4v4a4 4 0 01-8 0V6a4 4 0 014-4z" stroke-width="2"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke-width="2" stroke-linecap="round"/></svg></div><h3 data-i18n="feat.c6.title">Brand voice</h3><p data-i18n="feat.c6.body">Trained on your content for a consistent voice that fits your company — never generic, off-the-shelf AI.</p></div>
     </div>
   </div>
 </section>
 
-<!-- COMPARISON -->
-<section class="block" id="compare">
+<!-- ==================== COMPARISON ==================== -->
+<section class="block tinted" id="compare" aria-labelledby="compare-h">
   <div class="wrap">
-    <div class="sec-head reveal">
+    <div class="sec-head center reveal">
       <span class="eyebrow" data-i18n="comp.eyebrow">Why Axyom</span>
-      <h2 data-i18n="comp.title">Why not a regular chatbot?</h2>
+      <h2 id="compare-h" data-i18n="comp.title">Why not a regular chatbot?</h2>
     </div>
     <div class="cmp reveal">
-      <table>
-        <thead><tr><th data-i18n="comp.h1">Capability</th><th data-i18n="comp.h2">Regular chatbots</th><th>Axyom AI</th></tr></thead>
+      <table id="cmp-table">
+        <thead>
+          <tr>
+            <th scope="col" data-i18n="comp.h1">Capability</th>
+            <th scope="col" data-i18n="comp.h2">Regular chatbots</th>
+            <th scope="col">Axyom AI</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr><td data-i18n="comp.r1.k">Knowledge source</td><td data-i18n="comp.r1.a">Static FAQs, manual entry</td><td><span class="yes" data-i18n="comp.r1.b">Entire website, live-crawled</span></td></tr>
-          <tr><td data-i18n="comp.r2.k">Product comparison</td><td><span class="no" data-i18n="comp.r2.a">Not supported</span></td><td><span class="yes" data-i18n="comp.r2.b">Structured comparisons</span></td></tr>
-          <tr><td data-i18n="comp.r3.k">Context memory</td><td><span class="no" data-i18n="comp.r3.a">Each message isolated</span></td><td><span class="yes" data-i18n="comp.r3.b">Understands follow-ups</span></td></tr>
-          <tr><td data-i18n="comp.r4.k">Brand voice</td><td data-i18n="comp.r4.a">Generic, ChatGPT style</td><td><span class="yes" data-i18n="comp.r4.b">Trained on your content</span></td></tr>
-          <tr><td data-i18n="comp.r5.k">Hallucinations</td><td><span class="no" data-i18n="comp.r5.a">Common problem</span></td><td><span class="yes" data-i18n="comp.r5.b">Grounded — your data only</span></td></tr>
-          <tr><td data-i18n="comp.r6.k">Setup</td><td data-i18n="comp.r6.a">Manual FAQ maintenance</td><td><span class="yes" data-i18n="comp.r6.b">Auto-crawl, zero effort</span></td></tr>
+          <tr>
+            <th scope="row" data-i18n="comp.r1.k">Knowledge source</th>
+            <td><span class="mark" data-i18n="comp.r1.a">Static FAQs, manual entry</span></td>
+            <td><span class="mark is-yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span class="yes" data-i18n="comp.r1.b">Entire website, live-crawled</span></span></td>
+          </tr>
+          <tr>
+            <th scope="row" data-i18n="comp.r2.k">Product comparison</th>
+            <td><span class="mark is-no"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="no" data-i18n="comp.r2.a">Not supported</span></span></td>
+            <td><span class="mark is-yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span class="yes" data-i18n="comp.r2.b">Structured comparisons</span></span></td>
+          </tr>
+          <tr>
+            <th scope="row" data-i18n="comp.r3.k">Context memory</th>
+            <td><span class="mark is-no"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="no" data-i18n="comp.r3.a">Each message isolated</span></span></td>
+            <td><span class="mark is-yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span class="yes" data-i18n="comp.r3.b">Understands follow-ups</span></span></td>
+          </tr>
+          <tr>
+            <th scope="row" data-i18n="comp.r4.k">Brand voice</th>
+            <td><span class="mark" data-i18n="comp.r4.a">Generic, ChatGPT style</span></td>
+            <td><span class="mark is-yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span class="yes" data-i18n="comp.r4.b">Trained on your content</span></span></td>
+          </tr>
+          <tr>
+            <th scope="row" data-i18n="comp.r5.k">Hallucinations</th>
+            <td><span class="mark is-no"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="no" data-i18n="comp.r5.a">Common problem</span></span></td>
+            <td><span class="mark is-yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span class="yes" data-i18n="comp.r5.b">Grounded — your data only</span></span></td>
+          </tr>
+          <tr>
+            <th scope="row" data-i18n="comp.r6.k">Setup</th>
+            <td><span class="mark" data-i18n="comp.r6.a">Manual FAQ maintenance</span></td>
+            <td><span class="mark is-yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span class="yes" data-i18n="comp.r6.b">Auto-crawl, zero effort</span></span></td>
+          </tr>
         </tbody>
       </table>
     </div>
   </div>
 </section>
 
-<!-- INDUSTRIES -->
-<section class="block" id="industries">
+<!-- ==================== INDUSTRIES ==================== -->
+<section class="block" id="industries" aria-labelledby="industries-h">
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow" data-i18n="custom.eyebrow">Custom solutions</span>
-      <h2 data-i18n="custom.title">Built for every industry. Trained on your world.</h2>
+      <h2 id="industries-h" data-i18n="custom.title">Built for every industry. Trained on your world.</h2>
     </div>
     <div class="ind-grid">
       <div class="ind reveal"><div class="k" data-i18n="custom.k1">E-commerce</div><h3 data-i18n="custom.c1.title">Product discovery at scale</h3><p data-i18n="custom.c1.body">Compares specs, recommends alternatives and cross-sells based on intent — across thousands of SKUs.</p></div>
-      <div class="ind reveal"><div class="k" data-i18n="custom.k2">Automotive</div><h3 data-i18n="custom.c2.title">Spec &amp; configurator expert</h3><p data-i18n="custom.c2.body">Answers questions on trims, engines and towing capacities in seconds — no sales rep required.</p></div>
-      <div class="ind reveal"><div class="k" data-i18n="custom.k3">Real estate</div><h3 data-i18n="custom.c3.title">Property inquiry assistant</h3><p data-i18n="custom.c3.body">Explains availability and floor plans, and qualifies buyer intent 24/7.</p></div>
-      <div class="ind reveal"><div class="k" data-i18n="custom.k4">B2B / SaaS</div><h3 data-i18n="custom.c4.title">Technical product guide</h3><p data-i18n="custom.c4.body">Explains pricing tiers, integrations and API limits before prospects ever reach sales.</p></div>
+      <div class="ind reveal" style="--d:50ms"><div class="k" data-i18n="custom.k2">Automotive</div><h3 data-i18n="custom.c2.title">Spec &amp; configurator expert</h3><p data-i18n="custom.c2.body">Answers questions on trims, engines and towing capacities in seconds — no sales rep required.</p></div>
+      <div class="ind reveal" style="--d:100ms"><div class="k" data-i18n="custom.k3">Real estate</div><h3 data-i18n="custom.c3.title">Property inquiry assistant</h3><p data-i18n="custom.c3.body">Explains availability and floor plans, and qualifies buyer intent 24/7.</p></div>
+      <div class="ind reveal" style="--d:150ms"><div class="k" data-i18n="custom.k4">B2B / SaaS</div><h3 data-i18n="custom.c4.title">Technical product guide</h3><p data-i18n="custom.c4.body">Explains pricing tiers, integrations and API limits before prospects ever reach sales.</p></div>
       <div class="ind reveal"><div class="k" data-i18n="custom.k5">Powersports</div><h3 data-i18n="custom.c5.title">Gear &amp; parts expert</h3><p data-i18n="custom.c5.body">Matches riders with compatible parts by make, model and year — fitment questions, solved.</p></div>
-      <div class="ind reveal"><div class="k" data-i18n="custom.k6">Hospitality</div><h3 data-i18n="custom.c6.title">Concierge &amp; guest Q&amp;A</h3><p data-i18n="custom.c6.body">Answers room types, amenities and policies instantly — elevating the pre-stay experience.</p></div>
-      <div class="ind reveal"><div class="k" data-i18n="custom.k7">Healthcare</div><h3 data-i18n="custom.c7.title">Patient information guide</h3><p data-i18n="custom.c7.body">Answers from your published content — always grounded in your own documentation.</p></div>
-      <div class="ind reveal"><div class="k" data-i18n="custom.k8">Manufacturing</div><h3 data-i18n="custom.c8.title">Specs &amp; ordering guide</h3><p data-i18n="custom.c8.body">Helps procurement find part numbers, tolerances and lead times from complex catalogs.</p></div>
+      <div class="ind reveal" style="--d:50ms"><div class="k" data-i18n="custom.k6">Hospitality</div><h3 data-i18n="custom.c6.title">Concierge &amp; guest Q&amp;A</h3><p data-i18n="custom.c6.body">Answers room types, amenities and policies instantly — elevating the pre-stay experience.</p></div>
+      <div class="ind reveal" style="--d:100ms"><div class="k" data-i18n="custom.k7">Healthcare</div><h3 data-i18n="custom.c7.title">Patient information guide</h3><p data-i18n="custom.c7.body">Answers from your published content — always grounded in your own documentation.</p></div>
+      <div class="ind reveal" style="--d:150ms"><div class="k" data-i18n="custom.k8">Manufacturing</div><h3 data-i18n="custom.c8.title">Specs &amp; ordering guide</h3><p data-i18n="custom.c8.body">Helps procurement find part numbers, tolerances and lead times from complex catalogs.</p></div>
     </div>
   </div>
 </section>
 
-<!-- CTA -->
-<section class="block" id="contact">
+<!-- ==================== CONTACT ==================== -->
+<section class="block tinted" id="contact" aria-labelledby="contact-h">
   <div class="wrap">
-    <div class="cta reveal">
-      <div class="cta-grid">
-        <div>
-          <span class="eyebrow" data-i18n="cta.eyebrow">Contact</span>
-          <h2 style="margin-top:14px" data-i18n-html="cta.title">Let's build your <span class="cta-em">AI assistant</span> together.</h2>
-          <p data-i18n="cta.sub">Tell us about your website and we'll show you exactly what Axyom can do for you — no commitment, no pressure.</p>
-          <ul class="cta-points">
-            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span data-i18n="cta.p1">Liechtenstein-based team</span></li>
-            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span data-i18n="cta.p2">Response within 24 hours</span></li>
-            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span data-i18n="cta.p3">No commitment required</span></li>
-          </ul>
-        </div>
-        <div class="form">
-          <div class="row">
-            <input id="f-name" type="text" placeholder="Name" data-i18n-ph="cta.f.name" />
-            <input id="f-email" type="email" placeholder="Email" data-i18n-ph="cta.f.email" />
+    <div class="cta-grid">
+      <div class="reveal">
+        <span class="eyebrow" data-i18n="cta.eyebrow">Contact</span>
+        <h2 id="contact-h" data-i18n-html="cta.title">Let's build your <span class="cta-em">AI assistant</span> together.</h2>
+        <p data-i18n="cta.sub">Tell us about your website and we'll show you exactly what Axyom can do for you — no commitment, no pressure.</p>
+        <ul class="cta-points">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="cta.p1">Liechtenstein-based team</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="cta.p2">Response within 24 hours</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="cta.p3">No commitment required</span></li>
+        </ul>
+      </div>
+      <div class="form reveal" style="--d:80ms">
+        <div class="row">
+          <div>
+            <label class="vh" for="f-name" data-i18n="cta.f.name">Name</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" placeholder="Name" data-i18n-ph="cta.f.name" />
           </div>
-          <input id="f-web" type="text" placeholder="Website URL" data-i18n-ph="cta.f.web" />
-          <textarea id="f-msg" rows="4" placeholder="What would you like Axyom to do?" data-i18n-ph="cta.f.msg"></textarea>
-          <button class="btn btn-primary" id="f-send" data-i18n="cta.f.send">Send message →</button>
-          <div class="form-note" id="f-note" data-i18n="cta.f.note">Sends via axyom.ch · or write to kontakt@axyom.ch</div>
+          <div>
+            <label class="vh" for="f-email" data-i18n="cta.f.email">Email</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" placeholder="Email" data-i18n-ph="cta.f.email" />
+          </div>
         </div>
+        <label class="vh" for="f-web" data-i18n="cta.f.web">Website URL</label>
+        <input id="f-web" name="website" type="text" inputmode="url" autocomplete="url" placeholder="Website URL" data-i18n-ph="cta.f.web" />
+        <label class="vh" for="f-msg" data-i18n="cta.f.msg">What would you like Axyom to do?</label>
+        <textarea id="f-msg" name="message" rows="4" placeholder="What would you like Axyom to do?" data-i18n-ph="cta.f.msg"></textarea>
+        <button type="button" class="btn btn-primary" id="f-send" data-i18n="cta.f.send">Send message →</button>
+        <p class="form-note" id="f-note" role="status" aria-live="polite" data-i18n="cta.f.note">Sends via axyom.ch · or write to kontakt@axyom.ch</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
-<footer>
+</main>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="ftr">
   <div class="wrap">
     <div class="foot">
       <div>
-        <a class="brand" href="#top" aria-label="Axyom home">
-          <img src="Assets/axyomwhitelogo.png" alt="axyom" />
+        <a class="brand" href="#top" data-i18n-aria="a11y.home" aria-label="Axyom home">
+          <img src="Assets/axyomlogo.png" alt="Axyom" width="1664" height="749" />
         </a>
         <p data-i18n="footer.tag">Intelligent sales assistants for the web. Grounded in your content, fluent in your products.</p>
       </div>
-      <div class="foot-links">
-        <div class="foot-col">
-          <h4 data-i18n="footer.product">Product</h4>
-          <a href="#how" data-i18n="nav.how">How it works</a>
-          <a href="#capabilities" data-i18n="nav.features">Capabilities</a>
-          <a href="#compare" data-i18n="nav.compare">Why Axyom</a>
-          <a href="#industries" data-i18n="nav.solutions">Industries</a>
-        </div>
-        <div class="foot-col">
-          <h4 data-i18n="footer.company">Company</h4>
-          <a href="#contact" data-i18n="footer.contact">Contact</a>
-          <button onclick="openModal('impressum')" data-i18n="footer.impressum">Impressum</button>
-          <button onclick="openModal('privacy')" data-i18n="footer.privacy">Privacy</button>
-          <a href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a>
-        </div>
+      <div class="foot-col">
+        <h3 data-i18n="footer.product">Product</h3>
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#capabilities" data-i18n="nav.features">Capabilities</a>
+        <a href="#compare" data-i18n="nav.compare">Why Axyom</a>
+        <a href="#industries" data-i18n="nav.solutions">Industries</a>
+      </div>
+      <div class="foot-col">
+        <h3 data-i18n="footer.company">Company</h3>
+        <a href="#contact" data-i18n="footer.contact">Contact</a>
+        <button type="button" data-modal="impressum" data-i18n="footer.impressum">Impressum</button>
+        <button type="button" data-modal="privacy" data-i18n="footer.privacy">Privacy</button>
+        <a href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a>
       </div>
     </div>
     <div class="foot-bottom">
       <span data-i18n="footer.copy">© 2026 Axyom AI. All rights reserved.</span>
-      <span class="made">🇱🇮 <span data-i18n="footer.made">Made in Liechtenstein</span></span>
+      <span class="made"><span aria-hidden="true">🇱🇮</span> <span data-i18n="footer.made">Made in Liechtenstein</span></span>
     </div>
   </div>
 </footer>
 
-<!-- MODALS — legal content verbatim from live axyom.ch
-     (live-site/impressum-modal.html / privacy-modal.html) -->
-<div class="modal-bg" id="modal-impressum" onclick="if(event.target===this)closeModal()" role="dialog" aria-modal="true" aria-labelledby="impressum-title">
+<!-- ==================== MODALS (legal text verbatim) ==================== -->
+<div class="modal-bg" id="modal-impressum" role="dialog" aria-modal="true" aria-labelledby="impressum-title">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <button type="button" class="modal-close" data-close data-i18n-aria="a11y.close" aria-label="Close"><span aria-hidden="true">✕</span></button>
     <h3 id="impressum-title" data-i18n="modal.impressum.title">Legal Notice</h3>
-    <p><address style="font-style:normal" data-i18n="modal.impressum.address">Dario Tino, Gapetschstrasse 29, 9494 Schaan, Principality of Liechtenstein</address></p>
+    <p><span data-i18n="modal.impressum.address">Dario Tino, Gapetschstrasse 29, 9494 Schaan, Principality of Liechtenstein</span></p>
     <p>E-Mail: <a href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a></p>
     <p><span data-i18n="modal.impressum.website.label">Website:</span> <a href="https://www.axyom.ch">www.axyom.ch</a></p>
     <p data-i18n="modal.impressum.uid">UID: CHE-331.960.860</p>
     <p data-i18n="modal.impressum.resp">Responsible for content: Dario Tino</p>
   </div>
 </div>
-<div class="modal-bg" id="modal-privacy" onclick="if(event.target===this)closeModal()" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+<div class="modal-bg" id="modal-privacy" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <button type="button" class="modal-close" data-close data-i18n-aria="a11y.close" aria-label="Close"><span aria-hidden="true">✕</span></button>
     <h3 id="privacy-title" data-i18n="modal.privacy.title">Privacy Policy</h3>
     <h4 data-i18n="modal.privacy.s1.title">Data Collection</h4><p data-i18n="modal.privacy.s1.body">When you use our contact form, we collect your name, email address, website URL, and message.</p>
     <h4 data-i18n="modal.privacy.s2.title">Purpose of Processing</h4><p data-i18n="modal.privacy.s2.body">Your data is used exclusively to respond to your inquiry. We do not use it for any other purpose.</p>
@@ -486,68 +354,15 @@
   </div>
 </div>
 
-<!-- Claude Code: include the extracted live-site translations here -->
-<script src="translations.js?v=1"></script>
-<script>
-/* ---------- header scroll ---------- */
-const hdr=document.getElementById('hdr');
-addEventListener('scroll',()=>hdr.classList.toggle('scrolled',scrollY>20));
-
-/* ---------- reveal on scroll ---------- */
-const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-
-/* ---------- i18n ----------
-   Uses the LANGS object from translations.js (extracted verbatim from live site).
-   English is the in-HTML default. Persists to localStorage['axyom-lang'].
-   NOTE for Claude Code: the live site's keys are already on these elements as
-   data-i18n attributes — reconcile any key-name differences against LANGS. */
-function applyLang(lang){
-  document.querySelectorAll('#lang button').forEach(x=>x.classList.toggle('on',x.dataset.l===lang));
-  localStorage.setItem('axyom-lang',lang);
-  document.documentElement.lang=lang;
-  if(lang==='en'||typeof LANGS==='undefined'||!LANGS[lang]){
-    if(lang!=='en')return;
-    /* restore English defaults by reloading is simplest; CC may snapshot instead */
-  }
-  const t=(typeof LANGS!=='undefined')?LANGS[lang]:null;
-  if(!t)return;
-  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.dataset.i18n;if(t[k])el.textContent=t[k]});
-  document.querySelectorAll('[data-i18n-html]').forEach(el=>{const k=el.dataset.i18nHtml;if(t[k])el.innerHTML=t[k]});
-  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{const k=el.dataset.i18nPh;if(t[k])el.placeholder=t[k]});
-}
-/* translate runtime-generated strings (greeting, citation, form feedback) */
-function tr(k,fb){const l=document.documentElement.lang||'en';const t=(typeof LANGS!=='undefined')&&LANGS[l];return (t&&t[k])||fb}
-document.querySelectorAll('#lang button').forEach(b=>b.addEventListener('click',()=>{
-  if(b.dataset.l==='en'&&localStorage.getItem('axyom-lang')!=='en'){localStorage.setItem('axyom-lang','en');location.reload();return}
-  applyLang(b.dataset.l);
-}));
-const saved=localStorage.getItem('axyom-lang');
-if(saved&&saved!=='en')applyLang(saved);
-
-/* ---------- modals ---------- */
-function openModal(id){document.getElementById('modal-'+id).classList.add('open');document.body.style.overflow='hidden'}
-function closeModal(){document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('open'));document.body.style.overflow=''}
-addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-
-/* ---------- contact form -> existing api.axyom.ch backend ---------- */
-document.getElementById('f-send').addEventListener('click',async()=>{
-  const payload={
-    name:document.getElementById('f-name').value||'',
-    email:document.getElementById('f-email').value||'',
-    website:document.getElementById('f-web').value||'',
-    message:document.getElementById('f-msg').value||''
-  };
-  const note=document.getElementById('f-note');
-  try{
-    const r=await fetch('https://api.axyom.ch/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    note.textContent=r.ok?tr('cta.f.sent','Message sent! We\'ll get back to you within 24 hours.'):tr('cta.f.err','Something went wrong — please email kontakt@axyom.ch directly.');
-  }catch(e){
-    note.textContent=tr('cta.f.err','Something went wrong — please email kontakt@axyom.ch directly.');
-  }
-});
-
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"Axyom AI","url":"https://axyom.ch/","logo":"https://axyom.ch/Assets/axyomlogo.png","email":"kontakt@axyom.ch","address":{"@type":"PostalAddress","streetAddress":"Gapetschstrasse 29","postalCode":"9494","addressLocality":"Schaan","addressCountry":"LI"}}
 </script>
+
+<script src="translations.js?v=2"></script>
+<script src="js/home.js?v=2" defer></script>
+<!-- 3D mark: deferred module, never blocks first paint. If it fails to load,
+     the hero keeps its static fallback image and the page stays complete. -->
+<script type="module" src="js/hero.js?v=2"></script>
 
 <!-- AXYOM AI — our own assistant, trained on this site. Dogfooding: this is
      the same widget and the same embed snippet customers paste into their own
