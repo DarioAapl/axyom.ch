@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy Policy — Axyom AI</title>
+<meta name="description" content="What Axyom AI collects, why, who processes it, and how long it is kept. Covers the website, the Shopify app and the storefront assistant." />
+<meta name="theme-color" content="#ffffff" />
+<meta name="color-scheme" content="light" />
+<link rel="canonical" href="https://axyom.ch/privacy.html" />
+<meta name="robots" content="index,follow" />
+<link rel="stylesheet" href="style.css" />
+<style>
+  .legal { max-width: 46rem; margin: 0 auto; padding: 4rem 1.25rem 6rem; }
+  .legal h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.15; margin: 0 0 .5rem; }
+  .legal .updated { color: #667; font-size: .9rem; margin: 0 0 2.5rem; }
+  .legal h2 { font-size: 1.25rem; margin: 2.75rem 0 .75rem; }
+  .legal h3 { font-size: 1rem; margin: 1.75rem 0 .4rem; }
+  .legal p, .legal li { line-height: 1.7; }
+  .legal ul { padding-left: 1.15rem; }
+  .legal li { margin-bottom: .45rem; }
+  .legal table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .93rem; }
+  .legal th, .legal td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid #e3e6ea; vertical-align: top; }
+  .legal th { font-weight: 600; }
+  .legal .tablewrap { overflow-x: auto; }
+  .legal .box { background: #f5f7f9; border-left: 3px solid #1C5C87; padding: 1rem 1.15rem; border-radius: 0 8px 8px 0; margin: 1.25rem 0; }
+  .legal a { color: #1C5C87; }
+  .legal .back { display: inline-block; margin-bottom: 2rem; font-size: .92rem; }
+</style>
+</head>
+<body>
+<main class="legal">
+
+<a class="back" href="/">← Axyom AI</a>
+
+<h1>Privacy Policy</h1>
+<p class="updated">Last updated 4 September 2026. This policy is published in English; it applies to all users regardless of the language the site or the assistant is used in.</p>
+
+<h2>Who is responsible</h2>
+<p>
+  Dario Tino<br />
+  Gapetschstrasse 29, 9494 Schaan, Principality of Liechtenstein<br />
+  UID CHE-331.960.860<br />
+  <a href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a>
+</p>
+<p>Liechtenstein is part of the European Economic Area, so the GDPR applies to this processing. Where a user or merchant is located in Switzerland, the Swiss Federal Act on Data Protection applies in addition.</p>
+
+<h2>What this policy covers</h2>
+<p>Three different things, with meaningfully different data:</p>
+<ul>
+  <li><strong>This website</strong> — axyom.ch, including the contact form.</li>
+  <li><strong>The Axyom app for Shopify</strong> — installed by a merchant into their own store.</li>
+  <li><strong>The storefront assistant</strong> — the chat widget a merchant's customers talk to.</li>
+</ul>
+
+<h2>The website</h2>
+<p><strong>No cookies and no analytics.</strong> This site sets no cookies, and there is no Google Analytics, no tracking pixel and no third-party analytics service of any kind. Your browser stores your light/dark theme preference locally; that never leaves your device.</p>
+<p>If you use the contact form we receive your name, email address, website URL and message, and we use them only to answer you.</p>
+<p>The website itself is served by GitHub Pages (GitHub, Inc., United States). Our application servers are separate — see hosting below.</p>
+
+<h2>The Shopify app</h2>
+<p>When a merchant installs Axyom, we store the shop's <code>.myshopify.com</code> domain, the access token that lets us read the shop's catalogue, the granted permission scopes, and the subscription status. We read the shop's products, pages and policies in order to answer questions about them.</p>
+<p>We request two permissions that Shopify classifies as protected customer data: <code>customer_read_customers</code> and <code>customer_read_orders</code>. They exist for one feature — order status — and they are described in full below.</p>
+
+<h2>The storefront assistant</h2>
+
+<h3>Chat messages</h3>
+<p>Messages typed into the assistant, and the assistant's replies, are stored so the merchant can review how their assistant is performing. <strong>They are deleted automatically after 90 days.</strong></p>
+<p>Please do not type payment card details into a chat box. We do not ask for them and have no use for them.</p>
+
+<h3>Order status</h3>
+<div class="box">
+  <p><strong>We store no order data at all.</strong> To see an order, the shopper signs in to their own Shopify customer account. Order details are then read live from Shopify for that one answer and are never written to our database, our logs or our search index.</p>
+</div>
+<p>What we do hold, briefly, is one login session: an encrypted access token with a hard ceiling of 30 minutes from the moment the shopper authorises it. It is not extended by activity, and it is deleted on expiry, on sign-out, and on any authorisation failure. The identifier held by the browser is stored on our side only as a cryptographic hash, so a copy of our database does not grant access to anybody's orders.</p>
+<p>The order information we read is deliberately narrow: order number, date, total, payment and fulfilment status, tracking information, and the items ordered. We do not read the customer's name, email address, telephone number or postal address.</p>
+
+<h2>Who else processes this data</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Processor</th><th>What for</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>OpenAI, L.L.C.</td><td>Generating assistant replies (<code>gpt-4o-mini</code>) and building the search index (<code>text-embedding-3-small</code>). Message content is sent to OpenAI to produce an answer.</td><td>United States</td></tr>
+    <tr><td>Infomaniak Network SA</td><td>Application hosting, database, and outbound email</td><td>Switzerland</td></tr>
+    <tr><td>GitHub, Inc.</td><td>Hosting this website</td><td>United States</td></tr>
+    <tr><td>Shopify Inc.</td><td>The merchant's own store data and, for order status, the shopper's own account</td><td>Canada</td></tr>
+    <tr><td>Stripe, Inc.</td><td>Payments — for customers who subscribe directly. Merchants who install through the Shopify App Store are billed by Shopify and their payment data never reaches us or Stripe.</td><td>United States</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Transfers to the United States are made on the basis of the European Commission's Standard Contractual Clauses. We do not sell personal data, and we do not use chat content to train third-party models.</p>
+
+<h2>How long we keep things</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Data</th><th>Retained</th></tr></thead>
+  <tbody>
+    <tr><td>Chat messages</td><td>90 days, then deleted automatically</td></tr>
+    <tr><td>Order data</td><td>Not stored at all</td></tr>
+    <tr><td>Shopper login session</td><td>30 minutes maximum</td></tr>
+    <tr><td>Merchant account and shop record</td><td>For as long as the app is installed</td></tr>
+    <tr><td>Everything belonging to a shop</td><td>Erased after uninstall, on Shopify's request</td></tr>
+    <tr><td>Contact form messages</td><td>Until the enquiry is resolved and no longer needed</td></tr>
+  </tbody>
+</table>
+</div>
+<p>When a merchant uninstalls Axyom, Shopify asks us to erase the shop's data and we delete it — chat messages, login sessions, credentials, uploaded files, and the search index built from the shop's content.</p>
+
+<h2>Your rights</h2>
+<p>You may request access to your personal data, correction of it, deletion of it, a copy in portable form, or restriction of processing; you may object to processing, and you may lodge a complaint with a supervisory authority. Write to <a href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a>.</p>
+<p>If you spoke to an assistant on a merchant's store, that merchant is the controller for their shop's data and we act on their instructions. You can contact us at the address above and we will help, but you may find it faster to contact the shop directly.</p>
+
+<h2>Legal basis</h2>
+<ul>
+  <li><strong>Contract</strong> — running the service for merchants who subscribe, and answering a shopper's question about their own order.</li>
+  <li><strong>Legitimate interests</strong> — keeping the service secure and working, and letting merchants review their assistant's quality. Balanced against your interests by the retention limits above.</li>
+  <li><strong>Consent</strong> — the contact form, which you choose to submit.</li>
+</ul>
+
+<h2>Security</h2>
+<p>All traffic is encrypted in transit. Access and refresh tokens are encrypted at rest; API keys and session identifiers are stored only as hashes. Access to production systems is limited to the controller named above.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes materially we will update the date at the top and, for changes that affect merchants, notify them in the app.</p>
+
+</main>
+</body>
+</html>
