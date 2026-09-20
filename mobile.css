@@ -1,0 +1,115 @@
+/* ============================================================
+   Handy-Fassung (html.mobile): dieselbe Scroll-Choreografie wie am
+   Desktop, aber auf einer eigenen Entwurfsfläche von 430 × 932 px.
+   --s = min(innerWidth/430, innerHeight/932) (siehe applyScale).
+   Alle Masse hier sind Handy-Pixel × --s. Reihenfolge: nach polish.css,
+   damit die html:not(.compact)-Regeln dort überschrieben werden.
+   ============================================================ */
+
+/* ---------- Typo-Tokens ---------- */
+html.mobile .h1   { font-size: calc(48px * var(--s)); line-height: 0.95; letter-spacing: -0.02em; }
+html.mobile .h2   { font-size: calc(34px * var(--s)); }
+html.mobile .h3   { font-size: calc(26px * var(--s)); }
+html.mobile .h4   { font-size: calc(15px * var(--s)); letter-spacing: .06em; }
+html.mobile .h5   { font-size: calc(17px * var(--s)); }
+html.mobile .body1{ font-size: calc(26px * var(--s)); line-height: 1.2; }
+html.mobile .body2{ font-size: calc(15px * var(--s)); line-height: 1.45; }
+html.mobile .sub1 { font-size: calc(14px * var(--s)); }
+html.mobile .sub2, html.mobile .btn { font-size: calc(11px * var(--s)); }
+html.mobile .mega { font-size: calc(58px * var(--s)); letter-spacing: -0.03em; }
+html.mobile .quote{ font-size: calc(20px * var(--s)); }
+
+/* ---------- Kopf ---------- */
+html.mobile #site-header { inset: calc(18px * var(--s)) calc(20px * var(--s)) auto; }
+html.mobile #logo { font-size: calc(22px * var(--s)); }
+html.mobile #nav { top: 0; }
+html.mobile #nav a.btn { padding: calc(9px * var(--s)) calc(14px * var(--s)); font-size: calc(11px * var(--s)); margin-top: calc(-4px * var(--s)); }
+html.mobile #scroll-indicator__bar { right: calc(4px * var(--s)); width: 2px; height: calc(70px * var(--s)); }
+html.mobile #scroll-hint { bottom: calc(18px * var(--s)); }
+
+/* ---------- Hero ---------- */
+html.mobile #hero-top { left: calc(20px * var(--s)); top: calc(88px * var(--s)); width: calc(390px * var(--s)); }
+html.mobile #hero-tagline { text-align: left; font-size: calc(11px * var(--s)); letter-spacing: .08em; margin-bottom: calc(6px * var(--s)); }
+html.mobile #hero-wordmark { font-size: calc(96px * var(--s)); }
+html.mobile #hero-copy { left: calc(20px * var(--s)); top: calc(600px * var(--s)); width: calc(390px * var(--s)); }
+html.mobile #hero-card { left: calc(20px * var(--s)); top: calc(722px * var(--s)); width: calc(390px * var(--s)); height: calc(150px * var(--s)); }
+html.mobile #hero-card::before { inset: calc(-8px * var(--s)); filter: blur(calc(18px * var(--s))); }
+html.mobile #hero-card-header { left: calc(16px * var(--s)); top: calc(14px * var(--s)); width: calc(358px * var(--s)); }
+html.mobile #hero-card .dash { left: calc(16px * var(--s)); right: calc(16px * var(--s)); top: calc(76px * var(--s)); }
+html.mobile #hero-card-desc { left: calc(16px * var(--s)); top: calc(90px * var(--s)); width: calc(358px * var(--s)); text-align: left; font-size: calc(13px * var(--s)); line-height: 1.4; }
+
+/* ---------- Claim ---------- */
+html.mobile #claim-title { top: calc(120px * var(--s)); left: calc(16px * var(--s)); right: calc(16px * var(--s)); white-space: normal; text-wrap: balance; }
+html.mobile #claim-brand { top: calc(258px * var(--s)); left: calc(16px * var(--s)); right: calc(16px * var(--s)); }
+html.mobile #claim-desc { right: calc(20px * var(--s)); left: auto; top: calc(760px * var(--s)); width: calc(300px * var(--s)); font-size: calc(13px * var(--s)); }
+
+/* ---------- Drei Gründe ---------- */
+html.mobile .ft-item { left: calc(24px * var(--s)); width: calc(382px * var(--s)); }
+html.mobile .ft-tag { top: calc(468px * var(--s)); font-size: calc(12px * var(--s)); }
+html.mobile .ft-title { margin-top: calc(496px * var(--s)); font-size: calc(44px * var(--s)); line-height: 1.0; letter-spacing: -0.028em; }
+html.mobile .ft-desc { margin-top: calc(18px * var(--s)); width: calc(360px * var(--s)); font-size: calc(16px * var(--s)); line-height: 1.45; }
+html.mobile .ft-item[data-i="2"] .ft-desc { margin-top: calc(58px * var(--s)); }
+html.mobile #ft-rail, html.mobile #ft-vdash { display: none; }
+html.mobile #ft-foot { right: calc(20px * var(--s)); bottom: calc(18px * var(--s)); width: calc(240px * var(--s)); font-size: calc(12px * var(--s)); }
+
+/* ---------- Branchen ---------- */
+html.mobile #bt-mega { top: calc(330px * var(--s)); left: calc(16px * var(--s)); right: calc(16px * var(--s));
+  white-space: normal; text-wrap: balance; font-size: calc(58px * var(--s)); text-shadow: 0 0 calc(30px * var(--s)) rgba(238,244,242,.35); }
+html.mobile #bt-strip { top: calc(300px * var(--s)); height: calc(590px * var(--s)); gap: calc(14px * var(--s)); }
+html.mobile #bt-strip img, html.mobile #bt-strip video, html.mobile #bt-strip .bakery-slot { width: calc(290px * var(--s)); height: calc(590px * var(--s)); }
+html.mobile #bt-report { width: calc(390px * var(--s)); padding: calc(30px * var(--s)) calc(24px * var(--s)); border-radius: calc(16px * var(--s)); }
+html.mobile #bt-report-logo { width: calc(96px * var(--s)); height: calc(96px * var(--s)); margin-bottom: calc(14px * var(--s)); }
+html.mobile #bt-stars { gap: calc(6px * var(--s)); margin-bottom: calc(16px * var(--s)); }
+html.mobile #bt-stars svg { width: calc(22px * var(--s)); height: calc(22px * var(--s)); }
+html.mobile #bt-quote { font-size: calc(20px * var(--s)); margin-bottom: calc(16px * var(--s)); }
+
+/* ---------- Versprechen ---------- */
+html.mobile #ha-top { left: calc(20px * var(--s)); right: calc(20px * var(--s)); top: calc(64px * var(--s)); gap: calc(12px * var(--s)); font-size: calc(10px * var(--s)); }
+html.mobile #ha-label { left: calc(20px * var(--s)); top: calc(300px * var(--s)); width: calc(390px * var(--s)); }
+html.mobile #ha-mega { top: calc(340px * var(--s)); font-size: calc(88px * var(--s)); }
+html.mobile #ha-body { top: calc(500px * var(--s)); left: calc(20px * var(--s)); right: calc(20px * var(--s)); }
+html.mobile #ha-body > div { width: calc(370px * var(--s)); font-size: calc(16px * var(--s)); }
+html.mobile #ha-grid-head { left: calc(20px * var(--s)); top: calc(120px * var(--s)); width: calc(390px * var(--s)); font-size: calc(30px * var(--s)); }
+html.mobile #ha-grid { left: calc(20px * var(--s)); right: calc(20px * var(--s)); top: calc(215px * var(--s)); height: calc(660px * var(--s));
+  grid-template-columns: 1fr 1fr; gap: calc(14px * var(--s)); }
+html.mobile .ha-card { padding: calc(16px * var(--s)); gap: calc(14px * var(--s)); border-radius: calc(16px * var(--s));
+  box-shadow: 0 calc(12px * var(--s)) calc(30px * var(--s)) rgba(16,32,29,.08); }
+html.mobile .ha-ico { width: calc(84px * var(--s)); height: calc(84px * var(--s)); padding: calc(22px * var(--s)); }
+html.mobile .ha-card-text { max-width: 100%; }
+html.mobile #ha-grid h5 { font-size: calc(17px * var(--s)); margin-bottom: .4em; }
+html.mobile #ha-grid .body2 { font-size: calc(13px * var(--s)); line-height: 1.4; }
+
+/* ---------- Abbinder ---------- */
+html.mobile #ab-title { left: calc(20px * var(--s)); top: calc(100px * var(--s)); width: calc(390px * var(--s)); font-size: calc(34px * var(--s)); }
+html.mobile #ab-note { left: calc(20px * var(--s)); top: calc(196px * var(--s)); width: calc(370px * var(--s)); font-size: calc(15px * var(--s)); }
+html.mobile #ab-mail { left: calc(20px * var(--s)); top: calc(268px * var(--s)); font-size: calc(16px * var(--s)); }
+html.mobile #ab-form { left: calc(20px * var(--s)); right: calc(20px * var(--s)); width: auto; top: calc(316px * var(--s));
+  padding: calc(20px * var(--s)); gap: calc(12px * var(--s)); border-radius: calc(18px * var(--s)); }
+html.mobile .ab-row { grid-template-columns: 1fr; gap: calc(12px * var(--s)); }
+html.mobile .ab-field span { font-size: calc(12px * var(--s)); margin-bottom: calc(6px * var(--s)); }
+html.mobile .ab-field input, html.mobile .ab-field textarea { font-size: 16px; height: calc(44px * var(--s)); padding: 0 calc(14px * var(--s)); border-radius: calc(12px * var(--s)); }
+html.mobile .ab-field textarea { min-height: calc(88px * var(--s)); padding: calc(10px * var(--s)) calc(14px * var(--s)); }
+html.mobile .ab-actions { flex-direction: column; align-items: flex-start; gap: calc(10px * var(--s)); }
+html.mobile #ab-form button { font-size: calc(12px * var(--s)); }
+html.mobile #ab-form-hint { font-size: calc(12px * var(--s)); }
+html.mobile #ab-links { left: calc(20px * var(--s)); bottom: calc(18px * var(--s)); }
+html.mobile #ab-links a { font-size: calc(11px * var(--s)); }
+html.mobile #ab-legal { right: calc(20px * var(--s)); bottom: calc(18px * var(--s)); width: calc(200px * var(--s)); font-size: calc(10px * var(--s)); line-height: 1.5; }
+
+/* ---------- Überschreibungen der Desktop-Regeln aus polish.css (html:not(.compact)) ---------- */
+html.mobile #hero-wordmark { width: calc(300px * var(--s)); }
+html.mobile #hero-copy { left: calc(20px * var(--s)); top: calc(590px * var(--s)); width: calc(390px * var(--s));
+  font-size: calc(34px * var(--s)); line-height: 1.1; letter-spacing: -.03em; }
+html.mobile #hero-card-header { font-size: calc(17px * var(--s)); line-height: 1.35; }
+html.mobile #hero-copy { width: calc(300px * var(--s)); }   /* bricht nach «Aufwand.» um */
+
+/* ---------- Safari-Adressleiste ----------
+   Unten verankerte Elemente hängen an der kleinen Viewport-Höhe (100svh = Höhe bei
+   ausgefahrener Leiste). So wandern sie nicht mit, wenn Safari die Leiste ein- oder
+   ausfährt; der freiwerdende Streifen unten bleibt reiner Hintergrund. */
+@supports (height: 100svh) {
+  html.mobile #scroll-hint { bottom: auto; top: calc(100svh - 18px * var(--s)); transform: translate(-50%, -100%); }
+  html.mobile #ft-foot     { bottom: auto; top: calc(100svh - 18px * var(--s)); transform: translateY(-100%); }
+  html.mobile #ab-links,
+  html.mobile #ab-legal    { bottom: auto; top: calc(100svh - 18px * var(--s)); transform: translateY(-100%); }
+}

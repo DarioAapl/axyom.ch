@@ -1,0 +1,38 @@
+{
+  "vid-schreiner": {
+    "src": "https://mixkit.co/free-stock-video/hands-of-a-carpenter-carving-wood-with-a-chisel-39500/",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "vid-coiffeur": {
+    "src": "https://mixkit.co/free-stock-video/barber-doing-a-fashion-cut-to-a-man-43229/",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "vid-baeckerei": {
+    "src": "https://mixkit.co/free-stock-video/pastry-chef-decorating-a-cake-using-a-cake-scraper-50053/",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "vid-garage": {
+    "src": "https://mixkit.co/free-stock-video/mechanic-repairing-a-car-engine-4716/",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "vid-florist": {
+    "src": "https://mixkit.co/free-stock-video/florist-creating-a-bundle-of-flowers-15122/",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "vid-zahnarzt": {
+    "src": "https://mixkit.co/free-stock-video/dentist-choosing-a-drill-6609/",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "vid-schweisser": {
+    "src": "https://mixkit.co/free-stock-video/welder-welding-construction-steel-frames-47293/",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "vid-fromheaven": {
+    "src": "Kunden-Shooting From Heaven (Drive «Fotos Corinne From Heaven», Heaven_Location_Pics2), Kling 3.0 via Higgsfield, 2026-09-11",
+    "license": "Freigabe From Heaven ausstehend"
+  },
+  "fromheaven-logo": {
+    "src": "~/fromheaven-reel/public/img/logo_white.png",
+    "license": "Freigabe From Heaven ausstehend"
+  }
+}
