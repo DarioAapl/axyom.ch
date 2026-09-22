@@ -110,6 +110,45 @@ th.r,td.r{text-align:right}
 .check svg{display:none}.check.on svg{display:block}
 .link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 
+/* ── the weekly report ─────────────────────────────────────────────────────
+   Four stacked blocks of numbers answered «what happened» and nothing else.
+   The page now runs in the order the questions come: what is left, where the
+   franc went, how it was earned, how that compares, what comes next, what to
+   do. Every figure appears once.
+   ────────────────────────────────────────────────────────────────────────── */
+.wkopf{display:flex;gap:12px;align-items:stretch;margin-bottom:22px}
+.wkopf .bleibt{flex:0 0 340px}
+.wkopf .hin{flex:1;min-width:0}
+.gross{font-size:34px;font-weight:700;letter-spacing:-.028em;line-height:1.05;margin-top:6px}
+.rappen{font-size:12.5px;color:var(--dim);margin-top:7px;line-height:1.5}
+.wbar{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:4px 0 12px}
+.wbar i{display:block}
+.wleg{display:flex;flex-wrap:wrap;gap:8px 20px}
+.wleg > div{display:flex;align-items:baseline;gap:7px;font-size:12px}
+.wleg .pt{width:9px;height:9px;border-radius:3px;flex:none;align-self:center}
+.wleg b{font-variant-numeric:tabular-nums}
+.bm{font-size:10.5px;font-weight:650;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.bm.gut{color:var(--acci);background:var(--okbg)}
+.bm.ok{color:var(--dim);background:rgba(0,0,0,.05)}
+.bm.hoch{color:var(--warn);background:var(--warnbg)}
+.wf{border:1px solid var(--soft);border-radius:12px;overflow:hidden}
+.wf .z{display:flex;align-items:baseline;gap:14px;padding:10px 16px;border-top:1px solid var(--soft)}
+.wf .z:first-child{border-top:none}
+.wf .z .nm{flex:1;min-width:0;font-size:13px}
+.wf .z .wert{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;text-align:right;
+  flex:0 0 132px}
+.wf .z .hint{font-size:11.5px;color:var(--dim);flex:0 0 240px;text-align:right;
+  display:flex;gap:7px;justify-content:flex-end;align-items:center}
+.wf .z.sub{background:var(--surf)}
+.wf .z.sub .nm{padding-left:20px;font-size:12px;color:var(--dim)}
+.wf .z.sub .wert{font-weight:500;color:var(--dim)}
+.wf .z.summe{background:var(--wash)}
+.wf .z.summe .nm{font-weight:700}
+.wf .z.summe .wert{font-weight:800}
+.wf .z.ab .wert{color:var(--warn)}
+@media (max-width:900px){ .wkopf{flex-direction:column} .wkopf .bleibt{flex:1 1 auto}
+  .wf .z{flex-wrap:wrap} .wf .z .hint{flex:1 1 100%;justify-content:flex-start;text-align:left} }
+
 /* ── tabs, and the month calendar (Social Media) ───────────────────────────
    Two views over the same posts. A post is edited where it was clicked, so
    the calendar never becomes a second list that has to be kept in step.
@@ -336,8 +375,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 /* grid does not pack, so each dashboard column is its own stack and the
    short widgets sit directly under one another instead of leaving a hole */
 .col{display:flex;flex-direction:column;gap:10px;align-self:start}
-.dec{padding:7px 9px;border-radius:7px;background:rgba(178,94,0,.05);
-     border:1px solid rgba(178,94,0,.20);margin-bottom:5px;cursor:pointer}
+.dec{padding:6px 9px;border-radius:7px;background:rgba(178,94,0,.05);
+     border:1px solid rgba(178,94,0,.20);margin-bottom:4px;cursor:pointer}
 .dec:last-child{margin-bottom:0}
 .dec b{font-size:11.5px}
 .dec .why{font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.35}
@@ -582,23 +621,29 @@ const DB = {
      labelled as an expectation everywhere it appears. */
   naechste: {
     ab:'23.03.', anteil:0.76,
-    tage: [ { tag:'Mo', gebucht:28,  besetzt:3 }, { tag:'Di', gebucht:24,  besetzt:3 },
-            { tag:'Mi', gebucht:41,  besetzt:4 }, { tag:'Do', gebucht:52,  besetzt:4 },
-            { tag:'Fr', gebucht:96,  besetzt:6 }, { tag:'Sa', gebucht:118, besetzt:5 },
-            { tag:'So', gebucht:74,  besetzt:5 } ],
+    tage: [ { tag:'Mo', gebucht:28,  besetzt:4 }, { tag:'Di', gebucht:24,  besetzt:4 },
+            { tag:'Mi', gebucht:41,  besetzt:5 }, { tag:'Do', gebucht:52,  besetzt:6 },
+            { tag:'Fr', gebucht:96,  besetzt:9 }, { tag:'Sa', gebucht:118, besetzt:7 },
+            { tag:'So', gebucht:74,  besetzt:7 } ],
   },
 
   // rota: covers already booked against staffing
   woche: [
-    { tag:'Mo', gedecke:42,  vj:38,  besetzt:3, stunden:24 },
-    { tag:'Di', gedecke:38,  vj:41,  besetzt:3, stunden:24 },
-    { tag:'Mi', gedecke:61,  vj:55,  besetzt:4, stunden:32 },
-    { tag:'Do', gedecke:74,  vj:60,  besetzt:4, stunden:32 },
-    { tag:'Fr', gedecke:118, vj:104, besetzt:6, stunden:48 },
-    { tag:'Sa', gedecke:146, vj:139, besetzt:6, stunden:48 },
-    { tag:'So', gedecke:92,  vj:88,  besetzt:5, stunden:40 },
+    { tag:'Mo', gedecke:42,  vj:38,  besetzt:4, stunden:32 },
+    { tag:'Di', gedecke:38,  vj:41,  besetzt:4, stunden:32 },
+    { tag:'Mi', gedecke:61,  vj:55,  besetzt:5, stunden:40 },
+    { tag:'Do', gedecke:74,  vj:60,  besetzt:6, stunden:48 },
+    { tag:'Fr', gedecke:118, vj:104, besetzt:8, stunden:64 },
+    { tag:'Sa', gedecke:146, vj:139, besetzt:9, stunden:72 },
+    { tag:'So', gedecke:92,  vj:88,  besetzt:6, stunden:48 },
   ],
-  lohn: 34, // CHF per hour, fully loaded — used for the rota cost line
+  /* CHF 45 is an hour of staff as it actually costs: wage, social charges,
+     holiday and 13th. At CHF 34 and three people a day the demo showed
+     personnel at 23.8% of revenue — no Swiss restaurateur believes that, and
+     GastroSuisse puts the industry near 45%. */
+  lohn: 45,
+  // covers per person before a shift is tight — 26 belonged to the old staffing
+  knappAb: 15,
 
   // training: people and the modules they owe
   leute: [
@@ -771,7 +816,7 @@ DB.wochen = (() => {
     const proGedeck = 60.9 + (f - 0.95) * 4;          // volle Wochen trinken mehr
     const umsatz = Math.round(gedecke * proGedeck);
     const wareQ = 0.250 - (f - 0.95) * 0.02;
-    const persQ = 0.238 + (1.05 - f) * 0.05;          // die Schicht schrumpft langsamer als die Gäste
+    const persQ = 0.405 + (1.05 - f) * 0.09;          // die Schicht schrumpft langsamer als die Gäste
     return { kw: 'KW ' + kw, ab, umsatz, gedecke,
              einsatz: Math.round(umsatz * wareQ), personal: Math.round(umsatz * persQ) };
   });
@@ -901,7 +946,7 @@ const MODULES = [
   { id:'inhalte',     name:'Inhalte',     titel:'Karte und Inhalte',     sub:'Einmal geändert, an einer Stelle' },
   { id:'social',      name:'Social Media',titel:'Beiträge im März',      sub:'Kalender und Kanäle · entworfen aus dem, was sich im Haus geändert hat' },
   { id:'bewertungen', name:'Bewertungen', titel:'Letzte 30 Tage',        sub:'Google, Buchungsplattformen und Gästebuch in einer Liste' },
-  { id:'auswertungen',name:'Auswertungen',titel:'Die Woche',             sub:'Sechs Wochen im Verlauf, diese live gerechnet, und was nächste Woche gebucht ist' },
+  { id:'auswertungen',name:'Auswertungen',titel:'Die Woche',             sub:'Was bleibt, wie es zustande kommt, wie es sich entwickelt — und was nächste Woche gebucht ist' },
 ];
 
 let AKTIV = 'uebersicht';
@@ -1375,7 +1420,7 @@ VIEWS.dienstplan = () => {
   const max = Math.max(...DB.woche.map(d => Math.max(d.gedecke, d.vj)));
   const cols = DB.woche.map(d => {
     const pro = d.gedecke / d.besetzt;
-    const knapp = pro > 26, viel = pro < 13;
+    const knapp = pro > DB.knappAb, viel = pro < DB.knappAb * 0.5;
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:7px;flex:1">
       <div style="height:110px;display:flex;align-items:flex-end;gap:3px">
         <div style="width:22px;border-radius:5px 5px 0 0;height:${Math.round(d.gedecke / max * 110)}px;
@@ -1410,7 +1455,7 @@ VIEWS.dienstplan = () => {
         <span class="small muted"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;
           background:rgba(0,0,0,.12);margin-right:5px"></span>Vorjahr</span></div></div>
     <div class="small muted" style="margin-top:12px">Besetzung ändern — Stunden, Kosten und die Kosten
-      pro Gedeck rechnen mit. Mehr als 26 Gedecke auf eine Person wird als knapp markiert.</div>`;
+      pro Gedeck rechnen mit. Mehr als ${DB.knappAb} Gedecke auf eine Person wird als knapp markiert.</div>`;
 };
 
 /* ── Schulung ───────────────────────────────────────────────────────────── */
@@ -1767,23 +1812,70 @@ VIEWS.bewertungen = () => {
 VIEWS.auswertungen = () => {
   const Z = zahlen();
   const { gedecke, std, personal, kalk, umsatz, einsatz, roh } = Z;
-  const bewegt = Object.entries(DB.artikel).filter(([, a]) => a.preis !== a.vorher);
-  const zeilen = [
-    ['Speisen, kalkulierte Gerichte', chf(kalk),      DB.gerichte.reduce((s,g)=>s+g.verkauft,0) + ' Portionen, Zeile für Zeile gerechnet'],
-    ['Speisen, übrige Karte',         chf(DB.uebrigeSpeisen), 'noch nicht kalkuliert'],
-    ['Getränke',                      chf(DB.getraenke),      (DB.getraenke / umsatz * 100).toFixed(0) + '% vom Umsatz'],
-    ['Umsatz total',                  chf(umsatz),            chf(umsatz / gedecke) + ' pro Gedeck'],
-    ['Wareneinsatz',                  chf(einsatz),           (einsatz / umsatz * 100).toFixed(1) + '% vom Umsatz'],
-    ['Rohertrag',                     chf(roh),               (roh / umsatz * 100).toFixed(1) + '% Marge'],
-    ['Personal, geplant',             chf(personal),          std + ' Stunden · ' + (personal / umsatz * 100).toFixed(1) + '% vom Umsatz'],
-    ['Deckungsbeitrag',               chf(roh - personal),    'nach Ware und Personal'],
-  ].map(([a, b, c]) => `<tr><td><b>${a}</b></td><td class="r num">${b}</td>
-      <td class="r muted small">${c}</td></tr>`).join('');
+  const db = roh - personal;
+  const vorwoche = DB.wochen[DB.wochen.length - 1];
+  const dbVor = vorwoche.umsatz - vorwoche.einsatz - vorwoche.personal;
 
-  /* ── the six weeks: five closed ones plus this one, computed live ── */
+  /* Benchmarks, so a percentage means something. GastroSuisse Branchenspiegel:
+     Wareneinsatz rund 29.9%; für den Personalaufwand gilt rund die Hälfte des
+     Umsatzes als Obergrenze. */
+  const bench = (wert, gut, grenze, txt) => `<span class="bm ${wert <= gut ? 'gut'
+    : wert <= grenze ? 'ok' : 'hoch'}">${txt}</span>`;
+  const wareQ = einsatz / umsatz * 100, persQ = personal / umsatz * 100, dbQ = db / umsatz * 100;
+
+  /* ── 1. Was bleibt, und wohin der Franken geht ── */
+  const kopf = `<div class="wkopf">
+      <div class="card bleibt">
+        <div class="wl"><span>Was bleibt</span>
+          <span class="r2" style="color:${db >= dbVor ? 'var(--acci)' : 'var(--warn)'}"
+            >${pct((db / dbVor - 1) * 100)} ggü. ${esc(vorwoche.kw)}</span></div>
+        <div class="gross">${chf(db)}</div>
+        <div class="rappen">${(dbQ / 100 * 100).toFixed(0)} Rappen von jedem Franken Umsatz —
+          nach Ware und Personal.<br>
+          <span style="color:var(--dim)">Davon gehen noch Miete, Energie und Versicherungen ab;
+          die sind in dieser Demo nicht erfasst.</span></div></div>
+      <div class="card hin">
+        <div class="wl"><span>Wohin der Franken geht</span>
+          <span class="r2">${chf(umsatz)} Umsatz · ${gedecke} Gedecke</span></div>
+        <div class="wbar">
+          <i style="width:${wareQ}%;background:var(--warn)"></i>
+          <i style="width:${persQ}%;background:var(--acci)"></i>
+          <i style="width:${dbQ}%;background:var(--acc)"></i></div>
+        <div class="wleg">
+          <div><span class="pt" style="background:var(--warn)"></span>Ware <b>${wareQ.toFixed(1)}%</b>
+            ${bench(wareQ, 29.9, 33, 'Branche 29.9%')}</div>
+          <div><span class="pt" style="background:var(--acci)"></span>Personal <b>${persQ.toFixed(1)}%</b>
+            ${bench(persQ, 45, 51, 'Branche bis ~51%')}</div>
+          <div><span class="pt" style="background:var(--acc)"></span>Bleibt <b>${dbQ.toFixed(1)}%</b></div></div>
+        <div class="small muted" style="margin-top:11px">Beide Anteile liegen unter dem Branchenwert —
+          die Ware, weil ${DB.gerichte.length} Gerichte Zeile für Zeile kalkuliert sind und Preisänderungen
+          sofort ankommen; das Personal, weil der Dienstplan an den Gedecken hängt und nicht am Gefühl.</div></div>
+    </div>`;
+
+  /* ── 2. Wie sie zustande kommt ── */
+  const z = (nm, wert, hint, cls = '') => `<div class="z ${cls}">
+    <div class="nm">${nm}</div><div class="wert">${wert}</div>
+    <div class="hint">${hint || ''}</div></div>`;
+  const rechnung = `<div class="wf">
+      ${z('Umsatz', chf(umsatz), `${gedecke} Gedecke · ${chf(umsatz / gedecke)} pro Gedeck`, 'summe')}
+      ${z('Speisen, kalkulierte Gerichte', chf(kalk),
+          `${DB.gerichte.reduce((s, g) => s + g.verkauft, 0)} Portionen`, 'sub')}
+      ${z('Speisen, übrige Karte', chf(DB.uebrigeSpeisen), 'noch nicht kalkuliert', 'sub')}
+      ${z('Getränke', chf(DB.getraenke), (DB.getraenke / umsatz * 100).toFixed(0) + '% vom Umsatz', 'sub')}
+      ${z('− Wareneinsatz', '−' + chf(einsatz).replace('CHF ', 'CHF '),
+          `${wareQ.toFixed(1)}% ${bench(wareQ, 29.9, 33, 'Branche 29.9%')}`, 'ab')}
+      ${z('= Rohertrag', chf(roh), `${(roh / umsatz * 100).toFixed(1)}% vom Umsatz`, 'summe')}
+      ${z('− Personal, geplant', '−' + chf(personal),
+          `${std} Std · ${persQ.toFixed(1)}% ${bench(persQ, 45, 51, 'Branche bis ~51%')}`, 'ab')}
+      ${z('= Deckungsbeitrag', chf(db), `${dbQ.toFixed(1)}% · ${chf(db / gedecke)} pro Gedeck`, 'summe')}
+    </div>
+    <div class="small muted" style="margin-top:10px">Personal ist die geplante Schicht aus dem
+      <span class="link" data-go="dienstplan">Dienstplan</span>, nicht gestempelte Zeit. Die kalkulierten
+      Gerichte kommen aus <span class="link" data-go="gerichte">Gerichte</span> und rechnen mit den Preisen,
+      die zuletzt bezahlt wurden.</div>`;
+
   const alleWochen = [...DB.wochen, { kw:'KW 12', ab:'16.03.', umsatz, gedecke, einsatz, personal, jetzt:true }];
   const reihe = alleWochen.slice(-Math.min(VERLAUF_W, alleWochen.length));
-  const vorwoche = DB.wochen[DB.wochen.length - 1];
   const filter = [6, 13, 26].filter(n => n <= alleWochen.length).map(n =>
     `<button class="tab ${VERLAUF_W === n ? 'on' : ''}" data-verlauf="${n}">${n} Wochen</button>`).join('');
   const wochenZeilen = reihe.map(w => {
@@ -1798,26 +1890,31 @@ VIEWS.auswertungen = () => {
       <td class="r num muted">${(w.personal / w.umsatz * 100).toFixed(1)}%</td>
       <td class="r num">${chf(db)}</td></tr>`;
   }).join('');
-  const dbVor = vorwoche.umsatz - vorwoche.einsatz - vorwoche.personal;
-  const delta = (label, jetzt, vorher, format) => {
-    const d = (jetzt / vorher - 1) * 100;
-    return `<div class="vstat"><div class="vk">${esc(label)}</div>
-      <div class="vl2">${format(jetzt)}</div>
-      <div class="vn" style="color:${d < 0 ? 'var(--warn)' : 'var(--acci)'}">${pct(d)}</div></div>`;
-  };
+  /* One sentence instead of three numbers that are already in the header: what
+     moved, and — when the bottom line moved differently from the top line — why. */
+  const persVor = vorwoche.personal / vorwoche.umsatz * 100;
+  const dUmsatz = (umsatz / vorwoche.umsatz - 1) * 100;
+  const dDb = (db / dbVor - 1) * 100;
+  const satz = `Diese Woche liegt ${chf(umsatz - vorwoche.umsatz)} über ${esc(vorwoche.kw)} `
+    + `(${pct(dUmsatz)}), bei ${gedecke - vorwoche.gedecke} Gedecken mehr.`
+    + (dDb < dUmsatz - 1
+        ? ` Der Deckungsbeitrag wächst langsamer (${pct(dDb)}): der Personalanteil ist von `
+          + `${persVor.toFixed(1)}% auf ${persQ.toFixed(1)}% gestiegen.`
+        : dDb > dUmsatz + 1
+          ? ` Der Deckungsbeitrag wächst schneller (${pct(dDb)}): der Personalanteil ist von `
+            + `${persVor.toFixed(1)}% auf ${persQ.toFixed(1)}% gesunken.`
+          : ` Der Deckungsbeitrag zieht im gleichen Mass mit (${pct(dDb)}).`);
+
   const verlauf = `<div class="verlaufkopf">
       <div class="card vstats">
-        <div class="wl"><span>Diese Woche gegenüber ${esc(vorwoche.kw)}</span>
+        <div class="wl"><span>Gegenüber ${esc(vorwoche.kw)}</span>
           <span class="r2">die laufende Woche rechnet live mit</span></div>
-        <div class="vstatrow">
-          ${delta('Umsatz', umsatz, vorwoche.umsatz, chf)}
-          ${delta('Gedecke', gedecke, vorwoche.gedecke, String)}
-          ${delta('Deckungsbeitrag', roh - personal, dbVor, chf)}</div></div>
+        <div style="font-size:13px;line-height:1.65">${satz}</div>
+        <div class="small muted" style="margin-top:9px">Abgeschlossene Wochen stehen fest;
+          KW 12 ändert sich, sobald in einem Modul etwas entschieden wird.</div></div>
       <div class="card vchart">
         <div class="wl"><span>Umsatz pro Woche</span>
           <span class="r2">${reihe.length} Wochen</span></div>
-        ${/* bars from zero make six weeks within 15% of each other look identical;
-             a line over the data's own range shows the shape and marks nothing */''}
         ${(u => chartLine(u, Math.min(...u), Math.max(...u), 62))(reihe.map(w => w.umsatz))}
         <div class="row" style="justify-content:space-between;margin-top:6px">
           <span class="sm2">${chf(Math.min(...reihe.map(w => w.umsatz)))}</span>
@@ -1835,7 +1932,7 @@ VIEWS.auswertungen = () => {
   const eStd = N.tage.reduce((s, t) => s + t.besetzt * 8, 0);
   const ePersonal = eStd * DB.lohn;
   const eWare = eUmsatz * (einsatz / umsatz);
-  const knappN = N.tage.filter(t => t.gebucht / N.anteil / t.besetzt > 26);
+  const knappN = N.tage.filter(t => t.gebucht / N.anteil / t.besetzt > DB.knappAb);
   const vorschau = `<div class="grid g4" style="margin-bottom:12px">
       <div class="card kpi"><div class="l">Gebucht</div><div class="n">${gebucht}</div>
         <div class="d">Gedecke, Stand heute</div></div>
@@ -1851,8 +1948,8 @@ VIEWS.auswertungen = () => {
       ${N.tage.map(t => { const e = Math.round(t.gebucht / N.anteil), pro = e / t.besetzt;
         return `<tr><td><b>${t.tag}</b></td><td class="r num muted">${t.gebucht}</td>
           <td class="r num">${e}</td><td class="r num muted">${t.besetzt}</td>
-          <td class="r num" style="${pro > 26 ? 'color:var(--warn);font-weight:650' : ''}"
-            >${pro.toFixed(0)}${pro > 26 ? ' · knapp' : ''}</td></tr>`; }).join('')}
+          <td class="r num" style="${pro > DB.knappAb ? 'color:var(--warn);font-weight:650' : ''}"
+            >${pro.toFixed(0)}${pro > DB.knappAb ? ' · knapp' : ''}</td></tr>`; }).join('')}
       </tbody></table></div>
     <div class="small muted" style="margin-top:10px">«Erwartet» ist der Buchungsstand hochgerechnet:
       bis zum Mittwoch davor sind erfahrungsgemäss ${(N.anteil * 100).toFixed(0)}% der Woche gebucht.
@@ -1860,11 +1957,12 @@ VIEWS.auswertungen = () => {
       ${knappN.length ? `<span style="color:var(--warn);font-weight:600">${knappN.map(t => t.tag).join(', ')}
         ${knappN.length > 1 ? 'werden' : 'wird'} mit der geplanten Besetzung knapp.</span>` : ''}</div>`;
 
+  const bewegt = Object.entries(DB.artikel).filter(([, a]) => a.preis !== a.vorher);
   const hinweise = [];
   if (bewegt.length) hinweise.push(`${bewegt.length} Artikelpreis${bewegt.length > 1 ? 'e' : ''} bewegt: ` +
     bewegt.map(([, a]) => esc(a.name.split(',')[0])).join(', ') + ' — die Margen oben rechnen damit.');
-  const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > 26);
-  if (knapp.length) hinweise.push(`Knapp besetzt: ${knapp.map(d => d.tag).join(', ')} — mehr als 26 Gedecke pro Person.`);
+  const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > DB.knappAb);
+  if (knapp.length) hinweise.push(`Knapp besetzt: ${knapp.map(d => d.tag).join(', ')} — mehr als ${DB.knappAb} Gedecke pro Person.`);
   const offenH = DB.hygiene.filter(h => !h.done).length;
   if (offenH) hinweise.push(`${offenH} Hygienekontrolle${offenH > 1 ? 'n' : ''} noch offen.`);
   const alarmOffen = DB.alarme.filter(a => !a.quittiert).length;
@@ -1874,18 +1972,12 @@ VIEWS.auswertungen = () => {
     `<span class="link" data-go="dienstplan">Dienstplan</span> ansehen.`);
   if (!hinweise.length) hinweise.push('Keine offenen Punkte. Die Woche ist sauber.');
 
-  return `<div class="grid g4" style="margin-bottom:20px">
-      <div class="card kpi"><div class="l">Umsatz</div><div class="n">${chf(umsatz)}</div>
-        <div class="d">${gedecke} Gedecke, diese Woche</div></div>
-      <div class="card kpi"><div class="l">Rohertrag</div><div class="n">${chf(roh)}</div>
-        <div class="d">${(roh / umsatz * 100).toFixed(1)}% Marge</div></div>
-      <div class="card kpi"><div class="l">Personal</div><div class="n">${chf(personal)}</div>
-        <div class="d">${(personal / umsatz * 100).toFixed(1)}% vom Umsatz</div></div>
-      <div class="card kpi"><div class="l">Deckungsbeitrag</div>
-        <div class="n" style="color:${roh - personal < 0 ? 'var(--warn)' : 'var(--ink)'}">${chf(roh - personal)}</div>
-        <div class="d">Nach Ware und Personal</div></div></div>
-    <div class="sec">Immer gleich aufgebaut</div>
-    <table><tbody>${zeilen}</tbody></table>
+  return `${kopf}
+    <div class="sec">Wie sie zustande kommt</div>
+    ${rechnung}
+    <div class="sec">Was zu tun ist</div>
+    <div class="card ${DB.hygiene.some(h => !h.done) || DB.alarme.some(a => !a.quittiert) ? 'warn' : 'tint'}">
+      ${hinweise.map(h => `<div class="small" style="line-height:1.8">· ${h}</div>`).join('')}</div>
     <div class="sec" style="display:flex;align-items:center;gap:14px">Verlauf
       <span class="tabs" style="margin-bottom:0">${filter}</span>
       <span class="muted" style="font-weight:600;letter-spacing:0;text-transform:none">${
@@ -1893,9 +1985,6 @@ VIEWS.auswertungen = () => {
     ${verlauf}
     <div class="sec">Nächste Woche · erwartet</div>
     ${vorschau}
-    <div class="sec">Mit Empfehlungen</div>
-    <div class="card ${hinweise.length && DB.hygiene.some(h => !h.done) ? 'warn' : 'tint'}">
-      ${hinweise.map(h => `<div class="small" style="line-height:1.7">· ${h}</div>`).join('')}</div>
     ${DB.log.length ? `<div class="sec">Was in dieser Demo passiert ist</div>
       <div class="card tint">${DB.log.slice(0, 10).map(l =>
         `<div class="small muted" style="line-height:1.8"><span class="num">${l.zeit}</span> · ${l.text}</div>`).join('')}
@@ -1968,10 +2057,10 @@ function offeneSachen() {
     was: `${bOffen.length} Briefing${bOffen.length > 1 ? 's' : ''} fällig`,
     warum: bOffen.map(b => b.titel).join(', ') + ' — ' + bOffen.reduce((s, b) => s + b.faellig.length, 0) + ' Personen' });
 
-  const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > 26);
+  const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > DB.knappAb);
   if (knapp.length) items.push({ ernst: 2, wo: 'dienstplan', modul: 'Dienstplan',
     was: `${knapp.map(d => d.tag).join(', ')} knapp besetzt`,
-    warum: `Über 26 Gedecke pro Person — ${knapp.map(d => d.tag + ': ' + d.gedecke + ' auf ' + d.besetzt).join(' · ')}` });
+    warum: `Über ${DB.knappAb} Gedecke pro Person — ${knapp.map(d => d.tag + ': ' + d.gedecke + ' auf ' + d.besetzt).join(' · ')}` });
 
   const lAuff = DB.lager.filter(l => Math.abs(l.gezaehlt - l.erwartet) / l.erwartet > 0.05);
   if (lAuff.length) items.push({ ernst: 1, wo: 'lager', modul: 'Lager',
@@ -2028,17 +2117,23 @@ VIEWS.uebersicht = () => {
          tage.map(t => t[0]).join(' '));
 
   /* decisions — the tall column, so it carries the most rows */
+  /* At most five rows: the sixth pushed the dashboard off its single screen,
+     and a list that scrolls is a list nobody finishes. Everything below the cut
+     keeps its colour and moves into the chips — demoted, not hidden. */
+  const zeigen = dring.slice(0, 5), rest = dring.slice(5);
   const dec = WG('', dring.length ? dring.length + ' braucht eine Entscheidung' : 'Entscheidungen',
-    (dring.length
-      ? dring.map(i => `<div class="dec ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}">
+    (zeigen.length
+      ? zeigen.map(i => `<div class="dec ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}">
           <div class="row" style="justify-content:space-between;gap:6px">
             <b>${esc(i.was)}</b>
             <span class="tag ${i.ernst === 3 ? 't-bad' : 't-warn'}">${i.ernst === 3 ? 'jetzt' : 'heute'}</span></div>
           <div class="why">${i.warum}</div></div>`).join('')
       : `<div class="dec calm"><b>Nichts offen</b>
           <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`)
-    + (spaeter.length ? `<div class="chips" style="margin-top:7px">${spaeter.map(i =>
-        `<span class="chip s1" data-go="${i.wo}">${esc(i.was)}</span>`).join('')}</div>` : ''));
+    + ((rest.length || spaeter.length) ? `<div class="chips" style="margin-top:7px">${
+        rest.map(i => `<span class="chip s${i.ernst}" data-go="${i.wo}">${esc(i.was)}</span>`).join('') +
+        spaeter.map(i => `<span class="chip s1" data-go="${i.wo}">${esc(i.was)}</span>`).join('')
+      }</div>` : ''));
 
   /* The master indicator: the three levels counted, and the one thing that is
      actually urgent named beside them. A lamp without anything behind it stays
@@ -2116,14 +2211,14 @@ VIEWS.uebersicht = () => {
 
   const plan = WG('', 'Auslastung pro Schicht', `<div class="row" style="align-items:flex-end;gap:5px">
     ${DB.woche.map(d => {
-      const pro = d.gedecke / d.besetzt, knapp = pro > 26;
+      const pro = d.gedecke / d.besetzt, knapp = pro > DB.knappAb;
       return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
         <div style="height:44px;display:flex;align-items:flex-end;width:100%">
           <div style="width:100%;height:${Math.round(Math.min(1, pro / 34) * 44)}px;border-radius:3px 3px 0 0;
             background:${knapp ? 'var(--warn)' : 'var(--acc)'}"></div></div>
         <span style="font-size:10px;font-weight:650">${d.tag}</span>
         <span style="font-size:9.5px;color:var(--dim)">${pro.toFixed(0)}</span></div>`;
-    }).join('')}</div>`, { go:'dienstplan', rechts:'Gedecke pro Person · >26 knapp' });
+    }).join('')}</div>`, { go:'dienstplan', rechts:`Gedecke pro Person · >${DB.knappAb} knapp` });
 
   const lager = WG('', 'Lager gegen Verkauf', DB.lager.map(l => {
     const d = (l.gezaehlt - l.erwartet) * einzel(l.art);
@@ -2355,7 +2450,7 @@ function aTag(d) {
   return bau(`${esc(TAGE[d.tag])}`, [
     `<b>${d.gedecke} Gedecke</b> gebucht, Vorjahr ${d.vj} (${pct((d.gedecke / d.vj - 1) * 100)})`,
     `${d.besetzt} Personen, ${d.stunden} Stunden — ${chf(d.stunden * DB.lohn)} Schichtkosten`,
-    `${pro.toFixed(0)} Gedecke pro Person` + (pro > 26 ? ' — <span class="hl">knapp</span>' : ' — tragbar'),
+    `${pro.toFixed(0)} Gedecke pro Person` + (pro > DB.knappAb ? ' — <span class="hl">knapp</span>' : ' — tragbar'),
     `Umsatz geplant ${chf(DB.tagesUmsatz[i])}`,
   ], [{ t:'Dienstplan', go:'dienstplan' }]);
 }
@@ -2468,12 +2563,12 @@ const ANTWORT = {
       [{ t:'Kühlkette', go:'temperatur' }]);
   },
   dienstplan() {
-    const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > 26);
+    const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > DB.knappAb);
     const std = DB.woche.reduce((s, d) => s + d.stunden, 0);
     return bau(`Woche vom 16. März · ${DB.woche.reduce((s, d) => s + d.gedecke, 0)} Gedecke`, [
       DB.woche.map(d => `${esc(TAGE[d.tag])}: ${d.gedecke} auf ${d.besetzt} Personen (${(d.gedecke / d.besetzt).toFixed(0)}/Person)` +
-        (d.gedecke / d.besetzt > 26 ? ' <span class="hl">knapp</span>' : '')).join('<br>'),
-      knapp.length ? `Knapp: ${knapp.map(d => esc(TAGE[d.tag])).join(', ')} — über 26 Gedecke pro Person.` : 'Keine Schicht ist knapp.',
+        (d.gedecke / d.besetzt > DB.knappAb ? ' <span class="hl">knapp</span>' : '')).join('<br>'),
+      knapp.length ? `Knapp: ${knapp.map(d => esc(TAGE[d.tag])).join(', ')} — über ${DB.knappAb} Gedecke pro Person.` : 'Keine Schicht ist knapp.',
       `${std} Stunden, ${chf(std * DB.lohn)} bei ${chf(DB.lohn)} pro Stunde.`,
     ], [{ t:'Dienstplan', go:'dienstplan' }]);
   },
