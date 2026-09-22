@@ -114,11 +114,31 @@ th.r,td.r{text-align:right}
    and carries a count only when something is actually waiting at that level,
    so a dark lamp means nothing to do rather than «no data».
    ────────────────────────────────────────────────────────────────────────── */
-.ampel{display:flex;gap:6px;background:var(--dark);border-radius:11px;padding:9px 10px}
+/* the master indicator: one band across the top of the Übersicht */
+.ampel{display:flex;align-items:center;gap:6px;background:var(--dark);border-radius:12px;
+  padding:10px 14px;color:#fff}
+.ampel .trenn{width:1px;align-self:stretch;background:rgba(255,255,255,.12);margin:0 12px}
+.ampel .jetzt{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+.ampel .jetzt .was{min-width:0}
+.ampel .jetzt b{font-size:13px;font-weight:650;display:block;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.ampel .jetzt .why{font-size:10.5px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.ampel .hin{margin-left:auto;flex:none;font-size:11.5px;font-weight:650;color:var(--acc);cursor:pointer;
+  white-space:nowrap}
+.ampel .hin:hover{filter:brightness(1.15)}
+/* the band must be able to shrink: flex-basis:100% with shrink:0 made it wider
+   than the phone it was sitting on, which pushed the whole page sideways */
+.dash > *{min-width:0}
+.ampel{min-width:0}
+@media (max-width:900px){ .ampel{flex-wrap:wrap} .ampel .trenn{display:none}
+  .ampel .jetzt{flex:1 1 100%;min-width:0;margin-top:8px} }
+@media (max-width:560px){ .lampe .txt{display:none} .lampe{margin-right:10px}
+  .ampel .hin{font-size:11px} }
 /* lamp label beside the glass, not under it: three rows of text would make
    this tile taller than the column it has to fit into */
-.lampe{flex:1;display:flex;align-items:center;gap:7px;justify-content:center;
-  border:none;background:none;font-family:inherit;padding:0}
+.lampe{display:flex;align-items:center;gap:7px;border:none;background:none;
+  font-family:inherit;padding:0;margin-right:14px}
 .lampe.an{cursor:pointer}
 .lampe .glas{width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;
   justify-content:center;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;
@@ -1531,7 +1551,7 @@ function offeneSachen() {
   const wartet = DB.karte.ziele.filter(z => z.status === 'wartet');
   if (wartet.length) { const n = karteGeaendert().length;
     items.push({ ernst: 1, wo: 'inhalte', modul: 'Inhalte',
-      was: `Karte: ${n} ${n === 1 ? 'Zeile' : 'Zeilen'} warten auf Freigabe`,
+      was: `Karte: ${n} ${n === 1 ? 'Zeile wartet' : 'Zeilen warten'} auf Freigabe`,
       warum: `${wartet.map(z => z.was).join(', ')} — nichts erreicht einen Gast vorher` }); }
 
   const drafts = DB.posts.filter(p => p.status === 'entwurf');
@@ -1621,9 +1641,10 @@ VIEWS.uebersicht = () => {
     + (spaeter.length ? `<div class="chips" style="margin-top:7px">${spaeter.map(i =>
         `<span class="chip s1" data-go="${i.wo}">${esc(i.was)}</span>`).join('')}</div>` : ''));
 
-  /* The traffic light: the same three levels, counted. A lamp without anything
-     behind it stays dark instead of showing a zero — «nothing to do» should not
-     look like a measurement. */
+  /* The master indicator: the three levels counted, and the one thing that is
+     actually urgent named beside them. A lamp without anything behind it stays
+     dark instead of showing a zero — «nothing to do» should not look like a
+     measurement. */
   const ampel = (() => {
     const stufen = [
       { k:'r', n:'jetzt',       ernst:3 },
@@ -1631,11 +1652,18 @@ VIEWS.uebersicht = () => {
       { k:'g', n:'kann warten', ernst:1 },
     ].map(s => { const treffer = items.filter(i => i.ernst === s.ernst);
       return { ...s, anzahl: treffer.length, wo: treffer[0] && treffer[0].wo }; });
-    return WG('', 'Status', `<div class="ampel">${stufen.map(s =>
-      `<button class="lampe ${s.anzahl ? 'an ' + s.k : ''}"
+    const dring = items[0];
+    return `<div class="w12"><div class="ampel">
+      ${stufen.map(s => `<button class="lampe ${s.anzahl ? 'an ' + s.k : ''}"
         ${s.wo ? `data-go="${s.wo}"` : ''} ${s.anzahl ? '' : 'disabled'}>
-        <span class="glas">${s.anzahl || ''}</span><span class="txt">${s.n}</span></button>`).join('')}</div>`,
-      { rechts: items.length ? `${items.length} offen` : 'alles erledigt' });
+        <span class="glas">${s.anzahl || ''}</span><span class="txt">${s.n}</span></button>`).join('')}
+      <div class="trenn"></div>
+      <div class="jetzt">${dring
+        ? `<div class="was"><b>${esc(dring.was)}</b><div class="why">${dring.warum}</div></div>
+           <span class="hin" data-go="${dring.wo}">In ${esc(dring.modul)} ansehen &rsaquo;</span>`
+        : `<div class="was"><b>Nichts offen</b>
+             <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`}</div>
+      </div></div>`;
   })();
 
   /* cold chain — one line per unit */
@@ -1707,16 +1735,11 @@ VIEWS.uebersicht = () => {
         background:${auff ? 'var(--warn)' : 'var(--acc)'}"></i></div>`, chf(d), auff);
   }).join(''), { go:'lager', rechts:'gezählt ' + DB.lagerStand });
 
-  const module = WG('w12', 'Module', `<div class="chips">${MODULES.filter(m => m.id !== 'uebersicht')
-    .map(m => { const b = badge(m.id);
-      return `<span class="chip${b ? ' s' + stufe(m.id) : ''}" data-go="${m.id}">
-        ${esc(m.name)}${b ? ' · ' + b : ''}</span>`; }).join('')}</div>`);
-
-  return `<div class="dash">${kpis}
+  return `<div class="dash">${ampel}${kpis}
     <div class="col w4">${dec}${akt}</div>
-    <div class="col w4">${ampel}${kuehl}${hyg}${plan}</div>
+    <div class="col w4">${kuehl}${hyg}${plan}</div>
     <div class="col w4">${margen}${themen}${lager}</div>
-    ${module}</div>`;
+    </div>`;
 };
 /* ── Axyom fragen ───────────────────────────────────────────────────────────
    A question box in the corner, so nobody has to know which module holds the
