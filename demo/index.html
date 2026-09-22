@@ -1239,7 +1239,7 @@ function offeneSachen() {
 
   const lAuff = DB.lager.filter(l => Math.abs(l.gezaehlt - l.erwartet) / l.erwartet > 0.05);
   if (lAuff.length) items.push({ ernst: 1, wo: 'lager', modul: 'Lager',
-    was: `${lAuff.length} Artikel weicht ab`,
+    was: `${lAuff.length} Artikel weich${lAuff.length > 1 ? 'en' : 't'} ab`,
     warum: lAuff.map(l => DB.artikel[l.art].name.split(',')[0]).join(', ') +
            ` — zusammen ${chf(lAuff.reduce((s, l) => s + (l.gezaehlt - l.erwartet) * einzel(l.art), 0))}` });
 
