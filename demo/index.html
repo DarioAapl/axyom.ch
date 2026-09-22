@@ -118,6 +118,17 @@ th.r,td.r{text-align:right}
 .zeile1{margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* a seven-column report table cannot fit a phone: it scrolls inside its own
    box rather than pushing the page sideways */
+/* the trend belongs beside the numbers, not stretched across the page: a
+   six-point line over 1174px reads as a flat ribbon */
+.verlaufkopf{display:flex;gap:12px;align-items:stretch;margin-bottom:12px}
+.verlaufkopf .vstats{flex:1;min-width:0}
+.verlaufkopf .vchart{flex:0 0 340px;display:flex;flex-direction:column;justify-content:center}
+.vstatrow{display:flex;gap:34px;flex-wrap:wrap}
+.vstat .vk{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.vstat .vl2{font-size:20px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  margin-top:4px}
+.vstat .vn{font-size:11.5px;font-weight:650;margin-top:2px}
+@media (max-width:820px){ .verlaufkopf{flex-direction:column} .verlaufkopf .vchart{flex:1 1 auto} }
 .scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .scrollx table{min-width:560px}
 .tabs{display:flex;gap:6px;margin-bottom:14px}
@@ -1720,21 +1731,33 @@ VIEWS.auswertungen = () => {
       <td class="r num muted">${(w.personal / w.umsatz * 100).toFixed(1)}%</td>
       <td class="r num">${chf(db)}</td></tr>`;
   }).join('');
-  const verlauf = `<div class="card" style="margin-bottom:12px">
-      <div class="wl"><span>Umsatz pro Woche</span>
-        <span class="r2">${reihe.map(w => w.kw.replace('KW ', '')).join(' · ')}</span></div>
-      ${/* bars from zero make six weeks within 15% of each other look identical;
-             a line over the same numbers shows the shape. min/max are the data's
-             own range: that scales the line to fill the box AND leaves nothing
-             outside the range to be marked. */''}
-      ${(u => chartLine(u, Math.min(...u), Math.max(...u), 54))(reihe.map(w => w.umsatz))}</div>
+  const dbVor = vorwoche.umsatz - vorwoche.einsatz - vorwoche.personal;
+  const delta = (label, jetzt, vorher, format) => {
+    const d = (jetzt / vorher - 1) * 100;
+    return `<div class="vstat"><div class="vk">${esc(label)}</div>
+      <div class="vl2">${format(jetzt)}</div>
+      <div class="vn" style="color:${d < 0 ? 'var(--warn)' : 'var(--acci)'}">${pct(d)}</div></div>`;
+  };
+  const verlauf = `<div class="verlaufkopf">
+      <div class="card vstats">
+        <div class="wl"><span>Diese Woche gegenüber ${esc(vorwoche.kw)}</span>
+          <span class="r2">die laufende Woche rechnet live mit</span></div>
+        <div class="vstatrow">
+          ${delta('Umsatz', umsatz, vorwoche.umsatz, chf)}
+          ${delta('Gedecke', gedecke, vorwoche.gedecke, String)}
+          ${delta('Deckungsbeitrag', roh - personal, dbVor, chf)}</div></div>
+      <div class="card vchart">
+        <div class="wl"><span>Umsatz pro Woche</span>
+          <span class="r2">KW ${reihe[0].kw.replace('KW ', '')}–${reihe[reihe.length - 1].kw.replace('KW ', '')}</span></div>
+        ${/* bars from zero make six weeks within 15% of each other look identical;
+             a line over the data's own range shows the shape and marks nothing */''}
+        ${(u => chartLine(u, Math.min(...u), Math.max(...u), 62))(reihe.map(w => w.umsatz))}
+        <div class="row" style="justify-content:space-between;margin-top:6px">
+          <span class="sm2">${chf(Math.min(...reihe.map(w => w.umsatz)))}</span>
+          <span class="sm2">${chf(Math.max(...reihe.map(w => w.umsatz)))}</span></div></div></div>
     <div class="scrollx"><table><thead><tr><th>Woche</th><th class="r">Umsatz</th><th class="r">Gedecke</th>
       <th class="r">pro Gedeck</th><th class="r">Ware</th><th class="r">Personal</th>
-      <th class="r">Deckungsbeitrag</th></tr></thead><tbody>${wochenZeilen}</tbody></table></div>
-    <div class="small muted" style="margin-top:10px">Gegenüber ${esc(vorwoche.kw)}:
-      Umsatz ${pct((umsatz / vorwoche.umsatz - 1) * 100)}, Gedecke ${pct((gedecke / vorwoche.gedecke - 1) * 100)},
-      Deckungsbeitrag ${pct(((roh - personal) / (vorwoche.umsatz - vorwoche.einsatz - vorwoche.personal) - 1) * 100)}.
-      Die laufende Woche rechnet live mit, die abgeschlossenen stehen fest.</div>`;
+      <th class="r">Deckungsbeitrag</th></tr></thead><tbody>${wochenZeilen}</tbody></table></div>`;
 
   /* ── next week, out of the bookings that exist ── */
   const N = DB.naechste;
