@@ -116,6 +116,10 @@ th.r,td.r{text-align:right}
 /* one line, cut with an ellipsis — nowrap text in a table cell otherwise sets
    the cell's min-content to the whole sentence and pushes the page sideways */
 .zeile1{margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* a seven-column report table cannot fit a phone: it scrolls inside its own
+   box rather than pushing the page sideways */
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scrollx table{min-width:560px}
 .tabs{display:flex;gap:6px;margin-bottom:14px}
 .tab{font-size:12.5px;font-weight:650;padding:7px 14px;border-radius:9px;border:1px solid var(--line);
   background:#fff;cursor:pointer;font-family:inherit;color:var(--dim)}
@@ -539,6 +543,29 @@ const DB = {
     { geraet:'Tiefkühler', wann:'12.03. 02:14', wert:-16.2, an:'Marco B.', quittiert:'02:21', grund:'Tür stand offen' },
   ],
 
+  /* Closed weeks, as they were counted. The current week is not in here — it
+     is computed live from the modules, so the series can never disagree with
+     the screen above it. */
+  wochen: [
+    { kw:'KW 7',  ab:'09.02.', umsatz:29870, gedecke:478, einsatz:7586, personal:8010 },
+    { kw:'KW 8',  ab:'16.02.', umsatz:31480, gedecke:512, einsatz:7901, personal:7998 },
+    { kw:'KW 9',  ab:'23.02.', umsatz:33240, gedecke:536, einsatz:8277, personal:8210 },
+    { kw:'KW 10', ab:'02.03.', umsatz:30110, gedecke:489, einsatz:7708, personal:7860 },
+    { kw:'KW 11', ab:'09.03.', umsatz:34020, gedecke:548, einsatz:8437, personal:8228 },
+  ],
+
+  /* Next week, from the bookings that already exist. «anteil» is how much of a
+     week is usually booked by the Wednesday before — 0.76 here — which is what
+     turns a booking count into an expectation instead of a guess. It is
+     labelled as an expectation everywhere it appears. */
+  naechste: {
+    ab:'23.03.', anteil:0.76,
+    tage: [ { tag:'Mo', gebucht:28,  besetzt:3 }, { tag:'Di', gebucht:24,  besetzt:3 },
+            { tag:'Mi', gebucht:41,  besetzt:4 }, { tag:'Do', gebucht:52,  besetzt:4 },
+            { tag:'Fr', gebucht:96,  besetzt:6 }, { tag:'Sa', gebucht:118, besetzt:5 },
+            { tag:'So', gebucht:74,  besetzt:5 } ],
+  },
+
   // rota: covers already booked against staffing
   woche: [
     { tag:'Mo', gedecke:42,  vj:38,  besetzt:3, stunden:24 },
@@ -814,7 +841,7 @@ const MODULES = [
   { id:'inhalte',     name:'Inhalte',     titel:'Karte und Inhalte',     sub:'Einmal geändert, an einer Stelle' },
   { id:'social',      name:'Social Media',titel:'Beiträge im März',      sub:'Kalender und Kanäle · entworfen aus dem, was sich im Haus geändert hat' },
   { id:'bewertungen', name:'Bewertungen', titel:'Letzte 30 Tage',        sub:'Google, Buchungsplattformen und Gästebuch in einer Liste' },
-  { id:'auswertungen',name:'Auswertungen',titel:'Die Woche',             sub:'Immer gleich aufgebaut, jeden Montag' },
+  { id:'auswertungen',name:'Auswertungen',titel:'Die Woche',             sub:'Sechs Wochen im Verlauf, diese live gerechnet, und was nächste Woche gebucht ist' },
 ];
 
 let AKTIV = 'uebersicht';
@@ -1678,6 +1705,71 @@ VIEWS.auswertungen = () => {
   ].map(([a, b, c]) => `<tr><td><b>${a}</b></td><td class="r num">${b}</td>
       <td class="r muted small">${c}</td></tr>`).join('');
 
+  /* ── the six weeks: five closed ones plus this one, computed live ── */
+  const reihe = [...DB.wochen, { kw:'KW 12', ab:'16.03.', umsatz, gedecke, einsatz, personal, jetzt:true }];
+  const vorwoche = DB.wochen[DB.wochen.length - 1];
+  const wochenZeilen = reihe.map(w => {
+    const db = w.umsatz - w.einsatz - w.personal;
+    return `<tr${w.jetzt ? ' style="background:var(--wash)"' : ''}>
+      <td><b>${esc(w.kw)}</b> <span class="muted small">ab ${esc(w.ab)}</span>
+        ${w.jetzt ? '<span class="tag t-ok">diese Woche</span>' : ''}</td>
+      <td class="r num">${chf(w.umsatz)}</td>
+      <td class="r num muted">${w.gedecke}</td>
+      <td class="r num muted">${chf(w.umsatz / w.gedecke)}</td>
+      <td class="r num muted">${(w.einsatz / w.umsatz * 100).toFixed(1)}%</td>
+      <td class="r num muted">${(w.personal / w.umsatz * 100).toFixed(1)}%</td>
+      <td class="r num">${chf(db)}</td></tr>`;
+  }).join('');
+  const verlauf = `<div class="card" style="margin-bottom:12px">
+      <div class="wl"><span>Umsatz pro Woche</span>
+        <span class="r2">${reihe.map(w => w.kw.replace('KW ', '')).join(' · ')}</span></div>
+      ${/* bars from zero make six weeks within 15% of each other look identical;
+             a line over the same numbers shows the shape. min/max are the data's
+             own range: that scales the line to fill the box AND leaves nothing
+             outside the range to be marked. */''}
+      ${(u => chartLine(u, Math.min(...u), Math.max(...u), 54))(reihe.map(w => w.umsatz))}</div>
+    <div class="scrollx"><table><thead><tr><th>Woche</th><th class="r">Umsatz</th><th class="r">Gedecke</th>
+      <th class="r">pro Gedeck</th><th class="r">Ware</th><th class="r">Personal</th>
+      <th class="r">Deckungsbeitrag</th></tr></thead><tbody>${wochenZeilen}</tbody></table></div>
+    <div class="small muted" style="margin-top:10px">Gegenüber ${esc(vorwoche.kw)}:
+      Umsatz ${pct((umsatz / vorwoche.umsatz - 1) * 100)}, Gedecke ${pct((gedecke / vorwoche.gedecke - 1) * 100)},
+      Deckungsbeitrag ${pct(((roh - personal) / (vorwoche.umsatz - vorwoche.einsatz - vorwoche.personal) - 1) * 100)}.
+      Die laufende Woche rechnet live mit, die abgeschlossenen stehen fest.</div>`;
+
+  /* ── next week, out of the bookings that exist ── */
+  const N = DB.naechste;
+  const gebucht = N.tage.reduce((s, t) => s + t.gebucht, 0);
+  const erwartet = Math.round(gebucht / N.anteil);
+  const proGedeck = umsatz / gedecke;
+  const eUmsatz = erwartet * proGedeck;
+  const eStd = N.tage.reduce((s, t) => s + t.besetzt * 8, 0);
+  const ePersonal = eStd * DB.lohn;
+  const eWare = eUmsatz * (einsatz / umsatz);
+  const knappN = N.tage.filter(t => t.gebucht / N.anteil / t.besetzt > 26);
+  const vorschau = `<div class="grid g4" style="margin-bottom:12px">
+      <div class="card kpi"><div class="l">Gebucht</div><div class="n">${gebucht}</div>
+        <div class="d">Gedecke, Stand heute</div></div>
+      <div class="card kpi"><div class="l">Erwartet</div><div class="n">${erwartet}</div>
+        <div class="d">wenn es wie üblich weiterläuft</div></div>
+      <div class="card kpi"><div class="l">Umsatz, erwartet</div><div class="n">${chf(eUmsatz)}</div>
+        <div class="d">${chf(proGedeck)} pro Gedeck, wie diese Woche</div></div>
+      <div class="card kpi"><div class="l">Deckungsbeitrag, erwartet</div>
+        <div class="n">${chf(eUmsatz - eWare - ePersonal)}</div>
+        <div class="d">${eStd} Stunden geplant</div></div></div>
+    <div class="scrollx"><table><thead><tr><th>Tag</th><th class="r">Gebucht</th><th class="r">Erwartet</th>
+      <th class="r">Besetzt</th><th class="r">Gedecke pro Person</th></tr></thead><tbody>
+      ${N.tage.map(t => { const e = Math.round(t.gebucht / N.anteil), pro = e / t.besetzt;
+        return `<tr><td><b>${t.tag}</b></td><td class="r num muted">${t.gebucht}</td>
+          <td class="r num">${e}</td><td class="r num muted">${t.besetzt}</td>
+          <td class="r num" style="${pro > 26 ? 'color:var(--warn);font-weight:650' : ''}"
+            >${pro.toFixed(0)}${pro > 26 ? ' · knapp' : ''}</td></tr>`; }).join('')}
+      </tbody></table></div>
+    <div class="small muted" style="margin-top:10px">«Erwartet» ist der Buchungsstand hochgerechnet:
+      bis zum Mittwoch davor sind erfahrungsgemäss ${(N.anteil * 100).toFixed(0)}% der Woche gebucht.
+      Keine Prognose aus dem Nichts — und keine Zusage.
+      ${knappN.length ? `<span style="color:var(--warn);font-weight:600">${knappN.map(t => t.tag).join(', ')}
+        ${knappN.length > 1 ? 'werden' : 'wird'} mit der geplanten Besetzung knapp.</span>` : ''}</div>`;
+
   const hinweise = [];
   if (bewegt.length) hinweise.push(`${bewegt.length} Artikelpreis${bewegt.length > 1 ? 'e' : ''} bewegt: ` +
     bewegt.map(([, a]) => esc(a.name.split(',')[0])).join(', ') + ' — die Margen oben rechnen damit.');
@@ -1687,6 +1779,9 @@ VIEWS.auswertungen = () => {
   if (offenH) hinweise.push(`${offenH} Hygienekontrolle${offenH > 1 ? 'n' : ''} noch offen.`);
   const alarmOffen = DB.alarme.filter(a => !a.quittiert).length;
   if (alarmOffen) hinweise.push(`${alarmOffen} Temperaturalarm nicht quittiert.`);
+  if (knappN.length) hinweise.push(`Nächste Woche: ${knappN.map(t => t.tag).join(', ')} ` +
+    `${knappN.length > 1 ? 'sind' : 'ist'} mit der geplanten Besetzung knapp — ` +
+    `<span class="link" data-go="dienstplan">Dienstplan</span> ansehen.`);
   if (!hinweise.length) hinweise.push('Keine offenen Punkte. Die Woche ist sauber.');
 
   return `<div class="grid g4" style="margin-bottom:20px">
@@ -1701,6 +1796,10 @@ VIEWS.auswertungen = () => {
         <div class="d">Nach Ware und Personal</div></div></div>
     <div class="sec">Immer gleich aufgebaut</div>
     <table><tbody>${zeilen}</tbody></table>
+    <div class="sec">Verlauf, sechs Wochen</div>
+    ${verlauf}
+    <div class="sec">Nächste Woche · erwartet</div>
+    ${vorschau}
     <div class="sec">Mit Empfehlungen</div>
     <div class="card ${hinweise.length && DB.hygiene.some(h => !h.done) ? 'warn' : 'tint'}">
       ${hinweise.map(h => `<div class="small" style="line-height:1.7">· ${h}</div>`).join('')}</div>
