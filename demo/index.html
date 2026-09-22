@@ -468,6 +468,11 @@ const einzel = key => DB.artikel[key].preis / DB.artikel[key].menge;
 // what a dish costs to make, from the live article prices
 const wareneinsatz = g => g.rezept.reduce((s, z) => s + einzel(z.art) * z.m, 0);
 const marge = g => (g.karte - wareneinsatz(g)) / g.karte * 100;
+/* Two ways to say the same thing, and restaurateurs use the second one out
+   loud: «Faktor 3» is a 200% Aufschlag on the Wareneinsatz and a 66.7% Marge
+   vom Preis. The Marge can never pass 100%, the Aufschlag has no ceiling —
+   which is exactly why both belong on the screen. */
+const aufschlag = g => { const w = wareneinsatz(g); return w > 0 ? (g.karte / w - 1) * 100 : NaN; };
 
 // the week, computed once. Both Übersicht and Auswertungen read this, so the
 // dashboard can never quote a different number than the report.
@@ -844,7 +849,7 @@ VIEWS.aktionen = () => {
 /* ── Gerichte ───────────────────────────────────────────────────────────── */
 VIEWS.gerichte = () => {
   const rows = DB.gerichte.map(g => {
-    const w = wareneinsatz(g), m = marge(g);
+    const w = wareneinsatz(g), m = marge(g), auf = aufschlag(g);
     const bewegt = g.rezept.some(z => DB.artikel[z.art].preis !== DB.artikel[z.art].vorher);
     return `<tr>
       <td><b>${esc(g.name)}</b>${bewegt ? ' <span class="tag t-warn">Preis bewegt</span>' : ''}</td>
@@ -852,6 +857,7 @@ VIEWS.gerichte = () => {
       <td class="r num"><input style="width:82px;text-align:right" type="number" step="0.5"
           value="${g.karte.toFixed(2)}" data-karte="${g.id}"></td>
       <td class="r num"><b style="color:${m < 65 ? 'var(--warn)' : 'var(--ink)'}">${m.toFixed(1)}%</b></td>
+      <td class="r num muted">${isNaN(auf) ? '—' : auf.toFixed(0) + '%'}</td>
       <td class="r num muted">${g.verkauft}</td>
       <td class="r num">${chf((g.karte - w) * g.verkauft)}</td></tr>`;
   }).join('');
@@ -865,9 +871,12 @@ VIEWS.gerichte = () => {
       <div class="card kpi"><div class="l">Kalkuliert mit</div><div class="n">${DB.gelesen} Rechnungen</div>
         <div class="d">Den Preisen, die Sie zuletzt bezahlt haben</div></div></div>
     <table><thead><tr><th>Gericht</th><th class="r">Wareneinsatz</th><th class="r">Kartenpreis</th>
-      <th class="r">Marge</th><th class="r">Verkauft</th><th class="r">Rohertrag</th></tr></thead>
+      <th class="r">Marge vom Preis</th><th class="r">Aufschlag</th>
+      <th class="r">Verkauft</th><th class="r">Rohertrag</th></tr></thead>
       <tbody>${rows}</tbody></table>
-    <div class="small muted" style="margin-top:12px">Der Wareneinsatz kommt aus den Artikelpreisen.
+    <div class="small muted" style="margin-top:12px">Dieselbe Kalkulation, zweimal gesagt: die Marge ist
+      der Anteil am Kartenpreis und bleibt unter 100 %, der Aufschlag ist der Zuschlag auf den Wareneinsatz
+      — 200 % Aufschlag ist Faktor 3. Der Wareneinsatz kommt aus den Artikelpreisen.
       Übernehmen Sie in <span class="link" data-go="rechnungen">Rechnungen</span> eine Preisänderung,
       ändern sich diese Zahlen hier mit.</div>`;
 };
@@ -1542,7 +1551,8 @@ function aGericht(g) {
   const teuer = DB.artikel[g.rezept.map(z => ({ z, v: einzel(z.art) * z.m }))
     .sort((a, b) => b.v - a.v)[0].z.art];
   return bau(`${esc(g.name)} · ${chf(g.karte)} auf der Karte`, [
-    `Wareneinsatz <b>${chf(we)}</b>, Marge <b>${m.toFixed(1)}%</b>${m < 73 ? ' — unter Ihren anderen Gerichten' : ''}`,
+    `Wareneinsatz <b>${chf(we)}</b>, Marge <b>${m.toFixed(1)}%</b> vom Preis` +
+      ` — Aufschlag ${aufschlag(g).toFixed(0)}%${m < 73 ? ', unter Ihren anderen Gerichten' : ''}`,
     `Grösster Posten: ${esc(teuer.name.split(',')[0])} mit ${chf(lines[0].v)} (${(lines[0].v / we * 100).toFixed(0)}% der Ware)`,
     lines.slice(1, 4).map(l => `${esc(l.n)} ${chf(l.v)}`).join(' · '),
     `${g.verkauft}× diese Woche verkauft — ${chf((g.karte - we) * g.verkauft)} Rohertrag`,
