@@ -365,7 +365,11 @@ const DB = {
     { id:'k4', name:'Barkühlschrank', wo:'Bar',   min:2,   max:7,   temp:4.6 },
     { id:'k5', name:'Fischkühler',    wo:'Küche', min:0,   max:2,   temp:1.1 },
   ],
+  // One open alarm on purpose: the demo should show what a live problem looks
+  // like before anybody presses anything. The freezer's March incident stays
+  // as the closed case — that pair is the story: one handled, one waiting.
   alarme: [
+    { geraet:'Barkühlschrank', wann:'18.03. 18:20', wert:9.1, an:'Anna R.', quittiert:'', grund:'Tür stand offen' },
     { geraet:'Tiefkühler', wann:'12.03. 02:14', wert:-16.2, an:'Marco B.', quittiert:'02:21', grund:'Tür stand offen' },
   ],
 
@@ -460,6 +464,19 @@ DB.geraete.forEach((g, gi) => {
 // the night the freezer was left open, still visible in its curve
 DB.geraete[2].verlauf = DB.geraete[2].verlauf.map((v, i) =>
   i > 9 && i < 15 ? +(v + (i - 9) * 1.15).toFixed(2) : v);
+
+/* The bar fridge is out of range RIGHT NOW: the door stood open through the
+   evening service and it is still climbing. Generating its history around the
+   warm value would draw a flat warm line, which reads as a broken sensor —
+   the curve has to leave the range where the incident started. The current
+   reading is the last one on the curve, so the number and the line can never
+   disagree. */
+const _bar = DB.geraete[3];
+_bar.verlauf = _bar.verlauf.map((v, i) => i < 22 ? v : +(v + (i - 21) * 0.78).toFixed(2));
+_bar.temp = _bar.verlauf[_bar.verlauf.length - 1];
+// the protocol records the reading that raised the alarm, not the one it has
+// climbed to since — 18:20 is when it left the range
+DB.alarme[0].wert = _bar.verlauf.find(v => v > _bar.max);
 
 // revenue per day, tracking the covers with a plausible spread
 DB.tagesUmsatz = DB.woche.map((d, i) => Math.round(d.gedecke * [58, 55, 61, 63, 66, 68, 60][i]));
