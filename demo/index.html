@@ -568,16 +568,13 @@ const DB = {
     { geraet:'Tiefkühler', wann:'12.03. 02:14', wert:-16.2, an:'Marco B.', quittiert:'02:21', grund:'Tür stand offen' },
   ],
 
-  /* Closed weeks, as they were counted. The current week is not in here — it
-     is computed live from the modules, so the series can never disagree with
-     the screen above it. */
-  wochen: [
-    { kw:'KW 7',  ab:'09.02.', umsatz:29870, gedecke:478, einsatz:7586, personal:8010 },
-    { kw:'KW 8',  ab:'16.02.', umsatz:31480, gedecke:512, einsatz:7901, personal:7998 },
-    { kw:'KW 9',  ab:'23.02.', umsatz:33240, gedecke:536, einsatz:8277, personal:8210 },
-    { kw:'KW 10', ab:'02.03.', umsatz:30110, gedecke:489, einsatz:7708, personal:7860 },
-    { kw:'KW 11', ab:'09.03.', umsatz:34020, gedecke:548, einsatz:8437, personal:8228 },
-  ],
+  /* Closed weeks, as they were counted — half a year of them, so «Verlauf»
+     can be filtered instead of being six points. Generated, not typed, but
+     deterministic: no Math.random anywhere, so the demo is the same on every
+     laptop. The current week is NOT in here; it is computed live from the
+     modules further down, which is why the series can never disagree with the
+     table above it. */
+  wochen: [],
 
   /* Next week, from the bookings that already exist. «anteil» is how much of a
      week is usually booked by the Wednesday before — 0.76 here — which is what
@@ -742,6 +739,44 @@ const DB = {
   log: [],   // what the demo has changed, shown in Auswertungen
 };
 
+/* ── half a year of closed weeks ───────────────────────────────────────────
+   A restaurant year has a shape, and it is not a sine wave: autumn builds,
+   December is the best month until it stops dead over the holidays, January is
+   quiet, February is worse, and March picks up. «faktor» is that year, written
+   out week by week rather than computed, because a restaurateur reads this
+   column and either recognises it or does not.
+
+   Two things fall out of the shape by themselves and are worth the demo:
+   personnel costs are WORST in the quiet weeks (the rota cannot shrink as fast
+   as the guests disappear) and food cost is slightly better when the house is
+   full. No Math.random anywhere — the same numbers on every laptop.
+   ────────────────────────────────────────────────────────────────────────── */
+DB.wochen = (() => {
+  const KW = [...Array(14).keys()].map(i => 39 + i).concat([...Array(11).keys()].map(i => i + 1));
+  const faktor = [
+    0.94, 0.96, 0.99, 1.00, 1.02,      // Herbst baut auf
+    1.01, 1.03, 1.02, 1.05, 1.07,      // November, Metzgete-Saison
+    1.12, 1.16, 1.18,                  // Weihnachtsessen
+    0.58, 0.64,                        // Feiertage: zwei halbe Wochen
+    0.80, 0.86, 0.88, 0.90,            // Januar, ruhig
+    0.87, 0.89, 0.92,                  // Februar, am ruhigsten
+    0.94, 0.97, 1.005,                 // März zieht an
+  ];
+  const start = new Date(2025, 8, 22);     // Montag, 22.09.2025 = KW 39
+  return KW.map((kw, i) => {
+    const d = new Date(start.getTime() + i * 7 * 86400000);
+    const ab = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
+    const f = faktor[i];
+    const gedecke = Math.round(545 * f);
+    const proGedeck = 60.9 + (f - 0.95) * 4;          // volle Wochen trinken mehr
+    const umsatz = Math.round(gedecke * proGedeck);
+    const wareQ = 0.250 - (f - 0.95) * 0.02;
+    const persQ = 0.238 + (1.05 - f) * 0.05;          // die Schicht schrumpft langsamer als die Gäste
+    return { kw: 'KW ' + kw, ab, umsatz, gedecke,
+             einsatz: Math.round(umsatz * wareQ), personal: Math.round(umsatz * persQ) };
+  });
+})();
+
 /* ── synthetic histories, so the widgets have curves to draw ───────────────
    Deterministic on purpose: a demo that looks different on every reload is a
    demo you cannot rehearse. No Math.random anywhere.
@@ -872,6 +907,7 @@ const MODULES = [
 let AKTIV = 'uebersicht';
 let OFFEN = null;        // the invoice currently expanded
 let SOCIAL_TAB = 'kalender';
+let VERLAUF_W = 6;       // how many weeks the Verlauf shows
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
 /* How urgent a module's open count is: 3 = now, 2 = today, 1 = can wait.
@@ -1745,8 +1781,11 @@ VIEWS.auswertungen = () => {
       <td class="r muted small">${c}</td></tr>`).join('');
 
   /* ── the six weeks: five closed ones plus this one, computed live ── */
-  const reihe = [...DB.wochen, { kw:'KW 12', ab:'16.03.', umsatz, gedecke, einsatz, personal, jetzt:true }];
+  const alleWochen = [...DB.wochen, { kw:'KW 12', ab:'16.03.', umsatz, gedecke, einsatz, personal, jetzt:true }];
+  const reihe = alleWochen.slice(-Math.min(VERLAUF_W, alleWochen.length));
   const vorwoche = DB.wochen[DB.wochen.length - 1];
+  const filter = [6, 13, 26].filter(n => n <= alleWochen.length).map(n =>
+    `<button class="tab ${VERLAUF_W === n ? 'on' : ''}" data-verlauf="${n}">${n} Wochen</button>`).join('');
   const wochenZeilen = reihe.map(w => {
     const db = w.umsatz - w.einsatz - w.personal;
     return `<tr${w.jetzt ? ' style="background:var(--wash)"' : ''}>
@@ -1776,7 +1815,7 @@ VIEWS.auswertungen = () => {
           ${delta('Deckungsbeitrag', roh - personal, dbVor, chf)}</div></div>
       <div class="card vchart">
         <div class="wl"><span>Umsatz pro Woche</span>
-          <span class="r2">KW ${reihe[0].kw.replace('KW ', '')}–${reihe[reihe.length - 1].kw.replace('KW ', '')}</span></div>
+          <span class="r2">${reihe.length} Wochen</span></div>
         ${/* bars from zero make six weeks within 15% of each other look identical;
              a line over the data's own range shows the shape and marks nothing */''}
         ${(u => chartLine(u, Math.min(...u), Math.max(...u), 62))(reihe.map(w => w.umsatz))}
@@ -1847,7 +1886,10 @@ VIEWS.auswertungen = () => {
         <div class="d">Nach Ware und Personal</div></div></div>
     <div class="sec">Immer gleich aufgebaut</div>
     <table><tbody>${zeilen}</tbody></table>
-    <div class="sec">Verlauf, sechs Wochen</div>
+    <div class="sec" style="display:flex;align-items:center;gap:14px">Verlauf
+      <span class="tabs" style="margin-bottom:0">${filter}</span>
+      <span class="muted" style="font-weight:600;letter-spacing:0;text-transform:none">${
+        esc(reihe[0].kw)} bis ${esc(reihe[reihe.length - 1].kw)}</span></div>
     ${verlauf}
     <div class="sec">Nächste Woche · erwartet</div>
     ${vorschau}
@@ -2345,6 +2387,9 @@ const ANTWORT = {
       `Personal ${chf(z.personal)} für ${z.std} Stunden — ${(z.personal / z.umsatz * 100).toFixed(1)}% vom Umsatz`,
       `Deckungsbeitrag <b>${chf(z.db)}</b>`,
       `Gedecke gegen Vorjahr: ${z.gedecke} zu ${z.vj} (${pct((z.gedecke / z.vj - 1) * 100)})`,
+      (v => `Vorwoche ${esc(v.kw)}: ${chf(v.umsatz)} auf ${v.gedecke} Gedecke — ` +
+            `${pct((z.umsatz / v.umsatz - 1) * 100)}. Der Verlauf geht ${DB.wochen.length + 1} Wochen zurück.`)(
+        DB.wochen[DB.wochen.length - 1]),
     ], [{ t:'Auswertungen', go:'auswertungen' }, { t:'Wo verliere ich Geld?' }]);
   },
   gerichte() {
@@ -2744,6 +2789,9 @@ document.addEventListener('click', e => {
     } else { h.wer = ''; h.zeit = ''; }
     render(); return;
   }
+
+  const vf = e.target.closest('[data-verlauf]');
+  if (vf) { VERLAUF_W = +vf.dataset.verlauf; render(); return; }
 
   const tabBtn = e.target.closest('[data-socialtab]');
   if (tabBtn) { SOCIAL_TAB = tabBtn.dataset.socialtab; render(); return; }
