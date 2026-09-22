@@ -432,20 +432,32 @@ const DB = {
     { id:'b2', titel:'Hygiene-Auffrischung', faellig:['p3'], min:6 },
   ],
 
-  /* Content: one entry, many channels. «stand» is what a guest actually sees on
-     a channel that has not been released yet — without it the module can only
-     assert that the channels disagree, and the demo has to be believed instead
-     of shown. */
-  karte: [
-    { id:'k-1', name:'Bärlauchrisotto', preis:28.00, betriebe:['Gaststube','Gartensaal'],
-      allergene:'Milch, Sellerie', neu:true,
-      stand: { preis:26.50, allergene:'Milch' },
-      ziele:[ {was:'Website', typ:'web', status:'aktuell'},
-              {was:'Reservationsseite', typ:'res', status:'aktuell'},
-              {was:'Gedruckte Karte', typ:'pdf', status:'aktuell'},
-              {was:'Instagram', typ:'ig', status:'wartet'},
-              {was:'Newsletter', typ:'mail', status:'wartet'} ] },
-  ],
+  /* The card, and where it is published. An entry with «ref» takes its price
+     from Gerichte — the same number, not a copy — so a price changed there
+     makes these channels stale too. «stand» is what a channel that has not
+     been released still shows, which is what lets the module demonstrate the
+     disagreement instead of asserting it. */
+  karte: {
+    eintraege: [
+      { id:'e1', ref:'g1', allergene:'Milch, Sellerie' },
+      { id:'e2', ref:'g2', allergene:'Fisch, Milch, Gluten' },
+      { id:'e3', ref:'g3', allergene:'Milch, Sellerie' },
+      { id:'e4', ref:'g4', allergene:'Ei, Milch' },
+      { id:'e5', name:'Bärlauchrisotto', preis:28.00, allergene:'Milch, Sellerie', neu:true },
+    ],
+    betriebe: ['Gaststube', 'Gartensaal'],
+    // the risotto went up to 28.00 after the guest channels were last served
+    stand: { e1:{ preis:36.00, allergene:'Milch, Sellerie' },
+             e2:{ preis:42.00, allergene:'Fisch, Milch, Gluten' },
+             e3:{ preis:12.50, allergene:'Milch, Sellerie' },
+             e4:{ preis:24.00, allergene:'Ei, Milch' },
+             e5:{ preis:26.50, allergene:'Milch' } },
+    ziele: [ { was:'Website',          typ:'web',  status:'aktuell' },
+             { was:'Reservationsseite', typ:'res',  status:'aktuell' },
+             { was:'Gedruckte Karte',   typ:'pdf',  status:'aktuell' },
+             { was:'Instagram',         typ:'ig',   status:'wartet' },
+             { was:'Newsletter',        typ:'mail', status:'wartet' } ],
+  },
 
   // social: drafts that wait for a release
   posts: [
@@ -535,6 +547,23 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const TICK = '<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="#fff" ' +
   'stroke-width="2.6" stroke-linecap="round"><path d="M4 10.5l4 4 8-9"/></svg>';
 
+/* A card entry, resolved: an entry with «ref» is a dish, and its price is the
+   one Gerichte works with — read through, never copied. */
+function eintrag(e) {
+  const g = e.ref && DB.gerichte.find(x => x.id === e.ref);
+  return { id: e.id, name: g ? g.name : e.name, preis: g ? g.karte : e.preis,
+           allergene: e.allergene, neu: !!e.neu, gericht: g || null };
+}
+// a channel is behind as soon as one line differs from what it was given
+const karteGeaendert = () => DB.karte.eintraege.filter(e => {
+  const a = eintrag(e), b = DB.karte.stand[e.id];
+  return !b || a.preis !== b.preis || a.allergene !== b.allergene;
+});
+// called wherever a price can change — here or in Gerichte
+function kanaelePruefen() {
+  if (karteGeaendert().length) DB.karte.ziele.forEach(z => { z.status = 'wartet'; });
+}
+
 /* How long an offer still runs, from the date it carries. It used to be a
    hand-set «dringend» flag in the fixture, which promptly contradicted the
    dates — an offer four days out was red while one two days out was not.
@@ -618,7 +647,7 @@ function badge(id) {
   if (id === 'rechnungen') { const n = DB.rechnungen.filter(r => r.status !== 'ok').length; return n || 0; }
   if (id === 'temperatur') { return DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length || 0; }
   if (id === 'social')     { return DB.posts.filter(p => p.status === 'entwurf').length || 0; }
-  if (id === 'inhalte')    { return DB.karte[0].ziele.filter(z => z.status === 'wartet').length || 0; }
+  if (id === 'inhalte')    { return DB.karte.ziele.filter(z => z.status === 'wartet').length || 0; }
   return 0;
 }
 
@@ -1130,79 +1159,98 @@ VIEWS.schulung = () => {
 };
 /* ── Inhalte ────────────────────────────────────────────────────────────── */
 VIEWS.inhalte = () => {
-  const k = DB.karte[0];
-  const wartet = k.ziele.filter(z => z.status === 'wartet');
-  // a released channel shows the entry, a waiting one still shows the old stand
-  const zeigt = z => z.status === 'wartet'
-    ? { preis: k.stand.preis, allergene: k.stand.allergene } : { preis: k.preis, allergene: k.allergene };
+  const K = DB.karte;
+  const alle = K.eintraege.map(eintrag);
+  const wartet = K.ziele.filter(z => z.status === 'wartet');
+  const geaendert = karteGeaendert().map(e => e.id);
+  // what a given channel currently shows for an entry
+  const zeigt = (z, e) => z.status === 'wartet' ? (K.stand[e.id] || null) : e;
 
-  const mock = (z) => {
-    const c = zeigt(z);
-    const preis = chf(c.preis).replace('CHF ', '');
+  /* the editor: the whole card, one row per line */
+  const zeilen = alle.map(e => {
+    const st = K.stand[e.id], neuDrauf = !st;
+    const anders = geaendert.includes(e.id);
+    return `<tr>
+      <td><b>${esc(e.name)}</b>${e.neu ? ' <span class="tag t-ok">neu</span>' : ''}
+        ${e.gericht ? `<span class="muted small"> · kalkuliert in <span class="link"
+           data-go="gerichte">Gerichte</span></span>` : ''}</td>
+      <td class="r num"><input style="width:82px;text-align:right" type="number" step="0.5"
+          value="${e.preis.toFixed(2)}" data-kartepreis="${e.id}"></td>
+      <td class="muted small">${esc(e.allergene)}</td>
+      <td class="r">${neuDrauf ? '<span class="tag t-warn">noch nicht publiziert</span>'
+        : anders ? `<span class="tag t-warn">Kanäle zeigen ${chf(st.preis)}</span>`
+        : '<span class="tag t-ok">überall gleich</span>'}</td></tr>`;
+  }).join('');
+
+  /* the channels: each one rendered as the guest sees it */
+  const zeile = (e, c, gross) => `<div class="mock-zeile">
+    <span style="font-size:${gross ? 12 : 11}px;${c.preis !== e.preis ? 'color:var(--warn)' : ''}">${esc(e.name)}</span>
+    <span class="mock-fuell"></span>
+    <span style="font-size:${gross ? 12 : 11}px;font-weight:650;${c.preis !== e.preis ? 'color:var(--warn)' : ''}"
+      >${chf(c.preis).replace('CHF ', '')}</span></div>`;
+
+  const mock = z => {
+    const sichtbar = alle.filter(e => zeigt(z, e));           // a new line is simply absent
+    const zeilenHtml = sichtbar.map(e => zeile(e, zeigt(z, e), z.typ === 'pdf')).join('');
+    const neuste = alle.find(e => e.neu), c = neuste && zeigt(z, neuste);
     if (z.typ === 'web') return `<div class="mock-url"><i></i><i></i><i></i>&nbsp;gaststube.example/karte</div>
-      <div class="mock-h">${esc(k.name)}</div>
-      <div class="mock-p">vegetarisch · enthält ${esc(c.allergene)}</div>
-      <div class="mock-zeile"><span class="mock-preis">CHF ${preis}</span></div>`;
+      <div class="mock-h" style="font-size:12px">Unsere Karte</div>${zeilenHtml}`;
     if (z.typ === 'res') return `<div class="mock-res"><div class="dat">Tischreservation · heute</div>
-        <div class="mock-h" style="font-size:12px">Empfehlung der Küche</div>
-        <div class="mock-zeile"><span style="font-size:11.5px">${esc(k.name)}</span>
-          <span class="mock-fuell"></span><span class="mock-preis" style="font-size:11.5px">${preis}</span></div>
-        <div class="mock-p">enthält ${esc(c.allergene)}</div></div>`;
-    if (z.typ === 'pdf') return `<div class="mock-paper"><div class="kl">Karte · März</div>
-        <div class="mock-zeile"><span style="font-size:12.5px">${esc(k.name)}</span>
-          <span class="mock-fuell"></span><span style="font-size:12.5px;font-weight:600">${preis}</span></div>
-        <div class="mock-p" style="font-size:10px">enthält ${esc(c.allergene)}</div></div>`;
+      ${zeilenHtml}</div>`;
+    if (z.typ === 'pdf') return `<div class="mock-paper"><div class="kl">Karte · März</div>${zeilenHtml}</div>`;
     if (z.typ === 'ig') return `<div class="mock-bild"></div>
-      <div class="mock-p" style="color:var(--ink);font-size:11.5px">
-        <b>gaststube</b> Neu auf der Karte: ${esc(k.name)}, CHF ${preis}. 🌿</div>`;
+      <div class="mock-p" style="color:var(--ink);font-size:11.5px">${c
+        ? `<b>gaststube</b> Neu auf der Karte: ${esc(neuste.name)}, ${chf(c.preis)}. 🌿`
+        : `<b>gaststube</b> Frühling in der Gaststube. 🌿`}</div>`;
     return `<div class="mock-mail"><div class="mock-h" style="font-size:12px">Neu diese Woche</div>
-      <div class="mock-p">${esc(k.name)} — CHF ${preis}<br>vegetarisch · enthält ${esc(c.allergene)}</div></div>`;
+      ${zeilenHtml}</div>`;
   };
 
-  const kanaele = k.ziele.map(z => {
+  const kanaele = K.ziele.map(z => {
     const alt = z.status === 'wartet';
+    const veraltet = alt ? alle.filter(e => { const c = zeigt(z, e); return !c || c.preis !== e.preis; }).length : 0;
+    // a post shows one dish, not the card — «2 von 5 Zeilen» would be a lie there
+    const neuste = alle.find(e => e.neu), c = neuste && zeigt(z, neuste);
+    const hinweis = !veraltet ? ''
+      : z.typ === 'ig' ? (c && c.preis !== neuste.preis ? `Beitrag zeigt noch ${chf(c.preis)}`
+                          : c ? '' : 'Beitrag kennt den neuen Eintrag nicht')
+      : `${veraltet} von ${alle.length} Zeilen veraltet`;
     return `<div class="kanal ${alt ? 'alt' : ''}">
       <div class="kopf">${esc(z.was)}
         <span class="tag ${alt ? 't-warn' : 't-ok'}">${alt ? 'wartet' : 'aktuell'}</span></div>
       <div class="inhalt">${mock(z)}
-        ${alt ? `<div class="stale">zeigt noch ${chf(k.stand.preis)}${
-          k.stand.allergene !== k.allergene ? ' · Allergene unvollständig' : ''}</div>` : ''}</div></div>`;
+        ${hinweis ? `<div class="stale">${esc(hinweis)}</div>` : ''}</div></div>`;
   }).join('');
-
-  const gerichteMitPreis = DB.gerichte.map(g =>
-    `<tr><td>${esc(g.name)}</td><td class="r num">${chf(g.karte)}</td>
-     <td class="r num muted">${marge(g).toFixed(1)}% Marge</td></tr>`).join('');
 
   return `<div class="card" style="margin-bottom:18px">
       <div class="row" style="justify-content:space-between;align-items:flex-start;gap:16px">
         <div style="min-width:0">
           <div class="l small" style="font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-               color:var(--dim)">Der Eintrag</div>
-          <div style="font-size:17px;font-weight:700;margin-top:6px">${esc(k.name)}
-            ${k.neu ? '<span class="tag t-ok" style="vertical-align:middle">neu</span>' : ''}</div>
-          <div class="small muted" style="margin-top:6px;line-height:1.7">
-            Läuft in ${esc(k.betriebe.join(' und '))} · vegetarisch · enthält ${esc(k.allergene)}<br>
-            Preis <input style="width:82px;text-align:right" type="number" step="0.5"
-              value="${k.preis.toFixed(2)}" data-kartepreis="${k.id}"> CHF
-            <span style="margin-left:6px">— einmal hier, nicht fünfmal</span></div></div>
+               color:var(--dim)">Die Karte</div>
+          <div style="font-size:17px;font-weight:700;margin-top:6px">${alle.length} Einträge ·
+            ${esc(K.betriebe.join(' und '))}</div>
+          <div class="small muted" style="margin-top:6px;line-height:1.6">
+            ${geaendert.length
+              ? `${geaendert.length} ${geaendert.length === 1 ? 'Zeile' : 'Zeilen'} geändert,
+                 seit die Gästekanäle das letzte Mal bedient wurden.`
+              : 'Jede Zeile steht auf jedem Kanal gleich.'}</div></div>
         <div style="text-align:right;flex:none">
           ${wartet.length
             ? `<button class="btn acc" data-act="karte-freigeben">${wartet.length} Kanäle freigeben</button>
-               <div class="small muted" style="margin-top:7px;max-width:210px">Nichts erreicht einen Gast,
+               <div class="small muted" style="margin-top:7px;max-width:215px">Nichts erreicht einen Gast,
                  bevor Sie es sagen.</div>`
             : `<span class="tag t-ok">alle Kanäle zeigen dasselbe</span>
-               <div class="small muted" style="margin-top:7px;max-width:210px">Preis oben ändern —
+               <div class="small muted" style="margin-top:7px;max-width:215px">Einen Preis unten ändern —
                  die Kanäle fallen zurück und warten wieder auf Sie.</div>`}</div></div></div>
+    <table><thead><tr><th>Eintrag</th><th class="r">Kartenpreis</th><th>Allergene</th>
+      <th class="r">Stand</th></tr></thead><tbody>${zeilen}</tbody></table>
+    <div class="small muted" style="margin-top:11px">Die vier kalkulierten Gerichte führen denselben Preis wie
+      <span class="link" data-go="gerichte">Gerichte</span> — hier geändert heisst dort neu kalkuliert,
+      und umgekehrt.</div>
     <div class="sec">Was der Gast gerade sieht</div>
     <div class="kanaele">${kanaele}</div>
-    <div class="small muted" style="margin-top:12px">Kein Kanal wird hier nachgepflegt: jeder liest denselben
-      Eintrag. Bis Sie freigeben, zeigt ein Gästekanal weiter den alten Stand — und sagt es auch.</div>
-    <div class="sec">Preise auf der Karte</div>
-    <table><thead><tr><th>Gericht</th><th class="r">Kartenpreis</th><th class="r">Marge</th></tr></thead>
-      <tbody>${gerichteMitPreis}</tbody></table>
-    <div class="small muted" style="margin-top:12px">Die Karte ist dieselbe Datenbasis wie
-      <span class="link" data-go="gerichte">Gerichte</span> — ein Preis, den Sie hier ändern,
-      ändert dort die Marge.</div>`;
+    <div class="small muted" style="margin-top:12px">Kein Kanal wird nachgepflegt: jeder liest dieselbe Karte.
+      Bis Sie freigeben, zeigt ein Gästekanal weiter den alten Stand — und sagt, wie viele Zeilen das betrifft.</div>`;
 };
 
 /* ── Social Media ───────────────────────────────────────────────────────── */
@@ -1365,10 +1413,11 @@ function offeneSachen() {
       warum: `Spart ${chf((art.preis - a.neu) / art.menge * a.monat)} bei Ihrer üblichen Menge` });
   });
 
-  const wartet = DB.karte[0].ziele.filter(z => z.status === 'wartet');
-  if (wartet.length) items.push({ ernst: 1, wo: 'inhalte', modul: 'Inhalte',
-    was: `${DB.karte[0].name} wartet auf Freigabe`,
-    warum: `${wartet.map(z => z.was).join(', ')} — nichts erreicht einen Gast vorher` });
+  const wartet = DB.karte.ziele.filter(z => z.status === 'wartet');
+  if (wartet.length) { const n = karteGeaendert().length;
+    items.push({ ernst: 1, wo: 'inhalte', modul: 'Inhalte',
+      was: `Karte: ${n} ${n === 1 ? 'Zeile' : 'Zeilen'} warten auf Freigabe`,
+      warum: `${wartet.map(z => z.was).join(', ')} — nichts erreicht einen Gast vorher` }); }
 
   const drafts = DB.posts.filter(p => p.status === 'entwurf');
   if (drafts.length) items.push({ ernst: 1, wo: 'social', modul: 'Social Media',
@@ -1890,11 +1939,14 @@ const ANTWORT = {
     ], [{ t:'Bewertungen', go:'bewertungen' }]);
   },
   inhalte() {
-    const k = DB.karte[0], w = k.ziele.filter(z => z.status === 'wartet');
-    return bau(`${esc(k.name)} · ${chf(k.preis)}`, [
-      `Läuft in: ${k.betriebe.map(esc).join(', ')} · Allergene ${esc(k.allergene)}`,
-      k.ziele.map(z => `${esc(z.was)}: ${z.status === 'wartet' ? '<span class="hl">wartet</span>' : esc(z.status)}`).join('<br>'),
-      w.length ? `${w.length} Kanäle warten auf Ihre Freigabe.` : 'Überall gleich.',
+    const K = DB.karte, w = K.ziele.filter(z => z.status === 'wartet');
+    const ge = karteGeaendert().map(eintrag);
+    return bau(`Karte · ${K.eintraege.length} Einträge · ${K.betriebe.map(esc).join(' und ')}`, [
+      ge.length ? `<span class="hl">Geändert: ${ge.map(e => `${esc(e.name)} auf ${chf(e.preis)}` +
+          (K.stand[e.id] ? ` (Kanäle zeigen ${chf(K.stand[e.id].preis)})` : ', noch nicht publiziert')).join('; ')}</span>`
+        : 'Keine Zeile geändert.',
+      K.ziele.map(z => `${esc(z.was)}: ${z.status === 'wartet' ? '<span class="hl">wartet</span>' : 'aktuell'}`).join('<br>'),
+      w.length ? `${w.length} Kanäle warten auf Ihre Freigabe — vorher sieht kein Gast die Änderung.` : 'Überall gleich.',
     ], [{ t:'Inhalte', go:'inhalte' }]);
   },
   social() {
@@ -1969,7 +2021,8 @@ function frage(text) {
     if (e.kind === 'thema')     return aThema(e.ref);
     if (e.kind === 'betrieb')   return bau(esc(e.ref), [
       'Der Ausschnitt in dieser Demo ist über alle drei Betriebe gerechnet.',
-      'Karte: ' + (DB.karte[0].betriebe.includes(e.ref) ? esc(DB.karte[0].name) + ' läuft dort.' : 'nichts Neues dort.'),
+      'Karte: ' + (DB.karte.betriebe.includes(e.ref)
+        ? `${DB.karte.eintraege.length} Einträge laufen dort.` : 'nichts Eigenes dort.'),
     ], [{ t:'Übersicht', go:'uebersicht' }]);
     if (e.kind === 'modul' && ANTWORT[e.ref.id]) return ANTWORT[e.ref.id]();
     if (e.kind === 'modul') return ANTWORT.uebersicht();
@@ -2110,13 +2163,14 @@ const ACTIONS = {
     toast(`«${esc(b.titel)}» an ${esc(namen.map(p => p.name).join(' und '))} — ${b.min} Minuten am Handy.`, 1);
   },
   'karte-freigeben'() {
-    const k = DB.karte[0];
-    const n = k.ziele.filter(z => z.status === 'wartet').length;
-    k.ziele.forEach(z => { z.status = 'aktuell'; });
-    // what the channels show is now what the entry says
-    k.stand = { preis: k.preis, allergene: k.allergene };
-    logge(`${esc(k.name)} auf ${n} Gästekanälen freigegeben`);
-    toast(`Freigegeben. ${n} Kanäle sind jetzt gleich — und der Beitrag dazu wartet in Social Media.`, 1);
+    const K = DB.karte;
+    const n = K.ziele.filter(z => z.status === 'wartet').length;
+    const z = karteGeaendert().length;
+    K.ziele.forEach(x => { x.status = 'aktuell'; });
+    // every channel has now been given the card as it stands
+    K.eintraege.map(eintrag).forEach(e => { K.stand[e.id] = { preis: e.preis, allergene: e.allergene }; });
+    logge(`Karte auf ${n} Gästekanälen freigegeben (${z} ${z === 1 ? 'Zeile' : 'Zeilen'})`);
+    toast(`Freigegeben. ${n} Kanäle zeigen jetzt dieselbe Karte — und der Beitrag dazu wartet in Social Media.`, 1);
   },
   'post-freigeben'(el) {
     const p = DB.posts.find(x => x.id === el.dataset.id);
@@ -2205,13 +2259,15 @@ document.addEventListener('input', e => {
            renderTippend(c); return; }
   const k = e.target.closest('[data-karte]');
   if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = +k.value || g.karte;
+           kanaelePruefen();   // the card is published — the channels are now behind
            renderTippend(k); return; }
   const kp = e.target.closest('[data-kartepreis]');
-  if (kp) { const k = DB.karte[0];
-    k.preis = +kp.value || k.preis;
-    // a price that no longer matches what the channels show puts them all back
-    // in the queue — which is what makes this demonstrable twice in a row
-    if (k.preis !== k.stand.preis) k.ziele.forEach(z => { z.status = 'wartet'; });
+  if (kp) { const e2 = DB.karte.eintraege.find(x => x.id === kp.dataset.kartepreis);
+    const wert = +kp.value;
+    // a dish keeps its price in Gerichte; only a card-only entry keeps its own
+    if (e2.ref) { const g = DB.gerichte.find(x => x.id === e2.ref); g.karte = wert || g.karte; }
+    else e2.preis = wert || e2.preis;
+    kanaelePruefen();
     renderTippend(kp); }
 });
 
