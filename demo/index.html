@@ -2028,19 +2028,46 @@ document.addEventListener('click', e => {
   if (act && ACTIONS[act.dataset.act]) { ACTIONS[act.dataset.act](act); render(); }
 });
 
+/* Typing in a number field re-renders the whole view, so the field it was typed
+   into is thrown away — the caret goes with it, and the fresh field carries the
+   formatted value from DB. Typing «38» therefore produced «3.008» and needed a
+   click between digits. Keep the typed text and the focus; formatting waits for
+   the field to be left. */
+const TIPPFELDER = ['data-count', 'data-karte', 'data-kartepreis'];
+
+function renderTippend(el) {
+  const attr = TIPPFELDER.find(a => el.hasAttribute(a));
+  const sel = attr ? `[${attr}="${el.getAttribute(attr)}"]` : null;
+  const y = window.scrollY, pos = el.selectionStart, ende = el.selectionEnd;
+  render();
+  // Writing the text back into the new field is not enough: a number input
+  // rejects a half-typed value, so «38.» arrives as «38» and the point is
+  // lost. Put the ORIGINAL node back instead — it is never rewritten, so the
+  // text, the caret and the field's own state survive untouched.
+  const neu = sel && $(sel);
+  if (neu && neu !== el) {
+    neu.replaceWith(el);
+    el.focus();
+    if (pos !== null) { try { el.setSelectionRange(pos, ende); } catch { /* number inputs have no selection */ } }
+  }
+  window.scrollTo(0, y);
+}
+
 document.addEventListener('input', e => {
   const c = e.target.closest('[data-count]');
   if (c) { DB.lager.find(l => l.art === c.dataset.count).gezaehlt = +c.value || 0;
-           const v = $('#view'); const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+           renderTippend(c); return; }
   const k = e.target.closest('[data-karte]');
   if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = +k.value || g.karte;
-           const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+           renderTippend(k); return; }
   const kp = e.target.closest('[data-kartepreis]');
-  if (kp) { DB.karte[0].preis = +kp.value || DB.karte[0].preis;
-            const y = window.scrollY; render(); window.scrollTo(0, y); }
+  if (kp) { DB.karte[0].preis = +kp.value || DB.karte[0].preis; renderTippend(kp); }
 });
 
+// leaving a number field (blur or Enter) is when it may format itself
 document.addEventListener('change', e => {
+  if (TIPPFELDER.some(a => e.target.hasAttribute?.(a))) { const y = window.scrollY;
+    render(); window.scrollTo(0, y); return; }
   const s = e.target.closest('[data-shift]');
   if (s) {
     const d = DB.woche.find(x => x.tag === s.dataset.shift);
