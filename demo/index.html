@@ -14,6 +14,10 @@
   --acc:#00b2a0; --acci:#007a6e; --wash:rgba(0,178,160,.10);
   --dark:#0b0d12; --surf:#f5f5f7; --warn:#b25e00; --warnbg:rgba(178,94,0,.10);
   --ok:#007a6e; --okbg:rgba(0,178,160,.12);
+  /* Three levels, the ones the data already carries: ernst 3 = jetzt (rot),
+     2 = heute (gelb), 1 = kann warten (grün). Amber alone had to mean both
+     «a fridge is running warm» and «a post is waiting for approval». */
+  --bad:#c02a17; --badbg:rgba(192,42,23,.10);
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -36,6 +40,9 @@ body{font-family:var(--font);background:var(--surf);color:var(--ink);-webkit-fon
 #rail a:hover .ic{opacity:.9}
 #rail a .badge{margin-left:auto;font-size:10.5px;font-weight:700;background:var(--warn);color:#fff;
         border-radius:99px;padding:1px 6px}
+#rail a .badge.s3{background:var(--bad)}
+#rail a .badge.s2{background:var(--warn)}
+#rail a .badge.s1{background:var(--acc);color:#04211e}
 #rail .outlets{margin-top:auto;padding:12px 8px 0;border-top:1px solid rgba(255,255,255,.1);
         font-size:11px;line-height:1.7;color:rgba(255,255,255,.4)}
 #rail .outlets b{display:block;color:rgba(255,255,255,.75);font-weight:600;margin-bottom:3px}
@@ -64,6 +71,7 @@ th.r,td.r{text-align:right}
 .t-ok{color:var(--ok);background:var(--okbg)}
 .t-warn{color:var(--warn);background:var(--warnbg)}
 .t-mute{color:var(--dim);background:rgba(0,0,0,.05)}
+.t-bad{color:var(--bad);background:var(--badbg)}
 .card{background:#fff;border:1px solid var(--soft);border-radius:12px;padding:16px 18px}
 .card.tint{background:var(--surf)}
 .card.warn{background:rgba(178,94,0,.04);border-color:rgba(178,94,0,.22)}
@@ -142,10 +150,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 .dec b{font-size:11.5px}
 .dec .why{font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.35}
 .dec.calm{background:rgba(0,178,160,.05);border-color:rgba(0,178,160,.24)}
+.dec.jetzt{background:var(--badbg);border-color:rgba(192,42,23,.30)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chip{font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;
       background:rgba(0,0,0,.045);color:var(--dim);cursor:pointer;white-space:nowrap}
 .chip:hover{background:var(--wash);color:var(--acci)}
+.chip.s1{background:var(--okbg);color:var(--acci)}
+.chip.s2{background:var(--warnbg);color:var(--warn)}
+.chip.s3{background:var(--badbg);color:var(--bad)}
 @media (max-width:1180px){ .dash{grid-template-columns:repeat(6,1fr)}
   .w3,.w4,.w5{grid-column:span 3}.w6,.w7,.w8{grid-column:span 6} }
 @media (max-width:820px){ .dash{grid-template-columns:1fr}
@@ -186,6 +198,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 #chat .qz:first-of-type{border-top:none;padding-top:0}
 #chat .qz b{color:var(--ink);font-weight:650}
 #chat .hl{color:var(--warn);font-weight:600}
+#chat .bad{color:var(--bad);font-weight:650}
 #chat .mod{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:var(--acci);background:var(--wash);padding:1px 5px;border-radius:4px;white-space:nowrap}
 #chat .tipp{display:flex;gap:4px;align-self:flex-start;padding:12px 13px}
@@ -208,6 +221,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
   box-shadow:0 10px 30px rgba(0,0,0,.28)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast b{color:var(--acc)}
+/* the colour says how bad it is before the sentence is read */
+#toast{border-left:4px solid transparent}
+#toast.s3{border-left-color:var(--bad)}
+#toast.s3 b{color:#ff8a75}
+#toast.s2{border-left-color:#e08a2e}
+#toast.s2 b{color:#ffc079}
+#toast.s1{border-left-color:var(--acc)}
 @media (max-width:820px){
   #app{flex-direction:column}
   #rail{width:100%;height:auto;position:static;flex-direction:row;align-items:center;
@@ -496,8 +516,12 @@ function zahlen() {
 }
 
 let toastTimer;
-function toast(html) {
-  const t = $('#toast'); t.innerHTML = html; t.classList.add('show');
+// stufe: 3 something is wrong now, 2 something needs attention, 1 done and fine
+function toast(html, st) {
+  const t = $('#toast'); t.innerHTML = html;
+  t.classList.remove('s3', 's2', 's1');
+  if (st) t.classList.add('s' + st);
+  t.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
 }
 function logge(text) { DB.log.unshift({ text, zeit: new Date().toLocaleTimeString('de-CH').slice(0,5) }); }
@@ -521,6 +545,15 @@ const MODULES = [
 
 let AKTIV = 'uebersicht';
 let OFFEN = null;   // the invoice currently expanded
+
+/* How urgent a module's open count is: 3 = now, 2 = today, 1 = can wait.
+   The same three levels offeneSachen() uses, so a red badge in the rail and a
+   red row on the dashboard always mean the same thing. */
+function stufe(id) {
+  if (id === 'temperatur') return 3;
+  if (id === 'rechnungen' || id === 'hygiene') return 2;
+  return 1;
+}
 
 // an open hygiene check or an unacknowledged alarm is worth a badge
 function badge(id) {
@@ -568,7 +601,7 @@ function renderRail() {
   $('#nav').innerHTML = MODULES.map(m => {
     const b = badge(m.id);
     return `<a data-go="${m.id}" class="${m.id === AKTIV ? 'on' : ''}">
-      ${ic(m.id)}${esc(m.name)}${b ? `<span class="badge">${b}</span>` : ''}</a>`;
+      ${ic(m.id)}${esc(m.name)}${b ? `<span class="badge s${stufe(m.id)}">${b}</span>` : ''}</a>`;
   }).join('');
 }
 
@@ -625,7 +658,7 @@ function chartLine(vals, min, max, h = 22, col = 'var(--acc)') {
   // is what made the first version look broken. A zero-length line with a round
   // cap and a non-scaling stroke draws a true dot at any aspect ratio.
   const marks = vals.map((v, i) => (v > max || v < min)
-    ? `<line x1="${x(i)}" y1="${y(v)}" x2="${x(i)}" y2="${y(v)}" stroke="var(--warn)"
+    ? `<line x1="${x(i)}" y1="${y(v)}" x2="${x(i)}" y2="${y(v)}" stroke="var(--bad)"
          stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : '').join('');
   return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}"
       preserveAspectRatio="none" style="display:block;overflow:visible">
@@ -925,9 +958,9 @@ VIEWS.temperatur = () => {
     const bad = g.temp > g.max || g.temp < g.min;
     return `<tr>
       <td><b>${esc(g.name)}</b></td><td class="muted">${esc(g.wo)}</td>
-      <td class="r num"><b style="color:${bad ? 'var(--warn)' : 'var(--ink)'}">${g.temp.toFixed(1)} °C</b></td>
+      <td class="r num"><b style="color:${bad ? 'var(--bad)' : 'var(--ink)'}">${g.temp.toFixed(1)} °C</b></td>
       <td class="r num muted">${g.min} – ${g.max} °C</td>
-      <td class="r">${bad ? '<span class="tag t-warn">Alarm</span>' : '<span class="tag t-ok">im Bereich</span>'}</td>
+      <td class="r">${bad ? '<span class="tag t-bad">Alarm</span>' : '<span class="tag t-ok">im Bereich</span>'}</td>
       <td class="r">${bad
         ? `<button class="btn" data-act="alarm-quittieren" data-id="${g.id}">Quittieren</button>`
         : `<button class="btn demo" data-act="tuer-offen" data-id="${g.id}">Demo: Störung auslösen</button>`}</td>
@@ -935,16 +968,16 @@ VIEWS.temperatur = () => {
   }).join('');
   const alarme = DB.alarme.map(a => `<tr>
     <td><b>${esc(a.geraet)}</b></td><td class="muted">${a.wann}</td>
-    <td class="r num" style="color:var(--warn)">${a.wert.toFixed(1)} °C</td>
+    <td class="r num" style="color:var(--bad)">${a.wert.toFixed(1)} °C</td>
     <td class="muted">an ${esc(a.an)}</td>
-    <td class="r muted">${a.quittiert ? 'quittiert ' + a.quittiert : '<span class="tag t-warn">offen</span>'}</td>
+    <td class="r muted">${a.quittiert ? 'quittiert ' + a.quittiert : '<span class="tag t-bad">offen</span>'}</td>
     <td class="muted">${esc(a.grund || '')}</td></tr>`).join('');
   const jetztBad = DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length;
   return `<div class="grid g3" style="margin-bottom:20px">
       <div class="card kpi"><div class="l">Geräte</div><div class="n">${DB.geraete.length}</div>
         <div class="d">Ein Fühler pro Gerät, nur messend</div></div>
       <div class="card kpi"><div class="l">Jetzt im Alarm</div>
-        <div class="n" style="color:${jetztBad ? 'var(--warn)' : 'var(--ink)'}">${jetztBad}</div>
+        <div class="n" style="color:${jetztBad ? 'var(--bad)' : 'var(--ink)'}">${jetztBad}</div>
         <div class="d">Gemessen, ob jemand im Haus ist oder nicht</div></div>
       <div class="card kpi"><div class="l">Letzte 30 Tage</div><div class="n">${DB.alarme.length} Alarme</div>
         <div class="d">Dieselbe Aufzeichnung ist das HACCP-Protokoll</div></div></div>
@@ -1318,15 +1351,15 @@ VIEWS.uebersicht = () => {
   /* decisions — the tall column, so it carries the most rows */
   const dec = WG('', dring.length ? dring.length + ' braucht eine Entscheidung' : 'Entscheidungen',
     (dring.length
-      ? dring.map(i => `<div class="dec" data-go="${i.wo}">
+      ? dring.map(i => `<div class="dec ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}">
           <div class="row" style="justify-content:space-between;gap:6px">
             <b>${esc(i.was)}</b>
-            <span class="tag ${i.ernst === 3 ? 't-warn' : 't-mute'}">${i.ernst === 3 ? 'jetzt' : 'heute'}</span></div>
+            <span class="tag ${i.ernst === 3 ? 't-bad' : 't-warn'}">${i.ernst === 3 ? 'jetzt' : 'heute'}</span></div>
           <div class="why">${i.warum}</div></div>`).join('')
       : `<div class="dec calm"><b>Nichts offen</b>
           <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`)
     + (spaeter.length ? `<div class="chips" style="margin-top:7px">${spaeter.map(i =>
-        `<span class="chip" data-go="${i.wo}">${esc(i.was)}</span>`).join('')}</div>` : ''));
+        `<span class="chip s1" data-go="${i.wo}">${esc(i.was)}</span>`).join('')}</div>` : ''));
 
   /* cold chain — one line per unit */
   const kuehl = WG('', 'Kühlkette, letzte Stunden',
@@ -1334,11 +1367,11 @@ VIEWS.uebersicht = () => {
       const bad = g.temp > g.max || g.temp < g.min;
       return `<div class="mini" style="gap:10px"><div class="nm" style="flex:0 0 86px">${esc(g.name)}</div>
         <div class="ch" style="flex:1 1 auto">${chartLine(g.verlauf, g.min, g.max, 24,
-          bad ? 'var(--warn)' : 'var(--acc)')}</div>
-        <div class="vl" style="${bad ? 'color:var(--warn)' : ''}">${g.temp.toFixed(1)} °C</div></div>`;
+          bad ? 'var(--bad)' : 'var(--acc)')}</div>
+        <div class="vl" style="${bad ? 'color:var(--bad)' : ''}">${g.temp.toFixed(1)} °C</div></div>`;
     }).join(''), { go:'temperatur',
-      rechts: DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length
-        ? DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length + ' im Alarm' : 'alle im Bereich' });
+      rechts: (n => n ? `<span style="color:var(--bad);font-weight:700">${n} im Alarm</span>`
+                       : 'alle im Bereich')(DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length) });
 
   /* hygiene — ring beside the open items, not above them */
   const hyg = WG('', 'Hygiene heute', `<div class="row" style="gap:12px;align-items:center">
@@ -1399,7 +1432,7 @@ VIEWS.uebersicht = () => {
 
   const module = WG('w12', 'Module', `<div class="chips">${MODULES.filter(m => m.id !== 'uebersicht')
     .map(m => { const b = badge(m.id);
-      return `<span class="chip" data-go="${m.id}" style="${b ? 'background:var(--warnbg);color:var(--warn)' : ''}">
+      return `<span class="chip${b ? ' s' + stufe(m.id) : ''}" data-go="${m.id}">
         ${esc(m.name)}${b ? ' · ' + b : ''}</span>`; }).join('')}</div>`);
 
   return `<div class="dash">${kpis}
@@ -1569,10 +1602,10 @@ function aGeraet(g) {
   const hi = Math.max(...g.verlauf), lo = Math.min(...g.verlauf);
   const al = DB.alarme.filter(a => a.geraet === g.name);
   return bau(`${esc(g.name)} · ${esc(g.wo)}`, [
-    `Jetzt <b${bad ? ' class="hl"' : ''}>${g.temp.toFixed(1)} °C</b>, erlaubt sind ${g.min} bis ${g.max} °C`,
+    `Jetzt <b${bad ? ' class="bad"' : ''}>${g.temp.toFixed(1)} °C</b>, erlaubt sind ${g.min} bis ${g.max} °C`,
     `Letzte Stunden: ${lo.toFixed(1)} bis ${hi.toFixed(1)} °C`,
     al.length ? al.map(a => `${esc(a.wann)}: ${a.wert.toFixed(1)} °C an ${esc(a.an)}` +
-        (a.quittiert ? `, quittiert ${esc(a.quittiert)}` : ', <span class="hl">nicht quittiert</span>') +
+        (a.quittiert ? `, quittiert ${esc(a.quittiert)}` : ', <span class="bad">nicht quittiert</span>') +
         (a.grund ? ` (${esc(a.grund)})` : '')).join('<br>')
       : 'Kein Alarm in diesem Monat.',
   ], [{ t:'Kühlkette', go:'temperatur' }]);
@@ -1924,10 +1957,10 @@ const ACTIONS = {
       .sort((x, y) => x.d - y.d)[0];
     logge(`${a.name.split(',')[0]} auf ${chf(neu)} übernommen — Marge ${esc(worst.g.name)} ${pct(worst.d)}`);
     toast(`Preis übernommen. <b>${esc(worst.g.name)}</b> verliert ${Math.abs(worst.d).toFixed(1)} Punkte Marge — ` +
-          `nachzusehen in Gerichten.`);
+          `nachzusehen in Gerichten.`, 2);
   },
   'preis-nachfragen'() {
-    toast('Nachfrage vorbereitet. Die Rechnung bleibt offen, bis der Lieferant antwortet.');
+    toast('Nachfrage vorbereitet. Die Rechnung bleibt offen, bis der Lieferant antwortet.', 2);
     logge('Preisänderung beim Lieferanten nachgefragt');
   },
   'menge-kuerzen'(el) {
@@ -1936,7 +1969,7 @@ const ACTIONS = {
     r.total -= diff; r.status = 'erledigt';
     r.zeilen.forEach(z => { if (z.gel < z.best) z.best = z.gel; });
     logge(`${r.id} um ${chf(diff)} gekürzt — nicht gelieferte Position entfernt`);
-    toast(`Rechnung auf <b>${chf(r.total)}</b> gekürzt. ${chf(diff)} verlassen Ihr Konto nicht.`);
+    toast(`Rechnung auf <b>${chf(r.total)}</b> gekürzt. ${chf(diff)} verlassen Ihr Konto nicht.`, 1);
   },
   'aktion-nehmen'(el) {
     const a = DB.aktionen.find(x => x.id === el.dataset.id);
@@ -1944,12 +1977,12 @@ const ACTIONS = {
     const art = DB.artikel[a.art];
     const spart = (art.preis - a.neu) / art.menge * a.monat;
     logge(`Aktion ${art.name.split(',')[0]} übernommen — ${chf(spart)} bei üblicher Menge`);
-    toast(`Auf die Bestellliste. Bei Ihrer üblichen Menge sind das <b>${chf(spart)}</b>.`);
+    toast(`Auf die Bestellliste. Bei Ihrer üblichen Menge sind das <b>${chf(spart)}</b>.`, 1);
   },
   'haccp-export'() {
     const n = DB.hygiene.filter(h => h.done).length;
     toast(`Nachweis März erzeugt — ${DB.hygieneMonat} Einträge, jeder mit Name und Uhrzeit. ` +
-          `(In der Demo wird keine Datei geschrieben.)`);
+          `(In der Demo wird keine Datei geschrieben.)`, 1);
     logge(`HACCP-Nachweis exportiert (${n} Kontrollen heute)`);
   },
   'tuer-offen'(el) {
@@ -1961,7 +1994,7 @@ const ACTIONS = {
       wert: g.temp, an: DB.user, quittiert: '', grund: 'Tür offen (Demo)' });
     logge(`${g.name} aus dem Bereich gelaufen — Alarm an ${DB.user}`);
     toast(`<b>${esc(g.name)}</b> bei ${g.temp.toFixed(1)} °C. Meldung an ${esc(DB.user)} ` +
-          `— und an die nächste Person, wenn niemand quittiert.`);
+          `— und an die nächste Person, wenn niemand quittiert.`, 3);
   },
   'alarm-quittieren'(el) {
     const g = DB.geraete.find(x => x.id === el.dataset.id);
@@ -1970,7 +2003,7 @@ const ACTIONS = {
     const a = DB.alarme.find(x => x.geraet === g.name && !x.quittiert);
     if (a) a.quittiert = new Date().toLocaleTimeString('de-CH').slice(0, 5);
     logge(`Alarm ${g.name} quittiert — Gerät wieder im Bereich`);
-    toast('Quittiert. Der Eintrag bleibt im Protokoll — dieselbe Aufzeichnung ist der HACCP-Nachweis.');
+    toast('Quittiert. Der Eintrag bleibt im Protokoll — dieselbe Aufzeichnung ist der HACCP-Nachweis.', 1);
   },
   'brief-senden'(el) {
     const b = DB.briefings.find(x => x.id === el.dataset.id);
@@ -1978,20 +2011,20 @@ const ACTIONS = {
     namen.forEach(p => { if (p.durch < p.total) p.durch++; });
     b.faellig = [];
     logge(`Briefing «${b.titel}» an ${namen.map(p => p.name).join(', ')} gesendet`);
-    toast(`«${esc(b.titel)}» an ${esc(namen.map(p => p.name).join(' und '))} — ${b.min} Minuten am Handy.`);
+    toast(`«${esc(b.titel)}» an ${esc(namen.map(p => p.name).join(' und '))} — ${b.min} Minuten am Handy.`, 1);
   },
   'karte-freigeben'() {
     const k = DB.karte[0];
     const n = k.ziele.filter(z => z.status === 'wartet').length;
     k.ziele.forEach(z => { if (z.status === 'wartet') z.status = 'publiziert'; });
     logge(`${esc(k.name)} auf ${n} Gästekanälen freigegeben`);
-    toast(`Freigegeben. ${n} Kanäle sind jetzt gleich — und der Beitrag dazu wartet in Social Media.`);
+    toast(`Freigegeben. ${n} Kanäle sind jetzt gleich — und der Beitrag dazu wartet in Social Media.`, 1);
   },
   'post-freigeben'(el) {
     const p = DB.posts.find(x => x.id === el.dataset.id);
     p.status = 'freigegeben';
     logge(`Beitrag «${p.titel}» freigegeben (${p.kanal}, ${p.wann})`);
-    toast(`Freigegeben. Geht ${esc(p.wann)} auf ${esc(p.kanal)} raus.`);
+    toast(`Freigegeben. Geht ${esc(p.wann)} auf ${esc(p.kanal)} raus.`, 1);
   },
   'post-verwerfen'(el) {
     const p = DB.posts.find(x => x.id === el.dataset.id);
@@ -2005,7 +2038,7 @@ const ACTIONS = {
     DB.bewBeantwortet = Math.min(DB.bewMonat, DB.bewBeantwortet + 1);
     logge(`Antwort auf ${b.quelle}-Bewertung (${b.thema}) gesendet`);
     toast(`Gesendet — in der Sprache, in der der Gast geschrieben hat. ` +
-          `Beantwortet: <b>${DB.bewBeantwortet} von ${DB.bewMonat}</b>.`);
+          `Beantwortet: <b>${DB.bewBeantwortet} von ${DB.bewMonat}</b>.`, 1);
   },
   'antwort-ignorieren'(el) {
     const b = DB.bewertungen.find(x => x.id === el.dataset.id);
@@ -2034,7 +2067,7 @@ document.addEventListener('click', e => {
       DB.hygieneMonat++;
       logge(`${h.station} · ${h.was} abgehakt`);
       toast(`Abgehakt — mit <b>${esc(DB.user)}</b> und ${h.zeit} im Protokoll. ` +
-            `Das ist der Nachweis, nichts wird zweimal aufgeschrieben.`);
+            `Das ist der Nachweis, nichts wird zweimal aufgeschrieben.`, 1);
     } else { h.wer = ''; h.zeit = ''; }
     render(); return;
   }
