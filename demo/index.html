@@ -83,6 +83,10 @@ th.r,td.r{text-align:right}
 .btn.acc{background:var(--acc);color:#fff;border-color:var(--acc)}
 .btn.acc:hover{filter:brightness(1.06)}
 .btn:disabled{opacity:.45;cursor:default}
+/* a trigger for the presentation, not a function of the product — it must not
+   look like the buttons that actually do something */
+.btn.demo{border-style:dashed;color:var(--dim);font-weight:600}
+.btn.demo:hover{color:var(--ink)}
 .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
 .sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
      margin:26px 0 11px}
@@ -926,7 +930,7 @@ VIEWS.temperatur = () => {
       <td class="r">${bad ? '<span class="tag t-warn">Alarm</span>' : '<span class="tag t-ok">im Bereich</span>'}</td>
       <td class="r">${bad
         ? `<button class="btn" data-act="alarm-quittieren" data-id="${g.id}">Quittieren</button>`
-        : `<button class="btn" data-act="tuer-offen" data-id="${g.id}">Tür offen lassen</button>`}</td>
+        : `<button class="btn demo" data-act="tuer-offen" data-id="${g.id}">Demo: Störung auslösen</button>`}</td>
       </tr>`;
   }).join('');
   const alarme = DB.alarme.map(a => `<tr>
@@ -938,7 +942,7 @@ VIEWS.temperatur = () => {
   const jetztBad = DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length;
   return `<div class="grid g3" style="margin-bottom:20px">
       <div class="card kpi"><div class="l">Geräte</div><div class="n">${DB.geraete.length}</div>
-        <div class="d">Ein Fühler pro Gerät</div></div>
+        <div class="d">Ein Fühler pro Gerät, nur messend</div></div>
       <div class="card kpi"><div class="l">Jetzt im Alarm</div>
         <div class="n" style="color:${jetztBad ? 'var(--warn)' : 'var(--ink)'}">${jetztBad}</div>
         <div class="d">Gemessen, ob jemand im Haus ist oder nicht</div></div>
@@ -946,8 +950,9 @@ VIEWS.temperatur = () => {
         <div class="d">Dieselbe Aufzeichnung ist das HACCP-Protokoll</div></div></div>
     <table><thead><tr><th>Gerät</th><th>Wo</th><th class="r">Jetzt</th><th class="r">Bereich</th>
       <th class="r">Status</th><th class="r"></th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="small muted" style="margin-top:12px">«Tür offen lassen» simuliert, was nachts passiert:
-      das Gerät läuft aus dem Bereich, der Alarm geht an die diensthabende Person und landet im Protokoll.</div>
+    <div class="small muted" style="margin-top:12px">Axyom misst — geöffnet oder geschaltet wird nichts.
+      «Demo: Störung auslösen» spielt nach, was nachts passiert, wenn eine Tür offen bleibt: das Gerät läuft
+      aus dem Bereich, die Meldung geht an die diensthabende Person und landet im Protokoll.</div>
     <div class="sec">Alarmprotokoll</div>
     <table><thead><tr><th>Gerät</th><th>Wann</th><th class="r">Wert</th><th>Meldung</th>
       <th class="r">Quittiert</th><th>Grund</th></tr></thead><tbody>${alarme}</tbody></table>`;
