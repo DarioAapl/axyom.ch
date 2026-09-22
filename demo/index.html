@@ -108,6 +108,40 @@ th.r,td.r{text-align:right}
 .check.on{background:var(--acc);border-color:var(--acc)}
 .check svg{display:none}.check.on svg{display:block}
 .link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ── channel previews (Inhalte) ────────────────────────────────────────────
+   A status table can only claim that the channels disagree. These render what
+   each channel currently shows, so one that has not been released proves it
+   with the old price on screen.
+   ────────────────────────────────────────────────────────────────────────── */
+.kanaele{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.kanal{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;
+  display:flex;flex-direction:column}
+.kanal.alt{border-color:rgba(178,94,0,.35)}
+.kanal .kopf{display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--surf);
+  border-bottom:1px solid var(--soft);font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--dim)}
+.kanal .kopf .tag{margin-left:auto}
+.kanal .inhalt{padding:11px 12px;display:flex;flex-direction:column;flex:1}
+.kanal .stale{color:var(--warn);font-size:10.5px;font-weight:600;margin-top:auto;
+  padding-top:9px;border-top:1px solid var(--soft)}
+.mock-url{display:flex;align-items:center;gap:5px;background:var(--surf);border-radius:6px;
+  padding:4px 7px;font-size:9.5px;color:var(--dim);margin-bottom:10px}
+.mock-url i{width:5px;height:5px;border-radius:50%;background:rgba(0,0,0,.16);flex:none}
+.mock-h{font-size:13px;font-weight:700;letter-spacing:-.01em}
+.mock-p{font-size:11px;color:var(--dim);line-height:1.5;margin-top:3px}
+.mock-preis{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.mock-zeile{display:flex;align-items:baseline;gap:6px;margin-top:7px}
+.mock-fuell{flex:1;border-bottom:1px dotted rgba(0,0,0,.28);transform:translateY(-3px)}
+.mock-paper{background:#fffdf6;border:1px solid rgba(0,0,0,.08);border-radius:4px;padding:11px 12px;
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+.mock-paper .kl{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.mock-bild{height:56px;border-radius:8px;margin-bottom:9px;
+  background:linear-gradient(135deg,#cfe9e3,#8ed2c5 55%,#d8e9ae)}
+.mock-mail{border-left:3px solid var(--acc);padding-left:10px}
+.mock-res{border:1px solid var(--soft);border-radius:8px;padding:9px 10px}
+.mock-res .dat{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--acci);margin-bottom:5px}
 input,select,textarea{font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);
        border-radius:8px;background:#fff;color:var(--ink)}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-color:var(--acc)}
@@ -398,13 +432,19 @@ const DB = {
     { id:'b2', titel:'Hygiene-Auffrischung', faellig:['p3'], min:6 },
   ],
 
-  // content: one entry, many publish targets
+  /* Content: one entry, many channels. «stand» is what a guest actually sees on
+     a channel that has not been released yet — without it the module can only
+     assert that the channels disagree, and the demo has to be believed instead
+     of shown. */
   karte: [
     { id:'k-1', name:'Bärlauchrisotto', preis:28.00, betriebe:['Gaststube','Gartensaal'],
       allergene:'Milch, Sellerie', neu:true,
-      ziele:[ {was:'Website', status:'publiziert'}, {was:'Reservationsseite', status:'publiziert'},
-              {was:'Gedruckte Karte (PDF)', status:'neu erzeugt'},
-              {was:'Instagram', status:'wartet'}, {was:'Newsletter-Block', status:'wartet'} ] },
+      stand: { preis:26.50, allergene:'Milch' },
+      ziele:[ {was:'Website', typ:'web', status:'aktuell'},
+              {was:'Reservationsseite', typ:'res', status:'aktuell'},
+              {was:'Gedruckte Karte', typ:'pdf', status:'aktuell'},
+              {was:'Instagram', typ:'ig', status:'wartet'},
+              {was:'Newsletter', typ:'mail', status:'wartet'} ] },
   ],
 
   // social: drafts that wait for a release
@@ -578,6 +618,7 @@ function badge(id) {
   if (id === 'rechnungen') { const n = DB.rechnungen.filter(r => r.status !== 'ok').length; return n || 0; }
   if (id === 'temperatur') { return DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length || 0; }
   if (id === 'social')     { return DB.posts.filter(p => p.status === 'entwurf').length || 0; }
+  if (id === 'inhalte')    { return DB.karte[0].ziele.filter(z => z.status === 'wartet').length || 0; }
   return 0;
 }
 
@@ -1090,34 +1131,72 @@ VIEWS.schulung = () => {
 /* ── Inhalte ────────────────────────────────────────────────────────────── */
 VIEWS.inhalte = () => {
   const k = DB.karte[0];
-  const ziele = k.ziele.map(z => {
-    const cls = z.status === 'wartet' ? 't-mute' : 't-ok';
-    return `<tr><td>${esc(z.was)}</td>
-      <td class="r"><span class="tag ${cls}">${z.status === 'wartet' ? 'wartet auf Freigabe' : esc(z.status)}</span></td></tr>`;
+  const wartet = k.ziele.filter(z => z.status === 'wartet');
+  // a released channel shows the entry, a waiting one still shows the old stand
+  const zeigt = z => z.status === 'wartet'
+    ? { preis: k.stand.preis, allergene: k.stand.allergene } : { preis: k.preis, allergene: k.allergene };
+
+  const mock = (z) => {
+    const c = zeigt(z);
+    const preis = chf(c.preis).replace('CHF ', '');
+    if (z.typ === 'web') return `<div class="mock-url"><i></i><i></i><i></i>&nbsp;gaststube.example/karte</div>
+      <div class="mock-h">${esc(k.name)}</div>
+      <div class="mock-p">vegetarisch · enthält ${esc(c.allergene)}</div>
+      <div class="mock-zeile"><span class="mock-preis">CHF ${preis}</span></div>`;
+    if (z.typ === 'res') return `<div class="mock-res"><div class="dat">Tischreservation · heute</div>
+        <div class="mock-h" style="font-size:12px">Empfehlung der Küche</div>
+        <div class="mock-zeile"><span style="font-size:11.5px">${esc(k.name)}</span>
+          <span class="mock-fuell"></span><span class="mock-preis" style="font-size:11.5px">${preis}</span></div>
+        <div class="mock-p">enthält ${esc(c.allergene)}</div></div>`;
+    if (z.typ === 'pdf') return `<div class="mock-paper"><div class="kl">Karte · März</div>
+        <div class="mock-zeile"><span style="font-size:12.5px">${esc(k.name)}</span>
+          <span class="mock-fuell"></span><span style="font-size:12.5px;font-weight:600">${preis}</span></div>
+        <div class="mock-p" style="font-size:10px">enthält ${esc(c.allergene)}</div></div>`;
+    if (z.typ === 'ig') return `<div class="mock-bild"></div>
+      <div class="mock-p" style="color:var(--ink);font-size:11.5px">
+        <b>gaststube</b> Neu auf der Karte: ${esc(k.name)}, CHF ${preis}. 🌿</div>`;
+    return `<div class="mock-mail"><div class="mock-h" style="font-size:12px">Neu diese Woche</div>
+      <div class="mock-p">${esc(k.name)} — CHF ${preis}<br>vegetarisch · enthält ${esc(c.allergene)}</div></div>`;
+  };
+
+  const kanaele = k.ziele.map(z => {
+    const alt = z.status === 'wartet';
+    return `<div class="kanal ${alt ? 'alt' : ''}">
+      <div class="kopf">${esc(z.was)}
+        <span class="tag ${alt ? 't-warn' : 't-ok'}">${alt ? 'wartet' : 'aktuell'}</span></div>
+      <div class="inhalt">${mock(z)}
+        ${alt ? `<div class="stale">zeigt noch ${chf(k.stand.preis)}${
+          k.stand.allergene !== k.allergene ? ' · Allergene unvollständig' : ''}</div>` : ''}</div></div>`;
   }).join('');
-  const wartet = k.ziele.filter(z => z.status === 'wartet').length;
+
   const gerichteMitPreis = DB.gerichte.map(g =>
     `<tr><td>${esc(g.name)}</td><td class="r num">${chf(g.karte)}</td>
      <td class="r num muted">${marge(g).toFixed(1)}% Marge</td></tr>`).join('');
-  return `<div class="grid g2" style="margin-bottom:20px">
-      <div class="card"><div class="l small" style="font-weight:700;letter-spacing:.06em;
-          text-transform:uppercase;color:var(--dim)">Die Änderung</div>
-        <div style="font-size:17px;font-weight:700;margin-top:6px">${esc(k.name)}</div>
-        <div class="small muted" style="margin-top:5px;line-height:1.6">
-          Neu in ${esc(k.betriebe.join(' und '))} ·
-          <input style="width:78px;text-align:right" type="number" step="0.5" value="${k.preis.toFixed(2)}"
-            data-kartepreis="${k.id}"> CHF<br>
-          vegetarisch · enthält ${esc(k.allergene)}</div>
-        <div class="small" style="color:var(--acci);margin-top:9px">
-          Allergene werden automatisch übernommen</div></div>
-      <div class="card tint"><div class="l small" style="font-weight:700;letter-spacing:.06em;
-          text-transform:uppercase;color:var(--dim)">Wohin es geht</div>
-        <table style="margin-top:8px"><tbody>${ziele}</tbody></table>
-        ${wartet ? `<div class="row" style="margin-top:12px">
-            <button class="btn acc" data-act="karte-freigeben">${wartet} Gästekanäle freigeben</button></div>
-          <div class="small muted" style="margin-top:8px">Nichts erreicht einen Gast,
-            bevor Sie es sagen.</div>`
-          : '<div class="small" style="margin-top:10px;color:var(--acci)">Überall publiziert.</div>'}</div></div>
+
+  return `<div class="card" style="margin-bottom:18px">
+      <div class="row" style="justify-content:space-between;align-items:flex-start;gap:16px">
+        <div style="min-width:0">
+          <div class="l small" style="font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+               color:var(--dim)">Der Eintrag</div>
+          <div style="font-size:17px;font-weight:700;margin-top:6px">${esc(k.name)}
+            ${k.neu ? '<span class="tag t-ok" style="vertical-align:middle">neu</span>' : ''}</div>
+          <div class="small muted" style="margin-top:6px;line-height:1.7">
+            Läuft in ${esc(k.betriebe.join(' und '))} · vegetarisch · enthält ${esc(k.allergene)}<br>
+            Preis <input style="width:82px;text-align:right" type="number" step="0.5"
+              value="${k.preis.toFixed(2)}" data-kartepreis="${k.id}"> CHF
+            <span style="margin-left:6px">— einmal hier, nicht fünfmal</span></div></div>
+        <div style="text-align:right;flex:none">
+          ${wartet.length
+            ? `<button class="btn acc" data-act="karte-freigeben">${wartet.length} Kanäle freigeben</button>
+               <div class="small muted" style="margin-top:7px;max-width:210px">Nichts erreicht einen Gast,
+                 bevor Sie es sagen.</div>`
+            : `<span class="tag t-ok">alle Kanäle zeigen dasselbe</span>
+               <div class="small muted" style="margin-top:7px;max-width:210px">Preis oben ändern —
+                 die Kanäle fallen zurück und warten wieder auf Sie.</div>`}</div></div></div>
+    <div class="sec">Was der Gast gerade sieht</div>
+    <div class="kanaele">${kanaele}</div>
+    <div class="small muted" style="margin-top:12px">Kein Kanal wird hier nachgepflegt: jeder liest denselben
+      Eintrag. Bis Sie freigeben, zeigt ein Gästekanal weiter den alten Stand — und sagt es auch.</div>
     <div class="sec">Preise auf der Karte</div>
     <table><thead><tr><th>Gericht</th><th class="r">Kartenpreis</th><th class="r">Marge</th></tr></thead>
       <tbody>${gerichteMitPreis}</tbody></table>
@@ -2033,7 +2112,9 @@ const ACTIONS = {
   'karte-freigeben'() {
     const k = DB.karte[0];
     const n = k.ziele.filter(z => z.status === 'wartet').length;
-    k.ziele.forEach(z => { if (z.status === 'wartet') z.status = 'publiziert'; });
+    k.ziele.forEach(z => { z.status = 'aktuell'; });
+    // what the channels show is now what the entry says
+    k.stand = { preis: k.preis, allergene: k.allergene };
     logge(`${esc(k.name)} auf ${n} Gästekanälen freigegeben`);
     toast(`Freigegeben. ${n} Kanäle sind jetzt gleich — und der Beitrag dazu wartet in Social Media.`, 1);
   },
@@ -2126,7 +2207,12 @@ document.addEventListener('input', e => {
   if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = +k.value || g.karte;
            renderTippend(k); return; }
   const kp = e.target.closest('[data-kartepreis]');
-  if (kp) { DB.karte[0].preis = +kp.value || DB.karte[0].preis; renderTippend(kp); }
+  if (kp) { const k = DB.karte[0];
+    k.preis = +kp.value || k.preis;
+    // a price that no longer matches what the channels show puts them all back
+    // in the queue — which is what makes this demonstrable twice in a row
+    if (k.preis !== k.stand.preis) k.ziele.forEach(z => { z.status = 'wartet'; });
+    renderTippend(kp); }
 });
 
 // leaving a number field (blur or Enter) is when it may format itself
