@@ -772,8 +772,7 @@ VIEWS.lager = () => {
   }).join('');
   const verlust = DB.lager.reduce((s, l) => s + Math.min(0, (l.gezaehlt - l.erwartet) * einzel(l.art)), 0);
   return `<div class="grid g3" style="margin-bottom:20px">
-      <div class="card kpi"><div class="l">Gezählt</div><div class="n">${DB.lagerStand}</div>
-        <div class="d">Einmal, am Handy</div></div>
+      <div class="card kpi"><div class="l">Gezählt</div><div class="n">${DB.lagerStand}</div></div>
       <div class="card kpi"><div class="l">Differenz, Wert</div>
         <div class="n" style="color:${verlust < -20 ? 'var(--warn)' : 'var(--ink)'}">${chf(verlust)}</div>
         <div class="d">Gegen die Verkäufe gerechnet</div></div>
