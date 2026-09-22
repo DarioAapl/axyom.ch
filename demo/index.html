@@ -109,6 +109,29 @@ th.r,td.r{text-align:right}
 .check svg{display:none}.check.on svg{display:block}
 .link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 
+/* ── the traffic light (Übersicht) ─────────────────────────────────────────
+   Three lamps over the same severity the rest of the app uses: a lamp is lit
+   and carries a count only when something is actually waiting at that level,
+   so a dark lamp means nothing to do rather than «no data».
+   ────────────────────────────────────────────────────────────────────────── */
+.ampel{display:flex;gap:6px;background:var(--dark);border-radius:11px;padding:9px 10px}
+/* lamp label beside the glass, not under it: three rows of text would make
+   this tile taller than the column it has to fit into */
+.lampe{flex:1;display:flex;align-items:center;gap:7px;justify-content:center;
+  border:none;background:none;font-family:inherit;padding:0}
+.lampe.an{cursor:pointer}
+.lampe .glas{width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;
+  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);color:transparent}
+.lampe .txt{font-size:8.5px;text-align:left;line-height:1.2;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);white-space:nowrap}
+.lampe.an .txt{color:rgba(255,255,255,.78)}
+.lampe.an .glas{border-color:transparent;color:#fff}
+.lampe.an.r .glas{background:var(--bad);box-shadow:0 0 0 3px rgba(192,42,23,.24)}
+.lampe.an.y .glas{background:#cf7c1f;box-shadow:0 0 0 3px rgba(207,124,31,.22)}
+.lampe.an.g .glas{background:var(--acc);color:#04211e;box-shadow:0 0 0 3px rgba(0,178,160,.22)}
+.lampe.an:hover .glas{filter:brightness(1.1)}
+
 /* ── post previews (Social Media) ──────────────────────────────────────────
    A draft is judged by how it will look, so each one is drawn in the shape of
    its channel — square for a feed post, 9:16 for a story, 16:9 for Facebook —
@@ -1598,6 +1621,23 @@ VIEWS.uebersicht = () => {
     + (spaeter.length ? `<div class="chips" style="margin-top:7px">${spaeter.map(i =>
         `<span class="chip s1" data-go="${i.wo}">${esc(i.was)}</span>`).join('')}</div>` : ''));
 
+  /* The traffic light: the same three levels, counted. A lamp without anything
+     behind it stays dark instead of showing a zero — «nothing to do» should not
+     look like a measurement. */
+  const ampel = (() => {
+    const stufen = [
+      { k:'r', n:'jetzt',       ernst:3 },
+      { k:'y', n:'heute',       ernst:2 },
+      { k:'g', n:'kann warten', ernst:1 },
+    ].map(s => { const treffer = items.filter(i => i.ernst === s.ernst);
+      return { ...s, anzahl: treffer.length, wo: treffer[0] && treffer[0].wo }; });
+    return WG('', 'Status', `<div class="ampel">${stufen.map(s =>
+      `<button class="lampe ${s.anzahl ? 'an ' + s.k : ''}"
+        ${s.wo ? `data-go="${s.wo}"` : ''} ${s.anzahl ? '' : 'disabled'}>
+        <span class="glas">${s.anzahl || ''}</span><span class="txt">${s.n}</span></button>`).join('')}</div>`,
+      { rechts: items.length ? `${items.length} offen` : 'alles erledigt' });
+  })();
+
   /* cold chain — one line per unit */
   const kuehl = WG('', 'Kühlkette, letzte Stunden',
     DB.geraete.map(g => {
@@ -1674,7 +1714,7 @@ VIEWS.uebersicht = () => {
 
   return `<div class="dash">${kpis}
     <div class="col w4">${dec}${akt}</div>
-    <div class="col w4">${kuehl}${hyg}${plan}</div>
+    <div class="col w4">${ampel}${kuehl}${hyg}${plan}</div>
     <div class="col w4">${margen}${themen}${lager}</div>
     ${module}</div>`;
 };
