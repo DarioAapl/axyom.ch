@@ -1,0 +1,2045 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The demo is public but unlisted: noindex keeps it out of search results so
+     it cannot compete with axyom.ch. Deliberately NOT blocked in robots.txt —
+     a blocked crawler never reads this tag, and the URL can still get listed. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Axyom — Demo</title>
+<style>
+:root{
+  --ink:#1d1d1f; --dim:#6e6e73; --soft:rgba(0,0,0,.08); --line:rgba(0,0,0,.13);
+  --acc:#00b2a0; --acci:#007a6e; --wash:rgba(0,178,160,.10);
+  --dark:#0b0d12; --surf:#f5f5f7; --warn:#b25e00; --warnbg:rgba(178,94,0,.10);
+  --ok:#007a6e; --okbg:rgba(0,178,160,.12);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--surf);color:var(--ink);-webkit-font-smoothing:antialiased}
+#app{display:flex;min-height:100vh}
+
+/* ── rail ── */
+#rail{width:210px;flex:none;background:var(--dark);color:#fff;display:flex;flex-direction:column;
+      padding:18px 12px;position:sticky;top:0;height:100vh}
+#rail .brand{display:flex;align-items:baseline;gap:7px;padding:0 8px 18px}
+#rail .brand b{font-size:17px;font-weight:700;letter-spacing:-.01em}
+#rail .brand span{font-size:11px;color:rgba(255,255,255,.45)}
+#rail nav{display:flex;flex-direction:column;gap:2px;overflow:auto}
+#rail a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;
+        color:rgba(255,255,255,.58);font-size:13px;font-weight:500;text-decoration:none;cursor:pointer}
+#rail a .ic{width:16px;height:16px;flex:none;opacity:.62}
+#rail a:hover{color:#fff;background:rgba(255,255,255,.05)}
+#rail a.on{background:rgba(0,178,160,.16);color:#fff;font-weight:650}
+#rail a.on .ic{opacity:1;color:var(--acc)}
+#rail a:hover .ic{opacity:.9}
+#rail a .badge{margin-left:auto;font-size:10.5px;font-weight:700;background:var(--warn);color:#fff;
+        border-radius:99px;padding:1px 6px}
+#rail .outlets{margin-top:auto;padding:12px 8px 0;border-top:1px solid rgba(255,255,255,.1);
+        font-size:11px;line-height:1.7;color:rgba(255,255,255,.4)}
+#rail .outlets b{display:block;color:rgba(255,255,255,.75);font-weight:600;margin-bottom:3px}
+
+/* ── main ── */
+main{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff}
+header{padding:20px 28px 16px;border-bottom:1px solid var(--soft);display:flex;
+       align-items:flex-end;justify-content:space-between;gap:20px;position:sticky;top:0;background:#fff;z-index:5}
+header h1{font-size:20px;font-weight:700;letter-spacing:-.015em}
+header .sub{font-size:12.5px;color:var(--dim);margin-top:3px}
+header .demo{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+       color:var(--acci);background:var(--wash);padding:5px 9px;border-radius:6px;white-space:nowrap}
+.body{padding:22px 28px 40px;flex:1}
+
+/* ── bits ── */
+table{width:100%;border-collapse:collapse}
+th{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);
+   text-align:left;padding:0 10px 9px;white-space:nowrap}
+td{font-size:13px;padding:11px 10px;border-top:1px solid var(--soft);vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:rgba(0,0,0,.02)}
+th.r,td.r{text-align:right}
+.num{font-variant-numeric:tabular-nums}
+.tag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+     padding:3px 7px;border-radius:5px;white-space:nowrap;display:inline-block}
+.t-ok{color:var(--ok);background:var(--okbg)}
+.t-warn{color:var(--warn);background:var(--warnbg)}
+.t-mute{color:var(--dim);background:rgba(0,0,0,.05)}
+.card{background:#fff;border:1px solid var(--soft);border-radius:12px;padding:16px 18px}
+.card.tint{background:var(--surf)}
+.card.warn{background:rgba(178,94,0,.04);border-color:rgba(178,94,0,.22)}
+.card.good{background:rgba(0,178,160,.05);border-color:rgba(0,178,160,.28)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.kpi .n{font-size:27px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+.kpi .l{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.kpi .d{font-size:11.5px;color:var(--dim);margin-top:4px}
+.btn{font-size:12.5px;font-weight:650;padding:8px 14px;border-radius:9px;border:1px solid var(--line);
+     background:#fff;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--surf)}
+.btn.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.solid:hover{background:#000}
+.btn.acc{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn.acc:hover{filter:brightness(1.06)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
+     margin:26px 0 11px}
+.sec:first-child{margin-top:0}
+.muted{color:var(--dim)}
+.small{font-size:12px}
+.bar{height:6px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+.check{width:20px;height:20px;border-radius:6px;border:1.5px solid rgba(0,0,0,.22);cursor:pointer;
+       display:flex;align-items:center;justify-content:center;flex:none;background:#fff}
+.check.on{background:var(--acc);border-color:var(--acc)}
+.check svg{display:none}.check.on svg{display:block}
+.link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+input,select,textarea{font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);
+       border-radius:8px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-color:var(--acc)}
+
+/* ── dashboard: a packing grid, not equal-height rows ─────────────────────
+   align-items:start is the whole trick — without it every card stretches to
+   the tallest sibling in its row and the short ones end up half empty.
+   ────────────────────────────────────────────────────────────────────────── */
+.dash{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;align-items:start}
+.dash .card{padding:12px 14px}
+.w2{grid-column:span 2}.w3{grid-column:span 3}.w4{grid-column:span 4}
+.w5{grid-column:span 5}.w6{grid-column:span 6}.w7{grid-column:span 7}
+.w8{grid-column:span 8}.w12{grid-column:span 12}
+.wl{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between;
+    align-items:baseline;gap:8px}
+.wl .r2{letter-spacing:0;text-transform:none;font-weight:600;font-size:10.5px}
+.big{font-size:21px;font-weight:700;letter-spacing:-.022em;line-height:1.05}
+.sm2{font-size:10.5px;color:var(--dim);margin-top:2px}
+/* one row = label, chart, value. Five of these fit where one old card did. */
+.mini{display:flex;align-items:center;gap:8px;padding:2.5px 0}
+.mini .nm{font-size:11.5px;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;
+          text-overflow:ellipsis}
+.mini .ch{flex:0 0 96px}
+.mini .vl{font-size:11.5px;font-weight:650;flex:0 0 76px;text-align:right;white-space:nowrap;
+          font-variant-numeric:tabular-nums}
+/* long labels do not fit beside a bar in a third of the width, so the bar
+   widgets put the name and the value on their own line and the bar beneath */
+.mini2{padding:3px 0}
+.mini2 .top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px}
+.mini2 .nm2{font-size:11.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini2 .vl2{font-size:11.5px;font-weight:650;white-space:nowrap;flex:none;
+            font-variant-numeric:tabular-nums}
+/* grid does not pack, so each dashboard column is its own stack and the
+   short widgets sit directly under one another instead of leaving a hole */
+.col{display:flex;flex-direction:column;gap:10px;align-self:start}
+.dec{padding:7px 9px;border-radius:7px;background:rgba(178,94,0,.05);
+     border:1px solid rgba(178,94,0,.20);margin-bottom:5px;cursor:pointer}
+.dec:last-child{margin-bottom:0}
+.dec b{font-size:11.5px}
+.dec .why{font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.35}
+.dec.calm{background:rgba(0,178,160,.05);border-color:rgba(0,178,160,.24)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;
+      background:rgba(0,0,0,.045);color:var(--dim);cursor:pointer;white-space:nowrap}
+.chip:hover{background:var(--wash);color:var(--acci)}
+@media (max-width:1180px){ .dash{grid-template-columns:repeat(6,1fr)}
+  .w3,.w4,.w5{grid-column:span 3}.w6,.w7,.w8{grid-column:span 6} }
+@media (max-width:820px){ .dash{grid-template-columns:1fr}
+  .w2,.w3,.w4,.w5,.w6,.w7,.w8,.w12{grid-column:span 1} }
+
+/* ── Axyom fragen: the corner box ──────────────────────────────────────────
+   A question is faster than knowing which module holds the answer, so the
+   box sits over every screen and reads the same DB the screens read.
+   ────────────────────────────────────────────────────────────────────────── */
+#chatbtn{position:fixed;right:22px;bottom:22px;z-index:60;display:flex;align-items:center;gap:9px;
+  background:var(--dark);color:#fff;border:none;border-radius:99px;padding:11px 17px 11px 14px;
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);transition:transform .16s,opacity .16s}
+#chatbtn:hover{transform:translateY(-1px)}
+#chatbtn b{font-weight:700;color:var(--acc)}
+#chatbtn .pip{width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none}
+#chatbtn.weg{opacity:0;pointer-events:none;transform:translateY(8px)}
+
+#chat{position:fixed;right:22px;bottom:22px;z-index:61;width:396px;max-height:min(660px,calc(100vh - 44px));
+  background:#fff;border:1px solid var(--line);border-radius:16px;display:none;flex-direction:column;
+  overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+#chat.on{display:flex}
+#chat .top{display:flex;align-items:center;gap:9px;padding:13px 14px;background:var(--dark);color:#fff;flex:none}
+#chat .top b{font-size:14px;font-weight:700;color:#fff}
+#chat .top b span{color:var(--acc)}
+#chat .top .s{font-size:11px;color:rgba(255,255,255,.5);margin-left:auto}
+#chat-zu{background:none;border:none;color:rgba(255,255,255,.55);font-size:19px;line-height:1;
+  cursor:pointer;padding:0 2px;font-family:inherit}
+#chat-zu:hover{color:#fff}
+#chat-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+#chat .msg{max-width:100%;font-size:12.5px;line-height:1.5}
+#chat .msg.u{align-self:flex-end;background:var(--ink);color:#fff;padding:8px 12px;border-radius:13px 13px 3px 13px;
+  max-width:82%;font-weight:500}
+#chat .msg.b{align-self:stretch;background:var(--surf);border:1px solid var(--soft);
+  border-radius:13px 13px 13px 3px;padding:11px 13px}
+#chat .qk{font-size:12.5px;font-weight:700;letter-spacing:-.005em;margin-bottom:6px}
+#chat .qz{font-size:12px;line-height:1.55;color:var(--dim);padding:3.5px 0;border-top:1px solid var(--soft)}
+#chat .qz:first-of-type{border-top:none;padding-top:0}
+#chat .qz b{color:var(--ink);font-weight:650}
+#chat .hl{color:var(--warn);font-weight:600}
+#chat .mod{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--acci);background:var(--wash);padding:1px 5px;border-radius:4px;white-space:nowrap}
+#chat .tipp{display:flex;gap:4px;align-self:flex-start;padding:12px 13px}
+#chat .tipp i{width:5px;height:5px;border-radius:50%;background:var(--dim);animation:tp 1s infinite}
+#chat .tipp i:nth-child(2){animation-delay:.14s}
+#chat .tipp i:nth-child(3){animation-delay:.28s}
+@keyframes tp{0%,60%,100%{opacity:.25}30%{opacity:.9}}
+#chat .foot{flex:none;display:flex;gap:8px;padding:11px 12px;border-top:1px solid var(--soft);background:#fff}
+#chat-in{flex:1;min-width:0;border-radius:9px}
+#chat-send{flex:none}
+@media (max-width:820px){
+  #chat{right:12px;left:12px;bottom:12px;width:auto;max-height:calc(100vh - 24px)}
+  #chatbtn{right:12px;bottom:12px}
+}
+
+/* ── toast ── */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--dark);color:#fff;font-size:13px;padding:11px 18px;border-radius:10px;
+  opacity:0;pointer-events:none;transition:.22s;z-index:50;max-width:520px;
+  box-shadow:0 10px 30px rgba(0,0,0,.28)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast b{color:var(--acc)}
+@media (max-width:820px){
+  #app{flex-direction:column}
+  #rail{width:100%;height:auto;position:static;flex-direction:row;align-items:center;
+        overflow-x:auto;padding:10px}
+  #rail nav{flex-direction:row}#rail .outlets{display:none}#rail .brand{padding:0 12px 0 4px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  header,.body{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="rail">
+    <div class="brand"><b>axyom</b><span>ops</span></div>
+    <nav id="nav"></nav>
+    <div class="outlets"><b>Betriebe</b>Gaststube<br>Bahnhof<br>Gartensaal</div>
+  </aside>
+  <main>
+    <header>
+      <div><h1 id="h-title"></h1><div class="sub" id="h-sub"></div></div>
+      <div class="demo">Demo · Beispieldaten</div>
+    </header>
+    <div class="body" id="view"></div>
+  </main>
+</div>
+<button id="chatbtn"><span class="pip"></span><b>axyom</b> fragen</button>
+<div id="chat">
+  <div class="top"><b>axyom <span>fragen</span></b>
+    <span class="s">liest Ihre Daten</span>
+    <button id="chat-zu" title="Schliessen (Esc)">&times;</button></div>
+  <div id="chat-log"></div>
+  <div class="foot">
+    <input id="chat-in" placeholder="Fragen Sie etwas — z.B. Marge Kalbsbraten" autocomplete="off">
+    <button class="btn acc" id="chat-send">Fragen</button></div>
+</div>
+<div id="toast"></div>
+<script>
+/* ──────────────────────────────────────────────────────────────────────────
+   ONE dataset, twelve modules. Every screen reads from DB and writes back to
+   it, which is the whole point of the demo: a price that changes in
+   Rechnungen is a margin that changes in Gerichte, without anybody carrying
+   it across. Numbers are invented but internally consistent — the dish costs
+   really are the sum of their lines, and the report really is the sum of the
+   week.
+   ────────────────────────────────────────────────────────────────────────── */
+const DB = {
+  today: '18.03.',
+  outlets: ['Gaststube', 'Bahnhof', 'Gartensaal'],
+  user: 'Marco B.',
+
+  // articles carry the price actually last paid, plus the price before it
+  artikel: {
+    butter:   { name: 'Butter, 10 kg',        lief: 'Molkerei Musterberg',   einheit: 'kg',  preis: 78.40, vorher: 78.40, menge: 10 },
+    rahm:     { name: 'Rahm 35%, 5 l',        lief: 'Molkerei Musterberg',   einheit: 'l',   preis: 42.00, vorher: 42.00, menge: 5 },
+    kalb:     { name: 'Kalbsbraten, 5 kg',    lief: 'Metzgerei Mustermann',  einheit: 'kg',  preis: 190.00, vorher: 190.00, menge: 5 },
+    kartoffel:{ name: 'Kartoffeln, 25 kg',    lief: 'Muster Gemüse AG',      einheit: 'kg',  preis: 32.50, vorher: 32.50, menge: 25 },
+    ruebli:   { name: 'Rüebli, 10 kg',        lief: 'Muster Gemüse AG',      einheit: 'kg',  preis: 18.90, vorher: 18.90, menge: 10 },
+    egli:     { name: 'Eglifilet, 2 kg',      lief: 'Fischerei Mustersee',   einheit: 'kg',  preis: 96.00, vorher: 96.00, menge: 2 },
+    pinot:    { name: 'Pinot Noir, 6 Fl.',    lief: 'Weinkeller Musterthal', einheit: 'Fl.', preis: 138.00, vorher: 138.00, menge: 6 },
+    // the rest of what actually goes on a plate — without these the food cost
+    // comes out at 3% and no cook in the room believes the margin
+    eier:     { name: 'Eier, 30 Stk',         lief: 'Muster Gemüse AG',      einheit: 'Stk', preis: 13.50, vorher: 13.50, menge: 30 },
+    gemuese:  { name: 'Marktgemüse, 10 kg',   lief: 'Muster Gemüse AG',      einheit: 'kg',  preis: 44.00, vorher: 44.00, menge: 10 },
+    bratfett: { name: 'Bratbutter, 5 kg',     lief: 'Molkerei Musterberg',   einheit: 'kg',  preis: 62.00, vorher: 62.00, menge: 5 },
+    speck:    { name: 'Speckwürfel, 2 kg',    lief: 'Metzgerei Mustermann',  einheit: 'kg',  preis: 38.00, vorher: 38.00, menge: 2 },
+    fond:     { name: 'Fonds und Gewürze',    lief: 'Diverse',               einheit: 'Port.', preis: 0.85, vorher: 0.85, menge: 1 },
+  },
+
+  // invoices: lines reference articles, so matching is a real comparison
+  rechnungen: [
+    { id:'R-20418', lief:'Muster Gemüse AG',   datum:'14.03.', total:1284.60, status:'ok',
+      zeilen:[ {art:'kartoffel', best:8, gel:8, preis:32.50}, {art:'ruebli', best:4, gel:4, preis:18.90} ] },
+    { id:'8871-C',  lief:'Molkerei Musterberg',  datum:'14.03.', total:962.15, status:'preis',
+      zeilen:[ {art:'butter', best:6, gel:6, preis:87.80}, {art:'rahm', best:10, gel:10, preis:42.00} ] },
+    { id:'R-5512',  lief:'Metzgerei Mustermann', datum:'13.03.', total:1914.20, status:'preis',
+      zeilen:[ {art:'kalb', best:9, gel:9, preis:212.80} ] },
+    { id:'FZ-3390', lief:'Fischerei Mustersee',  datum:'13.03.', total:2110.00, status:'ok',
+      zeilen:[ {art:'egli', best:12, gel:12, preis:96.00} ] },
+    { id:'W-7742',  lief:'Weinkeller Musterthal', datum:'13.03.', total:3487.90, status:'menge',
+      zeilen:[ {art:'pinot', best:20, gel:18, preis:138.00} ] },
+  ],
+  gelesen: 84, // invoices read this month
+
+  // supplier offers, matched against what is actually bought
+  aktionen: [
+    { id:'a1', lief:'Muster Gemüse AG',      art:'ruebli',   neu:14.20, bis:'22.03.', dringend:true,  monat:40, genommen:false },
+    { id:'a2', lief:'Molkerei Musterberg',   art:'rahm',     neu:35.70, bis:'19.03.', dringend:true,  monat:34, genommen:false },
+    { id:'a3', lief:'Fischerei Mustersee',   art:'egli',     neu:81.60, bis:'20.03.', dringend:false, monat:18, genommen:false },
+    { id:'a4', lief:'Weinkeller Musterthal', art:'pinot',    neu:117.30, bis:'31.03.', dringend:false, monat:24, genommen:false },
+  ],
+  irrelevant: 9,
+
+  // dishes: recipes in grams/ml against article unit prices
+  gerichte: [
+    { id:'g1', name:'Kalbsbraten mit Rösti', karte:36.00, verkauft:64,
+      rezept:[ {art:'kalb', m:0.18}, {art:'butter', m:0.03}, {art:'kartoffel', m:0.22},
+               {art:'rahm', m:0.04}, {art:'gemuese', m:0.12}, {art:'bratfett', m:0.02}, {art:'fond', m:1} ] },
+    { id:'g2', name:'Eglifilet, Müllerin',   karte:42.00, verkauft:38,
+      rezept:[ {art:'egli', m:0.20}, {art:'butter', m:0.04}, {art:'kartoffel', m:0.18},
+               {art:'gemuese', m:0.10}, {art:'bratfett', m:0.02}, {art:'fond', m:1} ] },
+    { id:'g3', name:'Rüeblisuppe',           karte:12.50, verkauft:91,
+      rezept:[ {art:'ruebli', m:0.20}, {art:'rahm', m:0.05}, {art:'butter', m:0.01},
+               {art:'gemuese', m:0.04}, {art:'fond', m:1} ] },
+    { id:'g4', name:'Rösti mit Spiegelei',   karte:24.00, verkauft:57,
+      rezept:[ {art:'kartoffel', m:0.30}, {art:'butter', m:0.03}, {art:'eier', m:2},
+               {art:'speck', m:0.04}, {art:'bratfett', m:0.02}, {art:'fond', m:1} ] },
+  ],
+
+  // stock: counted vs what the tills say was sold
+  lager: [
+    { art:'butter',   gezaehlt:14.2, erwartet:15.0, einheit:'kg' },
+    { art:'rahm',     gezaehlt:22.0, erwartet:22.4, einheit:'l' },
+    { art:'kalb',     gezaehlt:6.4,  erwartet:6.5,  einheit:'kg' },
+    { art:'kartoffel',gezaehlt:41.0, erwartet:44.8, einheit:'kg' },
+    { art:'egli',     gezaehlt:3.1,  erwartet:3.2,  einheit:'kg' },
+  ],
+  lagerStand:'heute 06:20',
+
+  // hygiene: the checks a station owes today
+  hygiene: [
+    { id:'h1', station:'Küche · Kühlraum', was:'Temperaturen, 06:00', wer:'Marco B.', zeit:'06:12', done:true },
+    { id:'h2', station:'Wareneingang',     was:'Lieferkontrolle · Fischerei', wer:'Anna R.', zeit:'08:05', done:true },
+    { id:'h3', station:'Küche',            was:'Flächen nach der Vorbereitung', wer:'Luca K.', zeit:'17:52', done:true },
+    { id:'h4', station:'Küche · Fritteuse',was:'Öltest',       wer:'', zeit:'', done:false },
+    { id:'h5', station:'Bar',              was:'Eismaschine, wöchentlich', wer:'', zeit:'', done:false },
+  ],
+  hygieneMonat: 248, hygieneSpaet: 3,
+
+  // cold chain: a reading history per unit so a curve can be drawn
+  geraete: [
+    { id:'k1', name:'Kühlraum 1',     wo:'Küche', min:0,   max:5,   temp:2.4 },
+    { id:'k2', name:'Kühlraum 2',     wo:'Küche', min:0,   max:5,   temp:3.1 },
+    { id:'k3', name:'Tiefkühler',     wo:'Küche', min:-22, max:-18, temp:-19.4 },
+    { id:'k4', name:'Barkühlschrank', wo:'Bar',   min:2,   max:7,   temp:4.6 },
+    { id:'k5', name:'Fischkühler',    wo:'Küche', min:0,   max:2,   temp:1.1 },
+  ],
+  alarme: [
+    { geraet:'Tiefkühler', wann:'12.03. 02:14', wert:-16.2, an:'Marco B.', quittiert:'02:21', grund:'Tür stand offen' },
+  ],
+
+  // rota: covers already booked against staffing
+  woche: [
+    { tag:'Mo', gedecke:42,  vj:38,  besetzt:3, stunden:24 },
+    { tag:'Di', gedecke:38,  vj:41,  besetzt:3, stunden:24 },
+    { tag:'Mi', gedecke:61,  vj:55,  besetzt:4, stunden:32 },
+    { tag:'Do', gedecke:74,  vj:60,  besetzt:4, stunden:32 },
+    { tag:'Fr', gedecke:118, vj:104, besetzt:6, stunden:48 },
+    { tag:'Sa', gedecke:146, vj:139, besetzt:6, stunden:48 },
+    { tag:'So', gedecke:92,  vj:88,  besetzt:5, stunden:40 },
+  ],
+  lohn: 34, // CHF per hour, fully loaded — used for the rota cost line
+
+  // training: people and the modules they owe
+  leute: [
+    { id:'p1', name:'Anna R.',   rolle:'Service', durch:6, total:6 },
+    { id:'p2', name:'Marco B.', rolle:'Küche',   durch:8, total:8 },
+    { id:'p3', name:'Luca K.',  rolle:'Küche',   durch:5, total:8 },
+    { id:'p4', name:'Tomas N.',   rolle:'Service', durch:2, total:6 },
+    { id:'p5', name:'Sofia F.',rolle:'Küche',   durch:1, total:8 },
+  ],
+  briefings: [
+    { id:'b1', titel:'Allergene', faellig:['p4','p5'], min:4 },
+    { id:'b2', titel:'Hygiene-Auffrischung', faellig:['p3'], min:6 },
+  ],
+
+  // content: one entry, many publish targets
+  karte: [
+    { id:'k-1', name:'Bärlauchrisotto', preis:28.00, betriebe:['Gaststube','Gartensaal'],
+      allergene:'Milch, Sellerie', neu:true,
+      ziele:[ {was:'Website', status:'publiziert'}, {was:'Reservationsseite', status:'publiziert'},
+              {was:'Gedruckte Karte (PDF)', status:'neu erzeugt'},
+              {was:'Instagram', status:'wartet'}, {was:'Newsletter-Block', status:'wartet'} ] },
+  ],
+
+  // social: drafts that wait for a release
+  posts: [
+    { id:'s1', wann:'Di 11:00', titel:'Bärlauchrisotto ist zurück', kanal:'Instagram', status:'entwurf',
+      text:'Der Bärlauch ist da. Ab heute im Gartensaal und in der Gaststube.' },
+    { id:'s2', wann:'Do 17:30', titel:'Terrasse offen', kanal:'Instagram', status:'entwurf',
+      text:'Ab Donnerstag ist die Terrasse offen — 40 Plätze an der Sonne.' },
+    { id:'s3', wann:'Fr 09:00', titel:'Freitag: Eglifilet', kanal:'Facebook', status:'freigegeben',
+      text:'Frisch aus dem See. Freitag und Samstag, solange es reicht.' },
+  ],
+
+  // reviews: grouped by what they are actually about
+  themen: [
+    { thema:'Tempo im Mittagsservice', n:14, trend:'up' },
+    { thema:'Portionsgrösse, Hauptgänge', n:9, trend:'down' },
+    { thema:'Lärm auf der Terrasse', n:6, trend:'down' },
+    { thema:'Preis-Leistung Weinkarte', n:5, trend:'up' },
+  ],
+  bewertungen: [
+    { id:'r1', quelle:'Google', sterne:4, wann:'vor 2 Tagen', thema:'Tempo im Mittagsservice',
+      text:'Schöner Abend, allerdings haben wir mittags zwischen den Gängen länger gewartet.',
+      antwort:'Danke für die Rückmeldung — die Wartezeit zwischen den Gängen entspricht mittags nicht unserem Anspruch. Wir haben es der Küche weitergegeben.',
+      status:'entwurf' },
+    { id:'r2', quelle:'OpenTable', sterne:5, wann:'vor 3 Tagen', thema:'Preis-Leistung Weinkarte',
+      text:'Die offenen Weine sind für die Lage sehr fair kalkuliert.',
+      antwort:'Vielen Dank — die offene Auswahl wechseln wir alle zwei Wochen, es lohnt sich also wiederzukommen.',
+      status:'entwurf' },
+    { id:'r3', quelle:'Google', sterne:3, wann:'vor 5 Tagen', thema:'Portionsgrösse, Hauptgänge',
+      text:'Gut gekocht, aber der Hauptgang war für den Preis klein.',
+      antwort:'Danke, dass Sie das ansprechen. Wir schauen die Portionen bei den Hauptgängen diese Woche durch.',
+      status:'gesendet' },
+  ],
+  bewMonat:34, bewBeantwortet:31, schnitt:4.6, schnittVorher:4.5,
+
+  // The four dishes above are the ones costed line by line. A week also sells
+  // the rest of the card and a lot of drinks, and the rota covers all of it —
+  // without these the report shows personnel at 130% of revenue and nobody
+  // believes another number on the screen.
+  uebrigeSpeisen: 14836, uebrigeSpeisenWE: 4154,
+  getraenke: 14161, getraenkeWE: 3115,
+
+  log: [],   // what the demo has changed, shown in Auswertungen
+};
+
+/* ── synthetic histories, so the widgets have curves to draw ───────────────
+   Deterministic on purpose: a demo that looks different on every reload is a
+   demo you cannot rehearse. No Math.random anywhere.
+   ────────────────────────────────────────────────────────────────────────── */
+DB.geraete.forEach((g, gi) => {
+  g.verlauf = Array.from({ length: 28 }, (_, i) => {
+    const wobble = Math.sin((i + gi * 3) / 2.7) * 0.42 + Math.cos((i + gi) / 1.9) * 0.22;
+    const span = Math.max(1, (g.max - g.min) / 6);
+    return +(g.temp + wobble * span).toFixed(2);
+  });
+});
+// the night the freezer was left open, still visible in its curve
+DB.geraete[2].verlauf = DB.geraete[2].verlauf.map((v, i) =>
+  i > 9 && i < 15 ? +(v + (i - 9) * 1.15).toFixed(2) : v);
+
+// revenue per day, tracking the covers with a plausible spread
+DB.tagesUmsatz = DB.woche.map((d, i) => Math.round(d.gedecke * [58, 55, 61, 63, 66, 68, 60][i]));
+DB.tagesUmsatzVJ = DB.woche.map((d, i) => Math.round(d.vj * [57, 56, 59, 60, 64, 65, 59][i]));
+
+// rating, last six months
+DB.schnittVerlauf = [4.3, 4.4, 4.4, 4.5, 4.5, 4.6];
+// invoices read per week, last eight weeks
+DB.rechnungenVerlauf = [16, 19, 17, 22, 18, 21, 20, 24];
+/* ── helpers ───────────────────────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const chf = n => (n < 0 ? '−' : '') + 'CHF ' + Math.abs(n).toLocaleString('de-CH',
+  { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n).toFixed(1) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TICK = '<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="#fff" ' +
+  'stroke-width="2.6" stroke-linecap="round"><path d="M4 10.5l4 4 8-9"/></svg>';
+
+// unit price of an article, e.g. butter at 78.40 per 10 kg = 7.84 / kg
+const einzel = key => DB.artikel[key].preis / DB.artikel[key].menge;
+// what a dish costs to make, from the live article prices
+const wareneinsatz = g => g.rezept.reduce((s, z) => s + einzel(z.art) * z.m, 0);
+const marge = g => (g.karte - wareneinsatz(g)) / g.karte * 100;
+
+// the week, computed once. Both Übersicht and Auswertungen read this, so the
+// dashboard can never quote a different number than the report.
+function zahlen() {
+  const kalk   = DB.gerichte.reduce((s, g) => s + g.karte * g.verkauft, 0);
+  const kalkWE = DB.gerichte.reduce((s, g) => s + wareneinsatz(g) * g.verkauft, 0);
+  const speisen = kalk + DB.uebrigeSpeisen;
+  const umsatz  = speisen + DB.getraenke;
+  const einsatz = kalkWE + DB.uebrigeSpeisenWE + DB.getraenkeWE;
+  const std     = DB.woche.reduce((s, d) => s + d.besetzt * 8, 0);
+  const personal = std * DB.lohn;
+  const gedecke = DB.woche.reduce((s, d) => s + d.gedecke, 0);
+  const vj      = DB.woche.reduce((s, d) => s + d.vj, 0);
+  const roh     = umsatz - einsatz;
+  return { kalk, kalkWE, speisen, umsatz, einsatz, std, personal, gedecke, vj,
+           roh, db: roh - personal };
+}
+
+let toastTimer;
+function toast(html) {
+  const t = $('#toast'); t.innerHTML = html; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
+}
+function logge(text) { DB.log.unshift({ text, zeit: new Date().toLocaleTimeString('de-CH').slice(0,5) }); }
+
+/* ── modules ───────────────────────────────────────────────────────────── */
+const MODULES = [
+  { id:'uebersicht',  name:'Übersicht',   titel:'Übersicht',             sub:'Was ansteht, über alle drei Betriebe' },
+  { id:'rechnungen',  name:'Rechnungen',  titel:'Rechnungen',            sub:'Per E-Mail und Post eingegangen · beim Eingang gelesen' },
+  { id:'lager',       name:'Lager',       titel:'Lager',                 sub:'Einmal gezählt, gegen die Verkäufe gerechnet' },
+  { id:'aktionen',    name:'Aktionen',    titel:'Aktionen diese Woche',  sub:'Aus den Preislisten Ihrer Lieferanten gelesen' },
+  { id:'gerichte',    name:'Gerichte',    titel:'Gerichte',              sub:'Kalkuliert mit den Preisen, die Sie zuletzt bezahlt haben' },
+  { id:'hygiene',     name:'Hygiene',     titel:'Kontrollen heute',      sub:'Abgehakt an der Station, am Handy' },
+  { id:'temperatur',  name:'Temperatur',  titel:'Kühlkette',             sub:'Alle paar Minuten gemessen, Tag und Nacht' },
+  { id:'dienstplan',  name:'Dienstplan',  titel:'Woche vom 16. März',    sub:'Bereits gebuchte Gedecke, daneben die Vorjahreswoche' },
+  { id:'schulung',    name:'Schulung',    titel:'Wer was kann',          sub:'Aus Ihren eigenen Rezepten und Hausregeln gebaut' },
+  { id:'inhalte',     name:'Inhalte',     titel:'Karte und Inhalte',     sub:'Einmal geändert, an einer Stelle' },
+  { id:'social',      name:'Social Media',titel:'Diese Woche',           sub:'Aus dem entworfen, was sich auf der Karte geändert hat' },
+  { id:'bewertungen', name:'Bewertungen', titel:'Letzte 30 Tage',        sub:'Google, Buchungsplattformen und Gästebuch in einer Liste' },
+  { id:'auswertungen',name:'Auswertungen',titel:'Die Woche',             sub:'Immer gleich aufgebaut, jeden Montag' },
+];
+
+let AKTIV = 'uebersicht';
+let OFFEN = null;   // the invoice currently expanded
+
+// an open hygiene check or an unacknowledged alarm is worth a badge
+function badge(id) {
+  if (id === 'hygiene')    { const n = DB.hygiene.filter(h => !h.done).length; return n || 0; }
+  if (id === 'rechnungen') { const n = DB.rechnungen.filter(r => r.status !== 'ok').length; return n || 0; }
+  if (id === 'temperatur') { return DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length || 0; }
+  if (id === 'social')     { return DB.posts.filter(p => p.status === 'entwurf').length || 0; }
+  return 0;
+}
+
+/* ── rail icons ─────────────────────────────────────────────────────────────
+   Inline, 16px, stroked in currentColor so the rail's own hover and active
+   colours carry them — no icon font, no sprite, nothing to load. Each one is
+   the object the module is about, not a decoration: a crate for Lager, a
+   thermometer for Temperatur, layers for Inhalte (one entry, many channels).
+   ────────────────────────────────────────────────────────────────────────── */
+const ICON = {
+  uebersicht:  '<rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/>' +
+               '<rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/>',
+  rechnungen:  '<path d="M4 1.9h5.4l2.7 2.7v9.5H4z"/><path d="M9.2 1.9v2.8h2.9"/><path d="M6.2 8.1h3.8M6.2 10.6h3.8"/>',
+  lager:       '<path d="M8 1.9 14 5v6l-6 3.1L2 11V5z"/><path d="M2 5l6 3 6-3M8 8v6.1"/>',
+  aktionen:    '<path d="M13.9 8.7 8.7 13.9a1.1 1.1 0 0 1-1.6 0L1.9 8.7V1.9h6.8l5.2 5.2a1.1 1.1 0 0 1 0 1.6z"/>' +
+               '<circle cx="4.9" cy="4.9" r="1.1"/>',
+  // a cloche is a faint arc at 16px; a pot with steam survives the size
+  gerichte:    '<path d="M2.6 6.6h10.8v4.2a2.6 2.6 0 0 1-2.6 2.6H5.2a2.6 2.6 0 0 1-2.6-2.6z"/>' +
+               '<path d="M1.3 7.8h1.3M13.4 7.8h1.3"/><path d="M5.7 4.6V3.2M8 4.2V2.8M10.3 4.6V3.2"/>',
+  hygiene:     '<rect x="3.2" y="2.9" width="9.6" height="11" rx="1.4"/><path d="M6.4 2.9V1.8h3.2v1.1"/>' +
+               '<path d="m5.9 8.7 1.8 1.8 3-3.4"/>',
+  temperatur:  '<path d="M9.8 9V3.6a1.8 1.8 0 1 0-3.6 0V9a3 3 0 1 0 3.6 0z"/><path d="M8 9.9v1.6"/>',
+  dienstplan:  '<rect x="2.2" y="3.5" width="11.6" height="10.3" rx="1.4"/><path d="M2.2 6.7h11.6"/>' +
+               '<path d="M5.6 1.9v2.6M10.4 1.9v2.6"/>',
+  schulung:    '<path d="M1.7 5.9 8 2.9l6.3 3L8 8.9z"/><path d="M4.3 7.4v3.2c0 1 1.6 1.9 3.7 1.9s3.7-.9 3.7-1.9V7.4"/>',
+  inhalte:     '<path d="M8 1.9 14.2 5 8 8.1 1.8 5z"/><path d="m2.6 8.3 5.4 2.7 5.4-2.7M2.6 11.2 8 13.9l5.4-2.7"/>',
+  social:      '<path d="M13.8 8.4c0 2.5-2.6 4.6-5.8 4.6-.8 0-1.6-.2-2.3-.4l-3.3 1.2 1-2.5a4.3 4.3 0 0 1-1.2-2.9C2.2 5.9 4.8 3.8 8 3.8s5.8 2.1 5.8 4.6z"/>',
+  bewertungen: '<path d="m8 2 1.9 3.9 4.2.6-3 3 .7 4.3L8 11.8l-3.8 2 .7-4.3-3-3 4.2-.6z"/>',
+  // bars, not hairlines — three strokes at 1.5px read as noise
+  auswertungen:'<rect x="2.3" y="8.2" width="3.2" height="5.5" rx=".9"/>' +
+               '<rect x="6.4" y="3.4" width="3.2" height="10.3" rx=".9"/>' +
+               '<rect x="10.5" y="6.1" width="3.2" height="7.6" rx=".9"/>',
+};
+const ic = id => `<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICON[id] || ICON.uebersicht}</svg>`;
+
+function renderRail() {
+  $('#nav').innerHTML = MODULES.map(m => {
+    const b = badge(m.id);
+    return `<a data-go="${m.id}" class="${m.id === AKTIV ? 'on' : ''}">
+      ${ic(m.id)}${esc(m.name)}${b ? `<span class="badge">${b}</span>` : ''}</a>`;
+  }).join('');
+}
+
+function render() {
+  const m = MODULES.find(x => x.id === AKTIV);
+  $('#h-title').textContent = m.titel;
+  $('#h-sub').textContent = m.sub;
+  $('#view').innerHTML = VIEWS[AKTIV]();
+  renderRail();
+  window.scrollTo(0, 0);
+}
+/* ── chart primitives ──────────────────────────────────────────────────────
+   Inline SVG, no library. Each one takes numbers and returns a string, so a
+   widget is just a template hole — and the whole app stays one file with no
+   build step and no network.
+   ────────────────────────────────────────────────────────────────────────── */
+const svg = (w, h, inner, extra = '') =>
+  `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" ${extra}>${inner}</svg>`;
+
+// bars, optionally with a ghost series behind (last year)
+function chartBars(vals, ghost, h = 74, col = 'var(--acc)') {
+  const w = 240, n = vals.length, gap = 3;
+  const bw = (w - gap * (n - 1)) / n;
+  const max = Math.max(...vals, ...(ghost || [0])) || 1;
+  const bars = vals.map((v, i) => {
+    const x = i * (bw + gap), bh = Math.max(1, v / max * (h - 2));
+    const g = ghost ? Math.max(1, ghost[i] / max * (h - 2)) : 0;
+    return (ghost ? `<rect x="${x + bw * .62}" y="${h - g}" width="${bw * .38}" height="${g}"
+              rx="1.5" fill="rgba(0,0,0,.13)"/>` : '') +
+      `<rect x="${x}" y="${h - bh}" width="${ghost ? bw * .58 : bw}" height="${bh}"
+              rx="2" fill="${col}"/>`;
+  }).join('');
+  return svg(w, h, bars);
+}
+
+// A sparkline with its tolerance range.
+//
+// Two things went wrong the first time and both are worth remembering:
+//   * the viewBox was 240 wide stretched into a ~660px box with
+//     preserveAspectRatio="none", so every marker circle came out as a 2.75:1
+//     ellipse. The viewBox is now wide enough that the stretch is negligible.
+//   * the range was a filled block, which read as a highlighter smear behind
+//     the line. It is now two hairlines, and the line itself carries a soft
+//     area fill so the row has some weight without shouting.
+let _lineId = 0;
+function chartLine(vals, min, max, h = 22, col = 'var(--acc)') {
+  const w = 600, id = 'g' + (++_lineId);
+  const lo = Math.min(...vals, min) - .5, hi = Math.max(...vals, max) + .5;
+  const y = v => +(h - (v - lo) / (hi - lo) * h).toFixed(2);
+  const x = i => +(i / (vals.length - 1) * w).toFixed(1);
+  const pts = vals.map((v, i) => `${x(i)},${y(v)}`);
+  const area = `M0,${h} L` + pts.join(' L') + ` L${w},${h} Z`;
+  // A circle cannot survive non-uniform scaling — it becomes an ellipse, which
+  // is what made the first version look broken. A zero-length line with a round
+  // cap and a non-scaling stroke draws a true dot at any aspect ratio.
+  const marks = vals.map((v, i) => (v > max || v < min)
+    ? `<line x1="${x(i)}" y1="${y(v)}" x2="${x(i)}" y2="${y(v)}" stroke="var(--warn)"
+         stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : '').join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}"
+      preserveAspectRatio="none" style="display:block;overflow:visible">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${col}" stop-opacity=".22"/>
+      <stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#${id})"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.7"
+      stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    ${marks}</svg>`;
+}
+
+// a ring — share of something, e.g. checks done
+function ring(part, total, size = 78, col = 'var(--acc)', label) {
+  const r = size / 2 - 7, c = 2 * Math.PI * r, q = total ? part / total : 0;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(0,0,0,.09)" stroke-width="7"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="7"
+      stroke-linecap="round" stroke-dasharray="${(c*q).toFixed(1)} ${c.toFixed(1)}"
+      transform="rotate(-90 ${size/2} ${size/2})"/>
+    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
+      style="font:700 ${size/4.2}px var(--font);fill:var(--ink)">${label ?? (part + '/' + total)}</text></svg>`;
+}
+
+// a stacked bar for the cost structure of a franc of revenue
+function chartStack(parts, h = 26) {
+  const total = parts.reduce((s, p) => s + p.v, 0) || 1;
+  let x = 0;
+  const segs = parts.map(p => {
+    const w = p.v / total * 240;
+    const s = `<rect x="${x.toFixed(1)}" y="0" width="${Math.max(0, w - 1.5).toFixed(1)}" height="${h}"
+        rx="3" fill="${p.c}"/>`;
+    x += w; return s;
+  }).join('');
+  // the legend has to stay on ONE line, or this tile grows taller than the
+  // three beside it and the top row stops looking like a row
+  return svg(240, h, segs) +
+    `<div style="display:flex;gap:9px;margin-top:7px;white-space:nowrap">${parts.map(p =>
+      `<span style="font-size:9.5px;color:var(--dim)"><span style="display:inline-block;width:7px;
+        height:7px;border-radius:2px;background:${p.c};margin-right:4px"></span>${esc(p.n)} ${(p.v / total * 100).toFixed(0)}%</span>`
+      ).join('')}</div>`;
+}
+
+// horizontal bars, for margins and review themes
+function chartRows(rows, warnBelow) {
+  const max = Math.max(...rows.map(r => r.v)) || 1;
+  return rows.map(r => {
+    const bad = warnBelow !== undefined && r.v < warnBelow;
+    return `<div style="margin-bottom:9px">
+      <div class="row" style="justify-content:space-between;margin-bottom:4px">
+        <span class="small">${esc(r.n)}</span>
+        <span class="small num" style="font-weight:650;color:${bad ? 'var(--warn)' : 'var(--ink)'}">${esc(r.l)}</span></div>
+      <div class="bar"><i style="width:${(r.v / max * 100).toFixed(0)}%;
+        background:${bad ? 'var(--warn)' : 'var(--acc)'}"></i></div></div>`;
+  }).join('');
+}
+
+// a widget frame, so every tile looks the same
+const W = (titel, inner, opts = {}) => `<div class="card ${opts.cls || ''}"
+  ${opts.go ? `data-go="${opts.go}" style="cursor:pointer"` : ''}>
+  <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:11px">
+    <div class="l" style="font-size:10.5px;font-weight:700;letter-spacing:.06em;
+         text-transform:uppercase;color:var(--dim)">${esc(titel)}</div>
+    ${opts.rechts || ''}</div>${inner}</div>`;
+const VIEWS = {};
+
+/* ── Rechnungen ─────────────────────────────────────────────────────────── */
+VIEWS.rechnungen = () => {
+  const stat = { ok:['t-ok','abgeglichen'], preis:['t-warn','Preisänderung'], menge:['t-mute','Menge offen'],
+                 erledigt:['t-ok','geprüft'] };
+  const rows = DB.rechnungen.map(r => {
+    const [cls, label] = stat[r.status];
+    return `<tr class="click" data-inv="${r.id}">
+      <td><b>${esc(r.lief)}</b></td><td class="muted">${r.id}</td><td class="muted">${r.datum}</td>
+      <td class="r num">${chf(r.total)}</td>
+      <td class="r"><span class="tag ${cls}">${label}</span></td></tr>`;
+  }).join('');
+
+  let detail = '';
+  if (OFFEN) {
+    const r = DB.rechnungen.find(x => x.id === OFFEN);
+    const zeilen = r.zeilen.map((z, i) => {
+      const a = DB.artikel[z.art];
+      const hoch = z.preis > a.vorher;
+      const fehlt = z.gel < z.best;
+      return `<tr>
+        <td>${esc(a.name)}</td>
+        <td class="r num">${z.best}</td>
+        <td class="r num ${fehlt ? '' : 'muted'}" ${fehlt ? 'style="color:var(--warn);font-weight:650"' : ''}>${z.gel}</td>
+        <td class="r num">${chf(z.preis)}</td>
+        <td class="r">${hoch
+          ? `<span class="tag t-warn">+${((z.preis / a.vorher - 1) * 100).toFixed(1)}%</span>`
+          : fehlt ? `<span class="tag t-mute">${z.best - z.gel} nicht geliefert</span>`
+                  : '<span class="tag t-ok">wie bestellt</span>'}</td></tr>`;
+    }).join('');
+
+    const preisZeile = r.zeilen.find(z => z.preis > DB.artikel[z.art].vorher);
+    const mengeZeile = r.zeilen.find(z => z.gel < z.best);
+    let aktion = '';
+    if (preisZeile) {
+      const a = DB.artikel[preisZeile.art];
+      const betroffen = DB.gerichte.filter(g => g.rezept.some(z => z.art === preisZeile.art));
+      aktion = `<div class="card warn" style="margin-top:14px">
+        <div class="row" style="margin-bottom:8px">
+          <span class="tag t-warn">Preisänderung</span>
+          <b class="small">${esc(a.name)} · ${esc(a.lief)}</b></div>
+        <div class="small muted" style="line-height:1.6">
+          ${chf(a.vorher)} → <b style="color:var(--ink)">${chf(preisZeile.preis)}</b> seit Ihrer letzten
+          Bestellung. Steckt in <b style="color:var(--ink)">${betroffen.length} Gerichten</b>
+          auf der aktuellen Karte.</div>
+        <div class="row" style="margin-top:11px">
+          <button class="btn acc" data-act="preis-uebernehmen" data-art="${preisZeile.art}"
+                  data-neu="${preisZeile.preis}">Preis übernehmen</button>
+          <button class="btn" data-act="preis-reklamieren">Beim Lieferanten reklamieren</button></div></div>`;
+    } else if (mengeZeile) {
+      const a = DB.artikel[mengeZeile.art];
+      const diff = (mengeZeile.best - mengeZeile.gel) * mengeZeile.preis;
+      aktion = `<div class="card warn" style="margin-top:14px">
+        <div class="row" style="margin-bottom:8px">
+          <span class="tag t-mute">Menge offen</span>
+          <b class="small">${esc(a.name)}</b></div>
+        <div class="small muted" style="line-height:1.6">Bestellt ${mengeZeile.best}, geliefert
+          ${mengeZeile.gel}. Die Rechnung verlangt <b style="color:var(--ink)">${chf(diff)}</b> zu viel.</div>
+        <div class="row" style="margin-top:11px">
+          <button class="btn acc" data-act="menge-kuerzen" data-inv="${r.id}"
+                  data-diff="${diff}">Rechnung kürzen und freigeben</button></div></div>`;
+    } else {
+      aktion = `<div class="card good" style="margin-top:14px"><div class="small">
+        Alle Positionen stimmen mit der Bestellung überein. Nichts zu tun.</div></div>`;
+    }
+
+    detail = `<div class="sec">${esc(r.lief)} · ${r.id}</div>
+      <table><thead><tr><th>Position</th><th class="r">Bestellt</th><th class="r">Geliefert</th>
+        <th class="r">Preis</th><th class="r">Abgleich</th></tr></thead><tbody>${zeilen}</tbody></table>
+      ${aktion}`;
+  }
+
+  const offen = DB.rechnungen.filter(r => r.status !== 'ok' && r.status !== 'erledigt').length;
+  return `<table><thead><tr><th>Lieferant</th><th>Nummer</th><th>Datum</th>
+      <th class="r">Total</th><th class="r">Status</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="small muted" style="margin-top:12px">Diesen Monat
+      <b style="color:var(--ink)">${DB.gelesen} Rechnungen gelesen</b> ·
+      ${offen} brauchen eine Entscheidung ·
+      ${OFFEN ? 'unten die Positionen' : 'eine Zeile anklicken, um die Positionen zu sehen'}</div>
+    ${detail}`;
+};
+
+/* ── Lager ──────────────────────────────────────────────────────────────── */
+VIEWS.lager = () => {
+  const rows = DB.lager.map(l => {
+    const a = DB.artikel[l.art];
+    const diff = l.gezaehlt - l.erwartet;
+    const wert = diff * einzel(l.art);
+    const auff = Math.abs(diff) / l.erwartet > 0.05;
+    return `<tr>
+      <td><b>${esc(a.name.split(',')[0])}</b></td>
+      <td class="r num muted">${l.erwartet.toFixed(1)} ${l.einheit}</td>
+      <td class="r num"><input style="width:74px;text-align:right" type="number" step="0.1"
+            value="${l.gezaehlt}" data-count="${l.art}"></td>
+      <td class="r num" style="${auff ? 'color:var(--warn);font-weight:650' : ''}">${diff > 0 ? '+' : '−'}${Math.abs(diff).toFixed(1)}</td>
+      <td class="r num muted">${chf(wert)}</td>
+      <td class="r">${auff ? '<span class="tag t-warn">nachschauen</span>' : '<span class="tag t-ok">im Rahmen</span>'}</td></tr>`;
+  }).join('');
+  const verlust = DB.lager.reduce((s, l) => s + Math.min(0, (l.gezaehlt - l.erwartet) * einzel(l.art)), 0);
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Gezählt</div><div class="n">${DB.lagerStand}</div>
+        <div class="d">Einmal, am Handy</div></div>
+      <div class="card kpi"><div class="l">Differenz, Wert</div>
+        <div class="n" style="color:${verlust < -20 ? 'var(--warn)' : 'var(--ink)'}">${chf(verlust)}</div>
+        <div class="d">Gegen die Verkäufe gerechnet</div></div>
+      <div class="card kpi"><div class="l">Auffällig</div>
+        <div class="n">${DB.lager.filter(l => Math.abs(l.gezaehlt - l.erwartet) / l.erwartet > 0.05).length} von ${DB.lager.length}</div>
+        <div class="d">Mehr als 5 % Abweichung</div></div></div>
+    <table><thead><tr><th>Artikel</th><th class="r">Erwartet</th><th class="r">Gezählt</th>
+      <th class="r">Differenz</th><th class="r">Wert</th><th class="r">Status</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    <div class="small muted" style="margin-top:12px">Eine Zahl ändern — die Differenz, der Wert und
+      die Kennzahl oben rechnen sofort mit.</div>`;
+};
+
+/* ── Aktionen ───────────────────────────────────────────────────────────── */
+VIEWS.aktionen = () => {
+  const rows = DB.aktionen.map(a => {
+    const art = DB.artikel[a.art];
+    const rabatt = (1 - a.neu / art.preis) * 100;
+    const spart = (art.preis - a.neu) / art.menge * a.monat;
+    const gerichte = DB.gerichte.filter(g => g.rezept.some(z => z.art === a.art)).length;
+    return `<tr>
+      <td><b>${esc(a.lief)}</b></td><td class="muted">${esc(art.name)}</td>
+      <td class="r num muted" style="text-decoration:line-through">${chf(art.preis)}</td>
+      <td class="r num"><b>${chf(a.neu)}</b></td>
+      <td class="r"><span class="tag t-ok">−${rabatt.toFixed(0)}%</span></td>
+      <td class="r ${a.dringend ? '' : 'muted'}" style="${a.dringend ? 'color:var(--warn);font-weight:650' : ''}">bis ${a.bis}</td>
+      <td class="r num">${chf(spart)}</td>
+      <td class="r">${a.genommen
+        ? '<span class="tag t-ok">auf der Bestellliste</span>'
+        : `<button class="btn acc" data-act="aktion-nehmen" data-id="${a.id}">Übernehmen</button>`}</td>
+      </tr>`;
+  }).join('');
+  const total = DB.aktionen.reduce((s, a) => {
+    const art = DB.artikel[a.art];
+    return s + (art.preis - a.neu) / art.menge * a.monat;
+  }, 0);
+  const genommen = DB.aktionen.filter(a => a.genommen);
+  const gespart = genommen.reduce((s, a) => {
+    const art = DB.artikel[a.art];
+    return s + (art.preis - a.neu) / art.menge * a.monat;
+  }, 0);
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Gefunden</div><div class="n">${DB.aktionen.length + DB.irrelevant}</div>
+        <div class="d">${DB.irrelevant} als irrelevant ausgeblendet</div></div>
+      <div class="card kpi"><div class="l">Betreffen Ihren Einkauf</div><div class="n">${DB.aktionen.length}</div>
+        <div class="d">Gegen Ihre Bestellhistorie geprüft</div></div>
+      <div class="card kpi"><div class="l">Möglich diesen Monat</div><div class="n">${chf(total)}</div>
+        <div class="d">Bei Ihren üblichen Mengen</div></div></div>
+    <table><thead><tr><th>Lieferant</th><th>Artikel</th><th class="r">Liste</th><th class="r">Aktion</th>
+      <th class="r">Rabatt</th><th class="r">Bis</th><th class="r">Spart</th><th class="r"></th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    ${genommen.length ? `<div class="card good" style="margin-top:16px">
+      <div class="small"><b>${genommen.length} auf der Bestellliste</b> —
+      ${esc(genommen.map(a => DB.artikel[a.art].name.split(',')[0]).join(', '))}.
+      Das sind <b>${chf(gespart)}</b> bei den Mengen des letzten Monats.</div></div>` : ''}`;
+};
+
+/* ── Gerichte ───────────────────────────────────────────────────────────── */
+VIEWS.gerichte = () => {
+  const rows = DB.gerichte.map(g => {
+    const w = wareneinsatz(g), m = marge(g);
+    const bewegt = g.rezept.some(z => DB.artikel[z.art].preis !== DB.artikel[z.art].vorher);
+    return `<tr>
+      <td><b>${esc(g.name)}</b>${bewegt ? ' <span class="tag t-warn">Preis bewegt</span>' : ''}</td>
+      <td class="r num muted">${chf(w)}</td>
+      <td class="r num"><input style="width:82px;text-align:right" type="number" step="0.5"
+          value="${g.karte.toFixed(2)}" data-karte="${g.id}"></td>
+      <td class="r num"><b style="color:${m < 65 ? 'var(--warn)' : 'var(--ink)'}">${m.toFixed(1)}%</b></td>
+      <td class="r num muted">${g.verkauft}</td>
+      <td class="r num">${chf((g.karte - w) * g.verkauft)}</td></tr>`;
+  }).join('');
+  const roh = DB.gerichte.reduce((s, g) => s + (g.karte - wareneinsatz(g)) * g.verkauft, 0);
+  const schnitt = DB.gerichte.reduce((s, g) => s + marge(g), 0) / DB.gerichte.length;
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Marge im Schnitt</div><div class="n">${schnitt.toFixed(1)}%</div>
+        <div class="d">Über die vier Gerichte</div></div>
+      <div class="card kpi"><div class="l">Rohertrag, Woche</div><div class="n">${chf(roh)}</div>
+        <div class="d">Verkäufe × Marge</div></div>
+      <div class="card kpi"><div class="l">Kalkuliert mit</div><div class="n">${DB.gelesen} Rechnungen</div>
+        <div class="d">Den Preisen, die Sie zuletzt bezahlt haben</div></div></div>
+    <table><thead><tr><th>Gericht</th><th class="r">Wareneinsatz</th><th class="r">Kartenpreis</th>
+      <th class="r">Marge</th><th class="r">Verkauft</th><th class="r">Rohertrag</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    <div class="small muted" style="margin-top:12px">Der Wareneinsatz kommt aus den Artikelpreisen.
+      Übernehmen Sie in <span class="link" data-go="rechnungen">Rechnungen</span> eine Preisänderung,
+      ändern sich diese Zahlen hier mit.</div>`;
+};
+/* ── Hygiene ────────────────────────────────────────────────────────────── */
+VIEWS.hygiene = () => {
+  const rows = DB.hygiene.map(h => `<tr>
+    <td style="width:34px"><div class="check ${h.done ? 'on' : ''}" data-check="${h.id}">${TICK}</div></td>
+    <td><b>${esc(h.station)}</b></td><td class="muted">${esc(h.was)}</td>
+    <td class="muted">${esc(h.wer) || '—'}</td>
+    <td class="r muted">${h.zeit || (h.done ? '' : 'heute fällig')}</td>
+    <td class="r">${h.done ? '<span class="tag t-ok">erledigt</span>' : '<span class="tag t-warn">offen</span>'}</td>
+    </tr>`).join('');
+  const offen = DB.hygiene.filter(h => !h.done);
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Heute</div>
+        <div class="n">${DB.hygiene.length - offen.length} von ${DB.hygiene.length}</div>
+        <div class="d">Abgehakt an der Station</div></div>
+      <div class="card kpi"><div class="l">Diesen Monat</div><div class="n">${DB.hygieneMonat}</div>
+        <div class="d">${DB.hygieneSpaet} verspätet</div></div>
+      <div class="card kpi"><div class="l">Nachweis</div><div class="n">vollständig</div>
+        <div class="d">Jeder Eintrag mit Name und Uhrzeit</div></div></div>
+    <table><thead><tr><th></th><th>Station</th><th>Kontrolle</th><th>Von</th>
+      <th class="r">Zeit</th><th class="r">Status</th></tr></thead><tbody>${rows}</tbody></table>
+    ${offen.length ? `<div class="card warn" style="margin-top:16px">
+        <div class="row" style="margin-bottom:7px"><span class="tag t-warn">noch offen</span>
+          <b class="small">${esc(offen.map(o => o.station + ' · ' + o.was).join(' | '))}</b></div>
+        <div class="small muted">Für die Schichtleitung jetzt sichtbar, nicht erst morgen früh.
+          Ein Häkchen setzen — der Eintrag bekommt Ihren Namen und die Uhrzeit.</div></div>`
+      : `<div class="card good" style="margin-top:16px"><div class="small">
+          Alle Kontrollen von heute sind erledigt. Der Monat lässt sich als eine Datei ausgeben.</div>
+          <div class="row" style="margin-top:11px">
+          <button class="btn" data-act="haccp-export">Nachweis März exportieren</button></div></div>`}
+    <div class="sec">Im Protokoll</div>
+    <table><tbody>${DB.hygiene.filter(h => h.done).map(h => `<tr>
+        <td><b>${esc(h.station)}</b> <span class="muted">· ${esc(h.was)}</span></td>
+        <td class="r muted">${esc(h.wer)} · ${h.zeit}</td></tr>`).join('')}</tbody></table>`;
+};
+
+/* ── Temperatur ─────────────────────────────────────────────────────────── */
+VIEWS.temperatur = () => {
+  const rows = DB.geraete.map(g => {
+    const bad = g.temp > g.max || g.temp < g.min;
+    return `<tr>
+      <td><b>${esc(g.name)}</b></td><td class="muted">${esc(g.wo)}</td>
+      <td class="r num"><b style="color:${bad ? 'var(--warn)' : 'var(--ink)'}">${g.temp.toFixed(1)} °C</b></td>
+      <td class="r num muted">${g.min} – ${g.max} °C</td>
+      <td class="r">${bad ? '<span class="tag t-warn">Alarm</span>' : '<span class="tag t-ok">im Bereich</span>'}</td>
+      <td class="r">${bad
+        ? `<button class="btn" data-act="alarm-quittieren" data-id="${g.id}">Quittieren</button>`
+        : `<button class="btn" data-act="tuer-offen" data-id="${g.id}">Tür offen lassen</button>`}</td>
+      </tr>`;
+  }).join('');
+  const alarme = DB.alarme.map(a => `<tr>
+    <td><b>${esc(a.geraet)}</b></td><td class="muted">${a.wann}</td>
+    <td class="r num" style="color:var(--warn)">${a.wert.toFixed(1)} °C</td>
+    <td class="muted">an ${esc(a.an)}</td>
+    <td class="r muted">${a.quittiert ? 'quittiert ' + a.quittiert : '<span class="tag t-warn">offen</span>'}</td>
+    <td class="muted">${esc(a.grund || '')}</td></tr>`).join('');
+  const jetztBad = DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length;
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Geräte</div><div class="n">${DB.geraete.length}</div>
+        <div class="d">Ein Fühler pro Gerät</div></div>
+      <div class="card kpi"><div class="l">Jetzt im Alarm</div>
+        <div class="n" style="color:${jetztBad ? 'var(--warn)' : 'var(--ink)'}">${jetztBad}</div>
+        <div class="d">Gemessen, ob jemand im Haus ist oder nicht</div></div>
+      <div class="card kpi"><div class="l">Letzte 30 Tage</div><div class="n">${DB.alarme.length} Alarme</div>
+        <div class="d">Dieselbe Aufzeichnung ist das HACCP-Protokoll</div></div></div>
+    <table><thead><tr><th>Gerät</th><th>Wo</th><th class="r">Jetzt</th><th class="r">Bereich</th>
+      <th class="r">Status</th><th class="r"></th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="small muted" style="margin-top:12px">«Tür offen lassen» simuliert, was nachts passiert:
+      das Gerät läuft aus dem Bereich, der Alarm geht an die diensthabende Person und landet im Protokoll.</div>
+    <div class="sec">Alarmprotokoll</div>
+    <table><thead><tr><th>Gerät</th><th>Wann</th><th class="r">Wert</th><th>Meldung</th>
+      <th class="r">Quittiert</th><th>Grund</th></tr></thead><tbody>${alarme}</tbody></table>`;
+};
+
+/* ── Dienstplan ─────────────────────────────────────────────────────────── */
+VIEWS.dienstplan = () => {
+  const max = Math.max(...DB.woche.map(d => Math.max(d.gedecke, d.vj)));
+  const cols = DB.woche.map(d => {
+    const pro = d.gedecke / d.besetzt;
+    const knapp = pro > 26, viel = pro < 13;
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:7px;flex:1">
+      <div style="height:110px;display:flex;align-items:flex-end;gap:3px">
+        <div style="width:22px;border-radius:5px 5px 0 0;height:${Math.round(d.gedecke / max * 110)}px;
+             background:${knapp ? 'var(--warn)' : 'var(--acc)'}"></div>
+        <div style="width:8px;border-radius:5px 5px 0 0;height:${Math.round(d.vj / max * 110)}px;
+             background:rgba(0,0,0,.12)"></div></div>
+      <div class="small" style="font-weight:650">${d.tag}</div>
+      <div class="small muted num">${d.gedecke}</div>
+      <select data-shift="${d.tag}" style="padding:4px 6px;font-size:11.5px">
+        ${[2,3,4,5,6,7].map(n => `<option value="${n}" ${n === d.besetzt ? 'selected' : ''}>${n} auf Schicht</option>`).join('')}
+      </select>
+      <div class="small" style="color:${knapp ? 'var(--warn)' : viel ? 'var(--acci)' : 'var(--dim)'};font-weight:650">
+        ${knapp ? 'knapp' : viel ? 'reichlich' : 'passt'}</div></div>`;
+  }).join('');
+  const std = DB.woche.reduce((s, d) => s + d.besetzt * 8, 0);
+  const kosten = std * DB.lohn;
+  const gedecke = DB.woche.reduce((s, d) => s + d.gedecke, 0);
+  const vj = DB.woche.reduce((s, d) => s + d.vj, 0);
+  return `<div class="grid g4" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Gedecke, gebucht</div><div class="n">${gedecke}</div>
+        <div class="d">Vorjahreswoche ${vj} · ${pct((gedecke / vj - 1) * 100)}</div></div>
+      <div class="card kpi"><div class="l">Stunden geplant</div><div class="n">${std}</div>
+        <div class="d">Bei 8 Stunden pro Schicht</div></div>
+      <div class="card kpi"><div class="l">Personalkosten</div><div class="n">${chf(kosten)}</div>
+        <div class="d">Zu ${chf(DB.lohn)} pro Stunde</div></div>
+      <div class="card kpi"><div class="l">Pro Gedeck</div><div class="n">${chf(kosten / gedecke)}</div>
+        <div class="d">Personal je gebuchtem Gedeck</div></div></div>
+    <div class="card"><div class="row" style="align-items:flex-end;gap:10px">${cols}</div>
+      <div class="row" style="margin-top:14px;gap:16px" class="small">
+        <span class="small muted"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;
+          background:var(--acc);margin-right:5px"></span>diese Woche</span>
+        <span class="small muted"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;
+          background:rgba(0,0,0,.12);margin-right:5px"></span>Vorjahr</span></div></div>
+    <div class="small muted" style="margin-top:12px">Besetzung ändern — Stunden, Kosten und die Kosten
+      pro Gedeck rechnen mit. Mehr als 26 Gedecke auf eine Person wird als knapp markiert.</div>`;
+};
+
+/* ── Schulung ───────────────────────────────────────────────────────────── */
+VIEWS.schulung = () => {
+  const rows = DB.leute.map(p => {
+    const q = p.durch / p.total;
+    return `<tr>
+      <td><b>${esc(p.name)}</b> <span class="muted">· ${esc(p.rolle)}</span></td>
+      <td style="width:170px"><div class="bar"><i style="width:${Math.round(q * 100)}%;
+        background:${q === 1 ? 'var(--acc)' : 'var(--warn)'}"></i></div></td>
+      <td class="r num" style="color:${q === 1 ? 'var(--acci)' : 'var(--warn)'};font-weight:650">${p.durch} / ${p.total}</td>
+      <td class="r">${q === 1 ? '<span class="tag t-ok">durch</span>' : '<span class="tag t-warn">offen</span>'}</td>
+      </tr>`;
+  }).join('');
+  const briefs = DB.briefings.map(b => `<div class="card" style="margin-bottom:10px">
+    <div class="row" style="justify-content:space-between">
+      <div><b class="small">${esc(b.titel)}</b>
+        <div class="small muted" style="margin-top:3px">${b.min} Minuten ·
+          fällig für ${b.faellig.length ? esc(b.faellig.map(id => DB.leute.find(p => p.id === id).name).join(', ')) : '—'}</div></div>
+      ${b.faellig.length
+        ? `<button class="btn acc" data-act="brief-senden" data-id="${b.id}">Briefing senden</button>`
+        : '<span class="tag t-ok">alle durch</span>'}</div></div>`).join('');
+  const offen = DB.leute.filter(p => p.durch < p.total).length;
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Durch</div>
+        <div class="n">${DB.leute.length - offen} von ${DB.leute.length}</div>
+        <div class="d">Grundlagen in der ersten Schicht</div></div>
+      <div class="card kpi"><div class="l">Diese Woche fällig</div>
+        <div class="n">${DB.briefings.reduce((s, b) => s + b.faellig.length, 0)}</div>
+        <div class="d">Briefings, nicht Kurse</div></div>
+      <div class="card kpi"><div class="l">Aus Ihrem Haus</div><div class="n">11 Module</div>
+        <div class="d">Aus Ihren Rezepten und Hausregeln</div></div></div>
+    <table><thead><tr><th>Person</th><th>Fortschritt</th><th class="r">Module</th>
+      <th class="r">Status</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="sec">Offene Briefings</div>${briefs}
+    <div class="small muted">Ein Briefing senden — die Betroffenen rücken im Fortschritt auf,
+      und wer es gesehen hat, steht oben in der Liste.</div>`;
+};
+/* ── Inhalte ────────────────────────────────────────────────────────────── */
+VIEWS.inhalte = () => {
+  const k = DB.karte[0];
+  const ziele = k.ziele.map(z => {
+    const cls = z.status === 'wartet' ? 't-mute' : 't-ok';
+    return `<tr><td>${esc(z.was)}</td>
+      <td class="r"><span class="tag ${cls}">${z.status === 'wartet' ? 'wartet auf Freigabe' : esc(z.status)}</span></td></tr>`;
+  }).join('');
+  const wartet = k.ziele.filter(z => z.status === 'wartet').length;
+  const gerichteMitPreis = DB.gerichte.map(g =>
+    `<tr><td>${esc(g.name)}</td><td class="r num">${chf(g.karte)}</td>
+     <td class="r num muted">${marge(g).toFixed(1)}% Marge</td></tr>`).join('');
+  return `<div class="grid g2" style="margin-bottom:20px">
+      <div class="card"><div class="l small" style="font-weight:700;letter-spacing:.06em;
+          text-transform:uppercase;color:var(--dim)">Die Änderung</div>
+        <div style="font-size:17px;font-weight:700;margin-top:6px">${esc(k.name)}</div>
+        <div class="small muted" style="margin-top:5px;line-height:1.6">
+          Neu in ${esc(k.betriebe.join(' und '))} ·
+          <input style="width:78px;text-align:right" type="number" step="0.5" value="${k.preis.toFixed(2)}"
+            data-kartepreis="${k.id}"> CHF<br>
+          vegetarisch · enthält ${esc(k.allergene)}</div>
+        <div class="small" style="color:var(--acci);margin-top:9px">
+          Allergene werden automatisch übernommen</div></div>
+      <div class="card tint"><div class="l small" style="font-weight:700;letter-spacing:.06em;
+          text-transform:uppercase;color:var(--dim)">Wohin es geht</div>
+        <table style="margin-top:8px"><tbody>${ziele}</tbody></table>
+        ${wartet ? `<div class="row" style="margin-top:12px">
+            <button class="btn acc" data-act="karte-freigeben">${wartet} Gästekanäle freigeben</button></div>
+          <div class="small muted" style="margin-top:8px">Nichts erreicht einen Gast,
+            bevor Sie es sagen.</div>`
+          : '<div class="small" style="margin-top:10px;color:var(--acci)">Überall publiziert.</div>'}</div></div>
+    <div class="sec">Preise auf der Karte</div>
+    <table><thead><tr><th>Gericht</th><th class="r">Kartenpreis</th><th class="r">Marge</th></tr></thead>
+      <tbody>${gerichteMitPreis}</tbody></table>
+    <div class="small muted" style="margin-top:12px">Die Karte ist dieselbe Datenbasis wie
+      <span class="link" data-go="gerichte">Gerichte</span> — ein Preis, den Sie hier ändern,
+      ändert dort die Marge.</div>`;
+};
+
+/* ── Social Media ───────────────────────────────────────────────────────── */
+VIEWS.social = () => {
+  const rows = DB.posts.map(p => `<div class="card" style="margin-bottom:11px">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div style="min-width:0">
+        <div class="row" style="gap:8px">
+          <span class="tag ${p.status === 'freigegeben' ? 't-ok' : 't-mute'}">${p.status === 'freigegeben' ? 'freigegeben' : 'Entwurf'}</span>
+          <b class="small">${esc(p.titel)}</b>
+          <span class="small muted">${esc(p.kanal)} · ${esc(p.wann)}</span></div>
+        <div class="small muted" style="margin-top:7px;line-height:1.6;max-width:62ch">${esc(p.text)}</div></div>
+      ${p.status === 'entwurf'
+        ? `<div class="row"><button class="btn acc" data-act="post-freigeben" data-id="${p.id}">Freigeben</button>
+             <button class="btn" data-act="post-verwerfen" data-id="${p.id}">Verwerfen</button></div>`
+        : '<span class="small muted">geht raus wie geplant</span>'}</div></div>`).join('');
+  const entwuerfe = DB.posts.filter(p => p.status === 'entwurf').length;
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Diese Woche</div><div class="n">${DB.posts.length} Beiträge</div>
+        <div class="d">Aus Kartenänderungen entworfen</div></div>
+      <div class="card kpi"><div class="l">Warten auf Freigabe</div><div class="n">${entwuerfe}</div>
+        <div class="d">Nichts wird ohne Freigabe publiziert</div></div>
+      <div class="card kpi"><div class="l">Geschrieben von</div><div class="n">Axyom</div>
+        <div class="d">Sie lesen durch und geben frei</div></div></div>
+    ${rows}
+    <div class="small muted">Der erste Entwurf kommt aus der Kartenänderung in
+      <span class="link" data-go="inhalte">Inhalte</span> — dasselbe Gericht, derselbe Preis.</div>`;
+};
+
+/* ── Bewertungen ────────────────────────────────────────────────────────── */
+VIEWS.bewertungen = () => {
+  const maxN = Math.max(...DB.themen.map(t => t.n));
+  const themen = DB.themen.map(t => `<tr>
+    <td><b>${esc(t.thema)}</b></td>
+    <td style="width:190px"><div class="bar"><i style="width:${Math.round(t.n / maxN * 100)}%;
+      background:${t.trend === 'down' ? 'var(--warn)' : 'var(--acc)'}"></i></div></td>
+    <td class="r num">${t.n}</td></tr>`).join('');
+  const bew = DB.bewertungen.map(b => `<div class="card" style="margin-bottom:11px">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div style="min-width:0;max-width:66ch">
+        <div class="row" style="gap:8px">
+          <span class="tag t-mute">${esc(b.quelle)} · ${b.sterne}★</span>
+          <span class="small muted">${esc(b.wann)} · ${esc(b.thema)}</span></div>
+        <div class="small" style="margin-top:8px;line-height:1.6">«${esc(b.text)}»</div>
+        <div class="small muted" style="margin-top:9px;line-height:1.6;padding-left:11px;
+             border-left:2px solid var(--wash)"><b style="color:var(--acci)">Antwortentwurf</b><br>${esc(b.antwort)}</div>
+      </div>
+      ${b.status === 'entwurf'
+        ? `<div class="row"><button class="btn acc" data-act="antwort-senden" data-id="${b.id}">Senden</button>
+             <button class="btn" data-act="antwort-ignorieren" data-id="${b.id}">Ignorieren</button></div>`
+        : `<span class="tag t-ok">${b.status}</span>`}</div></div>`).join('');
+  const quote = DB.bewBeantwortet / DB.bewMonat * 100;
+  return `<div class="grid g3" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Schnitt, 30 Tage</div><div class="n">${DB.schnitt.toFixed(1)}</div>
+        <div class="d">Vorher ${DB.schnittVorher.toFixed(1)}</div></div>
+      <div class="card kpi"><div class="l">Beantwortet</div>
+        <div class="n">${DB.bewBeantwortet} von ${DB.bewMonat}</div>
+        <div class="d">${quote.toFixed(0)}% · innert 24 h</div></div>
+      <div class="card kpi"><div class="l">Häufigstes Thema</div>
+        <div class="n" style="font-size:19px;line-height:1.3">${esc(DB.themen[0].thema)}</div>
+        <div class="d">${DB.themen[0].n}× erwähnt</div></div></div>
+    <div class="sec">Worum es ging</div>
+    <table><tbody>${themen}</tbody></table>
+    <div class="small muted" style="margin-top:10px">Sie lesen nicht «Note ${DB.schnitt.toFixed(1)}»,
+      sondern «${DB.themen[0].n}× ${esc(DB.themen[0].thema)}».</div>
+    <div class="sec">Offene Antworten</div>${bew}`;
+};
+
+/* ── Auswertungen ───────────────────────────────────────────────────────── */
+VIEWS.auswertungen = () => {
+  const Z = zahlen();
+  const { gedecke, std, personal, kalk, umsatz, einsatz, roh } = Z;
+  const bewegt = Object.entries(DB.artikel).filter(([, a]) => a.preis !== a.vorher);
+  const zeilen = [
+    ['Speisen, kalkulierte Gerichte', chf(kalk),      DB.gerichte.reduce((s,g)=>s+g.verkauft,0) + ' Portionen, Zeile für Zeile gerechnet'],
+    ['Speisen, übrige Karte',         chf(DB.uebrigeSpeisen), 'noch nicht kalkuliert'],
+    ['Getränke',                      chf(DB.getraenke),      (DB.getraenke / umsatz * 100).toFixed(0) + '% vom Umsatz'],
+    ['Umsatz total',                  chf(umsatz),            chf(umsatz / gedecke) + ' pro Gedeck'],
+    ['Wareneinsatz',                  chf(einsatz),           (einsatz / umsatz * 100).toFixed(1) + '% vom Umsatz'],
+    ['Rohertrag',                     chf(roh),               (roh / umsatz * 100).toFixed(1) + '% Marge'],
+    ['Personal, geplant',             chf(personal),          std + ' Stunden · ' + (personal / umsatz * 100).toFixed(1) + '% vom Umsatz'],
+    ['Deckungsbeitrag',               chf(roh - personal),    'nach Ware und Personal'],
+  ].map(([a, b, c]) => `<tr><td><b>${a}</b></td><td class="r num">${b}</td>
+      <td class="r muted small">${c}</td></tr>`).join('');
+
+  const hinweise = [];
+  if (bewegt.length) hinweise.push(`${bewegt.length} Artikelpreis${bewegt.length > 1 ? 'e' : ''} bewegt: ` +
+    bewegt.map(([, a]) => esc(a.name.split(',')[0])).join(', ') + ' — die Margen oben rechnen damit.');
+  const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > 26);
+  if (knapp.length) hinweise.push(`Knapp besetzt: ${knapp.map(d => d.tag).join(', ')} — mehr als 26 Gedecke pro Person.`);
+  const offenH = DB.hygiene.filter(h => !h.done).length;
+  if (offenH) hinweise.push(`${offenH} Hygienekontrolle${offenH > 1 ? 'n' : ''} noch offen.`);
+  const alarmOffen = DB.alarme.filter(a => !a.quittiert).length;
+  if (alarmOffen) hinweise.push(`${alarmOffen} Temperaturalarm nicht quittiert.`);
+  if (!hinweise.length) hinweise.push('Keine offenen Punkte. Die Woche ist sauber.');
+
+  return `<div class="grid g4" style="margin-bottom:20px">
+      <div class="card kpi"><div class="l">Umsatz</div><div class="n">${chf(umsatz)}</div>
+        <div class="d">${gedecke} Gedecke, diese Woche</div></div>
+      <div class="card kpi"><div class="l">Rohertrag</div><div class="n">${chf(roh)}</div>
+        <div class="d">${(roh / umsatz * 100).toFixed(1)}% Marge</div></div>
+      <div class="card kpi"><div class="l">Personal</div><div class="n">${chf(personal)}</div>
+        <div class="d">${(personal / umsatz * 100).toFixed(1)}% vom Umsatz</div></div>
+      <div class="card kpi"><div class="l">Deckungsbeitrag</div>
+        <div class="n" style="color:${roh - personal < 0 ? 'var(--warn)' : 'var(--ink)'}">${chf(roh - personal)}</div>
+        <div class="d">Nach Ware und Personal</div></div></div>
+    <div class="sec">Immer gleich aufgebaut</div>
+    <table><tbody>${zeilen}</tbody></table>
+    <div class="sec">Mit Empfehlungen</div>
+    <div class="card ${hinweise.length && DB.hygiene.some(h => !h.done) ? 'warn' : 'tint'}">
+      ${hinweise.map(h => `<div class="small" style="line-height:1.7">· ${h}</div>`).join('')}</div>
+    ${DB.log.length ? `<div class="sec">Was in dieser Demo passiert ist</div>
+      <div class="card tint">${DB.log.slice(0, 10).map(l =>
+        `<div class="small muted" style="line-height:1.8"><span class="num">${l.zeit}</span> · ${l.text}</div>`).join('')}
+      </div>` : `<div class="sec">Was in dieser Demo passiert ist</div>
+      <div class="card tint"><div class="small muted">Noch nichts. Übernehmen Sie in
+        <span class="link" data-go="rechnungen">Rechnungen</span> eine Preisänderung oder haken Sie in
+        <span class="link" data-go="hygiene">Hygiene</span> eine Kontrolle ab — die Folgen erscheinen hier.</div></div>`}`;
+};
+/* ── Übersicht ──────────────────────────────────────────────────────────────
+   The dashboard is not a twelfth screen with its own data. It asks every
+   module what it is waiting for and lists the answers, which is the only
+   honest way to build an overview: if a module goes quiet, the dashboard goes
+   quiet with it. Every row jumps to the module that owns it.
+   ────────────────────────────────────────────────────────────────────────── */
+function offeneSachen() {
+  const items = [];
+
+  DB.rechnungen.filter(r => r.status === 'preis').forEach(r => {
+    const z = r.zeilen.find(x => x.preis > DB.artikel[x.art].vorher);
+    const a = DB.artikel[z.art];
+    const auf = (z.preis / a.vorher - 1) * 100;
+    items.push({ ernst: 2, wo: 'rechnungen', modul: 'Rechnungen',
+      was: `${a.name.split(',')[0]} +${auf.toFixed(1)}% bei ${r.lief}`,
+      warum: (n => `Steckt in ${n} Gericht${n > 1 ? 'en' : ''} — Preis übernehmen oder reklamieren`)(
+        DB.gerichte.filter(g => g.rezept.some(x => x.art === z.art)).length) });
+  });
+  DB.rechnungen.filter(r => r.status === 'menge').forEach(r => {
+    const z = r.zeilen.find(x => x.gel < x.best);
+    items.push({ ernst: 2, wo: 'rechnungen', modul: 'Rechnungen',
+      was: `${r.lief}: ${r.id} verlangt zu viel`,
+      warum: `${z.best - z.gel} Position${z.best - z.gel > 1 ? 'en' : ''} nicht geliefert — ${chf((z.best - z.gel) * z.preis)}` });
+  });
+
+  DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).forEach(g => {
+    items.push({ ernst: 3, wo: 'temperatur', modul: 'Temperatur',
+      was: `${g.name} bei ${g.temp.toFixed(1)} °C`,
+      warum: `Bereich ${g.min} – ${g.max} °C — Meldung ist raus, wartet auf Quittierung` });
+  });
+
+  const hOffen = DB.hygiene.filter(h => !h.done);
+  if (hOffen.length) items.push({ ernst: 2, wo: 'hygiene', modul: 'Hygiene',
+    was: `${hOffen.length} Kontrolle${hOffen.length > 1 ? 'n' : ''} noch offen`,
+    warum: hOffen.map(h => h.station).join(', ') + ' — vor Serviceschluss sichtbar' });
+
+  DB.aktionen.filter(a => a.dringend && !a.genommen).forEach(a => {
+    const art = DB.artikel[a.art];
+    items.push({ ernst: 1, wo: 'aktionen', modul: 'Aktionen',
+      was: `${art.name.split(',')[0]} −${((1 - a.neu / art.preis) * 100).toFixed(0)}% bis ${a.bis}`,
+      warum: `Spart ${chf((art.preis - a.neu) / art.menge * a.monat)} bei Ihrer üblichen Menge` });
+  });
+
+  const wartet = DB.karte[0].ziele.filter(z => z.status === 'wartet');
+  if (wartet.length) items.push({ ernst: 1, wo: 'inhalte', modul: 'Inhalte',
+    was: `${DB.karte[0].name} wartet auf Freigabe`,
+    warum: `${wartet.map(z => z.was).join(', ')} — nichts erreicht einen Gast vorher` });
+
+  const drafts = DB.posts.filter(p => p.status === 'entwurf');
+  if (drafts.length) items.push({ ernst: 1, wo: 'social', modul: 'Social Media',
+    was: `${drafts.length} Beitr${drafts.length > 1 ? 'äge' : 'ag'} im Entwurf`,
+    warum: drafts.map(p => p.wann).join(', ') + ' — geschrieben, wartet auf Sie' });
+
+  const rOffen = DB.bewertungen.filter(b => b.status === 'entwurf');
+  if (rOffen.length) items.push({ ernst: 1, wo: 'bewertungen', modul: 'Bewertungen',
+    was: `${rOffen.length} Antwort${rOffen.length > 1 ? 'en' : ''} entworfen`,
+    warum: rOffen.map(b => b.quelle + ' ' + b.sterne + '★').join(', ') + ' — durchlesen und senden' });
+
+  const bOffen = DB.briefings.filter(b => b.faellig.length);
+  if (bOffen.length) items.push({ ernst: 1, wo: 'schulung', modul: 'Schulung',
+    was: `${bOffen.length} Briefing${bOffen.length > 1 ? 's' : ''} fällig`,
+    warum: bOffen.map(b => b.titel).join(', ') + ' — ' + bOffen.reduce((s, b) => s + b.faellig.length, 0) + ' Personen' });
+
+  const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > 26);
+  if (knapp.length) items.push({ ernst: 2, wo: 'dienstplan', modul: 'Dienstplan',
+    was: `${knapp.map(d => d.tag).join(', ')} knapp besetzt`,
+    warum: `Über 26 Gedecke pro Person — ${knapp.map(d => d.tag + ': ' + d.gedecke + ' auf ' + d.besetzt).join(' · ')}` });
+
+  const lAuff = DB.lager.filter(l => Math.abs(l.gezaehlt - l.erwartet) / l.erwartet > 0.05);
+  if (lAuff.length) items.push({ ernst: 1, wo: 'lager', modul: 'Lager',
+    was: `${lAuff.length} Artikel weicht ab`,
+    warum: lAuff.map(l => DB.artikel[l.art].name.split(',')[0]).join(', ') +
+           ` — zusammen ${chf(lAuff.reduce((s, l) => s + (l.gezaehlt - l.erwartet) * einzel(l.art), 0))}` });
+
+  return items.sort((a, b) => b.ernst - a.ernst);
+}
+
+/* A widget is a label, a body, and nothing else. No stretching, no filler. */
+const WG = (span, label, body, opts = {}) => `<div class="card ${span}"
+  ${opts.go ? `data-go="${opts.go}" style="cursor:pointer"` : ''}>
+  <div class="wl"><span>${esc(label)}</span>${opts.rechts ? `<span class="r2">${opts.rechts}</span>` : ''}</div>
+  ${body}</div>`;
+
+const mini = (nm, ch, vl, warn) => `<div class="mini"><div class="nm">${esc(nm)}</div>
+  <div class="ch">${ch}</div>
+  <div class="vl" style="${warn ? 'color:var(--warn)' : ''}">${vl}</div></div>`;
+
+const mini2 = (nm, ch, vl, warn) => `<div class="mini2">
+  <div class="top"><span class="nm2">${esc(nm)}</span>
+    <span class="vl2" style="${warn ? 'color:var(--warn)' : ''}">${vl}</span></div>${ch}</div>`;
+
+VIEWS.uebersicht = () => {
+  const z = zahlen();
+  const items = offeneSachen();
+  const dring = items.filter(i => i.ernst >= 2);
+  const spaeter = items.filter(i => i.ernst < 2);
+  const tage = DB.woche.map(d => d.tag);
+  const hDone = DB.hygiene.filter(h => h.done).length;
+
+  /* four numbers, each with its own history under it */
+  const tile = (label, big, sub, chart, rechts) =>
+    WG('w3', label, `<div class="big">${big}</div><div class="sm2">${sub}</div>
+       ${chart ? `<div style="margin-top:7px">${chart}</div>` : ''}`, { rechts });
+
+  const kpis =
+    tile('Umsatz, Woche', chf(z.umsatz), chf(z.umsatz / z.gedecke) + ' pro Gedeck',
+         chartBars(DB.tagesUmsatz, DB.tagesUmsatzVJ, 30),
+         tage.map(t => t[0]).join(' ')) +
+    tile('Rohertrag', (z.roh / z.umsatz * 100).toFixed(1) + '%', chf(z.roh) + ' nach Ware',
+         chartStack([{ n:'Ware', v:z.einsatz, c:'var(--warn)' },
+                     { n:'Personal', v:z.personal, c:'var(--acci)' },
+                     { n:'Rest', v:Math.max(0, z.db), c:'var(--acc)' }], 14)) +
+    tile('Deckungsbeitrag', chf(z.db), 'Personal ' + (z.personal / z.umsatz * 100).toFixed(1) + '% vom Umsatz',
+         // per day: the day's share of the gross margin, minus that day's shift cost
+         chartBars(DB.woche.map((d, i) =>
+           Math.max(0, Math.round(DB.tagesUmsatz[i] * (z.roh / z.umsatz) - d.besetzt * 8 * DB.lohn))),
+           null, 30),
+         tage.map(t => t[0]).join(' ')) +
+    tile('Gedecke', String(z.gedecke), 'Vorjahr ' + z.vj + ' · ' + pct((z.gedecke / z.vj - 1) * 100),
+         chartBars(DB.woche.map(d => d.gedecke), DB.woche.map(d => d.vj), 30),
+         tage.map(t => t[0]).join(' '));
+
+  /* decisions — the tall column, so it carries the most rows */
+  const dec = WG('', dring.length ? dring.length + ' braucht eine Entscheidung' : 'Entscheidungen',
+    (dring.length
+      ? dring.map(i => `<div class="dec" data-go="${i.wo}">
+          <div class="row" style="justify-content:space-between;gap:6px">
+            <b>${esc(i.was)}</b>
+            <span class="tag ${i.ernst === 3 ? 't-warn' : 't-mute'}">${i.ernst === 3 ? 'jetzt' : 'heute'}</span></div>
+          <div class="why">${i.warum}</div></div>`).join('')
+      : `<div class="dec calm"><b>Nichts offen</b>
+          <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`)
+    + (spaeter.length ? `<div class="chips" style="margin-top:7px">${spaeter.map(i =>
+        `<span class="chip" data-go="${i.wo}">${esc(i.was)}</span>`).join('')}</div>` : ''));
+
+  /* cold chain — one line per unit */
+  const kuehl = WG('', 'Kühlkette, letzte Stunden',
+    DB.geraete.map(g => {
+      const bad = g.temp > g.max || g.temp < g.min;
+      return `<div class="mini" style="gap:10px"><div class="nm" style="flex:0 0 86px">${esc(g.name)}</div>
+        <div class="ch" style="flex:1 1 auto">${chartLine(g.verlauf, g.min, g.max, 24,
+          bad ? 'var(--warn)' : 'var(--acc)')}</div>
+        <div class="vl" style="${bad ? 'color:var(--warn)' : ''}">${g.temp.toFixed(1)} °C</div></div>`;
+    }).join(''), { go:'temperatur',
+      rechts: DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length
+        ? DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length + ' im Alarm' : 'alle im Bereich' });
+
+  /* hygiene — ring beside the open items, not above them */
+  const hyg = WG('', 'Hygiene heute', `<div class="row" style="gap:12px;align-items:center">
+      ${ring(hDone, DB.hygiene.length, 62, hDone === DB.hygiene.length ? 'var(--acc)' : 'var(--warn)')}
+      <div style="min-width:0">
+        ${DB.hygiene.filter(h => !h.done).map(h =>
+          `<div style="font-size:10.5px;color:var(--warn);line-height:1.45">${esc(h.station)}</div>`).join('')
+         || '<div style="font-size:11px;color:var(--acci)">lückenlos</div>'}
+        <div class="sm2">${DB.hygieneMonat} Einträge im März</div></div></div>`,
+    { go:'hygiene' });
+
+  /* margins, themes, offers, shifts, stock — all one-liners */
+  const margen = WG('', 'Marge pro Gericht', DB.gerichte.map(g => {
+    const m = marge(g), max = Math.max(...DB.gerichte.map(marge));
+    return mini2(g.name, `<div class="bar"><i style="width:${(m / max * 100).toFixed(0)}%;
+      background:${m < 73 ? 'var(--warn)' : 'var(--acc)'}"></i></div>`, m.toFixed(1) + '%', m < 73);
+  }).join(''), { go:'gerichte', rechts: 'Ø ' + (DB.gerichte.reduce((s, g) => s + marge(g), 0) / DB.gerichte.length).toFixed(1) + '%' });
+
+  const themen = WG('', 'Bewertungen, 30 Tage', DB.themen.map(t => {
+    const max = Math.max(...DB.themen.map(x => x.n));
+    return mini2(t.thema, `<div class="bar"><i style="width:${(t.n / max * 100).toFixed(0)}%;
+      background:${t.trend === 'down' ? 'var(--warn)' : 'var(--acc)'}"></i></div>`, t.n + '×');
+  }).join(''), { go:'bewertungen',
+    rechts: DB.schnitt.toFixed(1) + ' · ' + DB.bewBeantwortet + '/' + DB.bewMonat + ' beantwortet' });
+
+  const offers = DB.aktionen.filter(a => !a.genommen);
+  const spar = offers.reduce((s, a) => {
+    const art = DB.artikel[a.art]; return s + (art.preis - a.neu) / art.menge * a.monat; }, 0);
+  const akt = WG('', 'Aktionen', offers.length ? offers.map(a => {
+      const art = DB.artikel[a.art];
+      const v = (art.preis - a.neu) / art.menge * a.monat;
+      const max = Math.max(...offers.map(x => {
+        const y = DB.artikel[x.art]; return (y.preis - x.neu) / y.menge * x.monat; }));
+      return mini2(art.name.split(',')[0] + ' · bis ' + a.bis,
+        `<div class="bar"><i style="width:${(v / max * 100).toFixed(0)}%"></i></div>`, chf(v));
+    }).join('') : '<div class="sm2">Alle übernommen.</div>',
+    { go:'aktionen', rechts: chf(spar) + ' möglich' });
+
+  const plan = WG('', 'Auslastung pro Schicht', `<div class="row" style="align-items:flex-end;gap:5px">
+    ${DB.woche.map(d => {
+      const pro = d.gedecke / d.besetzt, knapp = pro > 26;
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="height:44px;display:flex;align-items:flex-end;width:100%">
+          <div style="width:100%;height:${Math.round(Math.min(1, pro / 34) * 44)}px;border-radius:3px 3px 0 0;
+            background:${knapp ? 'var(--warn)' : 'var(--acc)'}"></div></div>
+        <span style="font-size:10px;font-weight:650">${d.tag}</span>
+        <span style="font-size:9.5px;color:var(--dim)">${pro.toFixed(0)}</span></div>`;
+    }).join('')}</div>`, { go:'dienstplan', rechts:'Gedecke pro Person · >26 knapp' });
+
+  const lager = WG('', 'Lager gegen Verkauf', DB.lager.map(l => {
+    const d = (l.gezaehlt - l.erwartet) * einzel(l.art);
+    const max = Math.max(...DB.lager.map(x => Math.abs((x.gezaehlt - x.erwartet) * einzel(x.art)))) || 1;
+    const auff = Math.abs(l.gezaehlt - l.erwartet) / l.erwartet > 0.05;
+    return mini2(DB.artikel[l.art].name.split(',')[0],
+      `<div class="bar"><i style="width:${(Math.abs(d) / max * 100).toFixed(0)}%;
+        background:${auff ? 'var(--warn)' : 'var(--acc)'}"></i></div>`, chf(d), auff);
+  }).join(''), { go:'lager', rechts:'gezählt ' + DB.lagerStand });
+
+  const module = WG('w12', 'Module', `<div class="chips">${MODULES.filter(m => m.id !== 'uebersicht')
+    .map(m => { const b = badge(m.id);
+      return `<span class="chip" data-go="${m.id}" style="${b ? 'background:var(--warnbg);color:var(--warn)' : ''}">
+        ${esc(m.name)}${b ? ' · ' + b : ''}</span>`; }).join('')}</div>`);
+
+  return `<div class="dash">${kpis}
+    <div class="col w4">${dec}${akt}</div>
+    <div class="col w4">${kuehl}${hyg}${plan}</div>
+    <div class="col w4">${margen}${themen}${lager}</div>
+    ${module}</div>`;
+};
+/* ── Axyom fragen ───────────────────────────────────────────────────────────
+   A question box in the corner, so nobody has to know which module holds the
+   answer. It reads the same DB every screen reads, so the answer moves when
+   the data moves: take the veal price over in Rechnungen and ask for the
+   Kalbsbraten margin here, and the new number comes back.
+
+   How it resolves a question, and what that costs:
+     * the NOUNS are built out of the data itself — every article, dish,
+       supplier, device, person, weekday, review theme and invoice number is
+       indexed from DB at question time, so a new article is askable the
+       moment it exists, in any phrasing.
+     * the MODULE names carry most of the topic vocabulary (they are the words
+       the house already uses), and BEGRIFFE below adds only the field
+       semantics no module is named after — marge, umsatz, preis. That much is
+       a written lexicon, and it is the honest limit of a demo with no model
+       behind it: the live product sends the question to the model.
+     * it therefore never answers "nothing". An unrecognised question falls
+       back to what is open right now, with links — narrow the answer, never
+       empty it.
+   ────────────────────────────────────────────────────────────────────────── */
+const CHAT = { offen: false, verlauf: [], denkt: false };
+
+const cnorm = s => String(s).toLowerCase()
+  .replace(/[äáà]/g, 'a').replace(/[öó]/g, 'o').replace(/[üú]/g, 'u')
+  .replace(/[éèê]/g, 'e').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, ' ').trim();
+
+const TAGE = { Mo:'Montag', Di:'Dienstag', Mi:'Mittwoch', Do:'Donnerstag',
+               Fr:'Freitag', Sa:'Samstag', So:'Sonntag' };
+
+/* every noun in the house, read out of DB — not a list anybody maintains */
+function chatIndex() {
+  const ix = [], add = (kind, ref, ...l) =>
+    ix.push({ kind, ref, keys: [...new Set(l.filter(Boolean).map(cnorm))] });
+  Object.entries(DB.artikel).forEach(([k, a]) => add('artikel', k, k, a.name.split(',')[0], a.name));
+  DB.gerichte.forEach(g => add('gericht', g, g.name, g.name.split(' ')[0]));
+  DB.geraete.forEach(g => add('geraet', g, g.name, g.name.replace(/\s*\d+$/, '')));
+  DB.rechnungen.forEach(r => add('rechnung', r, r.id));
+  [...new Set([...Object.values(DB.artikel).map(a => a.lief), ...DB.rechnungen.map(r => r.lief)])]
+    .forEach(l => add('lieferant', l, l, l.split(' ')[0]));
+  DB.leute.forEach(p => add('person', p, p.name, p.name.split(' ').pop()));
+  DB.woche.forEach(d => add('tag', d, d.tag, TAGE[d.tag]));
+  DB.themen.forEach(t => add('thema', t, t.thema));
+  MODULES.forEach(m => add('modul', m, m.name, m.titel));
+  DB.outlets.forEach(o => add('betrieb', o, o));
+  return ix;
+}
+
+/* the words the data uses that no module is named after */
+const BEGRIFFE = [
+  ['auswertungen', 'umsatz ertrag rohertrag deckungsbeitrag zahlen gedeck gedecke wareneinsatz personal personalkosten lohn woche monat rendite ergebnis'],
+  ['gerichte',     'marge margen kalkuliert kalkulation teller speise speisen karte verdient'],
+  ['preise',       'preis preise kostet kosten teurer teuerer preisanderung preiserhohung aufschlag gestiegen erhoht'],
+  ['aktionen',     'sparen spare angebot angebote rabatt guenstiger billiger'],
+  ['uebersicht',   'offen offene heute anstehen ansteht entscheiden entscheidung dringend wichtig tun'],
+  ['verlust',      'verliere verlieren verlust geld leck'],
+  ['log',          'geandert passiert protokoll gemacht'],
+  ['hilfe',        'kannst koennen hilfe helfen fragen wer bist du hallo hoi guten'],
+];
+
+/* Which kind of thing a topic word is asking about. «Marge Kalbsbraten» and
+   «Preis Kalbsbraten» name the same stem and want different answers — the dish
+   and the article — so the topic decides which noun wins the tie. */
+const KIND_VON = { gerichte:'gericht', preise:'artikel', aktionen:'artikel', lager:'artikel',
+                   temperatur:'geraet', rechnungen:'rechnung', dienstplan:'tag',
+                   schulung:'person', bewertungen:'thema' };
+
+function entName(kind, ref) {
+  if (kind === 'artikel')  return DB.artikel[ref].name;
+  if (kind === 'tag')      return TAGE[ref.tag];
+  if (kind === 'thema')    return ref.thema;
+  if (kind === 'rechnung') return ref.id;
+  if (kind === 'modul')    return ref.name;
+  return ref.name || String(ref);
+}
+
+function matchEnt(q, ix, bias) {
+  const qt = q.split(' ').filter(Boolean);
+  const hits = new Map();   // one score per thing, its best key wins
+  const take = (e, s) => {
+    if (!s) return;
+    s += (bias && e.kind === bias) ? 6 : 0;
+    const key = e.kind + '|' + entName(e.kind, e.ref);
+    if (!hits.has(key) || hits.get(key).s < s) hits.set(key, { kind: e.kind, ref: e.ref, s });
+  };
+  ix.forEach(e => e.keys.forEach(k => {
+    const kw = k.split(' ');
+    if (k.length >= 4 && q.includes(k)) return take(e, k.length + 3);
+    if ((' ' + q + ' ').includes(' ' + k + ' ')) return take(e, k.length + 1);
+    // «kalbsbrate», «kuhlraume» — a stem long enough to be unambiguous
+    qt.forEach(t => { if (t.length >= 5) kw.forEach(w => {
+      if (w.length >= 5 && (w.startsWith(t) || t.startsWith(w))) take(e, Math.min(t.length, w.length));
+    }); });
+  }));
+  const all = [...hits.values()].sort((a, b) => b.s - a.s);
+  if (!all.length) return null;
+  // «Rösti» is in two dishes. Ask which one instead of quietly picking one.
+  const gleich = all.filter(x => x.s === all[0].s && x.kind === all[0].kind);
+  return { ...all[0], ties: gleich.length > 1 ? gleich : [] };
+}
+
+function matchThema(q) {
+  let best = null;
+  BEGRIFFE.forEach(([id, words]) => words.split(' ').forEach(w => {
+    const s = (' ' + q + ' ').includes(' ' + w + ' ') ? w.length + 2
+            : (w.length >= 5 && q.includes(w)) ? w.length : 0;
+    if (s && (!best || s > best.s)) best = { id, s };
+  }));
+  return best;
+}
+
+/* ── answer formatting ─────────────────────────────────────────────────── */
+const cK = t => `<div class="qk">${t}</div>`;
+const cZ = t => `<div class="qz">${t}</div>`;
+const cC = arr => arr.length ? `<div class="chips" style="margin-top:9px">${arr.map(c => c.go
+    ? `<span class="chip" data-go="${c.go}">${esc(c.t)} &rsaquo;</span>`
+    : `<span class="chip" data-ask="${esc(c.t)}">${esc(c.t)}</span>`).join('')}</div>` : '';
+const bau = (kopf, zeilen, chips = []) => cK(kopf) + zeilen.filter(Boolean).map(cZ).join('') + cC(chips);
+const kurz = n => DB.artikel[n] ? DB.artikel[n].name.split(',')[0] : n;
+
+/* ── answers about one thing ───────────────────────────────────────────── */
+function aArtikel(k) {
+  const a = DB.artikel[k], ep = einzel(k);
+  const inG = DB.gerichte.filter(g => g.rezept.some(z => z.art === k));
+  const off = DB.rechnungen.find(r => r.status === 'preis' && r.zeilen.some(z => z.art === k && z.preis > a.preis));
+  const ak = DB.aktionen.find(x => x.art === k && !x.genommen);
+  const l = DB.lager.find(x => x.art === k);
+  const z = [`${chf(a.preis)} pro ${a.menge} ${a.einheit} — <b>${chf(ep)} pro ${esc(a.einheit)}</b>`];
+  if (a.preis !== a.vorher)
+    z.push(`${pct((a.preis / a.vorher - 1) * 100)} gegenüber ${chf(a.vorher)}, von Ihnen übernommen`);
+  if (off) { const zl = off.zeilen.find(x => x.art === k);
+    z.push(`<span class="hl">${esc(off.lief)} verlangt in ${esc(off.id)} ${chf(zl.preis)} — ${pct((zl.preis / a.preis - 1) * 100)}, noch nicht entschieden</span>`); }
+  if (inG.length) z.push(`Steckt in ${inG.length} Gericht${inG.length > 1 ? 'en' : ''}: ` +
+    inG.map(g => `${esc(g.name)} (${marge(g).toFixed(1)}%)`).join(', '));
+  if (ak) z.push(`Aktion bis ${esc(ak.bis)}: ${chf(ak.neu)} — spart ${chf((a.preis - ak.neu) / a.menge * ak.monat)} bei Ihrer üblichen Menge`);
+  if (l) { const d = (l.gezaehlt - l.erwartet) * ep;
+    z.push(`Lager: ${l.gezaehlt} ${esc(l.einheit)} gezählt, ${l.erwartet} erwartet — ${chf(d)}`); }
+  return bau(`${esc(a.name)} · ${esc(a.lief)}`, z,
+    [off ? { t:'Rechnungen', go:'rechnungen' } : null, inG.length ? { t:'Gerichte', go:'gerichte' } : null,
+     ak ? { t:'Aktionen', go:'aktionen' } : null].filter(Boolean));
+}
+
+function aGericht(g) {
+  const we = wareneinsatz(g), m = marge(g);
+  const lines = g.rezept.map(z => ({ n: kurz(z.art), v: einzel(z.art) * z.m }))
+    .sort((a, b) => b.v - a.v);
+  const teuer = DB.artikel[g.rezept.map(z => ({ z, v: einzel(z.art) * z.m }))
+    .sort((a, b) => b.v - a.v)[0].z.art];
+  return bau(`${esc(g.name)} · ${chf(g.karte)} auf der Karte`, [
+    `Wareneinsatz <b>${chf(we)}</b>, Marge <b>${m.toFixed(1)}%</b>${m < 73 ? ' — unter Ihren anderen Gerichten' : ''}`,
+    `Grösster Posten: ${esc(teuer.name.split(',')[0])} mit ${chf(lines[0].v)} (${(lines[0].v / we * 100).toFixed(0)}% der Ware)`,
+    lines.slice(1, 4).map(l => `${esc(l.n)} ${chf(l.v)}`).join(' · '),
+    `${g.verkauft}× diese Woche verkauft — ${chf((g.karte - we) * g.verkauft)} Rohertrag`,
+  ], [{ t:'Gerichte', go:'gerichte' }, { t:'Marge pro Gericht' }]);
+}
+
+function aGeraet(g) {
+  const bad = g.temp > g.max || g.temp < g.min;
+  const hi = Math.max(...g.verlauf), lo = Math.min(...g.verlauf);
+  const al = DB.alarme.filter(a => a.geraet === g.name);
+  return bau(`${esc(g.name)} · ${esc(g.wo)}`, [
+    `Jetzt <b${bad ? ' class="hl"' : ''}>${g.temp.toFixed(1)} °C</b>, erlaubt sind ${g.min} bis ${g.max} °C`,
+    `Letzte Stunden: ${lo.toFixed(1)} bis ${hi.toFixed(1)} °C`,
+    al.length ? al.map(a => `${esc(a.wann)}: ${a.wert.toFixed(1)} °C an ${esc(a.an)}` +
+        (a.quittiert ? `, quittiert ${esc(a.quittiert)}` : ', <span class="hl">nicht quittiert</span>') +
+        (a.grund ? ` (${esc(a.grund)})` : '')).join('<br>')
+      : 'Kein Alarm in diesem Monat.',
+  ], [{ t:'Kühlkette', go:'temperatur' }]);
+}
+
+function aLieferant(name) {
+  const rs = DB.rechnungen.filter(r => r.lief === name);
+  const arts = Object.entries(DB.artikel).filter(([, a]) => a.lief === name);
+  const offen = rs.filter(r => r.status !== 'ok' && r.status !== 'erledigt');
+  const ak = DB.aktionen.filter(a => a.lief === name && !a.genommen);
+  return bau(esc(name), [
+    `${rs.length} Rechnung${rs.length > 1 ? 'en' : ''} im März, zusammen <b>${chf(rs.reduce((s, r) => s + r.total, 0))}</b>`,
+    offen.length ? `<span class="hl">${offen.map(r => r.id + ' — ' +
+        (r.status === 'preis' ? 'Preis geändert' : 'Menge stimmt nicht')).join(', ')}</span>` : 'Nichts offen.',
+    `Sie kaufen dort: ${arts.map(([, a]) => esc(a.name.split(',')[0])).join(', ')}`,
+    ak.length ? `Aktion: ${ak.map(a => kurz(a.art) + ' auf ' + chf(a.neu) + ' bis ' + a.bis).join(', ')}` : '',
+  ], [{ t:'Rechnungen', go:'rechnungen' }, ak.length ? { t:'Aktionen', go:'aktionen' } : null].filter(Boolean));
+}
+
+function aRechnung(r) {
+  const z = r.zeilen.map(l => {
+    const a = DB.artikel[l.art];
+    const hoch = l.preis > a.vorher, fehlt = l.gel < l.best;
+    return `${esc(a.name.split(',')[0])}: ${l.gel} × ${chf(l.preis)}` +
+      (hoch ? ` <span class="hl">(${pct((l.preis / a.vorher - 1) * 100)})</span>` : '') +
+      (fehlt ? ` <span class="hl">(${l.best} bestellt, ${l.gel} gekommen)</span>` : '');
+  });
+  const st = { ok:'geprüft, nichts zu tun', preis:'Preis abweichend', menge:'Menge abweichend',
+               erledigt:'von Ihnen erledigt' }[r.status];
+  return bau(`${esc(r.id)} · ${esc(r.lief)} · ${esc(r.datum)}`,
+    [`Total <b>${chf(r.total)}</b> — ${st}`, ...z],
+    [{ t:'Rechnungen', go:'rechnungen' }]);
+}
+
+function aPerson(p) {
+  const b = DB.briefings.filter(x => x.faellig.includes(p.id));
+  const dienst = DB.hygiene.filter(h => h.wer === p.name);
+  return bau(`${esc(p.name)} · ${esc(p.rolle)}`, [
+    `${p.durch} von ${p.total} Modulen durch` + (p.durch < p.total
+      ? ` — ${p.total - p.durch} offen` : ' — vollständig'),
+    b.length ? `<span class="hl">Fällig: ${b.map(x => esc(x.titel) + ' (' + x.min + ' Min.)').join(', ')}</span>` : 'Kein Briefing fällig.',
+    dienst.length ? `Heute abgehakt: ${dienst.map(h => esc(h.was) + ' um ' + h.zeit).join(', ')}` : '',
+  ], [{ t:'Schulung', go:'schulung' }]);
+}
+
+function aTag(d) {
+  const i = DB.woche.indexOf(d), pro = d.gedecke / d.besetzt;
+  return bau(`${esc(TAGE[d.tag])}`, [
+    `<b>${d.gedecke} Gedecke</b> gebucht, Vorjahr ${d.vj} (${pct((d.gedecke / d.vj - 1) * 100)})`,
+    `${d.besetzt} Personen, ${d.stunden} Stunden — ${chf(d.stunden * DB.lohn)} Schichtkosten`,
+    `${pro.toFixed(0)} Gedecke pro Person` + (pro > 26 ? ' — <span class="hl">knapp</span>' : ' — tragbar'),
+    `Umsatz geplant ${chf(DB.tagesUmsatz[i])}`,
+  ], [{ t:'Dienstplan', go:'dienstplan' }]);
+}
+
+function aThema(t) {
+  const bs = DB.bewertungen.filter(b => b.thema === t.thema);
+  return bau(esc(t.thema), [
+    `${t.n}× in 30 Tagen genannt, Tendenz ${t.trend === 'up' ? 'steigend' : 'fallend'}`,
+    bs.length ? bs.map(b => `${esc(b.quelle)} ${b.sterne}★, ${esc(b.wann)}: «${esc(b.text)}»` +
+      ` — Antwort ${b.status}`).join('<br>') : 'Keine einzelne Bewertung dazu im Ausschnitt.',
+  ], [{ t:'Bewertungen', go:'bewertungen' }]);
+}
+
+/* ── answers about a topic ─────────────────────────────────────────────── */
+const ANTWORT = {
+  uebersicht() {
+    const it = offeneSachen();
+    if (!it.length) return bau('Nichts offen', ['Alles, was entschieden werden musste, ist entschieden.']);
+    return bau(`${it.length} Sache${it.length > 1 ? 'n' : ''} offen`,
+      it.map(i => `<b>${esc(i.was)}</b> <span class="mod">${esc(i.modul)}</span><br>${i.warum}`),
+      [...new Set(it.map(i => i.wo))].slice(0, 4).map(w =>
+        ({ t: MODULES.find(m => m.id === w).name, go: w })));
+  },
+  auswertungen() {
+    const z = zahlen();
+    return bau(`Woche vom 16. März`, [
+      `Umsatz <b>${chf(z.umsatz)}</b> auf ${z.gedecke} Gedecke — ${chf(z.umsatz / z.gedecke)} pro Gedeck`,
+      `Wareneinsatz ${chf(z.einsatz)} (${(z.einsatz / z.umsatz * 100).toFixed(1)}%), Rohertrag ${chf(z.roh)} (${(z.roh / z.umsatz * 100).toFixed(1)}%)`,
+      `Personal ${chf(z.personal)} für ${z.std} Stunden — ${(z.personal / z.umsatz * 100).toFixed(1)}% vom Umsatz`,
+      `Deckungsbeitrag <b>${chf(z.db)}</b>`,
+      `Gedecke gegen Vorjahr: ${z.gedecke} zu ${z.vj} (${pct((z.gedecke / z.vj - 1) * 100)})`,
+    ], [{ t:'Auswertungen', go:'auswertungen' }, { t:'Wo verliere ich Geld?' }]);
+  },
+  gerichte() {
+    const gs = [...DB.gerichte].sort((a, b) => marge(a) - marge(b));
+    const d = DB.gerichte.reduce((s, g) => s + marge(g), 0) / DB.gerichte.length;
+    return bau(`Marge pro Gericht · Ø ${d.toFixed(1)}%`,
+      gs.map(g => `${esc(g.name)}: <b>${marge(g).toFixed(1)}%</b> — ${chf(g.karte)} minus ${chf(wareneinsatz(g))} Ware, ${g.verkauft}× verkauft`)
+        .concat([`Am schwächsten: ${esc(gs[0].name)}. Am stärksten: ${esc(gs[gs.length - 1].name)}.`]),
+      [{ t:'Gerichte', go:'gerichte' }]);
+  },
+  preise() {
+    const uebernommen = Object.entries(DB.artikel).filter(([, a]) => a.preis !== a.vorher);
+    const offen = DB.rechnungen.filter(r => r.status === 'preis').map(r => {
+      const z = r.zeilen.find(x => x.preis > DB.artikel[x.art].vorher);
+      return { r, z, a: DB.artikel[z.art] };
+    });
+    return bau('Was sich am Preis bewegt hat', [
+      offen.length ? offen.map(o => `<span class="hl">${esc(o.a.name.split(',')[0])} bei ${esc(o.r.lief)}: ` +
+        `${chf(o.a.vorher)} auf ${chf(o.z.preis)} (${pct((o.z.preis / o.a.vorher - 1) * 100)})</span> — ${esc(o.r.id)}, offen`).join('<br>')
+        : 'Keine offene Preisänderung.',
+      uebernommen.length ? uebernommen.map(([k, a]) =>
+        `${esc(a.name.split(',')[0])}: übernommen auf ${chf(a.preis)} (${pct((a.preis / a.vorher - 1) * 100)}) — trifft ` +
+        DB.gerichte.filter(g => g.rezept.some(z => z.art === k)).length + ' Gerichte').join('<br>') : '',
+      `${DB.gelesen} Rechnungen in diesem Monat gelesen, ohne dass jemand etwas abgetippt hat.`,
+    ], [{ t:'Rechnungen', go:'rechnungen' }, { t:'Marge pro Gericht' }]);
+  },
+  rechnungen() {
+    const offen = DB.rechnungen.filter(r => r.status === 'preis' || r.status === 'menge');
+    return bau(`${DB.rechnungen.length} Rechnungen im Ausschnitt · ${DB.gelesen} im März gelesen`, [
+      offen.length ? offen.map(r => `<b>${esc(r.id)}</b> ${esc(r.lief)} — ` +
+        (r.status === 'preis' ? 'Preis abweichend' : 'Menge abweichend') + `, ${chf(r.total)}`).join('<br>')
+        : 'Nichts offen — alle geprüft.',
+      `Zusammen ${chf(DB.rechnungen.reduce((s, r) => s + r.total, 0))}`,
+    ], [{ t:'Rechnungen', go:'rechnungen' }]);
+  },
+  lager() {
+    const rows = DB.lager.map(l => ({ l, d: (l.gezaehlt - l.erwartet) * einzel(l.art) }))
+      .sort((a, b) => a.d - b.d);
+    const sum = rows.reduce((s, r) => s + r.d, 0);
+    return bau(`Lager gegen Verkauf · gezählt ${esc(DB.lagerStand)}`,
+      rows.map(r => `${esc(kurz(r.l.art))}: ${r.l.gezaehlt} statt ${r.l.erwartet} ${esc(r.l.einheit)} — ` +
+        `${Math.abs(r.l.gezaehlt - r.l.erwartet) / r.l.erwartet > 0.05 ? '<span class="hl">' + chf(r.d) + '</span>' : chf(r.d)}`)
+        .concat([`Zusammen <b>${chf(sum)}</b> Differenz.`]),
+      [{ t:'Lager', go:'lager' }]);
+  },
+  aktionen() {
+    const of = DB.aktionen.filter(a => !a.genommen);
+    const spar = of.reduce((s, a) => { const art = DB.artikel[a.art];
+      return s + (art.preis - a.neu) / art.menge * a.monat; }, 0);
+    return bau(of.length ? `${of.length} Aktionen · ${chf(spar)} möglich` : 'Alle Aktionen übernommen',
+      of.map(a => { const art = DB.artikel[a.art];
+        return `${esc(kurz(a.art))} bei ${esc(a.lief)}: ${chf(art.preis)} auf ${chf(a.neu)} bis ${esc(a.bis)} — ` +
+          `<b>${chf((art.preis - a.neu) / art.menge * a.monat)}</b> bei ${a.monat} ${esc(art.einheit)} im Monat` +
+          (a.dringend ? ' <span class="hl">läuft bald aus</span>' : ''); })
+        .concat([`${DB.irrelevant} weitere Angebote betreffen nichts, was Sie kaufen — die sehen Sie nicht.`]),
+      [{ t:'Aktionen', go:'aktionen' }]);
+  },
+  hygiene() {
+    const offen = DB.hygiene.filter(h => !h.done), done = DB.hygiene.filter(h => h.done);
+    return bau(`Kontrollen heute · ${done.length} von ${DB.hygiene.length}`, [
+      offen.length ? `<span class="hl">Offen: ${offen.map(h => esc(h.station) + ' (' + esc(h.was) + ')').join(', ')}</span>`
+        : 'Heute lückenlos.',
+      done.map(h => `${esc(h.station)} — ${esc(h.wer)}, ${esc(h.zeit)}`).join('<br>'),
+      `${DB.hygieneMonat} Einträge im März, ${DB.hygieneSpaet} davon verspätet. Dieselbe Aufzeichnung ist der Nachweis.`,
+    ], [{ t:'Hygiene', go:'hygiene' }]);
+  },
+  temperatur() {
+    const bad = DB.geraete.filter(g => g.temp > g.max || g.temp < g.min);
+    return bau(bad.length ? `${bad.length} Gerät${bad.length > 1 ? 'e' : ''} ausserhalb` : 'Alle Geräte im Bereich',
+      DB.geraete.map(g => { const b = g.temp > g.max || g.temp < g.min;
+        return `${esc(g.name)} (${esc(g.wo)}): ${b ? '<span class="hl">' + g.temp.toFixed(1) + ' °C</span>' : g.temp.toFixed(1) + ' °C'}` +
+          `, Bereich ${g.min} bis ${g.max}`; })
+        .concat(DB.alarme.length ? [`Letzter Alarm: ${esc(DB.alarme[0].geraet)}, ${esc(DB.alarme[0].wann)}, ` +
+          `${DB.alarme[0].wert.toFixed(1)} °C${DB.alarme[0].quittiert ? ', quittiert ' + esc(DB.alarme[0].quittiert) : ', <span class="hl">offen</span>'}`] : []),
+      [{ t:'Kühlkette', go:'temperatur' }]);
+  },
+  dienstplan() {
+    const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > 26);
+    const std = DB.woche.reduce((s, d) => s + d.stunden, 0);
+    return bau(`Woche vom 16. März · ${DB.woche.reduce((s, d) => s + d.gedecke, 0)} Gedecke`, [
+      DB.woche.map(d => `${esc(TAGE[d.tag])}: ${d.gedecke} auf ${d.besetzt} Personen (${(d.gedecke / d.besetzt).toFixed(0)}/Person)` +
+        (d.gedecke / d.besetzt > 26 ? ' <span class="hl">knapp</span>' : '')).join('<br>'),
+      knapp.length ? `Knapp: ${knapp.map(d => esc(TAGE[d.tag])).join(', ')} — über 26 Gedecke pro Person.` : 'Keine Schicht ist knapp.',
+      `${std} Stunden, ${chf(std * DB.lohn)} bei ${chf(DB.lohn)} pro Stunde.`,
+    ], [{ t:'Dienstplan', go:'dienstplan' }]);
+  },
+  schulung() {
+    const offen = DB.leute.filter(p => p.durch < p.total);
+    const b = DB.briefings.filter(x => x.faellig.length);
+    return bau(`Wer was kann · ${DB.leute.length} Personen`, [
+      DB.leute.map(p => `${esc(p.name)} (${esc(p.rolle)}): ${p.durch}/${p.total}`).join(' · '),
+      offen.length ? `<span class="hl">Offen bei ${offen.map(p => esc(p.name)).join(', ')}</span>` : 'Alle durch.',
+      b.length ? `Fällige Briefings: ${b.map(x => esc(x.titel) + ' (' +
+        x.faellig.map(id => esc(DB.leute.find(p => p.id === id).name)).join(', ') + ')').join('; ')}` : '',
+    ], [{ t:'Schulung', go:'schulung' }]);
+  },
+  bewertungen() {
+    const offen = DB.bewertungen.filter(b => b.status === 'entwurf');
+    return bau(`Ø ${DB.schnitt.toFixed(1)} · ${DB.bewBeantwortet} von ${DB.bewMonat} beantwortet`, [
+      `Vormonat ${DB.schnittVorher.toFixed(1)} — ${pct((DB.schnitt - DB.schnittVorher) / DB.schnittVorher * 100)}`,
+      DB.themen.map(t => `${esc(t.thema)}: ${t.n}× (${t.trend === 'up' ? 'steigend' : 'fallend'})`).join('<br>'),
+      offen.length ? `<span class="hl">${offen.length} Antwort${offen.length > 1 ? 'en' : ''} entworfen und wartet auf Sie</span>` : 'Nichts unbeantwortet.',
+    ], [{ t:'Bewertungen', go:'bewertungen' }]);
+  },
+  inhalte() {
+    const k = DB.karte[0], w = k.ziele.filter(z => z.status === 'wartet');
+    return bau(`${esc(k.name)} · ${chf(k.preis)}`, [
+      `Läuft in: ${k.betriebe.map(esc).join(', ')} · Allergene ${esc(k.allergene)}`,
+      k.ziele.map(z => `${esc(z.was)}: ${z.status === 'wartet' ? '<span class="hl">wartet</span>' : esc(z.status)}`).join('<br>'),
+      w.length ? `${w.length} Kanäle warten auf Ihre Freigabe.` : 'Überall gleich.',
+    ], [{ t:'Inhalte', go:'inhalte' }]);
+  },
+  social() {
+    const d = DB.posts.filter(p => p.status === 'entwurf');
+    return bau(`${DB.posts.length} Beiträge diese Woche`, [
+      DB.posts.map(p => `${esc(p.wann)} ${esc(p.kanal)}: «${esc(p.titel)}» — ${p.status === 'entwurf'
+        ? '<span class="hl">Entwurf</span>' : esc(p.status)}`).join('<br>'),
+      d.length ? `${d.length} warten auf Freigabe. Ohne Freigabe geht nichts raus.` : 'Alles freigegeben.',
+    ], [{ t:'Social Media', go:'social' }]);
+  },
+  verlust() {
+    const posten = [];
+    DB.rechnungen.filter(r => r.status === 'preis').forEach(r => {
+      const z = r.zeilen.find(x => x.preis > DB.artikel[x.art].vorher);
+      posten.push({ t: `${kurz(z.art)} +${((z.preis / DB.artikel[z.art].vorher - 1) * 100).toFixed(1)}% bei ${r.lief}`,
+        v: (z.preis - DB.artikel[z.art].vorher) * z.gel, wo:'rechnungen' });
+    });
+    DB.rechnungen.filter(r => r.status === 'menge').forEach(r => {
+      const z = r.zeilen.find(x => x.gel < x.best);
+      const fehlt = z.best - z.gel;
+      posten.push({ t: `${r.id}: ${fehlt} Position${fehlt > 1 ? 'en' : ''} nicht geliefert, aber verrechnet`,
+        v: (z.best - z.gel) * z.preis, wo:'rechnungen' });
+    });
+    DB.lager.filter(l => (l.gezaehlt - l.erwartet) < 0 &&
+        Math.abs(l.gezaehlt - l.erwartet) / l.erwartet > 0.05)
+      .forEach(l => posten.push({ t:`${kurz(l.art)} fehlt im Lager`,
+        v: Math.abs((l.gezaehlt - l.erwartet) * einzel(l.art)), wo:'lager' }));
+    DB.aktionen.filter(a => !a.genommen).forEach(a => { const art = DB.artikel[a.art];
+      posten.push({ t:`Aktion ${kurz(a.art)} nicht genommen`,
+        v: (art.preis - a.neu) / art.menge * a.monat, wo:'aktionen' }); });
+    posten.sort((a, b) => b.v - a.v);
+    return bau(`${chf(posten.reduce((s, p) => s + p.v, 0))} liegen gerade in Reichweite`,
+      posten.map(p => `<b>${chf(p.v)}</b> — ${esc(p.t)} <span class="mod">${esc(MODULES.find(m => m.id === p.wo).name)}</span>`)
+        .concat(['Alles davon ist eine Entscheidung, keine Schätzung.']),
+      [...new Set(posten.map(p => p.wo))].map(w => ({ t: MODULES.find(m => m.id === w).name, go: w })));
+  },
+  log() {
+    if (!DB.log.length) return bau('Noch nichts geändert',
+      ['Sobald Sie in einem Modul etwas entscheiden, steht es hier — und in Auswertungen.'],
+      [{ t:'Was ist offen?' }]);
+    return bau(`${DB.log.length} Änderung${DB.log.length > 1 ? 'en' : ''} in dieser Sitzung`,
+      DB.log.map(l => `${esc(l.zeit)} — ${l.text}`), [{ t:'Auswertungen', go:'auswertungen' }]);
+  },
+  hilfe() {
+    return bau('Fragen Sie in Ihren eigenen Worten', [
+      'Ich lese dieselben Daten wie die Module — Artikel, Lieferanten, Gerichte, Geräte, Leute, Tage, Rechnungsnummern.',
+      'Also zum Beispiel: «Was kostet die Butter?», «Marge Kalbsbraten», «Wie kalt ist der Tiefkühler?», «Was macht die Metzgerei Mustermann?», «Wie lief der Freitag?», «Wo verliere ich Geld?»',
+      'Wenn etwas in einem Modul entschieden wird, ändert sich die Antwort hier mit.',
+    ], [{ t:'Was ist offen?' }, { t:'Wo verliere ich Geld?' }, { t:'Zahlen der Woche' }]);
+  },
+};
+
+/* ── the resolver ──────────────────────────────────────────────────────── */
+function frage(text) {
+  const q = cnorm(text);
+  if (!q) return ANTWORT.hilfe();
+  const t = matchThema(q);
+  const e = matchEnt(q, chatIndex(), t && KIND_VON[t.id]);
+  if (e && e.ties.length && (!t || e.s >= t.s))
+    return bau('Das gibt es zweimal', ['Welches meinen Sie?'],
+      e.ties.map(x => ({ t: entName(x.kind, x.ref) })));
+
+  // a noun beats a topic word unless the topic word is the more specific hit
+  if (e && (!t || e.s >= t.s)) {
+    if (e.kind === 'artikel')   return aArtikel(e.ref);
+    if (e.kind === 'gericht')   return aGericht(e.ref);
+    if (e.kind === 'geraet')    return aGeraet(e.ref);
+    if (e.kind === 'lieferant') return aLieferant(e.ref);
+    if (e.kind === 'rechnung')  return aRechnung(e.ref);
+    if (e.kind === 'person')    return aPerson(e.ref);
+    if (e.kind === 'tag')       return aTag(e.ref);
+    if (e.kind === 'thema')     return aThema(e.ref);
+    if (e.kind === 'betrieb')   return bau(esc(e.ref), [
+      'Der Ausschnitt in dieser Demo ist über alle drei Betriebe gerechnet.',
+      'Karte: ' + (DB.karte[0].betriebe.includes(e.ref) ? esc(DB.karte[0].name) + ' läuft dort.' : 'nichts Neues dort.'),
+    ], [{ t:'Übersicht', go:'uebersicht' }]);
+    if (e.kind === 'modul' && ANTWORT[e.ref.id]) return ANTWORT[e.ref.id]();
+    if (e.kind === 'modul') return ANTWORT.uebersicht();
+  }
+  if (t && ANTWORT[t.id]) return ANTWORT[t.id]();
+
+  // nothing recognised: narrow, never empty
+  const it = offeneSachen();
+  return bau('Dazu finde ich keine eindeutige Zahl', [
+    'Fragen Sie nach einem Artikel, einem Gericht, einem Lieferanten, einem Kühlgerät, einer Person, einem Tag oder einer Rechnungsnummer — oder nach einem Modul.',
+    it.length ? `Offen ist gerade: ${it.slice(0, 3).map(i => '<b>' + esc(i.was) + '</b>').join(', ')}.` : '',
+  ], [{ t:'Was ist offen?' }, { t:'Zahlen der Woche' }, { t:'Marge pro Gericht' },
+      { t:'Wie kalt ist der Tiefkühler?' }]);
+}
+
+/* ── panel ─────────────────────────────────────────────────────────────── */
+function chatRender() {
+  const log = $('#chat-log');
+  if (!log) return;
+  log.innerHTML = CHAT.verlauf.map(m => m.r === 'u'
+    ? `<div class="msg u">${esc(m.t)}</div>`
+    : `<div class="msg b">${m.t}</div>`).join('') +
+    (CHAT.denkt ? '<div class="msg b tipp"><i></i><i></i><i></i></div>' : '');
+  log.scrollTop = log.scrollHeight;
+}
+
+function chatOeffnen(auf) {
+  CHAT.offen = auf ?? !CHAT.offen;
+  $('#chat').classList.toggle('on', CHAT.offen);
+  $('#chatbtn').classList.toggle('weg', CHAT.offen);
+  if (CHAT.offen) {
+    if (!CHAT.verlauf.length) { CHAT.verlauf.push({ r:'b', t: ANTWORT.hilfe() }); }
+    chatRender(); setTimeout(() => $('#chat-in').focus(), 60);
+  }
+}
+
+let chatTimer;
+function chatFragen(text) {
+  const t = text.trim();
+  if (!t) return;
+  CHAT.verlauf.push({ r:'u', t });
+  CHAT.denkt = true; chatRender();
+  clearTimeout(chatTimer);
+  // a short beat, so an answer reads as an answer and not as a page swap
+  chatTimer = setTimeout(() => {
+    CHAT.denkt = false;
+    CHAT.verlauf.push({ r:'b', t: frage(t) });
+    chatRender();
+  }, 260);
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('#chatbtn')) return chatOeffnen(true);
+  if (e.target.closest('#chat-zu')) return chatOeffnen(false);
+  const ask = e.target.closest('#chat [data-ask]');
+  if (ask) { chatFragen(ask.dataset.ask); return; }
+  const send = e.target.closest('#chat-send');
+  if (send) { const i = $('#chat-in'); chatFragen(i.value); i.value = ''; i.focus(); return; }
+  // a jump out of the chat should show the screen it jumped to
+  if (e.target.closest('#chat [data-go]')) chatOeffnen(false);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'chat-in') {
+    chatFragen(e.target.value); e.target.value = '';
+  }
+  if (e.key === 'Escape' && CHAT.offen) chatOeffnen(false);
+});
+/* ── actions ────────────────────────────────────────────────────────────────
+   Each one mutates DB and re-renders. The cross-module consequences are the
+   interesting part and are called out in the toast, because in a live demo
+   nobody notices a margin moving two screens away unless you say so.
+   ────────────────────────────────────────────────────────────────────────── */
+const ACTIONS = {
+  'preis-uebernehmen'(el) {
+    const key = el.dataset.art, neu = +el.dataset.neu, a = DB.artikel[key];
+    const vor = DB.gerichte.map(g => ({ id: g.id, m: marge(g) }));
+    a.vorher = a.preis; a.preis = neu;
+    DB.rechnungen.find(r => r.id === OFFEN).status = 'erledigt';
+    const nach = DB.gerichte.map(g => marge(g));
+    const worst = DB.gerichte.map((g, i) => ({ g, d: nach[i] - vor[i].m }))
+      .sort((x, y) => x.d - y.d)[0];
+    logge(`${a.name.split(',')[0]} auf ${chf(neu)} übernommen — Marge ${esc(worst.g.name)} ${pct(worst.d)}`);
+    toast(`Preis übernommen. <b>${esc(worst.g.name)}</b> verliert ${Math.abs(worst.d).toFixed(1)} Punkte Marge — ` +
+          `nachzusehen in Gerichten.`);
+  },
+  'preis-reklamieren'() {
+    toast('Reklamation vorbereitet. Die Rechnung bleibt offen, bis der Lieferant antwortet.');
+    logge('Preisänderung beim Lieferanten reklamiert');
+  },
+  'menge-kuerzen'(el) {
+    const r = DB.rechnungen.find(x => x.id === el.dataset.inv);
+    const diff = +el.dataset.diff;
+    r.total -= diff; r.status = 'erledigt';
+    r.zeilen.forEach(z => { if (z.gel < z.best) z.best = z.gel; });
+    logge(`${r.id} um ${chf(diff)} gekürzt — nicht gelieferte Position entfernt`);
+    toast(`Rechnung auf <b>${chf(r.total)}</b> gekürzt. ${chf(diff)} verlassen Ihr Konto nicht.`);
+  },
+  'aktion-nehmen'(el) {
+    const a = DB.aktionen.find(x => x.id === el.dataset.id);
+    a.genommen = true;
+    const art = DB.artikel[a.art];
+    const spart = (art.preis - a.neu) / art.menge * a.monat;
+    logge(`Aktion ${art.name.split(',')[0]} übernommen — ${chf(spart)} bei üblicher Menge`);
+    toast(`Auf die Bestellliste. Bei Ihrer üblichen Menge sind das <b>${chf(spart)}</b>.`);
+  },
+  'haccp-export'() {
+    const n = DB.hygiene.filter(h => h.done).length;
+    toast(`Nachweis März erzeugt — ${DB.hygieneMonat} Einträge, jeder mit Name und Uhrzeit. ` +
+          `(In der Demo wird keine Datei geschrieben.)`);
+    logge(`HACCP-Nachweis exportiert (${n} Kontrollen heute)`);
+  },
+  'tuer-offen'(el) {
+    const g = DB.geraete.find(x => x.id === el.dataset.id);
+    g.temp = +(g.max + 2.8).toFixed(1);
+    // the curve has to show it too, or the widget contradicts the number
+    g.verlauf = g.verlauf.slice(3).concat([g.max + 0.9, g.max + 1.8, g.temp]);
+    DB.alarme.unshift({ geraet: g.name, wann: DB.today + ' ' + new Date().toLocaleTimeString('de-CH').slice(0, 5),
+      wert: g.temp, an: DB.user, quittiert: '', grund: 'Tür offen (Demo)' });
+    logge(`${g.name} aus dem Bereich gelaufen — Alarm an ${DB.user}`);
+    toast(`<b>${esc(g.name)}</b> bei ${g.temp.toFixed(1)} °C. Meldung an ${esc(DB.user)} ` +
+          `— und an die nächste Person, wenn niemand quittiert.`);
+  },
+  'alarm-quittieren'(el) {
+    const g = DB.geraete.find(x => x.id === el.dataset.id);
+    g.temp = +((g.min + g.max) / 2).toFixed(1);
+    g.verlauf = g.verlauf.slice(2).concat([+(g.max - 0.3).toFixed(2), g.temp]);
+    const a = DB.alarme.find(x => x.geraet === g.name && !x.quittiert);
+    if (a) a.quittiert = new Date().toLocaleTimeString('de-CH').slice(0, 5);
+    logge(`Alarm ${g.name} quittiert — Gerät wieder im Bereich`);
+    toast('Quittiert. Der Eintrag bleibt im Protokoll — dieselbe Aufzeichnung ist der HACCP-Nachweis.');
+  },
+  'brief-senden'(el) {
+    const b = DB.briefings.find(x => x.id === el.dataset.id);
+    const namen = b.faellig.map(id => DB.leute.find(p => p.id === id));
+    namen.forEach(p => { if (p.durch < p.total) p.durch++; });
+    b.faellig = [];
+    logge(`Briefing «${b.titel}» an ${namen.map(p => p.name).join(', ')} gesendet`);
+    toast(`«${esc(b.titel)}» an ${esc(namen.map(p => p.name).join(' und '))} — ${b.min} Minuten am Handy.`);
+  },
+  'karte-freigeben'() {
+    const k = DB.karte[0];
+    const n = k.ziele.filter(z => z.status === 'wartet').length;
+    k.ziele.forEach(z => { if (z.status === 'wartet') z.status = 'publiziert'; });
+    logge(`${esc(k.name)} auf ${n} Gästekanälen freigegeben`);
+    toast(`Freigegeben. ${n} Kanäle sind jetzt gleich — und der Beitrag dazu wartet in Social Media.`);
+  },
+  'post-freigeben'(el) {
+    const p = DB.posts.find(x => x.id === el.dataset.id);
+    p.status = 'freigegeben';
+    logge(`Beitrag «${p.titel}» freigegeben (${p.kanal}, ${p.wann})`);
+    toast(`Freigegeben. Geht ${esc(p.wann)} auf ${esc(p.kanal)} raus.`);
+  },
+  'post-verwerfen'(el) {
+    const p = DB.posts.find(x => x.id === el.dataset.id);
+    DB.posts = DB.posts.filter(x => x.id !== p.id);
+    logge(`Beitrag «${p.titel}» verworfen`);
+    toast('Verworfen. Nichts wird ohne Ihre Freigabe publiziert.');
+  },
+  'antwort-senden'(el) {
+    const b = DB.bewertungen.find(x => x.id === el.dataset.id);
+    b.status = 'gesendet';
+    DB.bewBeantwortet = Math.min(DB.bewMonat, DB.bewBeantwortet + 1);
+    logge(`Antwort auf ${b.quelle}-Bewertung (${b.thema}) gesendet`);
+    toast(`Gesendet — in der Sprache, in der der Gast geschrieben hat. ` +
+          `Beantwortet: <b>${DB.bewBeantwortet} von ${DB.bewMonat}</b>.`);
+  },
+  'antwort-ignorieren'(el) {
+    const b = DB.bewertungen.find(x => x.id === el.dataset.id);
+    b.status = 'ignoriert';
+    logge(`Bewertung (${b.thema}) ignoriert`);
+    toast('Ignoriert. Der Entwurf bleibt, falls Sie es sich anders überlegen.');
+  },
+};
+
+/* ── one delegated listener for the whole app ───────────────────────────── */
+document.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]');
+  if (go) { AKTIV = go.dataset.go; OFFEN = null; render(); return; }
+
+  const inv = e.target.closest('[data-inv]');
+  if (inv && !e.target.closest('[data-act]')) {
+    OFFEN = OFFEN === inv.dataset.inv ? null : inv.dataset.inv; render(); return;
+  }
+
+  const chk = e.target.closest('[data-check]');
+  if (chk) {
+    const h = DB.hygiene.find(x => x.id === chk.dataset.check);
+    h.done = !h.done;
+    if (h.done) {
+      h.wer = DB.user; h.zeit = new Date().toLocaleTimeString('de-CH').slice(0, 5);
+      DB.hygieneMonat++;
+      logge(`${h.station} · ${h.was} abgehakt`);
+      toast(`Abgehakt — mit <b>${esc(DB.user)}</b> und ${h.zeit} im Protokoll. ` +
+            `Das ist der Nachweis, nichts wird zweimal aufgeschrieben.`);
+    } else { h.wer = ''; h.zeit = ''; }
+    render(); return;
+  }
+
+  const act = e.target.closest('[data-act]');
+  if (act && ACTIONS[act.dataset.act]) { ACTIONS[act.dataset.act](act); render(); }
+});
+
+document.addEventListener('input', e => {
+  const c = e.target.closest('[data-count]');
+  if (c) { DB.lager.find(l => l.art === c.dataset.count).gezaehlt = +c.value || 0;
+           const v = $('#view'); const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+  const k = e.target.closest('[data-karte]');
+  if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = +k.value || g.karte;
+           const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+  const kp = e.target.closest('[data-kartepreis]');
+  if (kp) { DB.karte[0].preis = +kp.value || DB.karte[0].preis;
+            const y = window.scrollY; render(); window.scrollTo(0, y); }
+});
+
+document.addEventListener('change', e => {
+  const s = e.target.closest('[data-shift]');
+  if (s) {
+    const d = DB.woche.find(x => x.tag === s.dataset.shift);
+    d.besetzt = +s.value; d.stunden = d.besetzt * 8;
+    logge(`${d.tag}: Besetzung auf ${d.besetzt} geändert`);
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
