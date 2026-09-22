@@ -220,6 +220,17 @@ th.r,td.r{text-align:right}
   text-transform:uppercase;color:var(--dim);margin-bottom:4px}
 .pfeld textarea{width:100%;resize:vertical;line-height:1.55;min-height:62px}
 .pfeld input[type=text]{width:100%}
+/* the picture field: a real file picker and a real drop target. The file is
+   read in the browser and never leaves it — the demo makes no network call. */
+.bildzeile{display:flex;gap:10px;align-items:stretch}
+.dropzone{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;
+  border:1.5px dashed var(--line);border-radius:10px;padding:9px 12px;font-size:11.5px;
+  color:var(--dim);cursor:pointer;background:#fff}
+.dropzone:hover{border-color:var(--acc);color:var(--acci)}
+.dropzone.drauf{border-color:var(--acc);background:var(--wash);color:var(--acci)}
+.dropzone b{color:var(--ink);font-weight:650}
+.dropzone .klein{font-size:10px}
+.pvbild.hat{background-size:cover;background-position:center}
 .anlass{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--acci);
   background:var(--wash);border-radius:6px;padding:4px 8px}
 .woche7{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:20px}
@@ -1443,14 +1454,15 @@ const postText = p => { const e = postPreis(p.ref);
 function postVorschau(p) {
   const k = KANAL(p.format), f = FELDER[p.format] || FELDER.ig;
   // a story carries its text inside the picture, so that is where it is drawn
+  const bildStil = p.bild ? ` hat" style="background-image:url(${p.bild})` : '"';
   if (p.format === 'story') return `<div class="pv story">
     <div class="pvkopf">${esc(k.name)}<span style="margin-left:auto">${esc(p.datum)} ${esc(p.zeit)}</span></div>
-    <div class="pvbild"><span class="pvoverlay">${postText(p)}</span></div>
+    <div class="pvbild${bildStil}"><span class="pvoverlay">${postText(p)}</span></div>
     <div class="pvalt">Keine Bildunterschrift, keine Hashtags — Instagram nimmt bei Stories
       nur Bild oder Video.</div></div>`;
   return `<div class="pv ${p.format}">
     <div class="pvkopf">${esc(k.name)}<span style="margin-left:auto">${esc(p.datum)} ${esc(p.zeit)}</span></div>
-    ${p.format === 'gbp' ? '' : '<div class="pvbild"></div>'}
+    ${p.format === 'gbp' && !p.bild ? '' : `<div class="pvbild${bildStil}"></div>`}
     <div class="pvtext"><b>gaststube</b> ${postText(p)}
       ${f.tags && p.tags.length ? `<div class="pvtags">${p.tags.map(t => '#' + esc(t)).join(' ')}</div>` : ''}</div>
     ${f.alt && p.alt ? `<div class="pvalt">Alt-Text: ${esc(p.alt)}</div>` : ''}</div>`;
@@ -1472,6 +1484,19 @@ function postEditor(p) {
               ? `<span class="anlass">Anlass: ${esc(p.anlass)}${p.anlassWo
                   ? ` · <span class="link" data-go="${p.anlassWo}">nachsehen</span>` : ''}</span>` : ''}</div></div>
           <span class="tag ${p.status === 'entwurf' ? 't-warn' : 't-ok'}">${STATUS_TXT[p.status]}</span></div>
+        <div class="pfeld"><label>Bild${p.format === 'story' ? ' · 9:16'
+            : p.format === 'fb' ? ' · 16:9' : p.format === 'ig' ? ' · 1:1' : ''}</label>
+          <div class="bildzeile">
+            <label class="dropzone" data-drop="${p.id}">
+              <input type="file" accept="image/*" data-postbild="${p.id}" hidden>
+              ${p.bild
+                ? `<b>${esc(p.bildname || 'Bild gewählt')}</b>
+                   <span class="klein">Anderes Bild wählen oder hierher ziehen</span>`
+                : `<b>Bild wählen</b>
+                   <span class="klein">oder hierher ziehen · JPG oder PNG</span>`}</label>
+            ${p.bild ? `<button class="btn" data-bildweg="${p.id}">Entfernen</button>` : ''}</div>
+          ${p.bild ? '' : `<div class="small muted" style="margin-top:5px">Ohne Bild geht bei
+            ${esc(KANAL(p.format).kurz)} nichts raus.</div>`}</div>
         <div class="pfeld"><label>${esc(FELDER[p.format].textLabel)}</label>
           <textarea data-posttext="${p.id}">${esc(p.text)}</textarea>
           ${p.format === 'story' ? `<div class="small muted" style="margin-top:5px">Stories nehmen über die
@@ -2545,6 +2570,12 @@ document.addEventListener('click', e => {
     render(); return; }
   if (e.target.closest('[data-postzu]')) { POST_OFFEN = null; render(); return; }
 
+  const weg = e.target.closest('[data-bildweg]');
+  if (weg) { const p = DB.posts.find(x => x.id === weg.dataset.bildweg);
+    p.bild = null; p.bildname = null;
+    logge(`Bild für «${p.titel}» entfernt`);
+    render(); return; }
+
   const act = e.target.closest('[data-act]');
   if (act && ACTIONS[act.dataset.act]) { ACTIONS[act.dataset.act](act); render(); }
 });
@@ -2609,7 +2640,39 @@ document.addEventListener('input', e => {
 });
 
 // leaving a number field (blur or Enter) is when it may format itself
+/* ── the picture field ──────────────────────────────────────────────────────
+   FileReader, not an upload: the picture is read in the browser and kept in
+   memory, so the demo still makes no network call. In the live system the file
+   goes to Axyom's media store, because Instagram fetches the image from a URL
+   rather than accepting bytes.
+   ────────────────────────────────────────────────────────────────────────── */
+const MAX_BILD = 8 * 1024 * 1024;
+function bildLesen(p, datei) {
+  if (!datei) return;
+  if (!/^image\//.test(datei.type)) {
+    toast('Das ist kein Bild. JPG oder PNG.', 2); return;
+  }
+  if (datei.size > MAX_BILD) {
+    toast(`Das Bild ist ${(datei.size / 1048576).toFixed(1)} MB gross — mehr als 8 MB nimmt die Demo nicht.`, 2);
+    return;
+  }
+  const leser = new FileReader();
+  leser.onload = () => {
+    p.bild = leser.result;
+    p.bildname = `${datei.name} · ${(datei.size / 1024).toFixed(0)} KB`;
+    if (p.status !== 'entwurf') { p.status = 'entwurf';
+      logge(`Beitrag «${p.titel}» hat ein neues Bild — zurück auf Entwurf`); }
+    else logge(`Bild für «${p.titel}» gewählt (${datei.name})`);
+    toast(`Bild übernommen. Zugeschnitten wird für ${esc(KANAL(p.format).kurz)}.`, 1);
+    render();
+  };
+  leser.onerror = () => toast('Das Bild liess sich nicht lesen.', 2);
+  leser.readAsDataURL(datei);
+}
+
 document.addEventListener('change', e => {
+  const bild = e.target.closest('[data-postbild]');
+  if (bild) { bildLesen(DB.posts.find(x => x.id === bild.dataset.postbild), bild.files[0]); return; }
   if (TIPPFELDER.some(a => e.target.hasAttribute?.(a))) { const y = window.scrollY;
     render(); window.scrollTo(0, y); return; }
   const pw = e.target.closest('[data-postwann]');
@@ -2625,6 +2688,23 @@ document.addEventListener('change', e => {
     logge(`${d.tag}: Besetzung auf ${d.besetzt} geändert`);
     render();
   }
+});
+
+/* ── dragging a picture in ─────────────────────────────────────────────────── */
+['dragenter', 'dragover'].forEach(n => document.addEventListener(n, e => {
+  const z = e.target.closest('[data-drop]');
+  if (!z) return;
+  e.preventDefault(); z.classList.add('drauf');
+}));
+document.addEventListener('dragleave', e => {
+  const z = e.target.closest('[data-drop]');
+  if (z) z.classList.remove('drauf');
+});
+document.addEventListener('drop', e => {
+  const z = e.target.closest('[data-drop]');
+  if (!z) return;
+  e.preventDefault(); z.classList.remove('drauf');
+  bildLesen(DB.posts.find(x => x.id === z.dataset.drop), e.dataTransfer.files[0]);
 });
 
 render();
