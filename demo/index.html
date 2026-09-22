@@ -205,11 +205,16 @@ th.r,td.r{text-align:right}
   text-transform:uppercase;color:var(--dim)}
 .pv .pvbild{background:linear-gradient(135deg,#cfe9e3,#8ed2c5 55%,#d8e9ae)}
 .pv.ig .pvbild{aspect-ratio:1/1}
-.pv.story .pvbild{aspect-ratio:9/16;max-height:250px}
+/* a story canvas is 9:16 — centred in the card rather than hugging one edge */
+.pv.story .pvbild{aspect-ratio:9/16;max-height:260px;margin:9px auto;border-radius:10px}
 .pv.fb .pvbild{aspect-ratio:16/9}
 .pv .pvtext{padding:9px 11px;font-size:11.5px;line-height:1.5}
 .pv .pvtags{color:var(--acci);font-size:11px;margin-top:6px;word-break:break-word}
 .pv .pvalt{padding:0 11px 9px;font-size:9.5px;color:var(--dim);line-height:1.4}
+.pv.story .pvbild{position:relative;display:flex;align-items:flex-end}
+.pvoverlay{padding:10px 11px;color:#fff;font-size:11.5px;font-weight:650;line-height:1.4;
+  text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.pvoverlay b{font-weight:800}
 .pfeld{margin-bottom:10px}
 .pfeld > label{display:block;font-size:9.5px;font-weight:700;letter-spacing:.06em;
   text-transform:uppercase;color:var(--dim);margin-bottom:4px}
@@ -1424,6 +1429,10 @@ VIEWS.inhalte = () => {
    a second place that has to be kept in step.
    ────────────────────────────────────────────────────────────────────────── */
 const KANAL = id => DB.kanaele.find(k => k.id === id) || { name: id, kurz: id };
+const FELDER = { ig:    { tags:true,  alt:true,  textLabel:'Text' },
+                 fb:    { tags:true,  alt:true,  textLabel:'Text' },
+                 story: { tags:false, alt:false, textLabel:'Text im Bild' },
+                 gbp:   { tags:false, alt:false, textLabel:'Text' } };
 const STATUS_TXT = { entwurf:'Entwurf', freigegeben:'freigegeben', publiziert:'publiziert' };
 // a post that names a dish reads name and price off the card
 const postPreis = ref => { const e = ref && DB.karte.eintraege.find(x => x.id === ref);
@@ -1432,14 +1441,19 @@ const postText = p => { const e = postPreis(p.ref);
   return esc(p.text) + (e ? ` <b>${esc(e.name)}, ${chf(e.preis)}.</b>` : ''); };
 
 function postVorschau(p) {
-  const k = KANAL(p.format);
-  const bild = p.format === 'gbp' ? '' : '<div class="pvbild"></div>';
+  const k = KANAL(p.format), f = FELDER[p.format] || FELDER.ig;
+  // a story carries its text inside the picture, so that is where it is drawn
+  if (p.format === 'story') return `<div class="pv story">
+    <div class="pvkopf">${esc(k.name)}<span style="margin-left:auto">${esc(p.datum)} ${esc(p.zeit)}</span></div>
+    <div class="pvbild"><span class="pvoverlay">${postText(p)}</span></div>
+    <div class="pvalt">Keine Bildunterschrift, keine Hashtags — Instagram nimmt bei Stories
+      nur Bild oder Video.</div></div>`;
   return `<div class="pv ${p.format}">
     <div class="pvkopf">${esc(k.name)}<span style="margin-left:auto">${esc(p.datum)} ${esc(p.zeit)}</span></div>
-    ${bild}
+    ${p.format === 'gbp' ? '' : '<div class="pvbild"></div>'}
     <div class="pvtext"><b>gaststube</b> ${postText(p)}
-      ${p.tags.length ? `<div class="pvtags">${p.tags.map(t => '#' + esc(t)).join(' ')}</div>` : ''}</div>
-    ${p.alt ? `<div class="pvalt">Alt-Text: ${esc(p.alt)}</div>` : ''}</div>`;
+      ${f.tags && p.tags.length ? `<div class="pvtags">${p.tags.map(t => '#' + esc(t)).join(' ')}</div>` : ''}</div>
+    ${f.alt && p.alt ? `<div class="pvalt">Alt-Text: ${esc(p.alt)}</div>` : ''}</div>`;
 }
 
 function postEditor(p) {
@@ -1458,18 +1472,21 @@ function postEditor(p) {
               ? `<span class="anlass">Anlass: ${esc(p.anlass)}${p.anlassWo
                   ? ` · <span class="link" data-go="${p.anlassWo}">nachsehen</span>` : ''}</span>` : ''}</div></div>
           <span class="tag ${p.status === 'entwurf' ? 't-warn' : 't-ok'}">${STATUS_TXT[p.status]}</span></div>
-        <div class="pfeld"><label>Text</label>
-          <textarea data-posttext="${p.id}">${esc(p.text)}</textarea></div>
+        <div class="pfeld"><label>${esc(FELDER[p.format].textLabel)}</label>
+          <textarea data-posttext="${p.id}">${esc(p.text)}</textarea>
+          ${p.format === 'story' ? `<div class="small muted" style="margin-top:5px">Stories nehmen über die
+            Schnittstelle keine Bildunterschrift an — dieser Text wird ins Bild gesetzt.</div>` : ''}</div>
         <div class="grid g2" style="gap:12px">
-          <div class="pfeld"><label>Hashtags</label>
-            <input type="text" data-posttags="${p.id}" value="${esc(p.tags.map(t => '#' + t).join(' '))}"></div>
+          ${FELDER[p.format].tags ? `<div class="pfeld"><label>Hashtags</label>
+            <input type="text" data-posttags="${p.id}" value="${esc(p.tags.map(t => '#' + t).join(' '))}"></div>`
+            : '<div></div>'}
           <div class="pfeld"><label>Datum und Zeitfenster</label>
             <div class="row" style="gap:7px">
               <input type="text" style="width:84px" data-postdatum="${p.id}" value="${esc(p.datum)}">
               <select data-postwann="${p.id}">${DB.slots.map(sl =>
                 `<option ${sl === p.zeit ? 'selected' : ''}>${esc(sl)}</option>`).join('')}</select></div></div></div>
-        <div class="pfeld"><label>Alt-Text · für Gäste mit Screenreader</label>
-          <input type="text" data-postalt="${p.id}" value="${esc(p.alt)}"></div>
+        ${FELDER[p.format].alt ? `<div class="pfeld"><label>Alt-Text · für Gäste mit Screenreader</label>
+          <input type="text" data-postalt="${p.id}" value="${esc(p.alt)}"></div>` : ''}
         ${p.ref ? `<div class="small muted" style="margin-bottom:11px">Preis und Name kommen aus
             <span class="link" data-go="inhalte">der Karte</span> — ändert sich dort etwas, ändert sich dieser Text.</div>` : ''}
         <div class="row">${offen
