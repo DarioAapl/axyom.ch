@@ -658,15 +658,23 @@ const DB = {
     { id:'r1', quelle:'Google', sterne:4, wann:'vor 2 Tagen', thema:'Tempo im Mittagsservice',
       text:'Schöner Abend, allerdings haben wir mittags zwischen den Gängen länger gewartet.',
       antwort:'Danke für die Rückmeldung — die Wartezeit zwischen den Gängen entspricht mittags nicht unserem Anspruch. Wir haben es der Küche weitergegeben.',
-      status:'entwurf' },
+      ton:'sachlich', status:'entwurf',
+      varianten:[
+        { ton:'sachlich', text:'Danke für die Rückmeldung — die Wartezeit zwischen den Gängen entspricht mittags nicht unserem Anspruch. Wir haben es der Küche weitergegeben.' },
+        { ton:'herzlich', text:'Vielen Dank, dass Sie bei uns waren, und danke für die offenen Worte. Dass es mittags zwischen den Gängen gedauert hat, ärgert uns selbst — wir haben es mit der Küche angeschaut. Wir würden uns freuen, es beim nächsten Mal besser zu zeigen.' },
+        { ton:'kurz',     text:'Danke für die Rückmeldung. Die Wartezeit mittags haben wir der Küche weitergegeben.' } ] },
     { id:'r2', quelle:'OpenTable', sterne:5, wann:'vor 3 Tagen', thema:'Preis-Leistung Weinkarte',
       text:'Die offenen Weine sind für die Lage sehr fair kalkuliert.',
       antwort:'Vielen Dank — die offene Auswahl wechseln wir alle zwei Wochen, es lohnt sich also wiederzukommen.',
-      status:'entwurf' },
+      ton:'sachlich', status:'entwurf',
+      varianten:[
+        { ton:'sachlich', text:'Vielen Dank — die offene Auswahl wechseln wir alle zwei Wochen, es lohnt sich also wiederzukommen.' },
+        { ton:'herzlich', text:'Das freut uns sehr zu lesen, vielen Dank! Bei den offenen Weinen wechseln wir alle zwei Wochen — es lohnt sich also, wieder vorbeizukommen.' },
+        { ton:'kurz',     text:'Danke! Die offene Auswahl wechselt alle zwei Wochen.' } ] },
     { id:'r3', quelle:'Google', sterne:3, wann:'vor 5 Tagen', thema:'Portionsgrösse, Hauptgänge',
       text:'Gut gekocht, aber der Hauptgang war für den Preis klein.',
       antwort:'Danke, dass Sie das ansprechen. Wir schauen die Portionen bei den Hauptgängen diese Woche durch.',
-      status:'gesendet' },
+      ton:'sachlich', status:'gesendet', varianten:[] },
   ],
   bewMonat:34, bewBeantwortet:31, schnitt:4.6, schnittVorher:4.5,
 
@@ -1605,20 +1613,35 @@ VIEWS.bewertungen = () => {
     <td style="width:190px"><div class="bar"><i style="width:${Math.round(t.n / maxN * 100)}%;
       background:${t.trend === 'down' ? 'var(--warn)' : 'var(--acc)'}"></i></div></td>
     <td class="r num">${t.n}</td></tr>`).join('');
-  const bew = DB.bewertungen.map(b => `<div class="card" style="margin-bottom:11px">
-    <div class="row" style="justify-content:space-between;align-items:flex-start">
-      <div style="min-width:0;max-width:66ch">
-        <div class="row" style="gap:8px">
-          <span class="tag t-mute">${esc(b.quelle)} · ${b.sterne}★</span>
-          <span class="small muted">${esc(b.wann)} · ${esc(b.thema)}</span></div>
-        <div class="small" style="margin-top:8px;line-height:1.6">«${esc(b.text)}»</div>
-        <div class="small muted" style="margin-top:9px;line-height:1.6;padding-left:11px;
-             border-left:2px solid var(--wash)"><b style="color:var(--acci)">Antwortentwurf</b><br>${esc(b.antwort)}</div>
-      </div>
-      ${b.status === 'entwurf'
-        ? `<div class="row"><button class="btn acc" data-act="antwort-senden" data-id="${b.id}">Senden</button>
-             <button class="btn" data-act="antwort-ignorieren" data-id="${b.id}">Ignorieren</button></div>`
-        : `<span class="tag t-ok">${b.status}</span>`}</div></div>`).join('');
+  // Google nimmt bis 4096 Zeichen in einer Antwort
+  const LIMIT = 4096;
+  const bew = DB.bewertungen.map(b => {
+    const offen = b.status === 'entwurf';
+    const naechsterTon = b.varianten && b.varianten.length
+      ? b.varianten[(b.varianten.findIndex(v => v.ton === b.ton) + 1) % b.varianten.length] : null;
+    return `<div class="card" style="margin-bottom:12px">
+      <div class="row" style="justify-content:space-between;align-items:flex-start;gap:14px">
+        <div style="min-width:0;max-width:72ch">
+          <div class="row" style="gap:8px">
+            <span class="tag t-mute">${esc(b.quelle)} · ${b.sterne}★</span>
+            <span class="small muted">${esc(b.wann)} · ${esc(b.thema)}</span></div>
+          <div class="small" style="margin-top:8px;line-height:1.6">«${esc(b.text)}»</div></div>
+        ${offen ? '' : `<span class="tag ${b.status === 'gesendet' ? 't-ok' : 't-mute'}">${esc(b.status)}</span>`}</div>
+      ${offen ? `<div class="pfeld" style="margin-top:12px;margin-bottom:0">
+          <label>Ihre Antwort · Entwurf von Axyom${b.angepasst ? ' · von Ihnen angepasst' : ''}</label>
+          <textarea data-antwort="${b.id}" style="min-height:76px">${esc(b.antwort)}</textarea>
+          <div class="row" style="justify-content:space-between;margin-top:9px">
+            <div class="row">
+              <button class="btn acc" data-act="antwort-senden" data-id="${b.id}">Antwort senden</button>
+              ${naechsterTon ? `<button class="btn" data-act="antwort-ton" data-id="${b.id}"
+                >Anders formulieren · ${esc(naechsterTon.ton)}</button>` : ''}
+              <button class="btn" data-act="antwort-ignorieren" data-id="${b.id}">Ignorieren</button></div>
+            <span class="small ${b.antwort.length > LIMIT ? '' : 'muted'}"
+              style="${b.antwort.length > LIMIT ? 'color:var(--warn);font-weight:650' : ''}"
+              >${b.antwort.length} von ${LIMIT} Zeichen</span></div></div>`
+        : `<div class="small muted" style="margin-top:10px;line-height:1.6;padding-left:11px;
+             border-left:2px solid var(--wash)">${esc(b.antwort)}</div>`}</div>`;
+  }).join('');
   const quote = DB.bewBeantwortet / DB.bewMonat * 100;
   return `<div class="grid g3" style="margin-bottom:20px">
       <div class="card kpi"><div class="l">Schnitt, 30 Tage</div><div class="n">${DB.schnitt.toFixed(1)}</div>
@@ -2521,13 +2544,22 @@ const ACTIONS = {
     logge(`Beitrag «${p.titel}» verworfen`);
     toast('Verworfen. Nichts wird ohne Ihre Freigabe publiziert.');
   },
+  'antwort-ton'(el) {
+    const b = DB.bewertungen.find(x => x.id === el.dataset.id);
+    const i = b.varianten.findIndex(v => v.ton === b.ton);
+    const v = b.varianten[(i + 1) % b.varianten.length];
+    b.ton = v.ton; b.antwort = v.text; b.angepasst = false;
+    logge(`Antwort auf ${b.quelle}-Bewertung neu formuliert (${v.ton})`);
+    toast(`Neu formuliert, ${esc(v.ton)}. Ändern können Sie weiter jeden Satz.`, 1);
+  },
   'antwort-senden'(el) {
     const b = DB.bewertungen.find(x => x.id === el.dataset.id);
     b.status = 'gesendet';
     DB.bewBeantwortet = Math.min(DB.bewMonat, DB.bewBeantwortet + 1);
-    logge(`Antwort auf ${b.quelle}-Bewertung (${b.thema}) gesendet`);
-    toast(`Gesendet — in der Sprache, in der der Gast geschrieben hat. ` +
-          `Beantwortet: <b>${DB.bewBeantwortet} von ${DB.bewMonat}</b>.`, 1);
+    logge(`Antwort auf ${b.quelle}-Bewertung (${b.thema}) gesendet` +
+          (b.angepasst ? ' — von Ihnen angepasst' : ''));
+    toast(`Gesendet${b.angepasst ? ', mit Ihren Änderungen' : ''} — in der Sprache, in der der Gast ` +
+          `geschrieben hat. Beantwortet: <b>${DB.bewBeantwortet} von ${DB.bewMonat}</b>.`, 1);
   },
   'antwort-ignorieren'(el) {
     const b = DB.bewertungen.find(x => x.id === el.dataset.id);
@@ -2586,7 +2618,8 @@ document.addEventListener('click', e => {
    click between digits. Keep the typed text and the focus; formatting waits for
    the field to be left. */
 const TIPPFELDER = ['data-count', 'data-karte', 'data-kartepreis',
-                   'data-posttext', 'data-posttags', 'data-postalt', 'data-postdatum'];
+                   'data-posttext', 'data-posttags', 'data-postalt', 'data-postdatum',
+                   'data-antwort'];
 
 function renderTippend(el) {
   const attr = TIPPFELDER.find(a => el.hasAttribute(a));
@@ -2629,6 +2662,11 @@ document.addEventListener('input', e => {
       logge(`Beitrag «${p.titel}» geändert — zurück auf Entwurf`); }
     renderTippend(pt); return;
   }
+  const aw = e.target.closest('[data-antwort]');
+  if (aw) { const b = DB.bewertungen.find(x => x.id === aw.dataset.antwort);
+    b.antwort = aw.value;
+    b.angepasst = !b.varianten.some(v => v.text === aw.value);
+    renderTippend(aw); return; }
   const kp = e.target.closest('[data-kartepreis]');
   if (kp) { const e2 = DB.karte.eintraege.find(x => x.id === kp.dataset.kartepreis);
     const wert = +kp.value;
