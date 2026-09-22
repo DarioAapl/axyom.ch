@@ -720,7 +720,7 @@ VIEWS.rechnungen = () => {
         <div class="row" style="margin-top:11px">
           <button class="btn acc" data-act="preis-uebernehmen" data-art="${preisZeile.art}"
                   data-neu="${preisZeile.preis}">Preis übernehmen</button>
-          <button class="btn" data-act="preis-reklamieren">Beim Lieferanten reklamieren</button></div></div>`;
+          <button class="btn" data-act="preis-nachfragen">Beim Lieferanten nachfragen</button></div></div>`;
     } else if (mengeZeile) {
       const a = DB.artikel[mengeZeile.art];
       const diff = (mengeZeile.best - mengeZeile.gel) * mengeZeile.preis;
@@ -1184,7 +1184,7 @@ function offeneSachen() {
     const auf = (z.preis / a.vorher - 1) * 100;
     items.push({ ernst: 2, wo: 'rechnungen', modul: 'Rechnungen',
       was: `${a.name.split(',')[0]} +${auf.toFixed(1)}% bei ${r.lief}`,
-      warum: (n => `Steckt in ${n} Gericht${n > 1 ? 'en' : ''} — Preis übernehmen oder reklamieren`)(
+      warum: (n => `Steckt in ${n} Gericht${n > 1 ? 'en' : ''} — Preis übernehmen oder nachfragen`)(
         DB.gerichte.filter(g => g.rezept.some(x => x.art === z.art)).length) });
   });
   DB.rechnungen.filter(r => r.status === 'menge').forEach(r => {
@@ -1900,9 +1900,9 @@ const ACTIONS = {
     toast(`Preis übernommen. <b>${esc(worst.g.name)}</b> verliert ${Math.abs(worst.d).toFixed(1)} Punkte Marge — ` +
           `nachzusehen in Gerichten.`);
   },
-  'preis-reklamieren'() {
-    toast('Reklamation vorbereitet. Die Rechnung bleibt offen, bis der Lieferant antwortet.');
-    logge('Preisänderung beim Lieferanten reklamiert');
+  'preis-nachfragen'() {
+    toast('Nachfrage vorbereitet. Die Rechnung bleibt offen, bis der Lieferant antwortet.');
+    logge('Preisänderung beim Lieferanten nachgefragt');
   },
   'menge-kuerzen'(el) {
     const r = DB.rechnungen.find(x => x.id === el.dataset.inv);
