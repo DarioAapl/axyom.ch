@@ -109,6 +109,39 @@ th.r,td.r{text-align:right}
 .check svg{display:none}.check.on svg{display:block}
 .link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 
+/* ── post previews (Social Media) ──────────────────────────────────────────
+   A draft is judged by how it will look, so each one is drawn in the shape of
+   its channel — square for a feed post, 9:16 for a story, 16:9 for Facebook —
+   with the caption, the hashtags and the alt text that go with it.
+   ────────────────────────────────────────────────────────────────────────── */
+.posts{display:flex;flex-direction:column;gap:14px}
+.post{display:grid;grid-template-columns:226px 1fr;gap:20px;align-items:start}
+.pv{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.pv .pvkopf{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--surf);
+  border-bottom:1px solid var(--soft);font-size:9.5px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--dim)}
+.pv .pvbild{background:linear-gradient(135deg,#cfe9e3,#8ed2c5 55%,#d8e9ae)}
+.pv.ig .pvbild{aspect-ratio:1/1}
+.pv.story .pvbild{aspect-ratio:9/16;max-height:250px}
+.pv.fb .pvbild{aspect-ratio:16/9}
+.pv .pvtext{padding:9px 11px;font-size:11.5px;line-height:1.5}
+.pv .pvtags{color:var(--acci);font-size:11px;margin-top:6px;word-break:break-word}
+.pv .pvalt{padding:0 11px 9px;font-size:9.5px;color:var(--dim);line-height:1.4}
+.pfeld{margin-bottom:10px}
+.pfeld > label{display:block;font-size:9.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.pfeld textarea{width:100%;resize:vertical;line-height:1.55;min-height:62px}
+.pfeld input[type=text]{width:100%}
+.anlass{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--acci);
+  background:var(--wash);border-radius:6px;padding:4px 8px}
+.woche7{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:20px}
+.woche7 .t7{border:1px solid var(--soft);border-radius:9px;padding:8px 9px;min-height:72px;background:#fff}
+.woche7 .t7 .d7{font-size:10px;font-weight:700;color:var(--dim);margin-bottom:5px}
+.woche7 .t7 .p7{font-size:10.5px;line-height:1.35;padding:4px 6px;border-radius:6px;
+  background:var(--warnbg);color:var(--warn);font-weight:600;margin-bottom:4px}
+.woche7 .t7 .p7.frei{background:var(--okbg);color:var(--acci)}
+@media (max-width:900px){ .post{grid-template-columns:1fr} .woche7{grid-template-columns:repeat(3,1fr)} }
+
 /* ── channel previews (Inhalte) ────────────────────────────────────────────
    A status table can only claim that the channels disagree. These render what
    each channel currently shows, so one that has not been released proves it
@@ -459,15 +492,27 @@ const DB = {
              { was:'Newsletter',        typ:'mail', status:'wartet' } ],
   },
 
-  // social: drafts that wait for a release
+  /* Social: drafts, and what each one was written FROM. A post that names a
+     price reads it off the card entry (ref), so changing the price in Inhalte
+     or Gerichte rewrites the draft instead of leaving a wrong number in it. */
   posts: [
-    { id:'s1', wann:'Di 11:00', titel:'Bärlauchrisotto ist zurück', kanal:'Instagram', status:'entwurf',
-      text:'Der Bärlauch ist da. Ab heute im Gartensaal und in der Gaststube.' },
-    { id:'s2', wann:'Do 17:30', titel:'Terrasse offen', kanal:'Instagram', status:'entwurf',
-      text:'Ab Donnerstag ist die Terrasse offen — 40 Plätze an der Sonne.' },
-    { id:'s3', wann:'Fr 09:00', titel:'Freitag: Eglifilet', kanal:'Facebook', status:'freigegeben',
-      text:'Frisch aus dem See. Freitag und Samstag, solange es reicht.' },
+    { id:'s1', wann:'Di 11:00', kanal:'Instagram', format:'ig', status:'entwurf',
+      titel:'Bärlauchrisotto ist zurück', ref:'e5',
+      anlass:'Neu auf der Karte', anlassWo:'inhalte',
+      text:'Der Bärlauch ist da. Ab heute im Gartensaal und in der Gaststube — solange die Saison läuft.',
+      tags:['baerlauch','saisonal','gaststube'],
+      alt:'Teller Risotto mit Bärlauch, von oben aufgenommen' },
+    { id:'s2', wann:'Do 17:30', kanal:'Instagram', format:'story', status:'entwurf',
+      titel:'Terrasse offen', anlass:'Wetter ab Donnerstag über 18°', anlassWo:null,
+      text:'Ab Donnerstag ist die Terrasse offen — 40 Plätze an der Sonne.',
+      tags:['terrasse','frühling'], alt:'Terrasse mit gedeckten Tischen in der Abendsonne' },
+    { id:'s3', wann:'Fr 09:00', kanal:'Facebook', format:'fb', status:'freigegeben',
+      titel:'Freitag: Eglifilet', ref:'e2',
+      anlass:'Fischlieferung Freitag bestätigt', anlassWo:'rechnungen',
+      text:'Frisch aus dem See. Freitag und Samstag, solange es reicht.',
+      tags:['eglifilet','fisch'], alt:'Eglifilet in der Pfanne mit Butter' },
   ],
+  slots: ['Mo 11:00', 'Di 11:00', 'Mi 17:30', 'Do 17:30', 'Fr 09:00', 'Sa 10:00', 'So 16:00'],
 
   // reviews: grouped by what they are actually about
   themen: [
@@ -1255,29 +1300,76 @@ VIEWS.inhalte = () => {
 
 /* ── Social Media ───────────────────────────────────────────────────────── */
 VIEWS.social = () => {
-  const rows = DB.posts.map(p => `<div class="card" style="margin-bottom:11px">
-    <div class="row" style="justify-content:space-between;align-items:flex-start">
+  // a post that names a dish reads its price off the card, so a draft can
+  // never quote a price the house no longer charges
+  const preisVon = ref => { const e = DB.karte.eintraege.find(x => x.id === ref);
+    return e ? eintrag(e) : null; };
+  const kanalName = { ig:'Instagram · Beitrag', story:'Instagram · Story', fb:'Facebook' };
+
+  const caption = p => { const e = p.ref && preisVon(p.ref);
+    return esc(p.text) + (e ? ` <b>${esc(e.name)}, ${chf(e.preis)}.</b>` : ''); };
+
+  const vorschau = p => `<div class="pv ${p.format}">
+    <div class="pvkopf">${esc(kanalName[p.format] || p.kanal)}
+      <span style="margin-left:auto">${esc(p.wann)}</span></div>
+    <div class="pvbild"></div>
+    <div class="pvtext"><b>gaststube</b> ${caption(p)}
+      <div class="pvtags">${p.tags.map(t => '#' + esc(t)).join(' ')}</div></div>
+    <div class="pvalt">Alt-Text: ${esc(p.alt)}</div></div>`;
+
+  const felder = p => `<div>
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:11px">
       <div style="min-width:0">
-        <div class="row" style="gap:8px">
-          <span class="tag ${p.status === 'freigegeben' ? 't-ok' : 't-mute'}">${p.status === 'freigegeben' ? 'freigegeben' : 'Entwurf'}</span>
-          <b class="small">${esc(p.titel)}</b>
-          <span class="small muted">${esc(p.kanal)} · ${esc(p.wann)}</span></div>
-        <div class="small muted" style="margin-top:7px;line-height:1.6;max-width:62ch">${esc(p.text)}</div></div>
-      ${p.status === 'entwurf'
-        ? `<div class="row"><button class="btn acc" data-act="post-freigeben" data-id="${p.id}">Freigeben</button>
-             <button class="btn" data-act="post-verwerfen" data-id="${p.id}">Verwerfen</button></div>`
-        : '<span class="small muted">geht raus wie geplant</span>'}</div></div>`).join('');
-  const entwuerfe = DB.posts.filter(p => p.status === 'entwurf').length;
-  return `<div class="grid g3" style="margin-bottom:20px">
+        <b style="font-size:14.5px">${esc(p.titel)}</b>
+        <div style="margin-top:6px">${p.anlass
+          ? `<span class="anlass">Anlass: ${esc(p.anlass)}${p.anlassWo
+              ? ` · <span class="link" data-go="${p.anlassWo}">nachsehen</span>` : ''}</span>` : ''}</div></div>
+      <span class="tag ${p.status === 'freigegeben' ? 't-ok' : 't-warn'}"
+        >${p.status === 'freigegeben' ? 'freigegeben' : 'Entwurf'}</span></div>
+
+    <div class="pfeld"><label>Text</label>
+      <textarea data-posttext="${p.id}">${esc(p.text)}</textarea></div>
+    <div class="grid g2" style="gap:12px">
+      <div class="pfeld"><label>Hashtags</label>
+        <input type="text" data-posttags="${p.id}" value="${esc(p.tags.map(t => '#' + t).join(' '))}"></div>
+      <div class="pfeld"><label>Zeitfenster</label>
+        <select data-postwann="${p.id}">${DB.slots.map(sl =>
+          `<option ${sl === p.wann ? 'selected' : ''}>${esc(sl)}</option>`).join('')}</select></div></div>
+    <div class="pfeld"><label>Alt-Text · für Gäste mit Screenreader</label>
+      <input type="text" data-postalt="${p.id}" value="${esc(p.alt)}"></div>
+    ${p.ref ? `<div class="small muted" style="margin-bottom:11px">Preis und Name kommen aus
+        <span class="link" data-go="inhalte">der Karte</span> — ändert sich dort etwas, ändert sich dieser Text.</div>` : ''}
+    <div class="row">${p.status === 'entwurf'
+      ? `<button class="btn acc" data-act="post-freigeben" data-id="${p.id}">Freigeben</button>
+         <button class="btn" data-act="post-verwerfen" data-id="${p.id}">Verwerfen</button>`
+      : `<span class="small muted">Geht ${esc(p.wann)} raus. Änderung hier setzt ihn zurück auf Entwurf.</span>`}
+    </div></div>`;
+
+  const posts = DB.posts.map(p => `<div class="card"><div class="post">
+    ${vorschau(p)}${felder(p)}</div></div>`).join('');
+
+  /* the week, so «diese Woche» is visible and not just a number */
+  const tage = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  const strip = tage.map(t => `<div class="t7"><div class="d7">${t}</div>
+    ${DB.posts.filter(p => p.wann.startsWith(t)).map(p =>
+      `<div class="p7 ${p.status === 'freigegeben' ? 'frei' : ''}">${esc(p.wann.slice(3))}<br>${esc(p.kanal)}</div>`
+    ).join('') || '<div class="small muted" style="font-size:10px">—</div>'}</div>`).join('');
+
+  const entwuerfe = DB.posts.filter(p => p.status === 'entwurf');
+  return `<div class="grid g3" style="margin-bottom:18px">
       <div class="card kpi"><div class="l">Diese Woche</div><div class="n">${DB.posts.length} Beiträge</div>
-        <div class="d">Aus Kartenänderungen entworfen</div></div>
-      <div class="card kpi"><div class="l">Warten auf Freigabe</div><div class="n">${entwuerfe}</div>
+        <div class="d">Aus Kartenänderungen und Lieferungen entworfen</div></div>
+      <div class="card kpi"><div class="l">Warten auf Freigabe</div>
+        <div class="n" style="color:${entwuerfe.length ? 'var(--warn)' : 'var(--ink)'}">${entwuerfe.length}</div>
         <div class="d">Nichts wird ohne Freigabe publiziert</div></div>
-      <div class="card kpi"><div class="l">Geschrieben von</div><div class="n">Axyom</div>
-        <div class="d">Sie lesen durch und geben frei</div></div></div>
-    ${rows}
-    <div class="small muted">Der erste Entwurf kommt aus der Kartenänderung in
-      <span class="link" data-go="inhalte">Inhalte</span> — dasselbe Gericht, derselbe Preis.</div>`;
+      <div class="card kpi"><div class="l">Nächstes Fenster</div>
+        <div class="n">${esc(entwuerfe[0] ? entwuerfe[0].wann : '—')}</div>
+        <div class="d">Zeitfenster pro Beitrag änderbar</div></div></div>
+    <div class="woche7">${strip}</div>
+    <div class="posts">${posts}</div>
+    <div class="small muted" style="margin-top:14px">Entworfen wird aus dem, was sich im Haus geändert hat —
+      der erste Beitrag aus der Kartenänderung in <span class="link" data-go="inhalte">Inhalte</span>.
+      Text, Hashtags, Alt-Text und Zeitfenster gehören Ihnen; ohne Freigabe geht nichts raus.</div>`;
 };
 
 /* ── Bewertungen ────────────────────────────────────────────────────────── */
@@ -2233,7 +2325,8 @@ document.addEventListener('click', e => {
    formatted value from DB. Typing «38» therefore produced «3.008» and needed a
    click between digits. Keep the typed text and the focus; formatting waits for
    the field to be left. */
-const TIPPFELDER = ['data-count', 'data-karte', 'data-kartepreis'];
+const TIPPFELDER = ['data-count', 'data-karte', 'data-kartepreis',
+                   'data-posttext', 'data-posttags', 'data-postalt'];
 
 function renderTippend(el) {
   const attr = TIPPFELDER.find(a => el.hasAttribute(a));
@@ -2261,6 +2354,18 @@ document.addEventListener('input', e => {
   if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = +k.value || g.karte;
            kanaelePruefen();   // the card is published — the channels are now behind
            renderTippend(k); return; }
+  /* A released post that is edited goes back to being a draft: the thing that
+     was approved is not the thing that would go out. */
+  const pt = e.target.closest('[data-posttext]') || e.target.closest('[data-posttags]')
+          || e.target.closest('[data-postalt]');
+  if (pt) {
+    const p = DB.posts.find(x => x.id === (pt.dataset.posttext || pt.dataset.posttags || pt.dataset.postalt));
+    if (pt.dataset.posttext) p.text = pt.value;
+    else if (pt.dataset.posttags) p.tags = pt.value.split(/[\s,]+/).map(t => t.replace(/^#/, '')).filter(Boolean);
+    else p.alt = pt.value;
+    if (p.status === 'freigegeben') { p.status = 'entwurf'; logge(`Beitrag «${p.titel}» geändert — Freigabe zurückgezogen`); }
+    renderTippend(pt); return;
+  }
   const kp = e.target.closest('[data-kartepreis]');
   if (kp) { const e2 = DB.karte.eintraege.find(x => x.id === kp.dataset.kartepreis);
     const wert = +kp.value;
@@ -2275,6 +2380,12 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   if (TIPPFELDER.some(a => e.target.hasAttribute?.(a))) { const y = window.scrollY;
     render(); window.scrollTo(0, y); return; }
+  const pw = e.target.closest('[data-postwann]');
+  if (pw) { const p = DB.posts.find(x => x.id === pw.dataset.postwann);
+    p.wann = pw.value;
+    logge(`Beitrag «${p.titel}» auf ${p.wann} gelegt`);
+    toast(`Zeitfenster auf <b>${esc(p.wann)}</b> gelegt.`, 1);
+    render(); return; }
   const s = e.target.closest('[data-shift]');
   if (s) {
     const d = DB.woche.find(x => x.tag === s.dataset.shift);
