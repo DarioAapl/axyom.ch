@@ -75,7 +75,7 @@ th{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercas
    text-align:left;padding:0 10px 9px;white-space:nowrap}
 td{font-size:13px;padding:11px 10px;border-top:1px solid var(--soft);vertical-align:middle}
 tr.click{cursor:pointer}
-tr.click:hover td{background:rgba(0,0,0,.02)}
+tr.click:hover td,tr.click:active td{background:rgba(0,0,0,.035)}
 th.r,td.r{text-align:right}
 .num{font-variant-numeric:tabular-nums}
 .tag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
@@ -98,7 +98,7 @@ th.r,td.r{text-align:right}
 .kpi .d{font-size:11.5px;color:var(--dim);margin-top:4px}
 .btn{font-size:12.5px;font-weight:650;padding:8px 14px;border-radius:9px;border:1px solid var(--line);
      background:#fff;cursor:pointer;font-family:inherit}
-.btn:hover{background:var(--surf)}
+.btn:hover,.btn:active{background:var(--surf)}
 .btn.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
 .btn.solid:hover{background:#000}
 .btn.acc{background:var(--acc);color:#fff;border-color:var(--acc)}
@@ -124,6 +124,7 @@ th.r,td.r{text-align:right}
 .check.on{background:var(--acc);border-color:var(--acc)}
 .check svg{display:none}.check.on svg{display:block}
 .link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.link:active{background:var(--wash)}
 
 /* ── the filter bar (Rechnungen) ───────────────────────────────────────────
    Six dropdowns and a free-text field, all combinable, with the result line
@@ -275,7 +276,7 @@ tr.gewaehlt td{background:var(--wash)}
 .tabs{display:flex;gap:6px;margin-bottom:14px}
 .tab{font-size:12.5px;font-weight:650;padding:7px 14px;border-radius:9px;border:1px solid var(--line);
   background:#fff;cursor:pointer;font-family:inherit;color:var(--dim)}
-.tab:hover{background:var(--surf)}
+.tab:hover,.tab:active{background:var(--surf)}
 .tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .kkopf,.kgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .kkopf{margin-bottom:6px}
@@ -296,16 +297,17 @@ tr.gewaehlt td{background:var(--wash)}
   line-height:1.3;padding:4px 6px;border-radius:6px;margin-bottom:3px;cursor:pointer;
   border:1px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpost .kzeit{font-variant-numeric:tabular-nums;opacity:.75}
+.kpost .ktitel{display:none}
 .kpost.entwurf{background:var(--warnbg);color:var(--warn)}
 .kpost.freigegeben{background:var(--okbg);color:var(--acci)}
 .kpost.publiziert{background:rgba(0,0,0,.045);color:var(--dim)}
-.kpost:hover{filter:brightness(.97)}
+.kpost:hover,.kpost:active{filter:brightness(.94)}
 .kpost.gewaehlt{border-color:currentColor}
 /* eine Zählung im Kalender */
 .ktag.gezaehlt{border-color:var(--line)}
 .zahnrad{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:#fff;
   color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.zahnrad:hover{border-color:var(--acc);color:var(--acci);background:var(--wash)}
+.zahnrad:hover,.zahnrad:active{border-color:var(--acc);color:var(--acci);background:var(--wash)}
 .zahnrad.an{background:var(--acc);border-color:var(--acc);color:#fff}
 .zutatform{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;padding:0 16px}
 .zpost{display:block;width:100%;text-align:left;font-family:inherit;font-size:10.5px;font-weight:650;
@@ -347,6 +349,14 @@ tr.gewaehlt td{background:var(--wash)}
   padding:12px 14px;box-shadow:0 14px 38px rgba(0,0,0,.32);font-size:11.5px;line-height:1.55;
   opacity:0;transform:translateY(-6px);transition:opacity .18s,transform .18s}
 .flug.gross{padding:14px 16px}
+.flug{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+/* das Kreuz: am Schreibtisch dezent, am Telefon der Weg hinaus */
+.flugzu{position:absolute;top:6px;right:6px;width:32px;height:32px;border:none;background:none;
+  color:rgba(255,255,255,.45);font-family:inherit;font-size:20px;line-height:1;cursor:pointer;
+  border-radius:8px;padding:0}
+.flugzu:hover{color:#fff;background:rgba(255,255,255,.1)}
+.flug{position:fixed}
+.flug .fk{padding-right:34px}
 .flug .fk{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--acc);margin-bottom:9px}
 .flug .fu{font-size:10px;color:rgba(255,255,255,.38);margin-top:10px;padding-top:8px;
@@ -373,8 +383,8 @@ tr.gewaehlt td{background:var(--wash)}
 .ampel{min-width:0}
 @media (max-width:900px){ .ampel{flex-wrap:wrap} .ampel .trenn{display:none}
   .ampel .jetzt{flex:1 1 100%;min-width:0;margin-top:8px} }
-@media (max-width:560px){ .lampe .txt{display:none} .lampe{margin-right:10px}
-  .ampel .hin{font-size:11px} }
+@media (max-width:340px){ .lampe .txt{display:none} }
+@media (max-width:560px){ .ampel .hin{font-size:11px} }
 /* lamp label beside the glass, not under it: three rows of text would make
    this tile taller than the column it has to fit into */
 .lampe{display:flex;align-items:center;gap:7px;border:none;background:none;
@@ -502,7 +512,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 /* Die Übersicht ist auf einen Schirm gebaut. Die Kacheln enden bei 892 px auf
    einem 1440x900-Laptop; die 40 px Fusspolster, die jede andere Ansicht zum
    Scrollen braucht, würden genau sie über die Kante schieben. */
-#view:has(> .dash){padding-bottom:8px}
+@media (min-width:821px){ #view:has(> .dash){padding-bottom:8px} }
 .spkopf{margin-bottom:-1px}
 .bt{font-size:12.5px;font-weight:700;letter-spacing:-.01em;color:var(--ink);line-height:1.2}
 .bu{font-size:10.5px;color:var(--dim);line-height:1.3}
@@ -546,7 +556,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chip{font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;
       background:rgba(0,0,0,.045);color:var(--dim);cursor:pointer;white-space:nowrap}
-.chip:hover{background:var(--wash);color:var(--acci)}
+.chip:hover,.chip:active{background:var(--wash);color:var(--acci)}
 .chip.s1{background:var(--okbg);color:var(--acci)}
 .chip.s2{background:var(--warnbg);color:var(--warn)}
 .chip.s3{background:var(--badbg);color:var(--bad)}
@@ -570,6 +580,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 #chatbtn .logo{width:62px;height:28px;flex:none}
 #chatbtn .pip{width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none}
 #chatbtn.weg{opacity:0;pointer-events:none;transform:translateY(8px)}
+/* Er klebt unten rechts, wo bei einer Tabelle Zahlen stehen. Also tritt er
+   zur Seite, solange gerollt oder in ein Feld getippt wird. */
+#chatbtn.schlaeft{opacity:0;pointer-events:none;transform:translateY(10px) scale(.96)}
 
 #chat{position:fixed;right:22px;bottom:22px;z-index:61;width:396px;max-height:min(660px,calc(100vh - 44px));
   background:#fff;border:1px solid var(--line);border-radius:16px;display:none;flex-direction:column;
@@ -610,11 +623,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 }
 
 /* ── toast ── */
-#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);cursor:pointer;
   background:var(--dark);color:#fff;font-size:13px;padding:11px 18px;border-radius:10px;
-  opacity:0;pointer-events:none;transition:.22s;z-index:50;max-width:520px;
+  opacity:0;pointer-events:none;transition:.22s;z-index:70;max-width:520px;
   box-shadow:0 10px 30px rgba(0,0,0,.28)}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 #toast b{color:var(--acc)}
 /* the colour says how bad it is before the sentence is read */
 #toast{border-left:4px solid transparent}
@@ -634,6 +647,189 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
   .g2,.g3,.g4{grid-template-columns:1fr}
   header,.body{padding-left:16px;padding-right:16px}
 }
+
+/* ── Am Handy ──────────────────────────────────────────────────────────────
+   Gezählt, abgehakt und quittiert wird am Handy, nicht am Schreibtisch. Alles
+   hier ist eine Daumenregel:
+     * 44 px Trefferfläche für alles, was angetippt wird;
+     * 16 px Schrift in jedem Eingabefeld — darunter zoomt iOS beim Antippen
+       hinein und die Seite steht danach schief;
+     * Platz unter dem letzten Inhalt, weil der Chat-Knopf unten rechts klebt;
+     * die Leiste bleibt oben stehen, der Kopf scrollt weg: Navigation ist am
+       Handy wichtiger als ein Titel, der ohnehin daneben steht.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width:820px){
+  .body{padding:16px 16px 108px}
+  header{position:static;padding:14px 16px 12px;align-items:flex-start}
+  header h1{font-size:19px;min-width:0}
+  /* das Fragezeichen bleibt neben dem Titel: umgebrochen stand es allein auf
+     einer Zeile und sah aus wie ein Knopf ohne Zusammenhang */
+  header .row{flex-wrap:nowrap;align-items:flex-start}
+  header #hilfe-btn{margin-top:-2px}
+  #rail{position:sticky;top:0;z-index:30;padding:8px 10px;gap:8px;
+        box-shadow:0 6px 16px rgba(0,0,0,.18)}
+  #rail nav{gap:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #rail nav::-webkit-scrollbar{display:none}
+  #rail a{min-height:44px;padding:8px 12px;font-size:13.5px;white-space:nowrap}
+  #rail a .badge{margin-left:4px}
+  /* die Leiste läuft seitlich weiter: das sagt die verlaufende Kante */
+  #rail::after{content:'';position:absolute;right:0;top:0;bottom:0;width:26px;pointer-events:none;
+    background:linear-gradient(to left,var(--dark),rgba(11,13,18,0))}
+  #hilfe-btn{width:40px;height:40px;font-size:16px;top:0}
+  /* auch die Felder, die am Schreibtisch kleiner geschrieben sind: sonst
+     zoomt iOS beim Antippen in die Filterzeile hinein */
+  .rfilter select,.rfilter input{font-size:16px;padding:10px 12px;min-height:44px}
+  [data-shift]{font-size:16px !important;padding:10px 12px !important;min-height:44px}
+  .ampel .frage{height:44px;min-width:44px;justify-content:center;padding:0 13px}
+  .ampel .hin{min-height:44px;display:flex;align-items:center;font-size:12.5px}
+  .ampel .lampe{min-height:44px}
+  .btn{min-height:44px;padding:11px 16px;font-size:13.5px}
+  input,select,textarea{font-size:16px;min-height:44px;padding:10px 12px}
+  textarea{min-height:96px}
+  .chip{font-size:12px;font-weight:650;padding:0 13px;min-height:42px;border-radius:9px;
+    display:inline-flex;align-items:center}
+  .chips{gap:6px}
+  .tab{min-height:42px;padding:0 15px;font-size:13px;display:inline-flex;align-items:center}
+  .tabs{gap:7px;flex-wrap:wrap}
+  td{padding:14px 10px}
+  tr.click td:first-child{position:relative}
+  .dec{padding:13px 14px}
+  .lampe .glas{width:42px;height:42px;font-size:15px}
+  .lampe{margin-right:12px}
+  .ampel .frage{height:38px;padding:0 12px}
+  .ampel{padding:10px 12px}
+  .zahnrad{width:42px;height:42px}
+  .frage{min-height:42px}
+  .zpost{min-height:44px;display:flex;align-items:center;justify-content:space-between}
+  .kpost{min-height:42px;display:flex;align-items:center;gap:7px;font-size:12px;padding:0 10px}
+  /* Links im Satz bleiben Links im Satz: eine 44-px-Fläche würde den Satz
+     auseinanderreissen. Sie bekommen etwas Luft und eine Tippfarbe. */
+  .link,[data-go]:not(.card):not(.chip):not(.tab){-webkit-tap-highlight-color:rgba(0,178,160,.16)}
+  span.link{padding:3px 0}
+  .ktag{min-height:44px}
+  .flug{font-size:12.5px}
+  .flug .hilfeliste li{font-size:12.5px;line-height:1.6}
+  /* der Chat nimmt das Telefon ganz, und die dynamische Höhe rechnet mit der
+     Tastatur: 100vh ist auf iOS die Höhe OHNE sie */
+  #chat{right:10px;left:10px;bottom:10px;width:auto;max-height:calc(100dvh - 20px)}
+  body.chatOffen{overflow:hidden}
+  /* ein Vorhang, damit klar ist, was jetzt gilt */
+  body.chatOffen::after{content:'';position:fixed;inset:0;background:rgba(11,13,18,.42);z-index:60}
+  #chat-in{min-height:44px;font-size:16px}
+  #chatbtn{right:12px;bottom:12px;min-height:48px}
+  /* Am Handy liest man von oben nach unten und hört irgendwann auf. Also
+     kommt zuerst, was eine Entscheidung braucht, und erst danach die Woche
+     in Zahlen — am Schreibtisch stehen sie nebeneinander, da ist es einerlei. */
+  .dash .ampel{order:0}
+  .dash .sp1{order:1}
+  .dash .bandkopf{order:2}
+  .dash .wkpi{order:3}
+  .dash .sp2{order:4}
+  .dash .sp3{order:5}
+  /* drei farbige Kreise ohne Wort sind ein Rätsel: die Beschriftung bleibt,
+     das Band darf dafür umbrechen */
+  .lampe .txt{display:block;font-size:8.5px;letter-spacing:.04em}
+  .lampe{margin-right:7px;flex:0 0 auto}
+  /* das Fragezeichen in die Ecke des Bandes, sonst schiebt es die dritte
+     Lampe in eine eigene Zeile und lässt ein Loch stehen */
+  .ampel{position:relative;padding:10px 58px 10px 12px}
+  .ampel .frage{position:absolute;top:9px;right:10px;margin:0}
+  .ampel .jetzt{margin-top:6px}
+  /* die Ergebniszeile der Rechnungen: eine Zeile pro Aussage, statt sieben
+     Bruchstücke, die sich über vier Zeilen verteilen */
+  .rerg{flex-direction:column;gap:3px;font-size:13px;padding-bottom:12px}
+  header .demo{font-size:9px;padding:4px 7px}
+  #rail .brand .logo{width:78px}
+  #rail .brand{padding:0 8px 0 2px}
+  #rail .brand span{display:none}
+  /* Beim seitlichen Wischen muss sichtbar bleiben, zu welcher Zeile eine Zahl
+     gehört: die erste Spalte bleibt stehen. */
+  .scrollx td:first-child,.scrollx th:first-child{position:sticky;left:0;z-index:2;
+    background:#fff;box-shadow:1px 0 0 var(--soft);
+    /* die haftende Spalte darf nie breiter sein als ein gutes Drittel, sonst
+       liegt sie über allem anderen und fängt die Tipps ab, die dahinter
+       gemeint waren */
+    max-width:40vw;white-space:normal}
+  .scrollx tr.gewaehlt td:first-child{background:var(--okbg)}
+  /* in der haftenden Spalte wird umgebrochen statt abgeschnitten: «eingekauft
+     zu CHF 10.…» sagt nichts, die ganze Zeile sagt alles */
+  .scrollx td:first-child .zeile1,.mitzahnrad td:nth-child(2) .zeile1{white-space:normal;
+    overflow:visible;text-overflow:clip}
+  /* drei Kennzahlenkarten à 200 px sind 600 px Vorspann, bevor die Tabelle
+     kommt. Am Handy stehen Etikett, Zahl und Zusatz gedrängter. */
+  .card.kpi{padding:12px 14px}
+  .card.kpi .n{font-size:21px;margin-top:2px}
+  .card.kpi .d{margin-top:2px}
+  .scrollx .detailzeile td{position:static;box-shadow:none;max-width:none}
+  /* im Lager ist die erste Zelle das Zahnrad: dort haftet die zweite dazu,
+     genau um die Breite der ersten versetzt (--haft, gesetzt beim Rendern) */
+  .mitzahnrad td:nth-child(2),.mitzahnrad th:nth-child(2){position:sticky;
+    left:var(--haft,52px);z-index:2;background:#fff;box-shadow:1px 0 0 var(--soft);
+    max-width:36vw;white-space:normal}
+  .mitzahnrad tr.gewaehlt td:nth-child(2){background:var(--okbg)}
+  /* Schriftboden: unter 11 px liest niemand etwas am Küchentisch */
+  .wl,.kpi .l,th,.tag,.knr,#rail a .badge,.r2,.sm2,.bu,.bs,.why,.klein,
+  .kl,.mock-url,.dat,.pfeld > label,.d{font-size:11.5px}
+  .kheute{font-size:11px}
+  .tag{padding:4px 8px}
+  .check{width:44px;height:44px;border-radius:10px}
+  .check svg{width:18px;height:18px}
+  .flugzu{width:40px;height:40px;font-size:24px}
+  #chat-zu{width:44px;height:44px;font-size:22px}
+  #hilfe-btn{width:44px;height:44px}
+  .zahnrad{width:44px;height:44px}
+  .tab{min-height:44px}
+  .chip{min-height:44px}
+  .frage,.ampel .frage{height:44px}
+  .ktag{min-height:44px}
+  .kpost{min-height:44px}
+  #view .link,span.link{min-height:32px}
+  /* der Verlauf war ein 62-px-Streifen: auf dem Handy hat er Platz in der Höhe,
+     und ohne Verzerrung stimmt die Kurve auch */
+  .verlaufkopf .vchart svg{height:130px !important}
+  /* die dringendste Sache darf zwei Zeilen brauchen, statt abgeschnitten zu werden */
+  .ampel .jetzt b,.ampel .jetzt .why{white-space:normal;overflow:visible;text-overflow:clip}
+  .ampel .jetzt{flex-wrap:wrap}
+  .ampel .hin{margin-left:0}
+  span.link{display:inline-block;padding:5px 0}
+  [data-karte],[data-kartepreis]{width:112px !important}
+  /* der Toast gehört über den Chat-Knopf, nicht dahinter */
+  #toast{left:12px;right:12px;bottom:78px;transform:translateY(20px);max-width:none;z-index:70;
+    font-size:13.5px}
+  #toast.show{transform:translateY(0)}
+  /* im Kalender bleiben am Handy nur die Tage, an denen etwas war: 31 leere
+     Zeilen sind 900 px Nichts, durch die niemand wischt */
+  .kgrid .ktag:not(.gezaehlt):not(.hatwas):not(.heute){display:none}
+  /* und im Chip steht, um welchen Beitrag es geht — der Titel hing vorher nur
+     im title-Attribut, also an einem Zeiger, den ein Telefon nicht hat */
+  .kpost .ktitel{display:inline;font-weight:600;opacity:.95}
+  .kpost .kkanal{opacity:.7}
+  .kpost{white-space:normal;line-height:1.35;padding:8px 10px;gap:5px;flex-wrap:wrap}
+  .kgrid{gap:7px}
+  .ktag{min-height:0;padding:9px 10px}
+  .woche7 .t7{min-height:0}
+}
+/* ── eine Tabelle, die seitlich läuft, sagt es ────────────────────────────
+   Auf einem Telefon ist eine siebenspaltige Tabelle immer breiter als das
+   Glas. Der Schatten an der Kante steht nur dann da, wenn wirklich noch
+   etwas kommt, und verschwindet am Ende des Weges. */
+.scrollbox{position:relative}
+.scrollbox.kanns::after{content:'';position:absolute;top:0;right:0;bottom:0;width:34px;
+  pointer-events:none;background:linear-gradient(to left,rgba(255,255,255,.97),rgba(255,255,255,0));
+  transition:opacity .15s}
+.scrollbox .weiter{position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  color:var(--ink);font-family:inherit;font-size:17px;font-weight:700;line-height:1;padding:0 0 2px;
+  cursor:pointer;z-index:3;box-shadow:0 2px 10px rgba(0,0,0,.16);transition:opacity .15s;display:none}
+.scrollbox.kanns .weiter{display:block}
+.scrollbox.kanns.amEnde::after,.scrollbox.kanns.amEnde .weiter{opacity:0;pointer-events:none}
+.scrollbox .weiter:hover,.scrollbox .weiter:active{border-color:var(--acc);color:var(--acci)}
+@media (max-width:820px){ .scrollbox .weiter{width:44px;height:44px;font-size:21px;right:5px} }
+/* Tippen soll sich wie Tippen anfühlen: kein blaues Aufblitzen, keine 300 ms
+   Wartezeit auf einen möglichen Doppeltipp. */
+html{-webkit-text-size-adjust:100%}
+button,a,.chip,.tab,.lampe,tr.click,.ktag,.zahnrad,[data-go]{touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(0,178,160,.16)}
 </style>
 </head>
 <body>
@@ -1317,7 +1513,20 @@ function toast(html, st) {
   t.classList.remove('s3', 's2', 's1');
   if (st) t.classList.add('s' + st);
   t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
+  /* Vier Sekunden reichen für vier Wörter. Am Telefon steht derselbe Satz auf
+     sechs Zeilen, also wächst die Zeit mit dem Text — und ein Tipp darauf
+     schickt ihn sofort weg, falls er im Weg steht. */
+  const dauer = Math.min(11000, 2600 + t.textContent.length * 55);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), dauer);
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('#toast')) { $('#toast').classList.remove('show'); clearTimeout(toastTimer); }
+});
+/* «38,5» ist auf einer Schweizer Tastatur das Naheliegende, «38.5» auf einer
+   anderen. Beides heisst dasselbe; alles andere behält den alten Wert. */
+function zahl(v, alt = 0) {
+  const n = parseFloat(String(v).replace(',', '.').replace(/[^0-9.\-]/g, ''));
+  return Number.isFinite(n) ? n : alt;
 }
 function logge(text) { DB.log.unshift({ text, zeit: new Date().toLocaleTimeString('de-CH').slice(0,5) }); }
 
@@ -1414,6 +1623,10 @@ function renderRail() {
 /* A table with more columns than the window is wide pushes the whole page
    sideways. Wrapping every one of them here — once — means no view has to
    remember to do it, and a new module gets it for free. */
+/* Zwei Hüllen, nicht eine: die innere rollt, die äussere steht still. Der
+   Hinweis an der Kante gehört an die stehende — auf der rollenden wanderte er
+   mit dem Inhalt in die Tabellenmitte und sah dort wie ein Knopf aus, der
+   nichts tut. */
 function tabellenEinpacken() {
   $('#view').querySelectorAll('table').forEach(t => {
     if (t.parentElement.classList.contains('scrollx')) return;
@@ -1422,6 +1635,15 @@ function tabellenEinpacken() {
     t.replaceWith(box);
     box.appendChild(t);
   });
+  // Manche Ansichten schreiben ihre .scrollx selbst. Auch die bekommen den
+  // stehenden Rahmen, sonst hängt der Kantenhinweis am falschen Element.
+  $('#view').querySelectorAll('.scrollx').forEach(box => {
+    if (box.parentElement.classList.contains('scrollbox')) return;
+    const rahmen = document.createElement('div');
+    rahmen.className = 'scrollbox';
+    box.replaceWith(rahmen);
+    rahmen.appendChild(box);
+  });
 }
 
 /* Switching module starts at the top; anything else — a filter, a tab, a
@@ -1429,16 +1651,110 @@ function tabellenEinpacken() {
    every re-render threw you out of the Verlauf each time you changed the
    number of weeks. */
 let ZULETZT = null;
+/* ── was nach jedem Rendern fürs Handy nachgezogen wird ────────────────────
+   Drei Dinge, die sich nicht im Markup sagen lassen: welche Tabelle gerade
+   wirklich seitlich läuft (das hängt von der Glasbreite ab), dass ein
+   Zahlenfeld die Zifferntastatur öffnen soll, und dass das aktive Modul in
+   einer seitlich scrollenden Leiste auch sichtbar ist.
+   ────────────────────────────────────────────────────────────────────────── */
+function handyNachziehen() {
+  /* Aus jedem Zahlenfeld wird ein Textfeld mit Zifferntastatur. Der Grund ist
+     der Cursor: ein input[type=number] gibt keine Auswahlposition heraus, also
+     kann sie nach dem Neurechnen nicht zurückgesetzt werden — der Cursor stand
+     danach am Anfang und «41.50» wurde Ziffer für Ziffer zu «41506.00».
+     Als Textfeld überlebt die Cursorposition, das Komma einer Schweizer
+     Tastatur kommt an, und die Pfeiltasten stellen wir selbst. */
+  document.querySelectorAll('#view input[type=number]').forEach(i => {
+    i.dataset.schritt = i.getAttribute('step') || '1';
+    i.dataset.min = i.getAttribute('min') ?? '';
+    i.type = 'text';
+    i.setAttribute('inputmode', 'decimal');
+    i.setAttribute('enterkeyhint', 'done');
+    i.setAttribute('autocomplete', 'off');
+    i.dataset.zahl = '1';
+  });
+  /* Ein Antwortentwurf ist fünf Zeilen lang und das Feld war zwei hoch: der
+     Rest war abgeschnitten, und die einzige Handhabe war der Ziehgriff in der
+     Ecke, den kein Daumen greift. Also wächst das Feld mit seinem Text. */
+  // die zweite haftende Spalte beginnt dort, wo die erste endet
+  document.querySelectorAll('#view table.mitzahnrad').forEach(tb => {
+    const erste = tb.querySelector('tbody td');
+    if (erste) tb.style.setProperty('--haft', Math.round(erste.getBoundingClientRect().width) + 'px');
+  });
+  document.querySelectorAll('#view textarea').forEach(t => {
+    const passen = () => { t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; };
+    passen();
+    if (!t.dataset.waechst) { t.dataset.waechst = '1'; t.addEventListener('input', passen); }
+  });
+  document.querySelectorAll('.scrollx').forEach(el => {
+    const rahmen = el.parentElement;
+    const laeuft = el.scrollWidth - el.clientWidth > 4;
+    rahmen.classList.toggle('kanns', laeuft);
+    if (!laeuft) { rahmen.classList.remove('amEnde'); return; }
+    const kante = () => rahmen.classList.toggle('amEnde',
+      el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
+    kante();
+    if (!rahmen.querySelector('.weiter')) {
+      // ein echter Knopf: ein Tipp rollt um fast eine Glasbreite weiter
+      const k = document.createElement('button');
+      k.className = 'weiter'; k.type = 'button';
+      k.setAttribute('aria-label', 'Tabelle weiter blättern');
+      k.innerHTML = '&rsaquo;';
+      k.addEventListener('click', ev => { ev.stopPropagation();
+        el.scrollBy({ left: el.clientWidth * 0.8, behavior:'smooth' }); });
+      rahmen.appendChild(k);
+    }
+    if (!el.dataset.kante) { el.dataset.kante = '1'; el.addEventListener('scroll', kante, { passive:true }); }
+  });
+  // die Leiste ist am Handy waagrecht: das aktive Modul muss im Bild stehen
+  const an = document.querySelector('#rail a.on');
+  if (an && document.querySelector('#rail').clientWidth > document.querySelector('#rail').clientHeight)
+    an.scrollIntoView({ block:'nearest', inline:'center' });
+}
+addEventListener('resize', () => handyNachziehen());
+
+/* ── der Chat-Knopf tritt zur Seite ───────────────────────────────────────
+   Er liegt fix über der unteren rechten Ecke — dort, wo in einer Tabelle die
+   Zahlen stehen und in einem Kalender die Beiträge. Solange gerollt wird oder
+   ein Feld den Fokus hat, ist er weg; kurz nach dem Loslassen ist er wieder da.
+   ────────────────────────────────────────────────────────────────────────── */
+let knopfTimer;
+function knopfSchlafen(ja) {
+  const k = document.getElementById('chatbtn');
+  if (k) k.classList.toggle('schlaeft', ja);
+}
+addEventListener('scroll', () => {
+  knopfSchlafen(true);
+  clearTimeout(knopfTimer);
+  knopfTimer = setTimeout(() => knopfSchlafen(false), 700);
+}, { passive: true });
+document.addEventListener('focusin', e => {
+  if (e.target.closest('#view input, #view textarea, #view select')) knopfSchlafen(true);
+});
+document.addEventListener('focusout', e => {
+  if (e.target.closest('#view input, #view textarea, #view select')) knopfSchlafen(false);
+});
+
 function render() {
   const m = MODULES.find(x => x.id === AKTIV);
   $('#h-title').textContent = m.titel;
   $('#h-sub').textContent = m.sub;
   const y = window.scrollY;
+  /* Wie weit jede Tabelle seitlich gerollt ist, gehört zum Platz, an dem
+     gearbeitet wird: eine Zahl eintippen darf sie nicht an den Anfang
+     zurückwerfen, sonst wischt man nach jedem Tipp von vorn. */
+  const seitlich = [...$('#view').querySelectorAll('.scrollx')].map(e => e.scrollLeft);
   $('#view').innerHTML = VIEWS[AKTIV]();
   tabellenEinpacken();
   renderRail();
   if (ZULETZT !== AKTIV) { ZULETZT = AKTIV; window.scrollTo(0, 0); }
-  else window.scrollTo(0, y);
+  else {
+    window.scrollTo(0, y);
+    [...$('#view').querySelectorAll('.scrollx')].forEach((e, i) => {
+      if (seitlich[i]) e.scrollLeft = seitlich[i];
+    });
+  }
+  handyNachziehen();
 }
 /* ── chart primitives ──────────────────────────────────────────────────────
    Inline SVG, no library. Each one takes numbers and returns a string, so a
@@ -1678,27 +1994,46 @@ function flugWeg(sofort = false) {
   });
 }
 
+/* Am Telefon gibt es keinen Zeiger, der stehen bleibt: dort schliesst ein
+   Kreuz, und das Antippen des Textes hält ihn offen, solange gelesen wird. */
+const tippgeraet = () => matchMedia('(hover:none)').matches;
+
 function flugHinweis(anker, html, dauer = 6000, cls = '') {
   document.querySelectorAll('.flug').forEach(f => f.remove());
   clearTimeout(flugTimer);
   const f = document.createElement('div');
   f.className = 'flug ' + cls;
-  f.innerHTML = html;
+  f.innerHTML = '<button class="flugzu" aria-label="Hinweis schliessen">&times;</button>' + html;
   document.body.appendChild(f);
   const a = anker.getBoundingClientRect();
-  // keep it on screen: prefer below the anchor, flip up if there is no room
-  const platzUnten = window.innerHeight - a.bottom;
-  // a list of five points in a 320px column is a tall thin wall of text
+  // a list of eight points in a 320px column is a tall thin wall of text
   const breite = Math.min(cls.includes('gross') ? 430 : 320, window.innerWidth - 24);
   f.style.width = breite + 'px';
   f.style.left = Math.max(12, Math.min(a.left - 12, window.innerWidth - breite - 12)) + 'px';
-  if (platzUnten > f.offsetHeight + 20) f.style.top = (a.bottom + 10) + 'px';
-  else f.style.top = Math.max(12, a.top - f.offsetHeight - 10) + 'px';
+  /* Auf einem Telefon ist die Liste höher als das Glas. Sie darf dann scrollen
+     statt unten abgeschnitten zu werden — und der Anfang steht oben, nicht
+     irgendwo hinter der Kante. */
+  const platz = window.innerHeight - 24;
+  if (f.offsetHeight > platz) {
+    f.style.maxHeight = platz + 'px';
+    f.style.top = '12px';
+  } else if (window.innerHeight - a.bottom > f.offsetHeight + 20) {
+    f.style.top = (a.bottom + 10) + 'px';
+  } else {
+    // nicht über den Anker legen: lieber so weit hoch, wie es reicht
+    f.style.top = Math.max(12, Math.min(a.top - f.offsetHeight - 10,
+      window.innerHeight - f.offsetHeight - 12)) + 'px';
+  }
   requestAnimationFrame(() => f.classList.add('da'));
-  // reading should not be interrupted: the clock stops while the pointer is on it
+  // Lesen soll nicht unterbrochen werden: die Uhr hält an, solange jemand
+  // darauf zeigt — am Telefon, solange darin gescrollt oder getippt wird.
   const starten = () => { clearTimeout(flugTimer); flugTimer = setTimeout(flugWeg, dauer); };
-  f.addEventListener('mouseenter', () => clearTimeout(flugTimer));
+  const halten = () => clearTimeout(flugTimer);
+  f.addEventListener('mouseenter', halten);
   f.addEventListener('mouseleave', starten);
+  f.addEventListener('touchstart', halten, { passive:true });
+  f.addEventListener('scroll', halten, { passive:true });
+  f.querySelector('.flugzu').addEventListener('click', ev => { ev.stopPropagation(); flugWeg(true); });
   starten();
   return f;
 }
@@ -1713,7 +2048,8 @@ function hilfeZeigen(anker) {
     `<div class="fk">${esc(m.name)} — was dieser Bereich macht</div>
      <ol class="hilfeliste">${punkte.map(t => `<li>${t}</li>`).join('')}</ol>
      <div class="fu">Erklärt die Funktion, nicht die Beispieldaten auf dem Bildschirm ·
-       verschwindet von selbst, Maus darauf hält ihn</div>`,
+       ${tippgeraet() ? 'schliesst mit dem Kreuz oder von selbst, Antippen hält ihn'
+                      : 'verschwindet von selbst, Maus darauf hält ihn'}</div>`,
     7000 + punkte.length * 2600, 'gross');
 }
 const VIEWS = {};
@@ -2266,7 +2602,7 @@ VIEWS.lager = () => {
         <div class="d">mehr als ${DB.toleranz.prozent} % und ${DB.toleranz.menge} Einheiten${
           DB.lager.some(l => DB.tol(l.art).eigen) ? ', wo nichts anderes gesetzt ist' : ''}</div></div></div>
     <div class="sec">Die Zählung von heute früh</div>
-    <div class="scrollx"><table><thead><tr><th></th><th>Artikel</th><th class="r">Erwartet</th>
+    <div class="scrollx"><table class="mitzahnrad"><thead><tr><th></th><th>Artikel</th><th class="r">Erwartet</th>
       <th class="r">Gezählt</th><th class="r">Differenz</th><th class="r">Wert</th>
       <th class="r">Status</th></tr></thead><tbody>${zeilen}</tbody></table></div>
     <div class="small muted" style="margin-top:10px">Eine Zahl ändern — Differenz, Wert und die
@@ -2387,8 +2723,9 @@ VIEWS.gerichte = () => {
 };
 /* ── Hygiene ────────────────────────────────────────────────────────────── */
 VIEWS.hygiene = () => {
-  const rows = DB.hygiene.map(h => `<tr>
-    <td style="width:34px"><div class="check ${h.done ? 'on' : ''}" data-check="${h.id}">${TICK}</div></td>
+  const rows = DB.hygiene.map(h => `<tr class="click" data-check="${h.id}"
+      title="${h.done ? 'Wieder öffnen' : 'Abhaken'}">
+    <td style="width:52px"><div class="check ${h.done ? 'on' : ''}">${TICK}</div></td>
     <td><b>${esc(h.station)}</b></td><td class="muted">${esc(h.was)}</td>
     <td class="muted">${esc(h.wer) || '—'}</td>
     <td class="r muted">${h.zeit || (h.done ? '' : 'heute fällig')}</td>
@@ -2693,9 +3030,11 @@ function postEditor(p) {
               <input type="file" accept="image/*" data-postbild="${p.id}" hidden>
               ${p.bild
                 ? `<b>${esc(p.bildname || 'Bild gewählt')}</b>
-                   <span class="klein">Anderes Bild wählen oder hierher ziehen</span>`
-                : `<b>Bild wählen</b>
-                   <span class="klein">oder hierher ziehen · JPG oder PNG</span>`}</label>
+                   <span class="klein">${tippgeraet() ? 'Anderes Foto aufnehmen oder aus der Galerie'
+                                                       : 'Anderes Bild wählen oder hierher ziehen'}</span>`
+                : `<b>${tippgeraet() ? 'Foto aufnehmen oder wählen' : 'Bild wählen'}</b>
+                   <span class="klein">${tippgeraet() ? 'aus der Galerie · JPG oder PNG'
+                                                       : 'oder hierher ziehen · JPG oder PNG'}</span>`}</label>
             ${p.bild ? `<button class="btn" data-bildweg="${p.id}">Entfernen</button>` : ''}</div>
           ${p.bild ? '' : `<div class="small muted" style="margin-top:5px">Ohne Bild geht bei
             ${esc(KANAL(p.format).kurz)} nichts raus.</div>`}</div>
@@ -2739,11 +3078,12 @@ VIEWS.social = () => {
     for (let i = 1; i < startWochentag; i++) zellen.push('<div class="ktag leer"></div>');
     for (let d = erster; d <= tage; d++) {
       const drin = DB.posts.filter(p => tag(p.datum) === d);
-      zellen.push(`<div class="ktag ${d === heute ? 'heute' : ''}">
+      zellen.push(`<div class="ktag ${d === heute ? 'heute' : ''} ${drin.length ? 'hatwas' : ''}">
         <div class="knr">${d}${d === heute ? '<span class="kheute">heute</span>' : ''}</div>
         ${drin.map(p => `<button class="kpost ${p.status} ${p.id === POST_OFFEN ? 'gewaehlt' : ''}"
             data-post="${p.id}" title="${esc(p.titel)}">
-            <span class="kzeit">${esc(p.zeit)}</span> ${esc(KANAL(p.format).kurz)}</button>`).join('')}</div>`);
+            <span class="kzeit">${esc(p.zeit)}</span> <span class="kkanal">${esc(KANAL(p.format).kurz)}</span>
+            <span class="ktitel">${esc(p.titel)}</span></button>`).join('')}</div>`);
     }
     return `<div class="kkopf">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(t => `<div>${t}</div>`).join('')}</div>
       <div class="kgrid">${zellen.join('')}</div>
@@ -3173,7 +3513,7 @@ VIEWS.uebersicht = () => {
 
   /* four numbers, each with its own history under it */
   const tile = (label, big, sub, chart, rechts) =>
-    WG('w3', label, `<div class="big">${big}</div><div class="sm2">${sub}</div>
+    WG('w3 wkpi', label, `<div class="big">${big}</div><div class="sm2">${sub}</div>
        ${chart ? `<div style="margin-top:7px">${chart}</div>` : ''}`, { rechts });
 
   const kpis =
@@ -3323,17 +3663,17 @@ VIEWS.uebersicht = () => {
     ${kopfband('Die Woche', 'Montag bis heute, live gerechnet. Dieselbe Rechnung wie in Auswertungen.',
                'wo ein Schatten steht, ist es das Vorjahr')}
     ${kpis}
-    <div class="col w4">
+    <div class="col w4 sp1">
       ${kopfspalte('Entscheiden', 'wartet auf Sie, das Dringendste oben',
         items.length ? `${items.length} offen` : 'nichts offen',
         items.some(i => i.ernst === 3) ? 'warn' : items.length ? '' : 'ok')}
       ${dec}${akt}</div>
-    <div class="col w4">
+    <div class="col w4 sp2">
       ${kopfspalte('Läuft der Betrieb', 'Messwerte, Pflichten, Besetzung',
         alarme ? `${alarme} im Alarm` : hOffen2 ? `${hOffen2} Kontrollen offen` : 'alles im Bereich',
         alarme ? 'warn' : hOffen2 ? '' : 'ok')}
       ${kuehl}${hyg}${plan}</div>
-    <div class="col w4">
+    <div class="col w4 sp3">
       ${kopfspalte('Was das Haus verdient', 'Marge, Gästestimmen, Schwund',
         nachziehen ? `${nachziehen} zum Nachziehen` : 'alles auf Ziel',
         nachziehen ? '' : 'ok')}
@@ -3816,9 +4156,16 @@ function chatOeffnen(auf) {
   CHAT.offen = auf ?? !CHAT.offen;
   $('#chat').classList.toggle('on', CHAT.offen);
   $('#chatbtn').classList.toggle('weg', CHAT.offen);
+  /* Am Telefon deckt das Fenster den Schirm fast ganz. Ohne Sperre scrollte
+     ein Wisch, der das Fenster verpasst, die Seite dahinter weg — und die
+     Seite war danach an einer anderen Stelle als vorher. */
+  document.body.classList.toggle('chatOffen', CHAT.offen);
   if (CHAT.offen) {
     if (!CHAT.verlauf.length) { CHAT.verlauf.push({ r:'b', t: ANTWORT.hilfe() }); }
-    chatRender(); setTimeout(() => $('#chat-in').focus(), 60);
+    chatRender();
+    // die Tastatur ruft man am Telefon selbst, sonst springt das Fenster beim
+    // Öffnen sofort auf halbe Höhe
+    if (!matchMedia('(hover:none)').matches) setTimeout(() => $('#chat-in').focus(), 60);
   }
 }
 
@@ -3955,11 +4302,20 @@ const ACTIONS = {
   },
   'antwort-ton'(el) {
     const b = DB.bewertungen.find(x => x.id === el.dataset.id);
+    /* Eine selbst geschriebene Fassung ist Arbeit. Sie wird nicht überschrieben,
+       sondern als eigene Variante aufgenommen — einmal weiterklicken, und sie
+       ist wieder da. */
+    if (b.angepasst && !b.varianten.some(v => v.ton === 'Ihre Fassung')) {
+      b.varianten.push({ ton: 'Ihre Fassung', text: b.antwort });
+      b.ton = 'Ihre Fassung';
+    }
     const i = b.varianten.findIndex(v => v.ton === b.ton);
     const v = b.varianten[(i + 1) % b.varianten.length];
     b.ton = v.ton; b.antwort = v.text; b.angepasst = false;
     logge(`Antwort auf ${b.quelle}-Bewertung neu formuliert (${v.ton})`);
-    toast(`Neu formuliert, ${esc(v.ton)}. Ändern können Sie weiter jeden Satz.`, 1);
+    toast(v.ton === 'Ihre Fassung'
+      ? 'Ihre eigene Fassung ist zurück.'
+      : `Neu formuliert, ${esc(v.ton)}. Ihre Fassung bleibt als Variante erhalten.`, 1);
   },
   'antwort-senden'(el) {
     const b = DB.bewertungen.find(x => x.id === el.dataset.id);
@@ -4005,7 +4361,9 @@ document.addEventListener('click', e => {
   const ah = e.target.closest('[data-ampelhilfe]');
   if (ah) {
     if (document.querySelector('.flug:not(.weg):not(.schnell)')) { flugWeg(true); return; }
-    flugHinweis(ah, `
+    // am Band, nicht am Fragezeichen: sonst legt sich der Hinweis am Telefon
+    // genau über die Zeile, die er erklärt
+    flugHinweis(ah.closest('.ampel') || ah, `
       <div class="fz"><span class="fp" style="background:var(--bad)"></span>
         <div><b>Rot — jetzt.</b> Etwas läuft gerade aus dem Ruder, zum Beispiel ein Kühlgerät
         ausserhalb seines Bereichs.</div></div>
@@ -4055,9 +4413,14 @@ document.addEventListener('click', e => {
   // a post opens for editing where it was clicked — calendar or channel list
   const postBtn = e.target.closest('[data-post]');
   if (postBtn) { POST_OFFEN = POST_OFFEN === postBtn.dataset.post ? null : postBtn.dataset.post;
+    /* Der Editor öffnet über dem Kalender. Am Telefon landete man damit
+       mitten in der Bildvorschau, ohne Titel und ohne «Schliessen» im Bild —
+       also bringen wir den Editor dorthin, wo hingeschaut wird. */
+    if (POST_OFFEN) setTimeout(() => {
+      const k = document.querySelector('[data-postzu]');
+      if (k) k.closest('.card').scrollIntoView({ block:'start', behavior:'smooth' });
+    }, 30);
     render();
-    // the editor opens above the calendar, so bring it to the reader
-    if (POST_OFFEN) $('#view .post')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return; }
   if (e.target.closest('[data-postzu]')) { POST_OFFEN = null; render(); return; }
 
@@ -4098,6 +4461,24 @@ function renderTippend(el) {
   }
 }
 
+/* Die Pfeiltasten stellen wir selbst, weil die Zahlenfelder Textfelder sind
+   (siehe handyNachziehen): hoch und runter um einen Schritt, mit Umschalt um
+   zehn. Am Handy tippt sowieso niemand Pfeile, am Schreibtisch erwartet es
+   jeder. */
+document.addEventListener('keydown', e => {
+  const f = e.target.closest?.('[data-zahl]');
+  if (!f || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+  const s = (+f.dataset.schritt || 1) * (e.shiftKey ? 10 : 1);
+  const neuWert = zahl(f.value) + (e.key === 'ArrowUp' ? s : -s);
+  const min = f.dataset.min === '' ? -Infinity : +f.dataset.min;
+  // so viele Stellen wie vorher dastanden: aus 42.00 wird 42.50, nicht 42.5
+  const stellen = Math.max((String(f.value).split('.')[1] || '').length,
+                           (String(f.dataset.schritt).split('.')[1] || '').length);
+  f.value = (Math.max(min, neuWert)).toFixed(stellen);
+  f.dispatchEvent(new Event('input', { bubbles: true }));
+  e.preventDefault();
+});
+
 document.addEventListener('input', e => {
   /* der Zutat-Editor: Bezeichnung, Packung, Toleranz */
   const zf = ['zname', 'zmenge', 'zeinheit', 'ztolp', 'ztolm']
@@ -4106,17 +4487,17 @@ document.addEventListener('input', e => {
     const [feld, el] = zf, key = el.dataset[feld];
     const a = DB.artikel[key], l = DB.lager.find(x => x.art === key);
     if (feld === 'zname') a.name = el.value;
-    else if (feld === 'zmenge') a.menge = Math.max(0.1, +el.value || a.menge);
+    else if (feld === 'zmenge') a.menge = Math.max(0.1, zahl(el.value, a.menge));
     else if (feld === 'zeinheit') { a.einheit = el.value; l.einheit = el.value; }
-    else if (feld === 'ztolp') l.tolProzent = Math.max(0, +el.value || 0);
-    else l.tolMenge = Math.max(0, +el.value || 0);
+    else if (feld === 'ztolp') l.tolProzent = Math.max(0, zahl(el.value));
+    else l.tolMenge = Math.max(0, zahl(el.value));
     renderTippend(el); return;
   }
   const c = e.target.closest('[data-count]');
-  if (c) { DB.zaehlungHeute().werte[c.dataset.count].gezaehlt = +c.value || 0;
+  if (c) { DB.zaehlungHeute().werte[c.dataset.count].gezaehlt = zahl(c.value);
            renderTippend(c); return; }
   const k = e.target.closest('[data-karte]');
-  if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = +k.value || g.karte;
+  if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = zahl(k.value, g.karte);
            kanaelePruefen();   // the card is published — the channels are now behind
            renderTippend(k); return; }
   /* A released post that is edited goes back to being a draft: the thing that
@@ -4143,7 +4524,7 @@ document.addEventListener('input', e => {
     renderTippend(aw); return; }
   const kp = e.target.closest('[data-kartepreis]');
   if (kp) { const e2 = DB.karte.eintraege.find(x => x.id === kp.dataset.kartepreis);
-    const wert = +kp.value;
+    const wert = zahl(kp.value);
     // a dish keeps its price in Gerichte; only a card-only entry keeps its own
     if (e2.ref) { const g = DB.gerichte.find(x => x.id === e2.ref); g.karte = wert || g.karte; }
     else e2.preis = wert || e2.preis;
@@ -4205,8 +4586,14 @@ document.addEventListener('change', e => {
   const s = e.target.closest('[data-shift]');
   if (s) {
     const d = DB.woche.find(x => x.tag === s.dataset.shift);
-    d.besetzt = +s.value; d.stunden = d.besetzt * 8;
+    d.besetzt = zahl(s.value, d.besetzt); d.stunden = d.besetzt * 8;
     logge(`${d.tag}: Besetzung auf ${d.besetzt} geändert`);
+    /* Was sich ändert, steht in den Kennzahlen weit oben — am Telefon
+       ausserhalb des Bildes. Also sagt es die Rückmeldung gleich hier. */
+    const pro = d.gedecke / d.besetzt;
+    toast(`${esc(d.tag)}: <b>${d.besetzt} auf Schicht</b> für ${d.gedecke} Gedecke · ` +
+          `${chf(d.besetzt * 8 * DB.lohn)} Lohn · ${pro.toFixed(1)} Gedecke pro Person` +
+          (pro > DB.knappAb ? ' — knapp' : ''), pro > DB.knappAb ? 2 : 1);
     render();
   }
 });
