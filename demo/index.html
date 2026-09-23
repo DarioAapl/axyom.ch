@@ -143,6 +143,9 @@ th.r,td.r{text-align:right}
 .rdtab{width:100%;border-collapse:collapse}
 .rdtab th{font-size:10px;letter-spacing:.04em;padding:0 8px 7px;border-bottom:1px solid rgba(0,0,0,.12)}
 .rdtab td{font-size:12px;padding:8px;border-bottom:1px solid rgba(0,0,0,.06)}
+.rdtab tr.rdwarn td{background:rgba(178,94,0,.06)}
+.rdklein{font-size:10px;color:var(--warn);font-weight:600;margin-top:2px}
+tr.gewaehlt td{background:var(--wash)}
 .rdsumme{margin-top:16px;margin-left:auto;width:250px}
 .rdsumme div{display:flex;justify-content:space-between;font-size:12px;padding:4px 0}
 .rdsumme .tot{border-top:1px solid rgba(0,0,0,.2);margin-top:5px;padding-top:7px;font-size:13.5px}
@@ -1117,10 +1120,9 @@ const MODULES = [
 ];
 
 let AKTIV = 'uebersicht';
-let OFFEN = null;        // the invoice currently expanded
 let SOCIAL_TAB = 'kalender';
 let VERLAUF_W = 8;       // how many weeks the Verlauf shows
-let RECH_MONAT = 9;      // which month the invoice archive shows
+let RECH_FILTER = 'offen';   // 'offen' oder eine Monatsnummer
 let RECH_DOK = null;     // the invoice shown as a document
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
@@ -1475,168 +1477,171 @@ function hilfeZeigen(anker) {
 }
 const VIEWS = {};
 
-/* ── Rechnungen ─────────────────────────────────────────────────────────── */
-VIEWS.rechnungen = () => {
-  const stat = { ok:['t-ok','abgeglichen'], preis:['t-warn','Preisänderung'], menge:['t-mute','Menge offen'],
-                 erledigt:['t-ok','geprüft'] };
-  const rows = DB.rechnungen.map(r => {
-    const [cls, label] = stat[r.status];
-    return `<tr class="click" data-inv="${r.id}">
-      <td><b>${esc(r.lief)}</b></td><td class="muted">${r.id}</td><td class="muted">${r.datum}</td>
-      <td class="r num">${chf(r.total)}</td>
-      <td class="r"><span class="tag ${cls}">${label}</span></td></tr>`;
-  }).join('');
+/* ── Rechnungen ─────────────────────────────────────────────────────────────
+   One list, one behaviour. It used to be two tables that looked alike and did
+   different things — the top one expanded a comparison, the archive opened a
+   document — under a heading that said «braucht eine Entscheidung» over rows
+   that did not. Now every invoice since the opening is in the same list, the
+   filter decides which ones, and any row opens the same panel: the document as
+   it arrived, and beside it what Axyom found and what there is to decide.
+   ────────────────────────────────────────────────────────────────────────── */
+const ADRESSEN = {
+  'Muster Gemüse AG':      ['Muster Gemüse AG', 'Feldweg 8', '9306 Musterwil'],
+  'Molkerei Musterberg':   ['Molkerei Musterberg AG', 'Bergstrasse 44', '9114 Musterberg'],
+  'Metzgerei Mustermann':  ['Metzgerei Mustermann GmbH', 'Dorfstrasse 3', '9203 Musterdorf'],
+  'Fischerei Mustersee':   ['Fischerei Mustersee', 'Seestrasse 21', '8640 Musterau'],
+  'Weinkeller Musterthal': ['Weinkeller Musterthal AG', 'Rebhalde 5', '9475 Musterthal'],
+};
+// three states, three words. «abgeglichen», «geprüft» und «entschieden» für
+// dasselbe waren ein Grund, warum die Liste unklar war.
+const RSTATUS = {
+  ok:        ['t-ok',   'geprüft'],
+  erledigt:  ['t-ok',   'entschieden'],
+  preis:     ['t-warn', 'Preis geändert'],
+  menge:     ['t-warn', 'Menge stimmt nicht'],
+};
 
-  let detail = '';
-  if (OFFEN) {
-    const r = DB.rechnungen.find(x => x.id === OFFEN);
-    const zeilen = r.zeilen.map((z, i) => {
+/* every invoice, current and archived, in one shape */
+function alleRechnungen() {
+  const aktuell = DB.rechnungen.map(r => {
+    // the lines decide the total, here as in the archive: a list that disagrees
+    // with the document it opens is worse than no document at all
+    const zeilen = r.zeilen.map(z => ({ art: z.art, name: DB.artikel[z.art].name, menge: z.best,
+      geliefert: z.gel, preis: z.preis, summe: +(z.best * z.preis).toFixed(2) }));
+    const netto = +zeilen.reduce((s, z) => s + z.summe, 0).toFixed(2);
+    const mwst = r.lief === 'Weinkeller Musterthal' ? 8.1 : 2.6;   // Alkohol: Normalsatz
+    return { id: r.id, lief: r.lief, datum: r.datum, status: r.status, mwst, quelle: 'aktuell',
+             roh: r, zeilen, netto, total: +(netto * (1 + mwst / 100)).toFixed(2) };
+  });
+  const archiv = DB.archiv.map(r => ({ ...r, quelle: 'archiv' }));
+  return [...aktuell, ...archiv];
+}
+
+VIEWS.rechnungen = () => {
+  const alle = alleRechnungen();
+  const offen = alle.filter(r => r.status === 'preis' || r.status === 'menge');
+  const liste = RECH_FILTER === 'offen' ? offen
+    : alle.filter(r => +r.datum.slice(3, 5) === RECH_FILTER)
+          .sort((a, b) => +b.datum.slice(0, 2) - +a.datum.slice(0, 2));
+
+  const filter = [['offen', `Offen (${offen.length})`]]
+    .concat(DB.monate.slice().reverse().map(m => [m.nr, `${m.name} (${
+      alle.filter(r => +r.datum.slice(3, 5) === m.nr).length})`]))
+    .map(([w, t]) => `<button class="tab ${RECH_FILTER === w ? 'on' : ''}" data-rfilter="${w}"
+      >${esc(t)}</button>`).join('');
+
+  const zeilen = liste.map(r => {
+    const [cls, label] = RSTATUS[r.status] || RSTATUS.ok;
+    return `<tr class="click ${r.id === RECH_DOK ? 'gewaehlt' : ''}" data-dok="${r.id}">
+      <td class="muted num" style="width:92px">${esc(r.datum)}</td>
+      <td><b>${esc(r.lief)}</b>${r.notiz ? `<div class="small muted zeile1">${esc(r.notiz)}</div>` : ''}</td>
+      <td class="muted" style="width:96px">${esc(r.id)}</td>
+      <td class="r num" style="width:116px">${chf(r.total)}</td>
+      <td class="r" style="width:150px"><span class="tag ${cls}">${label}</span></td>
+      <td class="r" style="width:120px"><span class="link">${r.id === RECH_DOK ? 'offen' : 'ansehen'}</span></td></tr>`;
+  }).join('') || `<tr><td colspan="6" class="muted small" style="padding:18px 10px">
+      Nichts offen — alle Rechnungen sind abgeglichen.</td></tr>`;
+
+  /* ── the panel: the document, and what there is to decide ── */
+  let panel = '';
+  const r = RECH_DOK && alle.find(x => x.id === RECH_DOK);
+  if (r) {
+    const adr = ADRESSEN[r.lief] || [r.lief, '', ''];
+    const netto = r.netto, total = r.total;
+    const mwstBetrag = +(netto * r.mwst / 100).toFixed(2);
+
+    const dokZeilen = r.zeilen.map(z => {
       const a = DB.artikel[z.art];
-      const hoch = z.preis > a.vorher;
-      const fehlt = z.gel < z.best;
-      return `<tr>
-        <td>${esc(a.name)}</td>
-        <td class="r num">${z.best}</td>
-        <td class="r num ${fehlt ? '' : 'muted'}" ${fehlt ? 'style="color:var(--warn);font-weight:650"' : ''}>${z.gel}</td>
-        <td class="r num">${chf(z.preis)}</td>
-        <td class="r">${hoch
-          ? `<span class="tag t-warn">+${((z.preis / a.vorher - 1) * 100).toFixed(1)}%</span>`
-          : fehlt ? `<span class="tag t-mute">${z.best - z.gel} nicht geliefert</span>`
-                  : '<span class="tag t-ok">wie bestellt</span>'}</td></tr>`;
+      const hoch = a && z.preis > a.vorher;
+      const fehlt = z.geliefert !== undefined && z.geliefert < z.menge;
+      return `<tr${hoch || fehlt ? ' class="rdwarn"' : ''}>
+        <td class="num">${z.menge}</td><td>${esc(z.name)}</td>
+        <td class="r num">${chf(z.preis)}${hoch
+          ? `<div class="rdklein">vorher ${chf(a.vorher)}</div>` : ''}</td>
+        <td class="r num">${chf(z.summe)}${fehlt
+          ? `<div class="rdklein">${z.geliefert} geliefert</div>` : ''}</td></tr>`;
     }).join('');
 
-    const preisZeile = r.zeilen.find(z => z.preis > DB.artikel[z.art].vorher);
-    const mengeZeile = r.zeilen.find(z => z.gel < z.best);
-    let aktion = '';
-    if (preisZeile) {
-      const a = DB.artikel[preisZeile.art];
-      const betroffen = DB.gerichte.filter(g => g.rezept.some(z => z.art === preisZeile.art));
-      aktion = `<div class="card warn" style="margin-top:14px">
-        <div class="row" style="margin-bottom:8px">
-          <span class="tag t-warn">Preisänderung</span>
-          <b class="small">${esc(a.name)} · ${esc(a.lief)}</b></div>
-        <div class="small muted" style="line-height:1.6">
-          ${chf(a.vorher)} → <b style="color:var(--ink)">${chf(preisZeile.preis)}</b> seit Ihrer letzten
-          Bestellung. Steckt in <b style="color:var(--ink)">${betroffen.length} Gerichten</b>
-          auf der aktuellen Karte.</div>
-        <div class="row" style="margin-top:11px">
-          <button class="btn acc" data-act="preis-uebernehmen" data-art="${preisZeile.art}"
-                  data-neu="${preisZeile.preis}">Preis übernehmen</button>
-          <button class="btn" data-act="preis-nachfragen">Beim Lieferanten nachfragen</button></div></div>`;
-    } else if (mengeZeile) {
-      const a = DB.artikel[mengeZeile.art];
-      const diff = (mengeZeile.best - mengeZeile.gel) * mengeZeile.preis;
-      aktion = `<div class="card warn" style="margin-top:14px">
-        <div class="row" style="margin-bottom:8px">
-          <span class="tag t-mute">Menge offen</span>
-          <b class="small">${esc(a.name)}</b></div>
-        <div class="small muted" style="line-height:1.6">Bestellt ${mengeZeile.best}, geliefert
-          ${mengeZeile.gel}. Die Rechnung verlangt <b style="color:var(--ink)">${chf(diff)}</b> zu viel.</div>
-        <div class="row" style="margin-top:11px">
+    /* what there is to decide, or what was decided */
+    let entscheid = '';
+    if (r.status === 'preis') {
+      const z = r.zeilen.find(x => DB.artikel[x.art] && x.preis > DB.artikel[x.art].vorher);
+      const a = DB.artikel[z.art];
+      const betroffen = DB.gerichte.filter(g => g.rezept.some(x => x.art === z.art));
+      entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
+          <div><b>${esc(a.name.split(',')[0])}: ${chf(a.vorher)} → ${chf(z.preis)}</b>
+          (${pct((z.preis / a.vorher - 1) * 100)}) seit der letzten Lieferung. Steckt in
+          ${betroffen.length} Gericht${betroffen.length > 1 ? 'en' : ''} auf der Karte.</div></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn acc" data-act="preis-uebernehmen" data-art="${z.art}"
+                  data-neu="${z.preis}">Preis übernehmen</button>
+          <button class="btn" data-act="preis-nachfragen">Beim Lieferanten nachfragen</button></div>`;
+    } else if (r.status === 'menge') {
+      const z = r.zeilen.find(x => x.geliefert !== undefined && x.geliefert < x.menge);
+      const diff = +((z.menge - z.geliefert) * z.preis).toFixed(2);
+      entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
+          <div><b>${esc(z.name.split(',')[0])}: ${z.menge} verrechnet, ${z.geliefert} geliefert.</b>
+          Die Rechnung verlangt ${chf(diff)} zu viel.</div></div>
+        <div class="row" style="margin-top:12px">
           <button class="btn acc" data-act="menge-kuerzen" data-inv="${r.id}"
-                  data-diff="${diff}">Rechnung kürzen und freigeben</button></div></div>`;
+                  data-diff="${diff}">Rechnung kürzen und freigeben</button></div>`;
+    } else if (r.notiz) {
+      entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
+        <div><b>Damals entschieden:</b> ${esc(r.notiz)}</div></div>`;
     } else {
-      aktion = `<div class="card good" style="margin-top:14px"><div class="small">
-        Alle Positionen stimmen mit der Bestellung überein. Nichts zu tun.</div></div>`;
+      entscheid = `<div class="pz"><span class="pj">✓</span><div>Alles stimmt mit der Bestellung
+        überein. Nichts zu tun.</div></div>`;
     }
 
-    detail = `<div class="sec">${esc(r.lief)} · ${r.id}</div>
-      <table><thead><tr><th>Position</th><th class="r">Bestellt</th><th class="r">Geliefert</th>
-        <th class="r">Preis</th><th class="r">Abgleich</th></tr></thead><tbody>${zeilen}</tbody></table>
-      ${aktion}`;
+    panel = `<div class="dokzeile">
+      <div class="rdoc">
+        <div class="rdkopf">
+          <div><b>${esc(adr[0])}</b><br>${esc(adr[1])}<br>${esc(adr[2])}<br>
+            <span class="muted">MWST-Nr. CHE-${112 + r.id.length}.${400 + r.zeilen.length}.${r.id.slice(-3)}</span></div>
+          <div class="rdmeta">
+            <div><span>Rechnung</span><b>${esc(r.id)}</b></div>
+            <div><span>Datum</span><b>${esc(r.datum)}${DB.jahr}</b></div>
+            <div><span>Lieferung</span><b>${esc(r.datum)}${DB.jahr}</b></div>
+            <div><span>Kunde</span><b>4021</b></div></div></div>
+        <div class="rdan">Gaststube Musterthal<br>Musterstrasse 12<br>9000 Musterstadt</div>
+        <table class="rdtab"><thead><tr><th>Menge</th><th>Artikel</th>
+          <th class="r">Einzelpreis</th><th class="r">Betrag</th></tr></thead>
+          <tbody>${dokZeilen}</tbody></table>
+        <div class="rdsumme">
+          <div><span>Netto</span><b>${chf(netto)}</b></div>
+          <div><span>MWST ${r.mwst.toFixed(1).replace('.', ',')}%</span><b>${chf(mwstBetrag)}</b></div>
+          <div class="tot"><span>Total CHF</span><b>${chf(total)}</b></div></div>
+        <div class="rdfuss">Zahlbar innert 30 Tagen · QR-Rechnung im Anhang ·
+          ${r.mwst === 2.6 ? 'Lebensmittel, reduzierter Satz 2,6%' : 'Getränke mit Alkohol, Normalsatz 8,1%'}</div>
+      </div>
+      <div class="card rdpruef">
+        <div class="wl"><span>Was Axyom gelesen hat</span>
+          <span class="r2">${esc(r.datum)}${DB.jahr}</span></div>
+        <div class="pz"><span class="pj">✓</span><div>${r.zeilen.length === 1
+          ? 'Die Position einem Artikel zugeordnet' : `Alle ${r.zeilen.length} Positionen einem Artikel zugeordnet`}
+          — Preise gegen die letzte Lieferung, Mengen gegen die Bestellung.</div></div>
+        <div class="pz"><span class="pj">✓</span><div>MWST-Satz plausibel:
+          ${r.mwst.toFixed(1).replace('.', ',')}% für
+          ${r.mwst === 2.6 ? 'Lebensmittel' : 'alkoholische Getränke'}.</div></div>
+        ${entscheid}
+        <div class="small muted" style="margin-top:12px;padding-top:9px;border-top:1px solid var(--soft)">
+          Gelesen beim Eingang. Abgetippt wurde nichts.</div>
+        <div class="row" style="margin-top:11px">
+          <button class="btn" data-dokzu="1">Schliessen</button></div></div></div>`;
   }
 
-  const offen = DB.rechnungen.filter(r => r.status !== 'ok' && r.status !== 'erledigt').length;
-
-  /* ── the archive: every invoice since the house opened ── */
-  const imMonat = m => DB.archiv.filter(r => +r.datum.slice(3, 5) === m);
-  const monatTabs = DB.monate.map(m =>
-    `<button class="tab ${RECH_MONAT === m.nr ? 'on' : ''}" data-rmonat="${m.nr}"
-      >${esc(m.name)} <span class="muted">${imMonat(m.nr).length}</span></button>`).join('');
-  const liste = imMonat(RECH_MONAT);
-  const archivZeilen = liste.map(r => `<tr class="click" data-dok="${r.id}">
-      <td class="muted num">${esc(r.datum)} <span class="muted">${esc(r.wochentag)}</span></td>
-      <td><b>${esc(r.lief)}</b>${r.notiz ? `<div class="small muted zeile1">${esc(r.notiz)}</div>` : ''}</td>
-      <td class="muted">${esc(r.id)}</td>
-      <td class="r num">${chf(r.total)}</td>
-      <td class="r"><span class="tag ${r.status === 'erledigt' ? 't-warn' : 't-ok'}"
-        >${r.status === 'erledigt' ? 'entschieden' : 'abgeglichen'}</span></td>
-      <td class="r"><span class="link">Rechnung ansehen</span></td></tr>`).join('');
-
-  /* ── one invoice as the document it is ── */
-  let dok = '';
-  if (RECH_DOK) {
-    const r = DB.archiv.find(x => x.id === RECH_DOK);
-    if (r) {
-      const adressen = {
-        'Muster Gemüse AG':      ['Muster Gemüse AG', 'Feldweg 8', '9306 Musterwil'],
-        'Molkerei Musterberg':   ['Molkerei Musterberg AG', 'Bergstrasse 44', '9114 Musterberg'],
-        'Metzgerei Mustermann':  ['Metzgerei Mustermann GmbH', 'Dorfstrasse 3', '9203 Musterdorf'],
-        'Fischerei Mustersee':   ['Fischerei Mustersee', 'Seestrasse 21', '8640 Musterau'],
-        'Weinkeller Musterthal': ['Weinkeller Musterthal AG', 'Rebhalde 5', '9475 Musterthal'],
-      }[r.lief] || [r.lief, '', ''];
-      const mwstBetrag = +(r.netto * r.mwst / 100).toFixed(2);
-      dok = `<div class="sec">Rechnung ${esc(r.id)}</div>
-        <div class="dokzeile">
-          <div class="rdoc">
-            <div class="rdkopf">
-              <div><b>${esc(adressen[0])}</b><br>${esc(adressen[1])}<br>${esc(adressen[2])}<br>
-                <span class="muted">MWST-Nr. CHE-${112 + r.id.length}.${400 + r.zeilen.length}.${r.id.slice(-3)}</span></div>
-              <div class="rdmeta">
-                <div><span>Rechnung</span><b>${esc(r.id)}</b></div>
-                <div><span>Datum</span><b>${esc(r.datum)}${DB.jahr}</b></div>
-                <div><span>Lieferung</span><b>${esc(r.datum)}${DB.jahr}</b></div>
-                <div><span>Kunde</span><b>4021</b></div></div></div>
-            <div class="rdan">Gaststube Musterthal<br>Musterstrasse 12<br>9000 Musterstadt</div>
-            <table class="rdtab"><thead><tr><th>Menge</th><th>Artikel</th>
-              <th class="r">Einzelpreis</th><th class="r">Betrag</th></tr></thead><tbody>
-              ${r.zeilen.map(z => `<tr><td class="num">${z.menge}</td><td>${esc(z.name)}</td>
-                <td class="r num">${chf(z.preis)}</td><td class="r num">${chf(z.summe)}</td></tr>`).join('')}
-              </tbody></table>
-            <div class="rdsumme">
-              <div><span>Netto</span><b>${chf(r.netto)}</b></div>
-              <div><span>MWST ${r.mwst.toFixed(1).replace('.', ',')}%</span><b>${chf(mwstBetrag)}</b></div>
-              <div class="tot"><span>Total CHF</span><b>${chf(r.total)}</b></div></div>
-            <div class="rdfuss">Zahlbar innert 30 Tagen · QR-Rechnung im Anhang ·
-              ${r.mwst === 2.6 ? 'Lebensmittel, reduzierter Satz 2,6%' : 'Getränke mit Alkohol, Normalsatz 8,1%'}</div>
-          </div>
-          <div class="card rdpruef">
-            <div class="wl"><span>Was Axyom geprüft hat</span></div>
-            <div class="pz"><span class="pj">✓</span><div>${r.zeilen.length === 1
-              ? 'Die Position einem Artikel zugeordnet.'
-              : `Alle ${r.zeilen.length} Positionen einem Artikel zugeordnet.`}</div></div>
-            <div class="pz"><span class="pj">✓</span><div>Preise gegen die letzte Lieferung verglichen.</div></div>
-            <div class="pz"><span class="pj">✓</span><div>Mengen gegen die Bestellung verglichen.</div></div>
-            <div class="pz"><span class="pj">✓</span><div>MWST-Satz plausibel: ${r.mwst.toFixed(1).replace('.', ',')}%
-              für ${r.mwst === 2.6 ? 'Lebensmittel' : 'alkoholische Getränke'}.</div></div>
-            ${r.notiz ? `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
-              <div><b>Damals entschieden:</b> ${esc(r.notiz)}</div></div>` : ''}
-            <div class="small muted" style="margin-top:11px;padding-top:9px;
-                 border-top:1px solid var(--soft)">Gelesen beim Eingang am ${esc(r.datum)}${DB.jahr}.
-              Abgetippt wurde nichts.</div>
-            <div class="row" style="margin-top:11px"><button class="btn" data-dokzu="1">Schliessen</button></div>
-          </div></div>`;
-    }
-  }
-
-  return `<div class="sec">Braucht eine Entscheidung</div>
-    <table><thead><tr><th>Lieferant</th><th>Nummer</th><th>Datum</th>
-      <th class="r">Total</th><th class="r">Status</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="small muted" style="margin-top:12px">Diesen Monat
-      <b style="color:var(--ink)">${DB.gelesen} Rechnungen gelesen</b> ·
-      ${offen} brauchen eine Entscheidung ·
-      ${OFFEN ? 'unten die Positionen' : 'eine Zeile anklicken, um die Positionen zu sehen'}</div>
-    ${detail}
-    ${dok}
-    <div class="sec" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">Archiv
-      <span class="tabs" style="margin-bottom:0">${monatTabs}</span>
-      <span class="muted" style="font-weight:600;letter-spacing:0;text-transform:none"
-        >seit der Eröffnung am ${esc(DB.eroeffnet)}: ${DB.archiv.length} Rechnungen</span></div>
-    <table><thead><tr><th>Datum</th><th>Lieferant</th><th>Nummer</th><th class="r">Total</th>
-      <th class="r">Status</th><th class="r"></th></tr></thead><tbody>${archivZeilen}</tbody></table>
-    <div class="small muted" style="margin-top:12px">${esc(DB.monate.find(m => m.nr === RECH_MONAT).name)}:
-      ${liste.length} Rechnungen, zusammen ${chf(liste.reduce((s, r) => s + r.total, 0))} ·
-      eine Zeile anklicken, um die Rechnung zu sehen</div>`;
+  return `<div class="tabs">${filter}</div>
+    <div class="scrollx"><table><thead><tr><th>Datum</th><th>Lieferant</th><th>Nummer</th>
+      <th class="r">Total</th><th class="r">Status</th><th class="r"></th></tr></thead>
+      <tbody>${zeilen}</tbody></table></div>
+    <div class="small muted" style="margin-top:12px">
+      ${RECH_FILTER === 'offen'
+        ? `${offen.length} von ${alle.length} Rechnungen brauchen eine Entscheidung.`
+        : `${liste.length} Rechnungen im ${esc(DB.monate.find(m => m.nr === RECH_FILTER).name)}, zusammen
+           ${chf(liste.reduce((s, x) => s + x.total, 0))}.`}
+      Seit der Eröffnung am ${esc(DB.eroeffnet)} sind ${DB.gelesenSeit} Rechnungen beim Eingang gelesen worden
+      — ${RECH_DOK ? 'unten die Rechnung' : 'eine Zeile anklicken, um die Rechnung zu sehen'}.</div>
+    ${panel}`;
 };
 
 /* ── Lager ──────────────────────────────────────────────────────────────── */
@@ -3176,7 +3181,9 @@ const ACTIONS = {
     const key = el.dataset.art, neu = +el.dataset.neu, a = DB.artikel[key];
     const vor = DB.gerichte.map(g => ({ id: g.id, m: marge(g) }));
     a.vorher = a.preis; a.preis = neu;
-    DB.rechnungen.find(r => r.id === OFFEN).status = 'erledigt';
+    const rr = DB.rechnungen.find(x => x.id === RECH_DOK) ||
+               DB.rechnungen.find(x => x.zeilen.some(z => z.art === key));
+    if (rr) rr.status = 'erledigt';
     const nach = DB.gerichte.map(g => marge(g));
     const worst = DB.gerichte.map((g, i) => ({ g, d: nach[i] - vor[i].m }))
       .sort((x, y) => x.d - y.d)[0];
@@ -3191,8 +3198,12 @@ const ACTIONS = {
   'menge-kuerzen'(el) {
     const r = DB.rechnungen.find(x => x.id === el.dataset.inv);
     const diff = +el.dataset.diff;
-    r.total -= diff; r.status = 'erledigt';
     r.zeilen.forEach(z => { if (z.gel < z.best) z.best = z.gel; });
+    r.status = 'erledigt';
+    // the total follows the lines, like everywhere else — quoting the old
+    // stored figure in the toast contradicted the document beside it
+    const mwst = r.lief === 'Weinkeller Musterthal' ? 8.1 : 2.6;
+    r.total = +(r.zeilen.reduce((s, z) => s + z.best * z.preis, 0) * (1 + mwst / 100)).toFixed(2);
     logge(`${r.id} um ${chf(diff)} gekürzt — nicht gelieferte Position entfernt`);
     toast(`Rechnung auf <b>${chf(r.total)}</b> gekürzt. ${chf(diff)} verlassen Ihr Konto nicht.`, 1);
   },
@@ -3293,12 +3304,7 @@ document.addEventListener('click', e => {
       && !e.target.closest('#hilfe-btn') && !e.target.closest('[data-ampelhilfe]')) flugWeg(true);
 
   const go = e.target.closest('[data-go]');
-  if (go) { AKTIV = go.dataset.go; OFFEN = null; render(); return; }
-
-  const inv = e.target.closest('[data-inv]');
-  if (inv && !e.target.closest('[data-act]')) {
-    OFFEN = OFFEN === inv.dataset.inv ? null : inv.dataset.inv; render(); return;
-  }
+  if (go) { AKTIV = go.dataset.go; RECH_DOK = null; POST_OFFEN = null; render(); return; }
 
   const chk = e.target.closest('[data-check]');
   if (chk) {
@@ -3333,8 +3339,9 @@ document.addEventListener('click', e => {
   const hb = e.target.closest('#hilfe-btn');
   if (hb) { document.querySelector('.flug:not(.weg):not(.schnell)') ? flugWeg(true) : hilfeZeigen(hb); return; }
 
-  const rm = e.target.closest('[data-rmonat]');
-  if (rm) { RECH_MONAT = +rm.dataset.rmonat; RECH_DOK = null; render(); return; }
+  const rf = e.target.closest('[data-rfilter]');
+  if (rf) { RECH_FILTER = rf.dataset.rfilter === 'offen' ? 'offen' : +rf.dataset.rfilter;
+    RECH_DOK = null; render(); return; }
   const dk = e.target.closest('[data-dok]');
   if (dk) { RECH_DOK = RECH_DOK === dk.dataset.dok ? null : dk.dataset.dok; render();
     if (RECH_DOK) $('#view .rdoc')?.scrollIntoView({ block:'center', behavior:'smooth' });
