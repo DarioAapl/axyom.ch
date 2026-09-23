@@ -255,6 +255,7 @@ th.r,td.r{text-align:right}
   border-top:1px solid rgba(255,255,255,.1)}
 .flug.da{opacity:1;transform:translateY(0)}
 .flug.weg{opacity:0;transition:opacity 1.4s ease-in}
+.flug.schnell{opacity:0;transform:translateY(-4px);transition:opacity .13s,transform .13s}
 .flug b{color:#fff;font-weight:650}
 .flug .fz{display:flex;gap:9px;align-items:flex-start;padding:3px 0}
 .flug .fp{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px}
@@ -1296,10 +1297,13 @@ const HILFE = {
    fades out by itself — nothing to close, nothing that stays in the way.
    ────────────────────────────────────────────────────────────────────────── */
 let flugTimer;
-function flugWeg() {
+/* Two ways to leave. The clock running out fades slowly — nice to look at, and
+   nobody asked for it to go. A click on the question mark, anywhere else, or
+   Escape is a decision: that one goes at once, or the demo feels sticky. */
+function flugWeg(sofort = false) {
   clearTimeout(flugTimer);
   document.querySelectorAll('.flug').forEach(f => {
-    f.classList.add('weg');
+    f.classList.add(sofort ? 'schnell' : 'weg');
     f.addEventListener('transitionend', () => f.remove(), { once: true });
   });
 }
@@ -2936,7 +2940,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'chat-in') {
     chatFragen(e.target.value); e.target.value = '';
   }
-  if (e.key === 'Escape') { flugWeg(); if (CHAT.offen) chatOeffnen(false); }
+  if (e.key === 'Escape') { flugWeg(true); if (CHAT.offen) chatOeffnen(false); }
 });
 /* ── actions ────────────────────────────────────────────────────────────────
    Each one mutates DB and re-renders. The cross-module consequences are the
@@ -3062,7 +3066,7 @@ document.addEventListener('click', e => {
   // any click that is not inside the hint sends it away — this has to run
   // before the branches that return, or a rail click leaves it hanging
   if (document.querySelector('.flug:not(.weg)') && !e.target.closest('.flug')
-      && !e.target.closest('#hilfe-btn') && !e.target.closest('[data-ampelhilfe]')) flugWeg();
+      && !e.target.closest('#hilfe-btn') && !e.target.closest('[data-ampelhilfe]')) flugWeg(true);
 
   const go = e.target.closest('[data-go]');
   if (go) { AKTIV = go.dataset.go; OFFEN = null; render(); return; }
@@ -3088,6 +3092,7 @@ document.addEventListener('click', e => {
 
   const ah = e.target.closest('[data-ampelhilfe]');
   if (ah) {
+    if (document.querySelector('.flug:not(.weg):not(.schnell)')) { flugWeg(true); return; }
     flugHinweis(ah, `
       <div class="fz"><span class="fp" style="background:var(--bad)"></span>
         <div><b>Rot — jetzt.</b> Etwas läuft gerade aus dem Ruder, zum Beispiel ein Kühlgerät
@@ -3102,7 +3107,7 @@ document.addEventListener('click', e => {
     return;
   }
   const hb = e.target.closest('#hilfe-btn');
-  if (hb) { document.querySelector('.flug:not(.weg)') ? flugWeg() : hilfeZeigen(hb); return; }
+  if (hb) { document.querySelector('.flug:not(.weg):not(.schnell)') ? flugWeg(true) : hilfeZeigen(hb); return; }
 
   const vf = e.target.closest('[data-verlauf]');
   if (vf) { VERLAUF_W = +vf.dataset.verlauf; render(); return; }
