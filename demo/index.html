@@ -236,7 +236,20 @@ th.r,td.r{text-align:right}
 /* the master indicator: one band across the top of the Übersicht */
 .ampel{display:flex;align-items:center;gap:6px;background:var(--dark);border-radius:12px;
   padding:10px 14px;color:#fff}
+.ampel .frage{width:19px;height:19px;border-radius:50%;border:1px solid rgba(255,255,255,.22);
+  background:none;color:rgba(255,255,255,.55);font-family:inherit;font-size:11px;font-weight:700;
+  line-height:1;padding:0;cursor:pointer;flex:none;align-self:center}
+.ampel .frage:hover{border-color:var(--acc);color:var(--acc)}
 .ampel .trenn{width:1px;align-self:stretch;background:rgba(255,255,255,.12);margin:0 12px}
+/* the flying hint */
+.flug{position:fixed;z-index:70;background:var(--dark);color:#fff;border-radius:11px;
+  padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.28);font-size:11.5px;line-height:1.55;
+  opacity:0;transform:translateY(-6px);transition:opacity .18s,transform .18s;pointer-events:none}
+.flug.da{opacity:1;transform:translateY(0)}
+.flug.weg{opacity:0;transition:opacity 1.4s ease-in}
+.flug b{color:#fff;font-weight:650}
+.flug .fz{display:flex;gap:9px;align-items:flex-start;padding:3px 0}
+.flug .fp{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px}
 .ampel .jetzt{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
 .ampel .jetzt .was{min-width:0}
 .ampel .jetzt b{font-size:13px;font-weight:650;display:block;white-space:nowrap;overflow:hidden;
@@ -1281,6 +1294,35 @@ function hilfePanel() {
       <button class="btn" data-hilfe="zu">Schliessen</button></div>
     <ol class="hilfeliste">${HILFE[AKTIV].map(t => `<li>${t}</li>`).join('')}</ol></div>`;
 }
+
+/* ── a hint that flies in and leaves again ─────────────────────────────────
+   For the small explanations that are not worth a panel. It is appended to
+   <body>, not to the view, so a re-render cannot wipe it mid-read, and it
+   fades out by itself — nothing to close, nothing that stays in the way.
+   ────────────────────────────────────────────────────────────────────────── */
+let flugTimer;
+function flugHinweis(anker, html, dauer = 6000) {
+  document.querySelectorAll('.flug').forEach(f => f.remove());
+  clearTimeout(flugTimer);
+  const f = document.createElement('div');
+  f.className = 'flug';
+  f.innerHTML = html;
+  document.body.appendChild(f);
+  const a = anker.getBoundingClientRect();
+  // keep it on screen: prefer below the anchor, flip up if there is no room
+  const platzUnten = window.innerHeight - a.bottom;
+  const breite = Math.min(320, window.innerWidth - 24);
+  f.style.width = breite + 'px';
+  f.style.left = Math.max(12, Math.min(a.left - 12, window.innerWidth - breite - 12)) + 'px';
+  if (platzUnten > f.offsetHeight + 20) f.style.top = (a.bottom + 10) + 'px';
+  else f.style.top = Math.max(12, a.top - f.offsetHeight - 10) + 'px';
+  requestAnimationFrame(() => f.classList.add('da'));
+  flugTimer = setTimeout(() => {
+    f.classList.add('weg');
+    f.addEventListener('transitionend', () => f.remove(), { once: true });
+  }, dauer);
+  return f;
+}
 const VIEWS = {};
 
 /* ── Rechnungen ─────────────────────────────────────────────────────────── */
@@ -2285,6 +2327,7 @@ VIEWS.uebersicht = () => {
       ${stufen.map(s => `<button class="lampe ${s.anzahl ? 'an ' + s.k : ''}"
         ${s.wo ? `data-go="${s.wo}"` : ''} ${s.anzahl ? '' : 'disabled'}>
         <span class="glas">${s.anzahl || ''}</span><span class="txt">${s.n}</span></button>`).join('')}
+      <button class="frage" data-ampelhilfe="1" title="Was bedeuten die Farben?">?</button>
       <div class="trenn"></div>
       <div class="jetzt">${dring
         ? `<div class="was"><b>${esc(dring.was)}</b><div class="why">${dring.warum}</div></div>
@@ -3019,6 +3062,21 @@ document.addEventListener('click', e => {
     render(); return;
   }
 
+  const ah = e.target.closest('[data-ampelhilfe]');
+  if (ah) {
+    flugHinweis(ah, `
+      <div class="fz"><span class="fp" style="background:var(--bad)"></span>
+        <div><b>Rot — jetzt.</b> Etwas läuft gerade aus dem Ruder, zum Beispiel ein Kühlgerät
+        ausserhalb seines Bereichs.</div></div>
+      <div class="fz"><span class="fp" style="background:#cf7c1f"></span>
+        <div><b>Gelb — heute.</b> Eine Entscheidung, die heute fallen sollte: ein Preis, eine
+        Menge, eine offene Kontrolle.</div></div>
+      <div class="fz"><span class="fp" style="background:var(--acc)"></span>
+        <div><b>Grün — kann warten.</b> Vorbereitet und ohne Eile: Aktionen, Entwürfe, Briefings.</div></div>
+      <div style="color:rgba(255,255,255,.5);margin-top:6px">Die Zahl ist, wie viele Sachen auf dieser
+        Stufe warten. Eine dunkle Lampe heisst: dort ist nichts.</div>`);
+    return;
+  }
   if (e.target.closest('#hilfe-btn')) {
     HILFE_OFFEN.has(AKTIV) ? HILFE_OFFEN.delete(AKTIV) : HILFE_OFFEN.add(AKTIV);
     render(); return;
