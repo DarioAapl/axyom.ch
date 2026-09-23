@@ -1123,6 +1123,7 @@ let AKTIV = 'uebersicht';
 let SOCIAL_TAB = 'kalender';
 let VERLAUF_W = 8;       // how many weeks the Verlauf shows
 let RECH_FILTER = 'offen';   // 'offen' oder eine Monatsnummer
+let RECH_SUCHE = '';         // Freitextsuche über alle Rechnungen
 let RECH_DOK = null;     // the invoice shown as a document
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
@@ -1517,12 +1518,57 @@ function alleRechnungen() {
   return [...aktuell, ...archiv];
 }
 
+/* ── the search ─────────────────────────────────────────────────────────────
+   It searches what is ON an invoice, not just its heading: the supplier, the
+   number, the month, the status, the note — and the ARTICLES in its lines, so
+   «butter» finds every delivery that contained butter, which is the question a
+   restaurateur actually has. Numbers work too: «>2000» for the big ones, «138»
+   for a price or an amount. Every token has to match something, so two words
+   narrow instead of widen, and the row says why it matched.
+   ────────────────────────────────────────────────────────────────────────── */
+function rechTreffer(r, q) {
+  /* tokenised RAW, not normalised: cnorm strips punctuation, which ate the
+     operator in «>2000» and turned it into a plain number. */
+  const worte = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  if (!worte.length) return { ok: true };
+  const label = (RSTATUS[r.status] || RSTATUS.ok)[1];
+  const monat = (DB.monate.find(m => m.nr === +r.datum.slice(3, 5)) || {}).name || '';
+  const artikel = r.zeilen.map(z => z.name);
+  const heu = cnorm([r.lief, r.id, r.notiz || '', label, monat, r.wochentag || '',
+                     r.datum, ...artikel].join(' '));
+  const gruende = [];
+  const ok = worte.every(w => {
+    const zahl = w.match(/^([<>])?(\d+(?:[.,]\d+)?)$/);
+    if (zahl) {
+      const n = +zahl[2].replace(',', '.');
+      if (zahl[1] === '>') return r.total > n;
+      if (zahl[1] === '<') return r.total < n;
+      // eine blanke Zahl: Betrag, Einzelpreis oder Nummer
+      return String(Math.round(r.total)).includes(zahl[2]) || heu.includes(cnorm(w))
+             || r.zeilen.some(z => String(z.preis).includes(zahl[2]));
+    }
+    const nw = cnorm(w);
+    if (!nw) return true;
+    const treffer = artikel.find(a => cnorm(a).includes(nw));
+    if (treffer) gruende.push(treffer.split(',')[0]);
+    return heu.includes(nw);
+  });
+  return { ok, grund: [...new Set(gruende)].join(', ') };
+}
+
 VIEWS.rechnungen = () => {
   const alle = alleRechnungen();
   const offen = alle.filter(r => r.status === 'preis' || r.status === 'menge');
-  const liste = RECH_FILTER === 'offen' ? offen
-    : alle.filter(r => +r.datum.slice(3, 5) === RECH_FILTER)
-          .sort((a, b) => +b.datum.slice(0, 2) - +a.datum.slice(0, 2));
+  const suche = RECH_SUCHE.trim();
+  const nachDatum = (a, b) => (+b.datum.slice(3, 5) - +a.datum.slice(3, 5))
+                           || (+b.datum.slice(0, 2) - +a.datum.slice(0, 2));
+  // eine Suche gilt für alle Rechnungen, nicht nur für den gewählten Monat
+  const gefunden = suche ? alle.map(r => ({ r, t: rechTreffer(r, suche) }))
+                               .filter(x => x.t.ok).sort((x, y) => nachDatum(x.r, y.r)) : null;
+  const liste = gefunden ? gefunden.map(x => x.r)
+    : RECH_FILTER === 'offen' ? offen
+    : alle.filter(r => +r.datum.slice(3, 5) === RECH_FILTER).sort(nachDatum);
+  const grundVon = id => gefunden ? (gefunden.find(x => x.r.id === id) || {}).t?.grund : '';
 
   const filter = [['offen', `Offen (${offen.length})`]]
     .concat(DB.monate.slice().reverse().map(m => [m.nr, `${m.name} (${
@@ -1534,13 +1580,18 @@ VIEWS.rechnungen = () => {
     const [cls, label] = RSTATUS[r.status] || RSTATUS.ok;
     return `<tr class="click ${r.id === RECH_DOK ? 'gewaehlt' : ''}" data-dok="${r.id}">
       <td class="muted num" style="width:92px">${esc(r.datum)}</td>
-      <td><b>${esc(r.lief)}</b>${r.notiz ? `<div class="small muted zeile1">${esc(r.notiz)}</div>` : ''}</td>
+      <td><b>${esc(r.lief)}</b>${(g => g ? `<span class="tag t-ok" style="margin-left:7px"
+          >enthält ${esc(g)}</span>` : '')(grundVon(r.id))}
+        ${r.notiz ? `<div class="small muted zeile1">${esc(r.notiz)}</div>` : ''}</td>
       <td class="muted" style="width:96px">${esc(r.id)}</td>
       <td class="r num" style="width:116px">${chf(r.total)}</td>
       <td class="r" style="width:150px"><span class="tag ${cls}">${label}</span></td>
       <td class="r" style="width:120px"><span class="link">${r.id === RECH_DOK ? 'offen' : 'ansehen'}</span></td></tr>`;
   }).join('') || `<tr><td colspan="6" class="muted small" style="padding:18px 10px">
-      Nichts offen — alle Rechnungen sind abgeglichen.</td></tr>`;
+      ${suche
+        ? `Kein Treffer für «${esc(suche)}». Es wird in Lieferant, Nummer, Monat, Status, Notiz und
+           in den Positionen gesucht — «butter», «>2000» oder «juli» zum Beispiel.`
+        : 'Nichts offen — alle Rechnungen sind abgeglichen.'}</td></tr>`;
 
   /* ── the panel: the document, and what there is to decide ── */
   let panel = '';
@@ -1630,12 +1681,19 @@ VIEWS.rechnungen = () => {
           <button class="btn" data-dokzu="1">Schliessen</button></div></div></div>`;
   }
 
-  return `<div class="tabs">${filter}</div>
+  return `<div class="row" style="gap:10px;margin-bottom:14px">
+      <input id="rsuche" data-rsuche="1" type="text" style="flex:1;min-width:0;max-width:420px"
+        placeholder="Suchen — Lieferant, Artikel, Nummer, Betrag, Monat …" value="${esc(RECH_SUCHE)}">
+      ${suche ? '<button class="btn" data-rsuchezu="1">Suche löschen</button>' : ''}
+      <span class="tabs" style="margin-bottom:0;${suche ? 'opacity:.4' : ''}">${filter}</span></div>
     <div class="scrollx"><table><thead><tr><th>Datum</th><th>Lieferant</th><th>Nummer</th>
       <th class="r">Total</th><th class="r">Status</th><th class="r"></th></tr></thead>
       <tbody>${zeilen}</tbody></table></div>
     <div class="small muted" style="margin-top:12px">
-      ${RECH_FILTER === 'offen'
+      ${suche
+        ? `${liste.length} Treffer für «${esc(suche)}», zusammen ${chf(liste.reduce((s, x) => s + x.total, 0))}
+           — gesucht wird auch in den Positionen, nicht nur in den Überschriften.`
+        : RECH_FILTER === 'offen'
         ? `${offen.length} von ${alle.length} Rechnungen brauchen eine Entscheidung.`
         : `${liste.length} Rechnungen im ${esc(DB.monate.find(m => m.nr === RECH_FILTER).name)}, zusammen
            ${chf(liste.reduce((s, x) => s + x.total, 0))}.`}
@@ -3339,9 +3397,10 @@ document.addEventListener('click', e => {
   const hb = e.target.closest('#hilfe-btn');
   if (hb) { document.querySelector('.flug:not(.weg):not(.schnell)') ? flugWeg(true) : hilfeZeigen(hb); return; }
 
+  if (e.target.closest('[data-rsuchezu]')) { RECH_SUCHE = ''; render(); return; }
   const rf = e.target.closest('[data-rfilter]');
   if (rf) { RECH_FILTER = rf.dataset.rfilter === 'offen' ? 'offen' : +rf.dataset.rfilter;
-    RECH_DOK = null; render(); return; }
+    RECH_DOK = null; RECH_SUCHE = ''; render(); return; }
   const dk = e.target.closest('[data-dok]');
   if (dk) { RECH_DOK = RECH_DOK === dk.dataset.dok ? null : dk.dataset.dok; render();
     if (RECH_DOK) $('#view .rdoc')?.scrollIntoView({ block:'center', behavior:'smooth' });
@@ -3380,7 +3439,7 @@ document.addEventListener('click', e => {
    the field to be left. */
 const TIPPFELDER = ['data-count', 'data-karte', 'data-kartepreis',
                    'data-posttext', 'data-posttags', 'data-postalt', 'data-postdatum',
-                   'data-antwort'];
+                   'data-antwort', 'data-rsuche'];
 
 function renderTippend(el) {
   const attr = TIPPFELDER.find(a => el.hasAttribute(a));
@@ -3422,6 +3481,8 @@ document.addEventListener('input', e => {
       logge(`Beitrag «${p.titel}» geändert — zurück auf Entwurf`); }
     renderTippend(pt); return;
   }
+  const rs = e.target.closest('[data-rsuche]');
+  if (rs) { RECH_SUCHE = rs.value; RECH_DOK = null; renderTippend(rs); return; }
   const aw = e.target.closest('[data-antwort]');
   if (aw) { const b = DB.bewertungen.find(x => x.id === aw.dataset.antwort);
     b.antwort = aw.value;
