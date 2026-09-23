@@ -1530,7 +1530,8 @@ const HILFE = {
     'Der Kalender darunter zeigt jede Zählung im Monat. Grün heisst im Rahmen der Waage, orange heisst Fehlmenge — so sehen Sie nicht nur DASS etwas fehlt, sondern ab welcher Woche.',
     'Auf einen Artikel einschränken zeigt dessen Verlauf: Butter lag wochenlang bei −0.3 kg und am 07.09. plötzlich bei −2.4 kg. Dazwischen liegt eine Woche, in der jemand nachschauen kann.',
     'Einen Tag anklicken öffnet die ganze Zählung dieses Tages, verglichen mit der Zählung davor.',
-    'Auffällig heisst mehr als 4 % und mehr als eine halbe Einheit — Prozent allein schlägt bei kleinen Beständen schon bei der Waagenrundung aus.',
+    'Auffällig heisst mehr als 4 % und mehr als eine halbe Einheit — Prozent allein schlägt bei kleinen Beständen schon bei der Waagenrundung aus. Grün heisst also «klein», nicht «null».',
+    'Genau darum steht unter dem Kalender die Summe über alle Zählungen: die kleinen, grünen Differenzen kosten in drei Monaten mehr als die vier Vorfälle zusammen. Eine Zeile dort anklicken schränkt den Kalender auf diesen Artikel ein.',
   ],
   aktionen: [
     'Die Aktionen Ihrer Lieferanten werden gelesen, sobald die Preislisten kommen.',
@@ -2121,6 +2122,40 @@ VIEWS.lager = () => {
     </div>`;
   }
 
+  /* «Grün» heisst klein, nicht null. Über dreizehn Zählungen summiert sich auch
+     die Waagentoleranz, und diese Summe ist der Grund, warum ein Betrieb das
+     überhaupt zählt — sie steht deshalb unter dem Kalender. */
+  const bilanzZeilen = DB.lager.map(l => {
+    const reihe = DB.zaehlungen.map(z => ({ z, d: DB.zDiff(z, l.art), w: DB.zWert(z, l.art) }));
+    const summe = reihe.reduce((s, x) => s + x.d, 0);
+    const wert = reihe.reduce((s, x) => s + x.w, 0);
+    const vorfaelle = reihe.filter(x => DB.zAuff(x.z, l.art));
+    const klein = reihe.filter(x => !DB.zAuff(x.z, l.art) && x.d < 0);
+    return { l, summe, wert, vorfaelle, klein,
+             kleinWert: klein.reduce((s, x) => s + x.w, 0) };
+  }).sort((a, b) => a.wert - b.wert);
+  const bilanz = `<div class="card" style="margin-top:16px">
+    <div class="wl"><span>Über alle ${DB.zaehlungen.length} Zählungen</span>
+      <span class="r2">seit dem ${esc(DB.eroeffnet)}</span></div>
+    <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Fehlt zusammen</th>
+      <th class="r">Wert</th><th class="r">davon aus Fehlmengen</th>
+      <th class="r">davon im Rahmen</th></tr></thead><tbody>
+      ${bilanzZeilen.map(b => `<tr class="click ${LAGER_ART === b.l.art ? 'gewaehlt' : ''}"
+          data-lartrow="${b.l.art}">
+        <td><b>${esc(DB.artikel[b.l.art].name.split(',')[0])}</b></td>
+        <td class="r num">${b.summe > 0 ? '+' : '−'}${Math.abs(b.summe).toFixed(1)} ${esc(b.l.einheit)}</td>
+        <td class="r num" style="font-weight:650">${chf(b.wert)}</td>
+        <td class="r num muted">${b.vorfaelle.length
+          ? `${chf(b.vorfaelle.reduce((s, x) => s + x.w, 0))} · ${b.vorfaelle.length}×`
+          : 'keine'}</td>
+        <td class="r num muted">${chf(b.kleinWert)} · ${b.klein.length}×</td></tr>`).join('')}
+      </tbody></table></div>
+    <div class="small muted" style="margin-top:11px;line-height:1.6">Eine Differenz von −0.4 l ist grün,
+      weil sie in der Waage liegt — nicht, weil sie nichts kostet. Dreizehn Mal −0.4 sind
+      ${chf(Math.abs(bilanzZeilen.reduce((s, b) => s + b.kleinWert, 0)))} in drei Monaten, ohne dass je
+      ein Alarm nötig war. Die Fehlmengen daneben sind die Fälle, bei denen es sich lohnt,
+      dem Tag nachzugehen.</div></div>`;
+
   const verlust = DB.zTagWert(heute);
   const auffHeute = DB.lager.filter(l => DB.zAuff(heute, l.art)).length;
   const vorfaelle = DB.zaehlungen.filter(z => DB.lager.some(l => DB.zAuff(z, l.art))).length;
@@ -2146,11 +2181,12 @@ VIEWS.lager = () => {
     <div class="kkopf">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(t => `<div>${t}</div>`).join('')}</div>
     <div class="kgrid">${zellen.join('')}</div>
     <div class="klegende">
-      <span><i class="freigegeben"></i>im Rahmen</span>
-      <span><i class="entwurf"></i>Fehlmenge</span>
+      <span><i class="freigegeben"></i>im Rahmen — unter 4 % und unter einer halben Einheit</span>
+      <span><i class="entwurf"></i>Fehlmenge — darüber</span>
       <span class="muted">${LAGER_ART
         ? `Zahl = Differenz bei ${esc(DB.artikel[LAGER_ART].name.split(',')[0])}`
         : 'Zahl = Fehlmenge des Tages in Franken'} · einen Tag anklicken für die ganze Zählung</span></div>
+    ${bilanz}
     ${tagPanel}`;
 };
 
@@ -3854,6 +3890,9 @@ document.addEventListener('click', e => {
     RECH_DOK = null; render(); return; }
   const lm = e.target.closest('[data-lmonat]');
   if (lm) { LAGER_MONAT = +lm.dataset.lmonat; LAGER_TAG = null; render(); return; }
+  const lr = e.target.closest('[data-lartrow]');
+  if (lr) { LAGER_ART = LAGER_ART === lr.dataset.lartrow ? '' : lr.dataset.lartrow;
+    LAGER_TAG = null; render(); return; }
   const lt = e.target.closest('[data-ltag]');
   if (lt) { LAGER_TAG = LAGER_TAG === lt.dataset.ltag ? null : lt.dataset.ltag; render(); return; }
   if (e.target.closest('[data-ltagzu]')) { LAGER_TAG = null; render(); return; }
