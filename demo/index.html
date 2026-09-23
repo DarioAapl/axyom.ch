@@ -1052,6 +1052,32 @@ DB.archiv = (() => {
                          || (+b.datum.slice(0, 2) - +a.datum.slice(0, 2)));
 })();
 
+/* ── what was last actually paid ───────────────────────────────────────────
+   Two prices per article, because they answer different questions:
+
+     preis    the price the calculation uses. Changing it is a decision — you
+              do not re-price a menu off a single delivery, and a queried
+              invoice may yet be credited.
+     bezahlt  the price on the most recent invoice. A fact, not a decision: the
+              invoice is due whatever you decide, so this is set the moment the
+              invoice is read.
+
+   Where the two differ, the demo says so instead of pretending the rise did not
+   happen until somebody clicks a button.
+   ────────────────────────────────────────────────────────────────────────── */
+(() => {
+  const alle = [...DB.archiv.map(r => ({ datum: r.datum, zeilen: r.zeilen })),
+                ...DB.rechnungen.map(r => ({ datum: r.datum,
+                  zeilen: r.zeilen.map(z => ({ art: z.art, preis: z.preis })) }))];
+  Object.keys(DB.artikel).forEach(k => {
+    const treffer = alle.filter(r => r.zeilen.some(z => z.art === k))
+      .sort((a, b) => TAGNR(b.datum) - TAGNR(a.datum))[0];
+    const a = DB.artikel[k];
+    a.bezahlt = treffer ? treffer.zeilen.find(z => z.art === k).preis : a.preis;
+    a.bezahltAm = treffer ? treffer.datum : null;
+  });
+})();
+
 /* Claims that can be counted have to be counted: «96 Rechnungen diesen Monat»
    would be a number nobody can find in the archive. */
 DB.gelesen = DB.archiv.filter(r => +r.datum.slice(3, 5) === 9).length + DB.rechnungen.length;
@@ -1130,9 +1156,16 @@ const dringend = a => tageBis(a.bis) <= 3;
 
 // unit price of an article, e.g. butter at 78.40 per 10 kg = 7.84 / kg
 const einzel = key => DB.artikel[key].preis / DB.artikel[key].menge;
-// what a dish costs to make, from the live article prices
+// the same at the price last actually invoiced — a fact, not a decision
+const einzelBezahlt = key => DB.artikel[key].bezahlt / DB.artikel[key].menge;
+// what a dish costs to make: with the calculation prices, and with the paid ones
 const wareneinsatz = g => g.rezept.reduce((s, z) => s + einzel(z.art) * z.m, 0);
+const wareneinsatzBezahlt = g => g.rezept.reduce((s, z) => s + einzelBezahlt(z.art) * z.m, 0);
 const marge = g => (g.karte - wareneinsatz(g)) / g.karte * 100;
+const margeBezahlt = g => (g.karte - wareneinsatzBezahlt(g)) / g.karte * 100;
+// welche Artikel eines Gerichts teurer eingekauft wurden, als kalkuliert wird
+const offenePreise = g => g.rezept.filter(z => DB.artikel[z.art].bezahlt !== DB.artikel[z.art].preis)
+  .map(z => z.art);
 /* Two ways to say the same thing, and restaurateurs use the second one out
    loud: «Faktor 3» is a 200% Aufschlag on the Wareneinsatz and a 66.7% Marge
    vom Preis. The Marge can never pass 100%, the Aufschlag has no ceiling —
@@ -1143,7 +1176,12 @@ const aufschlag = g => { const w = wareneinsatz(g); return w > 0 ? (g.karte / w 
 // dashboard can never quote a different number than the report.
 function zahlen() {
   const kalk   = DB.gerichte.reduce((s, g) => s + g.karte * g.verkauft, 0);
-  const kalkWE = DB.gerichte.reduce((s, g) => s + wareneinsatz(g) * g.verkauft, 0);
+  /* The week is costed at the prices actually INVOICED, not at the ones the
+     calculation still uses. What was paid is a fact as soon as the invoice is
+     read; adopting it as the calculation basis is a separate decision, and the
+     report must not wait for that decision to tell the truth. */
+  const kalkWE = DB.gerichte.reduce((s, g) => s + wareneinsatzBezahlt(g) * g.verkauft, 0);
+  const kalkWEplan = DB.gerichte.reduce((s, g) => s + wareneinsatz(g) * g.verkauft, 0);
   const speisen = kalk + DB.uebrigeSpeisen;
   const umsatz  = speisen + DB.getraenke;
   const einsatz = kalkWE + DB.uebrigeSpeisenWE + DB.getraenkeWE;
@@ -1152,7 +1190,7 @@ function zahlen() {
   const gedecke = DB.woche.reduce((s, d) => s + d.gedecke, 0);
   const vj      = DB.woche.reduce((s, d) => s + d.vj, 0);
   const roh     = umsatz - einsatz;
-  return { kalk, kalkWE, speisen, umsatz, einsatz, std, personal, gedecke, vj,
+  return { kalk, kalkWE, kalkWEplan, speisen, umsatz, einsatz, std, personal, gedecke, vj,
            roh, db: roh - personal };
 }
 
@@ -1408,7 +1446,8 @@ const HILFE = {
   rechnungen: [
     'Jede Rechnung wird beim Eingang gelesen — per Mail oder Post — und Position für Position mit Ihrer Bestellung und dem zuletzt bezahlten Preis verglichen.',
     'Gemeldet wird, was abweicht: ein Preis, der gestiegen ist, oder eine Menge, die verrechnet, aber nicht geliefert wurde.',
-    '«Preis übernehmen» schreibt den neuen Preis in die Kalkulation — die Margen in Gerichte und die Zahlen in Auswertungen rechnen sofort damit.',
+    'Was eine Rechnung verlangt, steckt sofort in den Zahlen: bezahlt wird, was geliefert wurde, und der Wareneinsatz in Auswertungen rechnet mit den Preisen auf den Rechnungen. Dafür braucht es keine Freigabe.',
+    '«Preis übernehmen» entscheidet etwas anderes — ob ab jetzt auch die Kalkulation mit dem neuen Preis rechnet. Eine Karte wird nicht wegen einer Lieferung neu gerechnet, und eine reklamierte Rechnung kann noch gutgeschrieben werden.',
     '«Beim Lieferanten nachfragen» hält die Rechnung offen, bis der Lieferant antwortet. Es wird nichts unterstellt, es wird gefragt.',
     `Abgetippt wird nichts: ${DB.gelesenSeit} Rechnungen seit der Eröffnung. Jede ist so zu sehen, wie sie gekommen ist — Positionen, MWST, Zahlungsfrist.`,
     'Die Filter oben kombinieren sich: Lieferant, Artikel, Zeitraum, Status, Betrag. Die Ergebniszeile rechnet zusammen, was gerade gewählt ist.',
@@ -1792,6 +1831,9 @@ function rechDokument(r) {
         <div><b>${esc(a.name.split(',')[0])}: ${chf(a.vorher)} → ${chf(z.preis)}</b>
         (${pct((z.preis / a.vorher - 1) * 100)}) seit der letzten Lieferung. Steckt in
         ${betroffen.length} Gericht${betroffen.length > 1 ? 'en' : ''} auf der Karte.</div></div>
+      <div class="pz"><span class="pj">i</span><div>Die Rechnung ist fällig, so oder so — bezahlt wird,
+        was geliefert wurde, und dieser Einkauf steckt schon in den Zahlen. Hier entscheiden Sie nur,
+        ob ab jetzt <b>mit ${chf(z.preis)} kalkuliert</b> wird.</div></div>
       <div class="row" style="margin-top:12px">
         <button class="btn acc" data-act="preis-uebernehmen" data-art="${z.art}"
                 data-neu="${z.preis}">Preis übernehmen</button>
@@ -1990,13 +2032,20 @@ VIEWS.aktionen = () => {
 VIEWS.gerichte = () => {
   const rows = DB.gerichte.map(g => {
     const w = wareneinsatz(g), m = marge(g), auf = aufschlag(g);
+    const offen = offenePreise(g);
+    const mB = margeBezahlt(g), wB = wareneinsatzBezahlt(g);
     const bewegt = g.rezept.some(z => DB.artikel[z.art].preis !== DB.artikel[z.art].vorher);
     return `<tr>
-      <td><b>${esc(g.name)}</b>${bewegt ? ' <span class="tag t-warn">Preis bewegt</span>' : ''}</td>
+      <td><b>${esc(g.name)}</b>${bewegt ? ' <span class="tag t-warn">Preis bewegt</span>' : ''}
+        ${offen.length ? `<div class="small zeile1" style="color:var(--warn)">eingekauft zu
+          ${chf(wB)} — ${offen.map(a => esc(DB.artikel[a].name.split(',')[0])).join(', ')}
+          ${offen.length > 1 ? 'sind' : 'ist'} teurer als kalkuliert</div>` : ''}</td>
       <td class="r num muted">${chf(w)}</td>
       <td class="r num"><input style="width:82px;text-align:right" type="number" step="0.5"
           value="${g.karte.toFixed(2)}" data-karte="${g.id}"></td>
-      <td class="r num"><b style="color:${m < 65 ? 'var(--warn)' : 'var(--ink)'}">${m.toFixed(1)}%</b></td>
+      <td class="r num"><b style="color:${m < 65 ? 'var(--warn)' : 'var(--ink)'}">${m.toFixed(1)}%</b>
+        ${offen.length ? `<div class="small" style="color:var(--warn);font-weight:600"
+          >${mB.toFixed(1)}% bezahlt</div>` : ''}</td>
       <td class="r num muted">${isNaN(auf) ? '—' : auf.toFixed(0) + '%'}</td>
       <td class="r num muted">${g.verkauft}</td>
       <td class="r num">${chf((g.karte - w) * g.verkauft)}</td></tr>`;
@@ -2014,6 +2063,16 @@ VIEWS.gerichte = () => {
       <th class="r">Marge vom Preis</th><th class="r">Aufschlag</th>
       <th class="r">Verkauft</th><th class="r">Rohertrag</th></tr></thead>
       <tbody>${rows}</tbody></table>
+    ${(() => { const offen = DB.gerichte.filter(g => offenePreise(g).length);
+      if (!offen.length) return '';
+      const d = offen.reduce((s, g) => s + (wareneinsatzBezahlt(g) - wareneinsatz(g)) * g.verkauft, 0);
+      return `<div class="card warn" style="margin-top:14px"><div class="small" style="line-height:1.65">
+        <b>${offen.length} Gerichte sind teurer eingekauft, als kalkuliert wird.</b>
+        Bezahlt ist das längst — die Rechnungen sind fällig, sobald sie gelesen sind, und die
+        ${chf(d)} dieser Woche stecken in den Zahlen. Offen ist nur, ob ab jetzt mit den neuen Preisen
+        kalkuliert wird: das entscheiden Sie in
+        <span class="link" data-go="rechnungen">Rechnungen</span>, nicht die Rechnung.</div></div>`;
+    })()}
     <div class="small muted" style="margin-top:12px">Dieselbe Kalkulation, zweimal gesagt: die Marge ist
       der Anteil am Kartenpreis und bleibt unter 100 %, der Aufschlag ist der Zuschlag auf den Wareneinsatz
       — 200 % Aufschlag ist Faktor 3. Der Wareneinsatz kommt aus den Artikelpreisen.
@@ -2551,14 +2610,21 @@ VIEWS.auswertungen = () => {
           `${DB.gerichte.reduce((s, g) => s + g.verkauft, 0)} Portionen`, 'sub')}
       ${z('Speisen, übrige Karte', chf(DB.uebrigeSpeisen), 'noch nicht kalkuliert', 'sub')}
       ${z('Getränke', chf(DB.getraenke), (DB.getraenke / umsatz * 100).toFixed(0) + '% vom Umsatz', 'sub')}
-      ${z('− Wareneinsatz', '−' + chf(einsatz).replace('CHF ', 'CHF '),
+      ${z('− Wareneinsatz', '−' + chf(einsatz),
           `${wareQ.toFixed(1)}% ${bench(wareQ, 29.9, 33, 'Branche 29.9%')}`, 'ab')}
+      ${Z.kalkWE !== Z.kalkWEplan ? z('davon aus Preisen, die noch nicht übernommen sind',
+          '−' + chf(Z.kalkWE - Z.kalkWEplan),
+          'bezahlt und gerechnet · kalkuliert wird noch mit den alten', 'sub') : ''}
       ${z('= Rohertrag', chf(roh), `${(roh / umsatz * 100).toFixed(1)}% vom Umsatz`, 'summe')}
       ${z('− Personal, geplant', '−' + chf(personal),
           `${std} Std · ${persQ.toFixed(1)}% ${bench(persQ, 45, 51, 'Branche bis ~51%')}`, 'ab')}
       ${z('= Deckungsbeitrag', chf(db), `${dbQ.toFixed(1)}% · ${chf(db / gedecke)} pro Gedeck`, 'summe')}
     </div>
-    <div class="small muted" style="margin-top:10px">Personal ist die geplante Schicht aus dem
+    <div class="small muted" style="margin-top:10px">Die Ware ist zu den Preisen gerechnet, die auf den
+      Rechnungen stehen — bezahlt ist bezahlt, dafür braucht es keine Freigabe. Ob ab jetzt auch mit
+      diesen Preisen <span class="link" data-go="gerichte">kalkuliert</span> wird, entscheiden Sie in
+      <span class="link" data-go="rechnungen">Rechnungen</span>.
+      Personal ist die geplante Schicht aus dem
       <span class="link" data-go="dienstplan">Dienstplan</span>, nicht gestempelte Zeit. Die kalkulierten
       Gerichte kommen aus <span class="link" data-go="gerichte">Gerichte</span> und rechnen mit den Preisen,
       die zuletzt bezahlt wurden.</div>`;
