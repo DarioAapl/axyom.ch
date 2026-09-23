@@ -160,7 +160,15 @@ th.r,td.r{text-align:right}
    A customer asks «und wie sieht das aus, wenn es reinkommt?» — this is the
    answer: the supplier's paper, beside what Axyom read out of it.
    ────────────────────────────────────────────────────────────────────────── */
-.dokzeile{display:flex;gap:16px;align-items:flex-start}
+/* the opened row and its document read as one thing */
+tr.gewaehlt td{background:var(--wash);border-bottom-color:transparent}
+tr.gewaehlt td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+tr.detailzeile > td{padding:0 0 18px;background:var(--wash);
+  box-shadow:inset 3px 0 0 var(--acc)}
+.detailkopf{display:flex;align-items:baseline;gap:10px;padding:2px 16px 12px;font-size:12.5px}
+.detailkopf .dpfeil{color:var(--acc);font-weight:700}
+.detailkopf .muted{font-size:11.5px}
+.dokzeile{display:flex;gap:16px;align-items:flex-start;padding:0 16px;min-width:0}
 .rdoc{flex:1 1 560px;min-width:0;background:#fffefb;border:1px solid var(--line);border-radius:6px;
   padding:26px 28px;font-size:12px;line-height:1.55;box-shadow:0 2px 14px rgba(0,0,0,.05)}
 .rdpruef{flex:0 1 300px;min-width:0}
@@ -1837,8 +1845,7 @@ function rechDokument(r) {
       ${entscheid}
       <div class="small muted" style="margin-top:12px;padding-top:9px;border-top:1px solid var(--soft)">
         Gelesen beim Eingang. Abgetippt wurde nichts.</div>
-      <div class="row" style="margin-top:11px">
-        <button class="btn" data-dokzu="1">Schliessen</button></div></div></div>`;
+      </div></div>`;
 }
 
 VIEWS.rechnungen = () => {
@@ -1849,7 +1856,11 @@ VIEWS.rechnungen = () => {
   const zeilen = liste.map(r => {
     const [cls, label] = RSTATUS[r.status] || RSTATUS.ok;
     const z = RECH_F.art && r.zeilen.find(x => x.art === RECH_F.art);
-    return `<tr class="click ${r.id === RECH_DOK ? 'gewaehlt' : ''}" data-dok="${r.id}">
+    const auf = r.id === RECH_DOK;
+    /* The document belongs UNDER the row it was opened from. It used to render
+       at the bottom of the page and scroll you there, which left you looking at
+       an invoice with no idea which line you had clicked. */
+    return `<tr class="click ${auf ? 'gewaehlt' : ''}" data-dok="${r.id}">
       <td class="muted num" style="width:92px">${esc(r.datum)}</td>
       <td><b>${esc(r.lief)}</b>
         ${z ? `<span class="tag t-ok" style="margin-left:7px">${z.menge} × ${chf(z.preis)}</span>` : ''}
@@ -1857,7 +1868,14 @@ VIEWS.rechnungen = () => {
       <td class="muted" style="width:96px">${esc(r.id)}</td>
       <td class="r num" style="width:116px">${chf(r.total)}</td>
       <td class="r" style="width:150px"><span class="tag ${cls}">${label}</span></td>
-      <td class="r" style="width:110px"><span class="link">${r.id === RECH_DOK ? 'offen' : 'ansehen'}</span></td></tr>`;
+      <td class="r" style="width:110px"><span class="link">${auf ? 'schliessen' : 'ansehen'}</span></td></tr>
+      ${auf ? `<tr class="detailzeile"><td colspan="6">
+        <div class="detailkopf">
+          <span class="dpfeil">↳</span>
+          <b>Rechnung ${esc(r.id)}</b>
+          <span class="muted">${esc(r.lief)} · ${esc(r.datum)}${DB.jahr} · ${chf(r.total)}</span>
+          <button class="btn" data-dokzu="1" style="margin-left:auto">Schliessen</button></div>
+        ${rechDokument(r)}</td></tr>` : ''}`;
   }).join('') || `<tr><td colspan="6" class="muted small" style="padding:18px 10px">
       Keine Rechnung passt auf diese Filter. <span class="link" data-rreset="1">Alle zurücksetzen</span></td></tr>`;
 
@@ -1880,10 +1898,6 @@ VIEWS.rechnungen = () => {
     <div class="muted" style="margin-left:auto">${DB.gelesenSeit} Rechnungen gelesen seit
       ${esc(DB.eroeffnet)}</div></div>`;
 
-  let panel = '';
-  const r = RECH_DOK && alle.find(x => x.id === RECH_DOK);
-  if (r) panel = rechDokument(r);
-
   return `${rechFilterbar(alle)}
     ${kopf}
     ${rechKontext(alle, liste)}
@@ -1891,9 +1905,8 @@ VIEWS.rechnungen = () => {
       <th class="r">Total</th><th class="r">Status</th><th class="r"></th></tr></thead>
       <tbody>${zeilen}</tbody></table></div>
     <div class="small muted" style="margin-top:12px">${RECH_DOK
-      ? 'Unten die Rechnung, wie sie gekommen ist.'
-      : 'Eine Zeile anklicken, um die Rechnung zu sehen, wie sie gekommen ist.'}</div>
-    ${panel}`;
+      ? 'Die Rechnung steht unter ihrer Zeile — noch einmal anklicken schliesst sie.'
+      : 'Eine Zeile anklicken, um die Rechnung zu sehen, wie sie gekommen ist.'}</div>`;
 };
 
 /* ── Lager ──────────────────────────────────────────────────────────────── */
@@ -3595,9 +3608,8 @@ document.addEventListener('click', e => {
     RECH_F = { lief:'', art:'', jahr:'', monat:'', zeit:'', status:'', betrag:'', sort:'datum', q:'' };
     RECH_DOK = null; render(); return; }
   const dk = e.target.closest('[data-dok]');
-  if (dk) { RECH_DOK = RECH_DOK === dk.dataset.dok ? null : dk.dataset.dok; render();
-    if (RECH_DOK) $('#view .rdoc')?.scrollIntoView({ block:'center', behavior:'smooth' });
-    return; }
+  // no scrolling: the document opens under the row, which is already in view
+  if (dk) { RECH_DOK = RECH_DOK === dk.dataset.dok ? null : dk.dataset.dok; render(); return; }
   if (e.target.closest('[data-dokzu]')) { RECH_DOK = null; render(); return; }
 
   const vf = e.target.closest('[data-verlauf]');
