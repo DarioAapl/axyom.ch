@@ -369,6 +369,7 @@ tr.gewaehlt td{background:var(--wash)}
 /* the band must be able to shrink: flex-basis:100% with shrink:0 made it wider
    than the phone it was sitting on, which pushed the whole page sideways */
 .dash > *{min-width:0}
+.dash .card,.dash .col > *{min-width:0}
 .ampel{min-width:0}
 @media (max-width:900px){ .ampel{flex-wrap:wrap} .ampel .trenn{display:none}
   .ampel .jetzt{flex:1 1 100%;min-width:0;margin-top:8px} }
@@ -481,11 +482,37 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
    align-items:start is the whole trick — without it every card stretches to
    the tallest sibling in its row and the short ones end up half empty.
    ────────────────────────────────────────────────────────────────────────── */
-.dash{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;align-items:start}
+/* minmax(0,1fr), nicht 1fr: sonst zieht eine Kachel mit breitem Inhalt ihre
+   Spalte auf und drückt die Nachbarspalten auf 80 px zusammen. Auf 1024 px
+   sah die Übersicht genau so aus. */
+.dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:9px;align-items:start}
 .dash .card{padding:12px 14px}
 .w2{grid-column:span 2}.w3{grid-column:span 3}.w4{grid-column:span 4}
 .w5{grid-column:span 5}.w6{grid-column:span 6}.w7{grid-column:span 7}
 .w8{grid-column:span 8}.w12{grid-column:span 12}
+/* ── Struktur auf der Übersicht ───────────────────────────────────────────
+   Neun gleich aussehende Kacheln sind eine Wand. Drei benannte Spalten und
+   eine benannte Zahlenreihe machen daraus eine Leserichtung: was muss ich
+   entscheiden, läuft der Betrieb, was verdient das Haus. Der Kopf steht IN
+   der Spalte, also wandert er beim Umbruch mit seiner Gruppe mit.
+   ───────────────────────────────────────────────────────────────────────── */
+.bandkopf,.spkopf{display:flex;align-items:flex-end;gap:10px;padding:0 2px 5px;
+  border-bottom:1px solid var(--line)}
+.bandkopf{margin-top:4px}
+/* Die Übersicht ist auf einen Schirm gebaut. Die Kacheln enden bei 892 px auf
+   einem 1440x900-Laptop; die 40 px Fusspolster, die jede andere Ansicht zum
+   Scrollen braucht, würden genau sie über die Kante schieben. */
+#view:has(> .dash){padding-bottom:8px}
+.spkopf{margin-bottom:-1px}
+.bt{font-size:12.5px;font-weight:700;letter-spacing:-.01em;color:var(--ink);line-height:1.2}
+.bu{font-size:10.5px;color:var(--dim);line-height:1.3}
+.bandkopf .bu{padding-bottom:1px}
+.bs{margin-left:auto;flex:none;font-size:10.5px;font-weight:650;color:var(--dim);
+  white-space:nowrap;padding-bottom:1px}
+.bs.warn{color:var(--warn)}
+.bs.ok{color:var(--acci)}
+@media (max-width:520px){ .bandkopf,.spkopf{flex-wrap:wrap;gap:2px 10px}
+  .bs{margin-left:0;width:100%} }
 .wl{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
     color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between;
     align-items:baseline;gap:8px}
@@ -523,8 +550,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 .chip.s1{background:var(--okbg);color:var(--acci)}
 .chip.s2{background:var(--warnbg);color:var(--warn)}
 .chip.s3{background:var(--badbg);color:var(--bad)}
-@media (max-width:1180px){ .dash{grid-template-columns:repeat(6,1fr)}
-  .w3,.w4,.w5{grid-column:span 3}.w6,.w7,.w8{grid-column:span 6} }
+/* Unter 1180 px wird aus dem 12er- ein 6er-Raster. Das «span 12» der Ampel und
+   der Bandköpfe muss mitwandern, sonst legt der Browser sechs implizite
+   Spalten dazu, sortiert sie nach Inhalt und die Kacheln stehen auf 80 px. */
+@media (max-width:1180px){ .dash{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .w3,.w4,.w5{grid-column:span 3}.w6,.w7,.w8,.w12{grid-column:span 6} }
 @media (max-width:820px){ .dash{grid-template-columns:1fr}
   .w2,.w3,.w4,.w5,.w6,.w7,.w8,.w12{grid-column:span 1} }
 
@@ -1536,6 +1566,7 @@ const HILFE = {
     'Die Ampel oben fasst zusammen, was gerade offen ist: rot heisst jetzt, gelb heisst heute, grün heisst kann warten. Daneben steht die dringendste Sache im Klartext.',
     'Die Liste darunter entsteht nicht auf dieser Seite. Jedes Modul meldet, was bei ihm offen ist; wird es dort erledigt, verschwindet es hier von selbst.',
     'Die Kennzahlen der laufenden Woche stammen aus derselben Rechnung wie Auswertungen. Es gibt keine zweite Zahlenwelt, die auseinanderlaufen könnte.',
+    'Darunter stehen drei Spalten, und jede beantwortet eine Frage: Was muss ich entscheiden? Läuft der Betrieb? Was verdient das Haus? Über jeder Spalte steht ihr Stand, damit man eine Spalte auch überspringen kann.',
     'Jede Kachel und jede Zeile springt dorthin, wo die Sache tatsächlich entschieden wird. Diese Seite verteilt, sie arbeitet nicht.',
   ],
   rechnungen: [
@@ -3108,8 +3139,21 @@ function offeneSachen() {
 /* A widget is a label, a body, and nothing else. No stretching, no filler. */
 const WG = (span, label, body, opts = {}) => `<div class="card ${span}"
   ${opts.go ? `data-go="${opts.go}" style="cursor:pointer"` : ''}>
-  <div class="wl"><span>${esc(label)}</span>${opts.rechts ? `<span class="r2">${opts.rechts}</span>` : ''}</div>
+  ${label || opts.rechts ? `<div class="wl"><span>${esc(label || '')}</span>${
+    opts.rechts ? `<span class="r2">${opts.rechts}</span>` : ''}</div>` : ''}
   ${body}</div>`;
+
+/* ── die Struktur der Übersicht ────────────────────────────────────────────
+   Ein Kopf über der Zahlenreihe und einer über jeder Spalte. Sie beantworten
+   je eine Frage, damit die neun Kacheln eine Reihenfolge haben statt nur eine
+   Fläche: Was muss ich entscheiden? Läuft der Betrieb? Was verdient das Haus?
+   ────────────────────────────────────────────────────────────────────────── */
+const kopfband = (titel, unter, stand = '', cls = '') => `<div class="w12 bandkopf">
+  <div class="bt">${esc(titel)}</div><div class="bu">${unter}</div>
+  ${stand ? `<div class="bs ${cls}">${stand}</div>` : ''}</div>`;
+const kopfspalte = (titel, unter, stand = '', cls = '') => `<div class="spkopf">
+  <div><div class="bt">${esc(titel)}</div><div class="bu">${unter}</div></div>
+  ${stand ? `<div class="bs ${cls}">${stand}</div>` : ''}</div>`;
 
 const mini = (nm, ch, vl, warn) => `<div class="mini"><div class="nm">${esc(nm)}</div>
   <div class="ch">${ch}</div>
@@ -3134,7 +3178,7 @@ VIEWS.uebersicht = () => {
 
   const kpis =
     tile('Umsatz, Woche', chf(z.umsatz), chf(z.umsatz / z.gedecke) + ' pro Gedeck',
-         chartBars(DB.tagesUmsatz, DB.tagesUmsatzVJ, 30),
+         chartBars(DB.tagesUmsatz, DB.tagesUmsatzVJ, 26),
          tage.map(t => t[0]).join(' ')) +
     tile('Rohertrag', (z.roh / z.umsatz * 100).toFixed(1) + '%', chf(z.roh) + ' nach Ware',
          chartStack([{ n:'Ware', v:z.einsatz, c:'var(--warn)' },
@@ -3144,18 +3188,19 @@ VIEWS.uebersicht = () => {
          // per day: the day's share of the gross margin, minus that day's shift cost
          chartBars(DB.woche.map((d, i) =>
            Math.max(0, Math.round(DB.tagesUmsatz[i] * (z.roh / z.umsatz) - d.besetzt * 8 * DB.lohn))),
-           null, 30),
+           null, 26),
          tage.map(t => t[0]).join(' ')) +
     tile('Gedecke', String(z.gedecke), 'Vorjahr ' + z.vj + ' · ' + pct((z.gedecke / z.vj - 1) * 100),
-         chartBars(DB.woche.map(d => d.gedecke), DB.woche.map(d => d.vj), 30),
+         chartBars(DB.woche.map(d => d.gedecke), DB.woche.map(d => d.vj), 26),
          tage.map(t => t[0]).join(' '));
 
   /* decisions — the tall column, so it carries the most rows */
-  /* At most five rows: the sixth pushed the dashboard off its single screen,
-     and a list that scrolls is a list nobody finishes. Everything below the cut
-     keeps its colour and moves into the chips — demoted, not hidden. */
-  const zeigen = dring.slice(0, 5), rest = dring.slice(5);
-  const dec = WG('', dring.length ? dring.length + ' braucht eine Entscheidung' : 'Entscheidungen',
+  /* At most four rows now that the columns carry heads: the fifth pushed the
+     dashboard off its single screen, and a list that scrolls is a list nobody
+     finishes. Everything below the cut keeps its colour and moves into the
+     chips right underneath — demoted, not hidden. */
+  const zeigen = dring.slice(0, 4), rest = dring.slice(4);
+  const dec = WG('', '',
     (zeigen.length
       ? zeigen.map(i => `<div class="dec ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}">
           <div class="row" style="justify-content:space-between;gap:6px">
@@ -3266,10 +3311,33 @@ VIEWS.uebersicht = () => {
         background:${auff ? 'var(--warn)' : 'var(--acc)'}"></i></div>`, chf(d), auff);
   }).join(''), { go:'lager', rechts:'gezählt ' + DB.lagerStand });
 
-  return `<div class="dash">${ampel}${kpis}
-    <div class="col w4">${dec}${akt}</div>
-    <div class="col w4">${kuehl}${hyg}${plan}</div>
-    <div class="col w4">${margen}${themen}${lager}</div>
+  /* die drei Fragen, die die Spalten beantworten, mit dem Stand von jetzt */
+  const alarme = DB.geraete.filter(g => g.temp > g.max || g.temp < g.min).length;
+  const hOffen2 = DB.hygiene.length - hDone;
+  const zH2 = DB.zaehlungHeute();
+  const nachziehen = DB.gerichte.filter(g => marge(g) < 73).length
+    + DB.themen.filter(t => t.trend === 'down').length
+    + DB.lager.filter(l => DB.zAuff(zH2, l.art)).length;
+
+  return `<div class="dash">${ampel}
+    ${kopfband('Die Woche', 'Montag bis heute, live gerechnet. Dieselbe Rechnung wie in Auswertungen.',
+               'wo ein Schatten steht, ist es das Vorjahr')}
+    ${kpis}
+    <div class="col w4">
+      ${kopfspalte('Entscheiden', 'wartet auf Sie, das Dringendste oben',
+        items.length ? `${items.length} offen` : 'nichts offen',
+        items.some(i => i.ernst === 3) ? 'warn' : items.length ? '' : 'ok')}
+      ${dec}${akt}</div>
+    <div class="col w4">
+      ${kopfspalte('Läuft der Betrieb', 'Messwerte, Pflichten, Besetzung',
+        alarme ? `${alarme} im Alarm` : hOffen2 ? `${hOffen2} Kontrollen offen` : 'alles im Bereich',
+        alarme ? 'warn' : hOffen2 ? '' : 'ok')}
+      ${kuehl}${hyg}${plan}</div>
+    <div class="col w4">
+      ${kopfspalte('Was das Haus verdient', 'Marge, Gästestimmen, Schwund',
+        nachziehen ? `${nachziehen} zum Nachziehen` : 'alles auf Ziel',
+        nachziehen ? '' : 'ok')}
+      ${margen}${themen}${lager}</div>
     </div>`;
 };
 /* ── Axyom fragen ───────────────────────────────────────────────────────────
