@@ -125,6 +125,33 @@ th.r,td.r{text-align:right}
 .check svg{display:none}.check.on svg{display:block}
 .link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 
+/* ── the filter bar (Rechnungen) ───────────────────────────────────────────
+   Six dropdowns and a free-text field, all combinable, with the result line
+   adding up whatever is selected.
+   ────────────────────────────────────────────────────────────────────────── */
+.rfilterbar{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;
+  padding:14px 16px;background:var(--surf);border:1px solid var(--soft);border-radius:12px;
+  margin-bottom:14px}
+.rfilter{display:flex;flex-direction:column;gap:5px;min-width:0}
+.rfilter > span{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--dim)}
+.rfilter select,.rfilter input{font-size:12.5px;padding:7px 9px;max-width:100%}
+.rerg{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:baseline;font-size:12.5px;
+  padding:0 2px 14px}
+.rerg b{font-size:15px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.card.kontext{margin-bottom:14px;background:var(--wash);border-color:rgba(0,178,160,.28)}
+.kzahlen{display:flex;flex-wrap:wrap;gap:10px 34px}
+.kschritte{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;
+  border-top:1px solid rgba(0,178,160,.22)}
+.ks{display:flex;align-items:baseline;gap:8px;background:#fff;border:1px solid var(--soft);
+  border-radius:8px;padding:6px 10px}
+.ksd{font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.ksp{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.ksv{font-size:10.5px;font-weight:650;color:var(--dim)}
+.ksv.hoch{color:var(--warn)}
+.ksv.tief{color:var(--acci)}
+@media (max-width:820px){ .rfilter{flex:1 1 140px} }
+
 /* ── an invoice as the document it is ──────────────────────────────────────
    A customer asks «und wie sieht das aus, wenn es reinkommt?» — this is the
    answer: the supplier's paper, beside what Axyom read out of it.
@@ -881,6 +908,30 @@ const DB = {
   log: [],   // what the demo has changed, shown in Auswertungen
 };
 
+/* ── what each article cost, and since when ────────────────────────────────
+   The archive would be worthless if every invoice carried today's price: a
+   customer filters by «Butter» to see what it did over three months. These are
+   the price steps the notes on the invoices talk about — CHF 74.20 until the
+   4th of August, CHF 78.40 after it — so the documents, the notes and the price
+   history cannot contradict each other.
+   ────────────────────────────────────────────────────────────────────────── */
+const TAGNR = d => { const [t, m] = String(d).split('.').map(Number); return m * 31 + t; };
+DB.preisschritte = {
+  butter:    [{ ab:'01.07.', preis:74.20 }, { ab:'04.08.', preis:78.40 }],
+  rahm:      [{ ab:'01.07.', preis:39.50 }, { ab:'21.07.', preis:42.00 }],
+  kartoffel: [{ ab:'01.07.', preis:29.80 }, { ab:'14.07.', preis:32.50 }],
+  speck:     [{ ab:'01.07.', preis:38.00 }, { ab:'19.08.', preis:34.20 }, { ab:'02.09.', preis:38.00 }],
+  gemuese:   [{ ab:'01.07.', preis:41.50 }, { ab:'25.08.', preis:44.00 }],
+  egli:      [{ ab:'01.07.', preis:91.00 }, { ab:'08.09.', preis:96.00 }],
+};
+// der Preis, der an einem Datum galt — sonst der heutige Artikelpreis
+DB.preisAm = (art, datum) => {
+  const schritte = DB.preisschritte[art];
+  if (!schritte) return DB.artikel[art].preis;
+  const gueltig = schritte.filter(x => TAGNR(x.ab) <= TAGNR(datum));
+  return (gueltig.length ? gueltig[gueltig.length - 1] : schritte[0]).preis;
+};
+
 /* ── every week since the house opened ─────────────────────────────────────
    Twelve closed weeks, 1 July to 20 September 2026. The shape is the one a new
    restaurant actually has, and it is written out rather than computed, because
@@ -958,8 +1009,9 @@ DB.archiv = (() => {
         /* Zeilen zuerst: der Betrag ist deren Summe, nicht umgekehrt. */
         const gewicht = [0.46, 0.32, 0.22];
         const zeilen = arts.slice(0, 3).map(([k, a], i) => {
-          const menge = Math.max(1, Math.round(netto * (gewicht[i] || 0.2) / a.preis));
-          return { art: k, name: a.name, menge, preis: a.preis, summe: +(menge * a.preis).toFixed(2) };
+          const preis = DB.preisAm(k, datum);        // der Preis, der damals galt
+          const menge = Math.max(1, Math.round(netto * (gewicht[i] || 0.2) / preis));
+          return { art: k, name: a.name, menge, preis, summe: +(menge * preis).toFixed(2) };
         });
         const summe = zeilen.reduce((s, z) => s + z.summe, 0);
         nr[L.kurz] = (nr[L.kurz] || 1000) + 1;
@@ -1122,8 +1174,8 @@ const MODULES = [
 let AKTIV = 'uebersicht';
 let SOCIAL_TAB = 'kalender';
 let VERLAUF_W = 8;       // how many weeks the Verlauf shows
-let RECH_FILTER = 'offen';   // 'offen' oder eine Monatsnummer
-let RECH_SUCHE = '';         // Freitextsuche über alle Rechnungen
+// die Filter in Rechnungen, alle kombinierbar
+let RECH_F = { lief:'', art:'', zeit:'', status:'offen', betrag:'', sort:'datum', q:'' };
 let RECH_DOK = null;     // the invoice shown as a document
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
@@ -1344,7 +1396,9 @@ const HILFE = {
     'Gemeldet wird, was abweicht: ein Preis, der gestiegen ist, oder eine Menge, die verrechnet, aber nicht geliefert wurde.',
     '«Preis übernehmen» schreibt den neuen Preis in die Kalkulation — die Margen in Gerichte und die Zahlen in Auswertungen rechnen sofort damit.',
     '«Beim Lieferanten nachfragen» hält die Rechnung offen, bis der Lieferant antwortet. Es wird nichts unterstellt, es wird gefragt.',
-    `Abgetippt wird nichts: ${DB.gelesenSeit} Rechnungen seit der Eröffnung, davon ${DB.gelesen} in diesem Monat. Das Archiv unten lässt sich Monat für Monat durchgehen — jede Rechnung ist so zu sehen, wie sie gekommen ist.`,
+    `Abgetippt wird nichts: ${DB.gelesenSeit} Rechnungen seit der Eröffnung. Jede ist so zu sehen, wie sie gekommen ist — Positionen, MWST, Zahlungsfrist.`,
+    'Die Filter oben kombinieren sich: Lieferant, Artikel, Zeitraum, Status, Betrag. Die Ergebniszeile rechnet zusammen, was gerade gewählt ist.',
+    'Nach einem Artikel filtern zeigt zusätzlich dessen Preisweg — was er bei der ersten Lieferung kostete, wann er sich änderte, was zuletzt verrechnet wurde und mit welchem Preis noch kalkuliert wird. Diese Geschichte ist nicht separat gepflegt, sie ist aus den Rechnungen gelesen.',
   ],
   lager: [
     'Einmal zählen, am Handy. Die Spalte «Erwartet» ist, was nach Lieferungen und Verkäufen da sein müsste.',
@@ -1518,187 +1572,287 @@ function alleRechnungen() {
   return [...aktuell, ...archiv];
 }
 
-/* ── the search ─────────────────────────────────────────────────────────────
-   It searches what is ON an invoice, not just its heading: the supplier, the
-   number, the month, the status, the note — and the ARTICLES in its lines, so
-   «butter» finds every delivery that contained butter, which is the question a
-   restaurateur actually has. Numbers work too: «>2000» for the big ones, «138»
-   for a price or an amount. Every token has to match something, so two words
-   narrow instead of widen, and the row says why it matched.
+/* ── filters ────────────────────────────────────────────────────────────────
+   A search box was not the ask. These are filters that answer the questions a
+   restaurateur has about three months of invoices:
+
+     Lieferant  — what did this supplier bill me, and how often
+     Artikel    — every delivery that contained it, AND what it cost over time
+     Zeitraum   — month, this week, last 30 days
+     Status     — the ones that needed a decision, the ones that got one
+     Betrag     — the big ones
+     Sortierung — newest, largest, by supplier
+
+   They combine, the result line adds them up, and selecting a supplier or an
+   article opens a panel about it: a price path straight out of the documents,
+   not a second number kept somewhere else.
    ────────────────────────────────────────────────────────────────────────── */
-function rechTreffer(r, q) {
-  /* tokenised RAW, not normalised: cnorm strips punctuation, which ate the
-     operator in «>2000» and turned it into a plain number. */
+const RFELD = (name, wert, attr, optionen) => `<label class="rfilter">
+  <span>${esc(name)}</span>
+  <select data-rf="${attr}">${optionen.map(([v, t]) =>
+    `<option value="${esc(v)}" ${String(v) === String(wert) ? 'selected' : ''}>${esc(t)}</option>`
+  ).join('')}</select></label>`;
+
+function rechFilterbar(alle) {
+  const lief = [...new Set(alle.map(r => r.lief))].sort();
+  const arts = Object.entries(DB.artikel).filter(([k]) => alle.some(r => r.zeilen.some(z => z.art === k)));
+  return `<div class="rfilterbar">
+    ${RFELD('Lieferant', RECH_F.lief, 'lief', [['', 'Alle Lieferanten'], ...lief.map(l => [l, l])])}
+    ${RFELD('Artikel', RECH_F.art, 'art', [['', 'Alle Artikel'],
+      ...arts.map(([k, a]) => [k, a.name.split(',')[0]])])}
+    ${RFELD('Zeitraum', RECH_F.zeit, 'zeit', [['', 'Seit der Eröffnung'], ['woche', 'Diese Woche'],
+      ['30', 'Letzte 30 Tage'], ...DB.monate.slice().reverse().map(m => [String(m.nr), m.name])])}
+    ${RFELD('Status', RECH_F.status, 'status', [['', 'Alle'], ['offen', 'Braucht eine Entscheidung'],
+      ['preis', 'Preis geändert'], ['menge', 'Menge stimmt nicht'], ['erledigt', 'Entschieden'],
+      ['ok', 'Geprüft, nichts zu tun']])}
+    ${RFELD('Betrag', RECH_F.betrag, 'betrag', [['', 'Beliebig'], ['0-500', 'bis CHF 500'],
+      ['500-1500', 'CHF 500 – 1500'], ['1500-', 'über CHF 1500']])}
+    ${RFELD('Sortierung', RECH_F.sort, 'sort', [['datum', 'Neueste zuerst'], ['alt', 'Älteste zuerst'],
+      ['betrag', 'Grösste zuerst'], ['lief', 'Nach Lieferant']])}
+    <label class="rfilter" style="flex:1 1 220px">
+      <span>Freitext</span>
+      <input data-rsuche="1" id="rsuche" type="text" value="${esc(RECH_F.q)}"
+        placeholder="Nummer, Notiz, Betrag …"></label>
+    ${rechAktiv() ? '<button class="btn" data-rreset="1" style="align-self:flex-end">Zurücksetzen</button>' : ''}
+  </div>`;
+}
+// sorting is not a filter, but «Zurücksetzen» has to be reachable after it too
+const rechAktiv = () => !!(RECH_F.lief || RECH_F.art || RECH_F.zeit || RECH_F.status
+                        || RECH_F.betrag || RECH_F.q.trim() || RECH_F.sort !== 'datum');
+
+/* free text still searches everything, including the articles on the lines */
+function rechText(r, q) {
   const worte = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  if (!worte.length) return { ok: true };
+  if (!worte.length) return true;
   const label = (RSTATUS[r.status] || RSTATUS.ok)[1];
   const monat = (DB.monate.find(m => m.nr === +r.datum.slice(3, 5)) || {}).name || '';
-  const artikel = r.zeilen.map(z => z.name);
-  const heu = cnorm([r.lief, r.id, r.notiz || '', label, monat, r.wochentag || '',
-                     r.datum, ...artikel].join(' '));
-  const gruende = [];
-  const ok = worte.every(w => {
+  const heu = cnorm([r.lief, r.id, r.notiz || '', label, monat, r.wochentag || '', r.datum,
+                     ...r.zeilen.map(z => z.name)].join(' '));
+  return worte.every(w => {
     const zahl = w.match(/^([<>])?(\d+(?:[.,]\d+)?)$/);
     if (zahl) {
       const n = +zahl[2].replace(',', '.');
       if (zahl[1] === '>') return r.total > n;
       if (zahl[1] === '<') return r.total < n;
-      // eine blanke Zahl: Betrag, Einzelpreis oder Nummer
       return String(Math.round(r.total)).includes(zahl[2]) || heu.includes(cnorm(w))
              || r.zeilen.some(z => String(z.preis).includes(zahl[2]));
     }
-    const nw = cnorm(w);
-    if (!nw) return true;
-    const treffer = artikel.find(a => cnorm(a).includes(nw));
-    if (treffer) gruende.push(treffer.split(',')[0]);
-    return heu.includes(nw);
+    return heu.includes(cnorm(w));
   });
-  return { ok, grund: [...new Set(gruende)].join(', ') };
+}
+
+function rechFiltern(alle) {
+  const heute = TAGNR(DB.today);
+  let l = alle.filter(r => {
+    if (RECH_F.lief && r.lief !== RECH_F.lief) return false;
+    if (RECH_F.art && !r.zeilen.some(z => z.art === RECH_F.art)) return false;
+    if (RECH_F.status === 'offen' && r.status !== 'preis' && r.status !== 'menge') return false;
+    if (RECH_F.status && RECH_F.status !== 'offen' && r.status !== RECH_F.status) return false;
+    if (RECH_F.zeit === 'woche' && heute - TAGNR(r.datum) > 3) return false;      // ab Montag
+    if (RECH_F.zeit === '30' && heute - TAGNR(r.datum) > 30) return false;
+    if (/^\d+$/.test(RECH_F.zeit) && +r.datum.slice(3, 5) !== +RECH_F.zeit) return false;
+    if (RECH_F.betrag) { const [von, bis] = RECH_F.betrag.split('-').map(Number);
+      if (r.total < von) return false;
+      if (bis && r.total > bis) return false; }
+    return rechText(r, RECH_F.q);
+  });
+  const neu = (a, b) => (TAGNR(b.datum) - TAGNR(a.datum)) || a.lief.localeCompare(b.lief);
+  if (RECH_F.sort === 'datum') l.sort(neu);
+  else if (RECH_F.sort === 'alt') l.sort((a, b) => -neu(a, b));
+  else if (RECH_F.sort === 'betrag') l.sort((a, b) => b.total - a.total);
+  else if (RECH_F.sort === 'lief') l.sort((a, b) => a.lief.localeCompare(b.lief) || neu(a, b));
+  return l;
+}
+
+/* ── the panel a filter earns: what this article, or this supplier, did ── */
+function rechKontext(alle, liste) {
+  if (RECH_F.art) {
+    const a = DB.artikel[RECH_F.art];
+    const zeilen = alle.filter(r => r.zeilen.some(z => z.art === RECH_F.art))
+      .map(r => ({ datum: r.datum, z: r.zeilen.find(z => z.art === RECH_F.art) }))
+      .sort((x, y) => TAGNR(x.datum) - TAGNR(y.datum));
+    if (!zeilen.length) return '';
+    const menge = zeilen.reduce((s, x) => s + x.z.menge, 0);
+    const summe = zeilen.reduce((s, x) => s + x.z.summe, 0);
+    // die Preisschritte, wie sie in den Rechnungen stehen
+    const schritte = [];
+    zeilen.forEach(x => { const letzte = schritte[schritte.length - 1];
+      if (!letzte || letzte.preis !== x.z.preis) schritte.push({ ab: x.datum, preis: x.z.preis }); });
+    const erst = schritte[0], letzt = schritte[schritte.length - 1];
+    return `<div class="card kontext">
+      <div class="wl"><span>${esc(a.name)} · ${esc(a.lief)}</span>
+        <span class="r2">${zeilen.length} Lieferungen seit der Eröffnung</span></div>
+      <div class="kzahlen">
+        <div><div class="vk">Gekauft</div><div class="vl2">${menge} ${esc(
+          { 'Fl.':'Flaschen', 'Port.':'Portionen', 'Stk':'Packungen' }[a.einheit] || 'Packungen')}</div>
+          <div class="vn muted">${esc(a.name.split(', ')[1] || a.einheit)} pro Packung</div></div>
+        <div><div class="vk">Ausgegeben</div><div class="vl2">${chf(summe)}</div>
+          <div class="vn muted">über ${zeilen.length} Lieferungen</div></div>
+        <div><div class="vk">Zuletzt verrechnet</div><div class="vl2">${chf(letzt.preis)}</div>
+          <div class="vn" style="color:${letzt.preis > erst.preis ? 'var(--warn)' : 'var(--acci)'}"
+            >${pct((letzt.preis / erst.preis - 1) * 100)} seit der ersten Lieferung</div></div>
+        <div><div class="vk">Kalkuliert mit</div><div class="vl2">${chf(a.preis)}</div>
+          ${a.preis !== letzt.preis
+            ? `<div class="vn" style="color:var(--warn)">Differenz noch nicht entschieden</div>`
+            : '<div class="vn muted">stimmt mit der letzten Rechnung</div>'}</div>
+      </div>
+      ${a.preis !== letzt.preis ? `<div class="small" style="margin-top:10px;color:var(--warn)">
+        Die letzte Rechnung verlangt ${chf(letzt.preis)}, kalkuliert wird noch mit ${chf(a.preis)} —
+        die Entscheidung steht in der Liste unten (Status «Preis geändert»).</div>` : ''}
+      <div class="kschritte">${schritte.map((x, i) => `<div class="ks">
+        <span class="ksd">${esc(x.ab)}</span>
+        <span class="ksp">${chf(x.preis)}</span>
+        ${i ? `<span class="ksv ${x.preis > schritte[i-1].preis ? 'hoch' : 'tief'}"
+          >${pct((x.preis / schritte[i-1].preis - 1) * 100)}</span>` : '<span class="ksv">erste Lieferung</span>'}
+        </div>`).join('')}</div>
+      <div class="small muted" style="margin-top:10px">Jeder Schritt steht in einer Rechnung, die hier
+        in der Liste liegt — die Preisgeschichte ist nicht separat gepflegt, sie ist gelesen.</div></div>`;
+  }
+  if (RECH_F.lief) {
+    const rs = alle.filter(r => r.lief === RECH_F.lief);
+    const arts = [...new Set(rs.flatMap(r => r.zeilen.map(z => z.name.split(',')[0])))];
+    const letzte = rs.slice().sort((a, b) => TAGNR(b.datum) - TAGNR(a.datum))[0];
+    const summe = rs.reduce((s, r) => s + r.total, 0);
+    return `<div class="card kontext">
+      <div class="wl"><span>${esc(RECH_F.lief)}</span>
+        <span class="r2">${rs.length} Rechnungen seit der Eröffnung</span></div>
+      <div class="kzahlen">
+        <div><div class="vk">Zusammen</div><div class="vl2">${chf(summe)}</div></div>
+        <div><div class="vk">Im Schnitt</div><div class="vl2">${chf(summe / rs.length)}</div></div>
+        <div><div class="vk">Letzte Lieferung</div><div class="vl2">${esc(letzte.datum)}</div>
+          <div class="vn muted">${esc(letzte.wochentag || '')}</div></div>
+        <div><div class="vk">Entscheidungen</div><div class="vl2">${rs.filter(r => r.notiz
+          || r.status === 'preis' || r.status === 'menge').length}</div></div>
+      </div>
+      <div class="small muted" style="margin-top:10px">Geführte Artikel: ${arts.map(esc).join(', ')}.</div></div>`;
+  }
+  return '';
+}
+
+
+/* ── one invoice, as the document it arrived as ── */
+function rechDokument(r) {
+  const adr = ADRESSEN[r.lief] || [r.lief, '', ''];
+  const netto = r.netto, total = r.total;
+  const mwstBetrag = +(netto * r.mwst / 100).toFixed(2);
+  const dokZeilen = r.zeilen.map(z => {
+    const a = DB.artikel[z.art];
+    const hoch = a && z.preis > a.vorher;
+    const fehlt = z.geliefert !== undefined && z.geliefert < z.menge;
+    return `<tr${hoch || fehlt ? ' class="rdwarn"' : ''}>
+      <td class="num">${z.menge}</td><td>${esc(z.name)}</td>
+      <td class="r num">${chf(z.preis)}${hoch ? `<div class="rdklein">vorher ${chf(a.vorher)}</div>` : ''}</td>
+      <td class="r num">${chf(z.summe)}${fehlt ? `<div class="rdklein">${z.geliefert} geliefert</div>` : ''}</td></tr>`;
+  }).join('');
+
+  let entscheid = '';
+  if (r.status === 'preis') {
+    const z = r.zeilen.find(x => DB.artikel[x.art] && x.preis > DB.artikel[x.art].vorher);
+    const a = DB.artikel[z.art];
+    const betroffen = DB.gerichte.filter(g => g.rezept.some(x => x.art === z.art));
+    entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
+        <div><b>${esc(a.name.split(',')[0])}: ${chf(a.vorher)} → ${chf(z.preis)}</b>
+        (${pct((z.preis / a.vorher - 1) * 100)}) seit der letzten Lieferung. Steckt in
+        ${betroffen.length} Gericht${betroffen.length > 1 ? 'en' : ''} auf der Karte.</div></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn acc" data-act="preis-uebernehmen" data-art="${z.art}"
+                data-neu="${z.preis}">Preis übernehmen</button>
+        <button class="btn" data-act="preis-nachfragen">Beim Lieferanten nachfragen</button></div>`;
+  } else if (r.status === 'menge') {
+    const z = r.zeilen.find(x => x.geliefert !== undefined && x.geliefert < x.menge);
+    const diff = +((z.menge - z.geliefert) * z.preis).toFixed(2);
+    entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
+        <div><b>${esc(z.name.split(',')[0])}: ${z.menge} verrechnet, ${z.geliefert} geliefert.</b>
+        Die Rechnung verlangt ${chf(diff)} zu viel.</div></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn acc" data-act="menge-kuerzen" data-inv="${r.id}"
+                data-diff="${diff}">Rechnung kürzen und freigeben</button></div>`;
+  } else if (r.notiz) {
+    entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
+      <div><b>Damals entschieden:</b> ${esc(r.notiz)}</div></div>`;
+  } else {
+    entscheid = `<div class="pz"><span class="pj">✓</span><div>Alles stimmt mit der Bestellung
+      überein. Nichts zu tun.</div></div>`;
+  }
+
+  return `<div class="dokzeile">
+    <div class="rdoc">
+      <div class="rdkopf">
+        <div><b>${esc(adr[0])}</b><br>${esc(adr[1])}<br>${esc(adr[2])}<br>
+          <span class="muted">MWST-Nr. CHE-${112 + r.id.length}.${400 + r.zeilen.length}.${r.id.slice(-3)}</span></div>
+        <div class="rdmeta">
+          <div><span>Rechnung</span><b>${esc(r.id)}</b></div>
+          <div><span>Datum</span><b>${esc(r.datum)}${DB.jahr}</b></div>
+          <div><span>Lieferung</span><b>${esc(r.datum)}${DB.jahr}</b></div>
+          <div><span>Kunde</span><b>4021</b></div></div></div>
+      <div class="rdan">Gaststube Musterthal<br>Musterstrasse 12<br>9000 Musterstadt</div>
+      <table class="rdtab"><thead><tr><th>Menge</th><th>Artikel</th>
+        <th class="r">Einzelpreis</th><th class="r">Betrag</th></tr></thead>
+        <tbody>${dokZeilen}</tbody></table>
+      <div class="rdsumme">
+        <div><span>Netto</span><b>${chf(netto)}</b></div>
+        <div><span>MWST ${r.mwst.toFixed(1).replace('.', ',')}%</span><b>${chf(mwstBetrag)}</b></div>
+        <div class="tot"><span>Total CHF</span><b>${chf(total)}</b></div></div>
+      <div class="rdfuss">Zahlbar innert 30 Tagen · QR-Rechnung im Anhang ·
+        ${r.mwst === 2.6 ? 'Lebensmittel, reduzierter Satz 2,6%' : 'Getränke mit Alkohol, Normalsatz 8,1%'}</div>
+    </div>
+    <div class="card rdpruef">
+      <div class="wl"><span>Was Axyom gelesen hat</span><span class="r2">${esc(r.datum)}${DB.jahr}</span></div>
+      <div class="pz"><span class="pj">✓</span><div>${r.zeilen.length === 1
+        ? 'Die Position einem Artikel zugeordnet' : `Alle ${r.zeilen.length} Positionen einem Artikel zugeordnet`}
+        — Preise gegen die letzte Lieferung, Mengen gegen die Bestellung.</div></div>
+      <div class="pz"><span class="pj">✓</span><div>MWST-Satz plausibel:
+        ${r.mwst.toFixed(1).replace('.', ',')}% für
+        ${r.mwst === 2.6 ? 'Lebensmittel' : 'alkoholische Getränke'}.</div></div>
+      ${entscheid}
+      <div class="small muted" style="margin-top:12px;padding-top:9px;border-top:1px solid var(--soft)">
+        Gelesen beim Eingang. Abgetippt wurde nichts.</div>
+      <div class="row" style="margin-top:11px">
+        <button class="btn" data-dokzu="1">Schliessen</button></div></div></div>`;
 }
 
 VIEWS.rechnungen = () => {
   const alle = alleRechnungen();
+  const liste = rechFiltern(alle);
   const offen = alle.filter(r => r.status === 'preis' || r.status === 'menge');
-  const suche = RECH_SUCHE.trim();
-  const nachDatum = (a, b) => (+b.datum.slice(3, 5) - +a.datum.slice(3, 5))
-                           || (+b.datum.slice(0, 2) - +a.datum.slice(0, 2));
-  // eine Suche gilt für alle Rechnungen, nicht nur für den gewählten Monat
-  const gefunden = suche ? alle.map(r => ({ r, t: rechTreffer(r, suche) }))
-                               .filter(x => x.t.ok).sort((x, y) => nachDatum(x.r, y.r)) : null;
-  const liste = gefunden ? gefunden.map(x => x.r)
-    : RECH_FILTER === 'offen' ? offen
-    : alle.filter(r => +r.datum.slice(3, 5) === RECH_FILTER).sort(nachDatum);
-  const grundVon = id => gefunden ? (gefunden.find(x => x.r.id === id) || {}).t?.grund : '';
-
-  const filter = [['offen', `Offen (${offen.length})`]]
-    .concat(DB.monate.slice().reverse().map(m => [m.nr, `${m.name} (${
-      alle.filter(r => +r.datum.slice(3, 5) === m.nr).length})`]))
-    .map(([w, t]) => `<button class="tab ${RECH_FILTER === w ? 'on' : ''}" data-rfilter="${w}"
-      >${esc(t)}</button>`).join('');
 
   const zeilen = liste.map(r => {
     const [cls, label] = RSTATUS[r.status] || RSTATUS.ok;
+    const z = RECH_F.art && r.zeilen.find(x => x.art === RECH_F.art);
     return `<tr class="click ${r.id === RECH_DOK ? 'gewaehlt' : ''}" data-dok="${r.id}">
       <td class="muted num" style="width:92px">${esc(r.datum)}</td>
-      <td><b>${esc(r.lief)}</b>${(g => g ? `<span class="tag t-ok" style="margin-left:7px"
-          >enthält ${esc(g)}</span>` : '')(grundVon(r.id))}
+      <td><b>${esc(r.lief)}</b>
+        ${z ? `<span class="tag t-ok" style="margin-left:7px">${z.menge} × ${chf(z.preis)}</span>` : ''}
         ${r.notiz ? `<div class="small muted zeile1">${esc(r.notiz)}</div>` : ''}</td>
       <td class="muted" style="width:96px">${esc(r.id)}</td>
       <td class="r num" style="width:116px">${chf(r.total)}</td>
       <td class="r" style="width:150px"><span class="tag ${cls}">${label}</span></td>
-      <td class="r" style="width:120px"><span class="link">${r.id === RECH_DOK ? 'offen' : 'ansehen'}</span></td></tr>`;
+      <td class="r" style="width:110px"><span class="link">${r.id === RECH_DOK ? 'offen' : 'ansehen'}</span></td></tr>`;
   }).join('') || `<tr><td colspan="6" class="muted small" style="padding:18px 10px">
-      ${suche
-        ? `Kein Treffer für «${esc(suche)}». Es wird in Lieferant, Nummer, Monat, Status, Notiz und
-           in den Positionen gesucht — «butter», «>2000» oder «juli» zum Beispiel.`
-        : 'Nichts offen — alle Rechnungen sind abgeglichen.'}</td></tr>`;
+      Keine Rechnung passt auf diese Filter. <span class="link" data-rreset="1">Alle zurücksetzen</span></td></tr>`;
 
-  /* ── the panel: the document, and what there is to decide ── */
+  const summe = liste.reduce((s, r) => s + r.total, 0);
+  const kopf = `<div class="rerg">
+    <div><b>${liste.length}</b> ${liste.length === 1 ? 'Rechnung' : 'Rechnungen'}</div>
+    <div><b>${chf(summe)}</b> zusammen</div>
+    ${liste.length ? `<div><b>${chf(summe / liste.length)}</b> im Schnitt</div>` : ''}
+    <div class="muted">${offen.length} von ${alle.length} brauchen eine Entscheidung</div>
+    <div class="muted" style="margin-left:auto">${DB.gelesenSeit} Rechnungen gelesen seit
+      ${esc(DB.eroeffnet)}</div></div>`;
+
   let panel = '';
   const r = RECH_DOK && alle.find(x => x.id === RECH_DOK);
-  if (r) {
-    const adr = ADRESSEN[r.lief] || [r.lief, '', ''];
-    const netto = r.netto, total = r.total;
-    const mwstBetrag = +(netto * r.mwst / 100).toFixed(2);
+  if (r) panel = rechDokument(r);
 
-    const dokZeilen = r.zeilen.map(z => {
-      const a = DB.artikel[z.art];
-      const hoch = a && z.preis > a.vorher;
-      const fehlt = z.geliefert !== undefined && z.geliefert < z.menge;
-      return `<tr${hoch || fehlt ? ' class="rdwarn"' : ''}>
-        <td class="num">${z.menge}</td><td>${esc(z.name)}</td>
-        <td class="r num">${chf(z.preis)}${hoch
-          ? `<div class="rdklein">vorher ${chf(a.vorher)}</div>` : ''}</td>
-        <td class="r num">${chf(z.summe)}${fehlt
-          ? `<div class="rdklein">${z.geliefert} geliefert</div>` : ''}</td></tr>`;
-    }).join('');
-
-    /* what there is to decide, or what was decided */
-    let entscheid = '';
-    if (r.status === 'preis') {
-      const z = r.zeilen.find(x => DB.artikel[x.art] && x.preis > DB.artikel[x.art].vorher);
-      const a = DB.artikel[z.art];
-      const betroffen = DB.gerichte.filter(g => g.rezept.some(x => x.art === z.art));
-      entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
-          <div><b>${esc(a.name.split(',')[0])}: ${chf(a.vorher)} → ${chf(z.preis)}</b>
-          (${pct((z.preis / a.vorher - 1) * 100)}) seit der letzten Lieferung. Steckt in
-          ${betroffen.length} Gericht${betroffen.length > 1 ? 'en' : ''} auf der Karte.</div></div>
-        <div class="row" style="margin-top:12px">
-          <button class="btn acc" data-act="preis-uebernehmen" data-art="${z.art}"
-                  data-neu="${z.preis}">Preis übernehmen</button>
-          <button class="btn" data-act="preis-nachfragen">Beim Lieferanten nachfragen</button></div>`;
-    } else if (r.status === 'menge') {
-      const z = r.zeilen.find(x => x.geliefert !== undefined && x.geliefert < x.menge);
-      const diff = +((z.menge - z.geliefert) * z.preis).toFixed(2);
-      entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
-          <div><b>${esc(z.name.split(',')[0])}: ${z.menge} verrechnet, ${z.geliefert} geliefert.</b>
-          Die Rechnung verlangt ${chf(diff)} zu viel.</div></div>
-        <div class="row" style="margin-top:12px">
-          <button class="btn acc" data-act="menge-kuerzen" data-inv="${r.id}"
-                  data-diff="${diff}">Rechnung kürzen und freigeben</button></div>`;
-    } else if (r.notiz) {
-      entscheid = `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
-        <div><b>Damals entschieden:</b> ${esc(r.notiz)}</div></div>`;
-    } else {
-      entscheid = `<div class="pz"><span class="pj">✓</span><div>Alles stimmt mit der Bestellung
-        überein. Nichts zu tun.</div></div>`;
-    }
-
-    panel = `<div class="dokzeile">
-      <div class="rdoc">
-        <div class="rdkopf">
-          <div><b>${esc(adr[0])}</b><br>${esc(adr[1])}<br>${esc(adr[2])}<br>
-            <span class="muted">MWST-Nr. CHE-${112 + r.id.length}.${400 + r.zeilen.length}.${r.id.slice(-3)}</span></div>
-          <div class="rdmeta">
-            <div><span>Rechnung</span><b>${esc(r.id)}</b></div>
-            <div><span>Datum</span><b>${esc(r.datum)}${DB.jahr}</b></div>
-            <div><span>Lieferung</span><b>${esc(r.datum)}${DB.jahr}</b></div>
-            <div><span>Kunde</span><b>4021</b></div></div></div>
-        <div class="rdan">Gaststube Musterthal<br>Musterstrasse 12<br>9000 Musterstadt</div>
-        <table class="rdtab"><thead><tr><th>Menge</th><th>Artikel</th>
-          <th class="r">Einzelpreis</th><th class="r">Betrag</th></tr></thead>
-          <tbody>${dokZeilen}</tbody></table>
-        <div class="rdsumme">
-          <div><span>Netto</span><b>${chf(netto)}</b></div>
-          <div><span>MWST ${r.mwst.toFixed(1).replace('.', ',')}%</span><b>${chf(mwstBetrag)}</b></div>
-          <div class="tot"><span>Total CHF</span><b>${chf(total)}</b></div></div>
-        <div class="rdfuss">Zahlbar innert 30 Tagen · QR-Rechnung im Anhang ·
-          ${r.mwst === 2.6 ? 'Lebensmittel, reduzierter Satz 2,6%' : 'Getränke mit Alkohol, Normalsatz 8,1%'}</div>
-      </div>
-      <div class="card rdpruef">
-        <div class="wl"><span>Was Axyom gelesen hat</span>
-          <span class="r2">${esc(r.datum)}${DB.jahr}</span></div>
-        <div class="pz"><span class="pj">✓</span><div>${r.zeilen.length === 1
-          ? 'Die Position einem Artikel zugeordnet' : `Alle ${r.zeilen.length} Positionen einem Artikel zugeordnet`}
-          — Preise gegen die letzte Lieferung, Mengen gegen die Bestellung.</div></div>
-        <div class="pz"><span class="pj">✓</span><div>MWST-Satz plausibel:
-          ${r.mwst.toFixed(1).replace('.', ',')}% für
-          ${r.mwst === 2.6 ? 'Lebensmittel' : 'alkoholische Getränke'}.</div></div>
-        ${entscheid}
-        <div class="small muted" style="margin-top:12px;padding-top:9px;border-top:1px solid var(--soft)">
-          Gelesen beim Eingang. Abgetippt wurde nichts.</div>
-        <div class="row" style="margin-top:11px">
-          <button class="btn" data-dokzu="1">Schliessen</button></div></div></div>`;
-  }
-
-  return `<div class="row" style="gap:10px;margin-bottom:14px">
-      <input id="rsuche" data-rsuche="1" type="text" style="flex:1;min-width:0;max-width:420px"
-        placeholder="Suchen — Lieferant, Artikel, Nummer, Betrag, Monat …" value="${esc(RECH_SUCHE)}">
-      ${suche ? '<button class="btn" data-rsuchezu="1">Suche löschen</button>' : ''}
-      <span class="tabs" style="margin-bottom:0;${suche ? 'opacity:.4' : ''}">${filter}</span></div>
+  return `${rechFilterbar(alle)}
+    ${kopf}
+    ${rechKontext(alle, liste)}
     <div class="scrollx"><table><thead><tr><th>Datum</th><th>Lieferant</th><th>Nummer</th>
       <th class="r">Total</th><th class="r">Status</th><th class="r"></th></tr></thead>
       <tbody>${zeilen}</tbody></table></div>
-    <div class="small muted" style="margin-top:12px">
-      ${suche
-        ? `${liste.length} Treffer für «${esc(suche)}», zusammen ${chf(liste.reduce((s, x) => s + x.total, 0))}
-           — gesucht wird auch in den Positionen, nicht nur in den Überschriften.`
-        : RECH_FILTER === 'offen'
-        ? `${offen.length} von ${alle.length} Rechnungen brauchen eine Entscheidung.`
-        : `${liste.length} Rechnungen im ${esc(DB.monate.find(m => m.nr === RECH_FILTER).name)}, zusammen
-           ${chf(liste.reduce((s, x) => s + x.total, 0))}.`}
-      Seit der Eröffnung am ${esc(DB.eroeffnet)} sind ${DB.gelesenSeit} Rechnungen beim Eingang gelesen worden
-      — ${RECH_DOK ? 'unten die Rechnung' : 'eine Zeile anklicken, um die Rechnung zu sehen'}.</div>
+    <div class="small muted" style="margin-top:12px">${RECH_DOK
+      ? 'Unten die Rechnung, wie sie gekommen ist.'
+      : 'Eine Zeile anklicken, um die Rechnung zu sehen, wie sie gekommen ist.'}</div>
     ${panel}`;
 };
 
@@ -3397,10 +3551,9 @@ document.addEventListener('click', e => {
   const hb = e.target.closest('#hilfe-btn');
   if (hb) { document.querySelector('.flug:not(.weg):not(.schnell)') ? flugWeg(true) : hilfeZeigen(hb); return; }
 
-  if (e.target.closest('[data-rsuchezu]')) { RECH_SUCHE = ''; render(); return; }
-  const rf = e.target.closest('[data-rfilter]');
-  if (rf) { RECH_FILTER = rf.dataset.rfilter === 'offen' ? 'offen' : +rf.dataset.rfilter;
-    RECH_DOK = null; RECH_SUCHE = ''; render(); return; }
+  if (e.target.closest('[data-rreset]')) {
+    RECH_F = { lief:'', art:'', zeit:'', status:'', betrag:'', sort:'datum', q:'' };
+    RECH_DOK = null; render(); return; }
   const dk = e.target.closest('[data-dok]');
   if (dk) { RECH_DOK = RECH_DOK === dk.dataset.dok ? null : dk.dataset.dok; render();
     if (RECH_DOK) $('#view .rdoc')?.scrollIntoView({ block:'center', behavior:'smooth' });
@@ -3482,7 +3635,7 @@ document.addEventListener('input', e => {
     renderTippend(pt); return;
   }
   const rs = e.target.closest('[data-rsuche]');
-  if (rs) { RECH_SUCHE = rs.value; RECH_DOK = null; renderTippend(rs); return; }
+  if (rs) { RECH_F.q = rs.value; RECH_DOK = null; renderTippend(rs); return; }
   const aw = e.target.closest('[data-antwort]');
   if (aw) { const b = DB.bewertungen.find(x => x.id === aw.dataset.antwort);
     b.antwort = aw.value;
@@ -3530,6 +3683,8 @@ function bildLesen(p, datei) {
 }
 
 document.addEventListener('change', e => {
+  const rfs = e.target.closest('[data-rf]');
+  if (rfs) { RECH_F[rfs.dataset.rf] = rfs.value; RECH_DOK = null; render(); return; }
   const bild = e.target.closest('[data-postbild]');
   if (bild) { bildLesen(DB.posts.find(x => x.id === bild.dataset.postbild), bild.files[0]); return; }
   if (TIPPFELDER.some(a => e.target.hasAttribute?.(a))) { render(); return; }
