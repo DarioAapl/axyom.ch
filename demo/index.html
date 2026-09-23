@@ -1015,7 +1015,8 @@ DB.archiv = (() => {
         });
         const summe = zeilen.reduce((s, z) => s + z.summe, 0);
         nr[L.kurz] = (nr[L.kurz] || 1000) + 1;
-        out.push({ id: L.kurz + '-' + nr[L.kurz], lief: L.lief, datum, wochentag: tagName[td],
+        out.push({ id: L.kurz + '-' + nr[L.kurz], lief: L.lief, datum, jahr: DB.jahr,
+                   wochentag: tagName[td],
                    zeilen, netto: +summe.toFixed(2), mwst: L.mwst,
                    total: +(summe * (1 + L.mwst / 100)).toFixed(2),
                    kw: w.kw, status: 'abgeglichen' });
@@ -1175,7 +1176,8 @@ let AKTIV = 'uebersicht';
 let SOCIAL_TAB = 'kalender';
 let VERLAUF_W = 8;       // how many weeks the Verlauf shows
 // die Filter in Rechnungen, alle kombinierbar
-let RECH_F = { lief:'', art:'', zeit:'', status:'offen', betrag:'', sort:'datum', q:'' };
+let RECH_F = { lief:'', art:'', jahr:'', monat:'', zeit:'', status:'offen',
+               betrag:'', sort:'datum', q:'' };
 let RECH_DOK = null;     // the invoice shown as a document
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
@@ -1565,7 +1567,8 @@ function alleRechnungen() {
       geliefert: z.gel, preis: z.preis, summe: +(z.best * z.preis).toFixed(2) }));
     const netto = +zeilen.reduce((s, z) => s + z.summe, 0).toFixed(2);
     const mwst = r.lief === 'Weinkeller Musterthal' ? 8.1 : 2.6;   // Alkohol: Normalsatz
-    return { id: r.id, lief: r.lief, datum: r.datum, status: r.status, mwst, quelle: 'aktuell',
+    return { id: r.id, lief: r.lief, datum: r.datum, jahr: DB.jahr, status: r.status, mwst,
+             quelle: 'aktuell',
              roh: r, zeilen, netto, total: +(netto * (1 + mwst / 100)).toFixed(2) };
   });
   const archiv = DB.archiv.map(r => ({ ...r, quelle: 'archiv' }));
@@ -1600,8 +1603,24 @@ function rechFilterbar(alle) {
     ${RFELD('Lieferant', RECH_F.lief, 'lief', [['', 'Alle Lieferanten'], ...lief.map(l => [l, l])])}
     ${RFELD('Artikel', RECH_F.art, 'art', [['', 'Alle Artikel'],
       ...arts.map(([k, a]) => [k, a.name.split(',')[0]])])}
-    ${RFELD('Zeitraum', RECH_F.zeit, 'zeit', [['', 'Seit der Eröffnung'], ['woche', 'Diese Woche'],
-      ['30', 'Letzte 30 Tage'], ...DB.monate.slice().reverse().map(m => [String(m.nr), m.name])])}
+    ${RFELD('Jahr', RECH_F.jahr, 'jahr', [['', 'Alle Jahre'],
+      ...[...new Set(alle.map(r => r.jahr))].sort((a, b) => b - a).map(j => [String(j), String(j)])])}
+    ${(() => {
+      /* all twelve months, so the selector is the one a real year needs — the
+         ones without invoices carry a 0 and cannot be chosen. */
+      const MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August',
+                      'September','Oktober','November','Dezember'];
+      const zahl = nr => alle.filter(r => +r.datum.slice(3, 5) === nr
+        && (!RECH_F.jahr || String(r.jahr) === RECH_F.jahr)).length;
+      const opt = MONATE.map((n, i) => { const c = zahl(i + 1);
+        return `<option value="${i + 1}" ${String(i + 1) === String(RECH_F.monat) ? 'selected' : ''}
+          ${c ? '' : 'disabled'}>${n}${c ? ` (${c})` : ' —'}</option>`; }).join('');
+      return `<label class="rfilter"><span>Monat</span>
+        <select data-rf="monat"><option value="" ${RECH_F.monat ? '' : 'selected'}
+          >Alle Monate</option>${opt}</select></label>`;
+    })()}
+    ${RFELD('Zeitraum', RECH_F.zeit, 'zeit', [['', 'Ganzer Zeitraum'], ['woche', 'Diese Woche'],
+      ['30', 'Letzte 30 Tage']])}
     ${RFELD('Status', RECH_F.status, 'status', [['', 'Alle'], ['offen', 'Braucht eine Entscheidung'],
       ['preis', 'Preis geändert'], ['menge', 'Menge stimmt nicht'], ['erledigt', 'Entschieden'],
       ['ok', 'Geprüft, nichts zu tun']])}
@@ -1617,8 +1636,8 @@ function rechFilterbar(alle) {
   </div>`;
 }
 // sorting is not a filter, but «Zurücksetzen» has to be reachable after it too
-const rechAktiv = () => !!(RECH_F.lief || RECH_F.art || RECH_F.zeit || RECH_F.status
-                        || RECH_F.betrag || RECH_F.q.trim() || RECH_F.sort !== 'datum');
+const rechAktiv = () => !!(RECH_F.lief || RECH_F.art || RECH_F.jahr || RECH_F.monat || RECH_F.zeit
+                        || RECH_F.status || RECH_F.betrag || RECH_F.q.trim() || RECH_F.sort !== 'datum');
 
 /* free text still searches everything, including the articles on the lines */
 function rechText(r, q) {
@@ -1648,9 +1667,10 @@ function rechFiltern(alle) {
     if (RECH_F.art && !r.zeilen.some(z => z.art === RECH_F.art)) return false;
     if (RECH_F.status === 'offen' && r.status !== 'preis' && r.status !== 'menge') return false;
     if (RECH_F.status && RECH_F.status !== 'offen' && r.status !== RECH_F.status) return false;
+    if (RECH_F.jahr && String(r.jahr) !== RECH_F.jahr) return false;
+    if (RECH_F.monat && +r.datum.slice(3, 5) !== +RECH_F.monat) return false;
     if (RECH_F.zeit === 'woche' && heute - TAGNR(r.datum) > 3) return false;      // ab Montag
     if (RECH_F.zeit === '30' && heute - TAGNR(r.datum) > 30) return false;
-    if (/^\d+$/.test(RECH_F.zeit) && +r.datum.slice(3, 5) !== +RECH_F.zeit) return false;
     if (RECH_F.betrag) { const [von, bis] = RECH_F.betrag.split('-').map(Number);
       if (r.total < von) return false;
       if (bis && r.total > bis) return false; }
@@ -1836,6 +1856,16 @@ VIEWS.rechnungen = () => {
     <div><b>${liste.length}</b> ${liste.length === 1 ? 'Rechnung' : 'Rechnungen'}</div>
     <div><b>${chf(summe)}</b> zusammen</div>
     ${liste.length ? `<div><b>${chf(summe / liste.length)}</b> im Schnitt</div>` : ''}
+    <div class="muted">${(() => {
+      const MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August',
+                      'September','Oktober','November','Dezember'];
+      const teile = [];
+      if (RECH_F.monat) teile.push(MONATE[+RECH_F.monat - 1]);
+      if (RECH_F.jahr) teile.push(RECH_F.jahr);
+      if (RECH_F.zeit === 'woche') teile.push('diese Woche');
+      if (RECH_F.zeit === '30') teile.push('letzte 30 Tage');
+      return teile.length ? teile.join(' ') : 'seit der Eröffnung';
+    })()}</div>
     <div class="muted">${offen.length} von ${alle.length} brauchen eine Entscheidung</div>
     <div class="muted" style="margin-left:auto">${DB.gelesenSeit} Rechnungen gelesen seit
       ${esc(DB.eroeffnet)}</div></div>`;
@@ -3552,7 +3582,7 @@ document.addEventListener('click', e => {
   if (hb) { document.querySelector('.flug:not(.weg):not(.schnell)') ? flugWeg(true) : hilfeZeigen(hb); return; }
 
   if (e.target.closest('[data-rreset]')) {
-    RECH_F = { lief:'', art:'', zeit:'', status:'', betrag:'', sort:'datum', q:'' };
+    RECH_F = { lief:'', art:'', jahr:'', monat:'', zeit:'', status:'', betrag:'', sort:'datum', q:'' };
     RECH_DOK = null; render(); return; }
   const dk = e.target.closest('[data-dok]');
   if (dk) { RECH_DOK = RECH_DOK === dk.dataset.dok ? null : dk.dataset.dok; render();
@@ -3684,7 +3714,13 @@ function bildLesen(p, datei) {
 
 document.addEventListener('change', e => {
   const rfs = e.target.closest('[data-rf]');
-  if (rfs) { RECH_F[rfs.dataset.rf] = rfs.value; RECH_DOK = null; render(); return; }
+  if (rfs) {
+    RECH_F[rfs.dataset.rf] = rfs.value;
+    // Monat und Schnellzeitraum meinen dasselbe Feld der Frage: eines gewinnt
+    if (rfs.dataset.rf === 'monat' && rfs.value) RECH_F.zeit = '';
+    if (rfs.dataset.rf === 'zeit' && rfs.value) RECH_F.monat = '';
+    RECH_DOK = null; render(); return;
+  }
   const bild = e.target.closest('[data-postbild]');
   if (bild) { bildLesen(DB.posts.find(x => x.id === bild.dataset.postbild), bild.files[0]); return; }
   if (TIPPFELDER.some(a => e.target.hasAttribute?.(a))) { render(); return; }
