@@ -301,7 +301,16 @@ tr.gewaehlt td{background:var(--wash)}
 .kpost.publiziert{background:rgba(0,0,0,.045);color:var(--dim)}
 .kpost:hover{filter:brightness(.97)}
 .kpost.gewaehlt{border-color:currentColor}
-.klegende{display:flex;gap:16px;align-items:center;margin-top:11px;font-size:10.5px;color:var(--dim)}
+/* eine Zählung im Kalender */
+.ktag.gezaehlt{border-color:var(--line)}
+.zpost{display:block;width:100%;text-align:left;font-family:inherit;font-size:10.5px;font-weight:650;
+  line-height:1.3;padding:5px 7px;border-radius:6px;cursor:pointer;border:1px solid transparent}
+.zpost.ok{background:var(--okbg);color:var(--acci)}
+.zpost.auff{background:var(--warnbg);color:var(--warn)}
+.zpost.gewaehlt{border-color:currentColor}
+.zpost:hover{filter:brightness(.97)}
+.klegende{display:flex;gap:16px;align-items:center;margin-top:11px;font-size:10.5px;color:var(--dim);
+  flex-wrap:wrap}
 .klegende i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;
   vertical-align:-1px}
 .klegende i.entwurf{background:var(--warn)}
@@ -704,22 +713,15 @@ const DB = {
                {art:'speck', m:0.04}, {art:'bratfett', m:0.02}, {art:'fond', m:1} ] },
   ],
 
-  /* Stock: «Erwartet» is not stored here, it is computed further down —
-     Anfangsbestand vom letzten Zählen + was diese Woche geliefert wurde
-     − was die verkauften Gerichte brauchten − der Rest der Karte. «restQuote»
-     ist dieser Rest als Anteil des kalkulierten Verbrauchs: die übrige Karte
-     ist noch nicht kalkuliert, also ist dieser Teil eine Annahme, und sie wird
-     im Modul als solche ausgewiesen. «gezaehlt» ist, was heute früh auf dem
-     Regal lag. */
+  // die Artikel, die gezählt werden
   lager: [
-    { art:'butter',   anfang: 5.7,  restQuote:0.75, gezaehlt:14.2, einheit:'kg' },
-    { art:'rahm',     anfang:13.8,  restQuote:0.60, gezaehlt:22.0, einheit:'l'  },
-    { art:'kalb',     anfang: 1.5,  restQuote:0.30, gezaehlt:6.4,  einheit:'kg' },
-    { art:'kartoffel',anfang:28.7,  restQuote:0.55, gezaehlt:41.0, einheit:'kg' },
-    { art:'egli',     anfang: 0.7,  restQuote:0.25, gezaehlt:3.1,  einheit:'kg' },
+    { art:'butter',    einheit:'kg' },
+    { art:'rahm',      einheit:'l'  },
+    { art:'kalb',      einheit:'kg' },
+    { art:'kartoffel', einheit:'kg' },
+    { art:'egli',      einheit:'kg' },
   ],
   lagerStand:'heute 06:20',
-  lagerVorher:'Mo 21.09. 06:15',
 
   // hygiene: the checks a station owes today
   hygiene: [
@@ -1070,37 +1072,53 @@ DB.archiv = (() => {
                          || (+b.datum.slice(0, 2) - +a.datum.slice(0, 2)));
 })();
 
-/* ── how «Erwartet» comes about ────────────────────────────────────────────
-   The module used to state that the expected quantity follows from deliveries
-   and sales, and then showed a stored number — which is a claim, not a
-   calculation. It is now derived, per article:
+/* ── every count since the house opened ───────────────────────────────────
+   Counting once and seeing a difference tells you that something is missing.
+   Counting every Monday and seeing WHEN it appeared tells you where to look — a
+   door, a shift, a delivery. So the demo carries the whole series: twelve Monday
+   counts plus this morning, expected against counted, per article.
 
-     Anfangsbestand (letztes Zählen)
-   + geliefert diese Woche        aus den Rechnungen dieser Woche, × Packungsgrösse
-   − Verbrauch kalkulierte Gerichte   Rezept × verkaufte Portionen
-   − Verbrauch übrige Karte       Annahme, weil die übrige Karte nicht kalkuliert ist
-   = Erwartet
-
-   The assumption is the honest part: without recipes for the whole card nobody
-   can compute this exactly, and the module says so rather than pretending.
+   Most weeks are weighing tolerance. Four are not, and they are the point:
+     17.08.  Rahm −1.9 l · 24.08.  Kalbsbraten −1.8 kg
+     07.09.  Butter −2.4 kg · 14.09.  Eglifilet −0.9 kg
+   Deterministic, no Math.random: the same story on every laptop.
    ────────────────────────────────────────────────────────────────────────── */
-DB.lagerRechnung = (l) => {
-  const a = DB.artikel[l.art];
-  // was diese Woche geliefert wurde, aus den Rechnungen dieser Woche
-  const lieferungen = DB.rechnungen.flatMap(r => r.zeilen
-    .filter(z => z.art === l.art)
-    .map(z => ({ id: r.id, lief: r.lief, datum: r.datum, packungen: z.gel,
-                 menge: +(z.gel * a.menge).toFixed(1) })));
-  const geliefert = +lieferungen.reduce((s, x) => s + x.menge, 0).toFixed(1);
-  const kalk = +DB.gerichte.reduce((s, g) => {
-    const z = g.rezept.find(x => x.art === l.art);
-    return s + (z ? z.m * g.verkauft : 0);
-  }, 0).toFixed(1);
-  const rest = +(kalk * l.restQuote).toFixed(1);
-  const erwartet = +(l.anfang + geliefert - kalk - rest).toFixed(1);
-  return { lieferungen, geliefert, kalk, rest, erwartet,
-           diff: +(l.gezaehlt - erwartet).toFixed(1) };
-};
+DB.zaehlungen = (() => {
+  const montage = ['06.07.','13.07.','20.07.','27.07.','03.08.','10.08.','17.08.','24.08.',
+                   '31.08.','07.09.','14.09.','21.09.'];
+  const basis  = { butter:15.0, rahm:22.4, kalb:6.5, kartoffel:44.8, egli:3.2 };
+  const normal = { butter:-0.2, rahm:-0.3, kalb:-0.1, kartoffel:-0.9, egli:-0.1 };
+  const vorfall = { '17.08.':{ rahm:-1.9 }, '24.08.':{ kalb:-1.8 },
+                    '07.09.':{ butter:-2.4 }, '14.09.':{ egli:-0.9 } };
+  const reihe = montage.map((datum, i) => {
+    const werte = {};
+    Object.keys(basis).forEach(k => {
+      const erwartet = +(basis[k] * (1 + Math.sin((i + 2) / 4.1) * 0.06)).toFixed(1);
+      const delta = (vorfall[datum] && vorfall[datum][k] !== undefined) ? vorfall[datum][k]
+        : +(normal[k] * (1 + (i % 3) * 0.25)).toFixed(1);
+      werte[k] = { erwartet, gezaehlt: +(erwartet + delta).toFixed(1) };
+    });
+    return { datum, zeit:'06:15', werte };
+  });
+  reihe.push({ datum: DB.today, zeit:'06:20', heute:true, werte: {
+    butter:{ erwartet:15.0, gezaehlt:14.2 }, rahm:{ erwartet:22.4, gezaehlt:22.0 },
+    kalb:{ erwartet:6.5, gezaehlt:6.4 }, kartoffel:{ erwartet:44.8, gezaehlt:41.0 },
+    egli:{ erwartet:3.2, gezaehlt:3.1 } } });
+  return reihe;
+})();
+
+DB.zaehlungHeute = () => DB.zaehlungen[DB.zaehlungen.length - 1];
+DB.zDiff = (z, art) => { const w = z.werte[art]; return w ? +(w.gezaehlt - w.erwartet).toFixed(1) : 0; };
+DB.zWert = (z, art) => DB.zDiff(z, art) * (DB.artikel[art].bezahlt / DB.artikel[art].menge);
+/* Auffällig heisst: mehr als 4% UND mehr als eine halbe Einheit. Prozent allein
+   schlägt bei kleinen Beständen schon bei Waagenrundung aus — 0.2 kg Fisch von
+   3.4 kg sind 6%, und das ist ein Abschnitt, kein Vorfall. */
+DB.zAuff = (z, art) => { const w = z.werte[art];
+  if (!w) return false;
+  const d = Math.abs(w.gezaehlt - w.erwartet);
+  return d > 0.5 && d / Math.max(1, w.erwartet) > 0.04; };
+// der Tag als Ganzes: Summe der Fehlmengen in Franken
+DB.zTagWert = z => DB.lager.reduce((s, l) => s + Math.min(0, DB.zWert(z, l.art)), 0);
 
 /* ── what was last actually paid ───────────────────────────────────────────
    Two prices per article, because they answer different questions:
@@ -1259,7 +1277,7 @@ function logge(text) { DB.log.unshift({ text, zeit: new Date().toLocaleTimeStrin
 const MODULES = [
   { id:'uebersicht',  name:'Übersicht',   titel:'Übersicht',             sub:'Was ansteht, über alle drei Betriebe' },
   { id:'rechnungen',  name:'Rechnungen',  titel:'Rechnungen',            sub:'Per E-Mail und Post eingegangen · beim Eingang gelesen' },
-  { id:'lager',       name:'Lager',       titel:'Lager',                 sub:'Einmal gezählt, gegen die Verkäufe gerechnet' },
+  { id:'lager',       name:'Lager',       titel:'Lager',                 sub:'Jede Zählung seit der Eröffnung — und ab welcher Woche etwas fehlt' },
   { id:'aktionen',    name:'Aktionen',    titel:'Aktionen diese Woche',  sub:'Aus den Preislisten Ihrer Lieferanten gelesen' },
   { id:'gerichte',    name:'Gerichte',    titel:'Gerichte',              sub:'Kalkuliert mit den Preisen, die Sie zuletzt bezahlt haben' },
   { id:'hygiene',     name:'Hygiene',     titel:'Kontrollen heute',      sub:'Abgehakt an der Station, am Handy' },
@@ -1279,7 +1297,9 @@ let VERLAUF_W = 8;       // how many weeks the Verlauf shows
 let RECH_F = { lief:'', art:'', jahr:'', monat:'', zeit:'', status:'offen',
                betrag:'', sort:'datum', q:'' };
 let RECH_DOK = null;     // the invoice shown as a document
-let LAGER_OFFEN = null;  // die Lagerzeile, deren Rechnung offen ist
+let LAGER_MONAT = 9;     // der Monat im Zähl-Kalender
+let LAGER_ART = '';      // auf einen Artikel eingeschränkt
+let LAGER_TAG = null;    // die geöffnete Zählung
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
 /* How urgent a module's open count is: 3 = now, 2 = today, 1 = can wait.
@@ -1505,12 +1525,12 @@ const HILFE = {
     'Nach einem Artikel filtern zeigt zusätzlich dessen Preisweg — was er bei der ersten Lieferung kostete, wann er sich änderte, was zuletzt verrechnet wurde und mit welchem Preis noch kalkuliert wird. Diese Geschichte ist nicht separat gepflegt, sie ist aus den Rechnungen gelesen.',
   ],
   lager: [
-    'Einmal zählen, am Handy — heute früh um 06:20, davor am Montag.',
-    'Die Spalte «Erwartet» ist gerechnet, nicht gesetzt: Anfangsbestand vom letzten Zählen, plus was diese Woche geliefert wurde (aus den Rechnungen), minus was die verkauften Gerichte nach Rezept gebraucht haben. Eine Zeile anklicken zeigt diese Rechnung Schritt für Schritt, mit der Rechnungsnummer der Lieferung.',
-    'Ein Posten darin ist eine Annahme und wird als solche ausgewiesen: die übrige Karte ist noch nicht kalkuliert, ihr Verbrauch wird geschätzt. Mit Rezepten für die ganze Karte wäre die Zeile exakt.',
-    'Die Differenz wird zum zuletzt bezahlten Preis bewertet — Sie sehen nicht nur fehlende Kilo, sondern Franken.',
-    'Mehr als 5% Abweichung wird markiert. Darunter ist Waage und Rundung, darüber ist etwas passiert.',
-    'Eine gezählte Zahl ändern — Differenz, Wert und die Kennzahl oben rechnen sofort mit.',
+    'Gezählt wird am Handy, jeden Montagmorgen und heute früh um 06:20 — dreizehn Zählungen seit der Eröffnung.',
+    'Die Tabelle oben ist die Zählung von heute: erwarteter Bestand, gezählter Bestand, Differenz, und was sie zum zuletzt bezahlten Preis wert ist.',
+    'Der Kalender darunter zeigt jede Zählung im Monat. Grün heisst im Rahmen der Waage, orange heisst Fehlmenge — so sehen Sie nicht nur DASS etwas fehlt, sondern ab welcher Woche.',
+    'Auf einen Artikel einschränken zeigt dessen Verlauf: Butter lag wochenlang bei −0.3 kg und am 07.09. plötzlich bei −2.4 kg. Dazwischen liegt eine Woche, in der jemand nachschauen kann.',
+    'Einen Tag anklicken öffnet die ganze Zählung dieses Tages, verglichen mit der Zählung davor.',
+    'Auffällig heisst mehr als 4 % und mehr als eine halbe Einheit — Prozent allein schlägt bei kleinen Beständen schon bei der Waagenrundung aus.',
   ],
   aktionen: [
     'Die Aktionen Ihrer Lieferanten werden gelesen, sobald die Preislisten kommen.',
@@ -2005,85 +2025,133 @@ VIEWS.rechnungen = () => {
 };
 
 /* ── Lager ──────────────────────────────────────────────────────────────────
-   «Erwartet» is derived here, not stored, and the derivation is on screen:
-   opening a row shows Anfangsbestand + Lieferungen − Rezeptverbrauch − der
-   Rest der Karte. That last term is an assumption — the rest of the card is not
-   costed — and the row says so, because a stock line that pretends to be exact
-   is worse than one that names its own uncertainty.
+   Counting once tells you something is missing. The calendar tells you WHEN —
+   which is the only version of this that leads anywhere: a week, a shift, a
+   delivery you can go and ask about. Every Monday count since the opening is in
+   it, per article, expected against counted.
    ────────────────────────────────────────────────────────────────────────── */
+const MONATSNAMEN = ['Januar','Februar','März','April','Mai','Juni','Juli','August',
+                     'September','Oktober','November','Dezember'];
+
 VIEWS.lager = () => {
+  const heute = DB.zaehlungHeute();
+
+  /* ── what this morning's count says ── */
   const zeilen = DB.lager.map(l => {
-    const a = DB.artikel[l.art];
-    const R = DB.lagerRechnung(l);
-    const wert = R.diff * einzel(l.art);
-    const auff = Math.abs(R.diff) / Math.max(1, R.erwartet) > 0.05;
-    const auf = LAGER_OFFEN === l.art;
-    return `<tr class="click ${auf ? 'gewaehlt' : ''}" data-lager="${l.art}">
-        <td><b>${esc(a.name.split(',')[0])}</b>
-          <div class="small muted zeile1">${l.anfang} + ${R.geliefert} − ${R.kalk} − ${R.rest} ${esc(l.einheit)}</div></td>
-        <td class="r num muted">${R.erwartet.toFixed(1)} ${esc(l.einheit)}</td>
-        <td class="r num"><input style="width:74px;text-align:right" type="number" step="0.1"
-              value="${l.gezaehlt}" data-count="${l.art}"></td>
-        <td class="r num" style="${auff ? 'color:var(--warn);font-weight:650' : ''}"
-          >${R.diff > 0 ? '+' : '−'}${Math.abs(R.diff).toFixed(1)}</td>
-        <td class="r num muted">${chf(wert)}</td>
-        <td class="r">${auff ? '<span class="tag t-warn">nachschauen</span>'
-                             : '<span class="tag t-ok">im Rahmen</span>'}</td>
-        <td class="r"><span class="link">${auf ? 'schliessen' : 'Rechnung zeigen'}</span></td></tr>
-      ${auf ? `<tr class="detailzeile"><td colspan="7">
-        <div class="detailkopf"><span class="dpfeil">↳</span><b>${esc(a.name)}</b>
-          <span class="muted">wie ${R.erwartet.toFixed(1)} ${esc(l.einheit)} zustande kommen</span>
-          <button class="btn" data-lagerzu="1" style="margin-left:auto">Schliessen</button></div>
-        <div class="lrechnung">
-          <div class="lz"><span class="ln">Anfangsbestand</span>
-            <span class="lv">${l.anfang.toFixed(1)} ${esc(l.einheit)}</span>
-            <span class="lh">gezählt ${esc(DB.lagerVorher)}</span></div>
-          <div class="lz"><span class="ln">+ geliefert diese Woche</span>
-            <span class="lv">${R.geliefert.toFixed(1)} ${esc(l.einheit)}</span>
-            <span class="lh">${R.lieferungen.map(x => `${x.packungen} × ${a.menge} ${esc(a.einheit)} ·
-              <span class="link" data-go="rechnungen">${esc(x.id)}</span> vom ${esc(x.datum)}`).join(' · ')
-              || 'keine Lieferung in dieser Woche'}</span></div>
-          <div class="lz"><span class="ln">− Verbrauch kalkulierte Gerichte</span>
-            <span class="lv">${R.kalk.toFixed(1)} ${esc(l.einheit)}</span>
-            <span class="lh">${DB.gerichte.filter(g => g.rezept.some(z => z.art === l.art))
-              .map(g => `${esc(g.name.split(',')[0])} ${g.verkauft}×`).join(' · ')}</span></div>
-          <div class="lz"><span class="ln">− Verbrauch übrige Karte</span>
-            <span class="lv">${R.rest.toFixed(1)} ${esc(l.einheit)}</span>
-            <span class="lh" style="color:var(--warn)">Annahme: ${(l.restQuote * 100).toFixed(0)}% des
-              kalkulierten Verbrauchs — die übrige Karte ist noch nicht kalkuliert</span></div>
-          <div class="lz summe"><span class="ln">= erwartet</span>
-            <span class="lv">${R.erwartet.toFixed(1)} ${esc(l.einheit)}</span><span class="lh"></span></div>
-          <div class="lz"><span class="ln">gezählt heute</span>
-            <span class="lv">${l.gezaehlt.toFixed(1)} ${esc(l.einheit)}</span>
-            <span class="lh">${esc(DB.lagerStand)}</span></div>
-          <div class="lz summe"><span class="ln">= Differenz</span>
-            <span class="lv" style="color:${auff ? 'var(--warn)' : 'var(--ink)'}"
-              >${R.diff > 0 ? '+' : '−'}${Math.abs(R.diff).toFixed(1)} ${esc(l.einheit)}</span>
-            <span class="lh">${chf(wert)} zum zuletzt bezahlten Preis von
-              ${chf(einzelBezahlt(l.art))} pro ${esc(l.einheit)}</span></div></div>
-        <div class="small muted" style="padding:10px 16px 0;max-width:80ch">Nur der Rest der Karte ist
-          eine Annahme. Mit Rezepten für die ganze Karte wäre diese Zeile exakt — bis dahin zeigt sie,
-          in welchem Rahmen die Differenz liegt.</div></td></tr>` : ''}`;
+    const a = DB.artikel[l.art], w = heute.werte[l.art];
+    const d = DB.zDiff(heute, l.art), auff = DB.zAuff(heute, l.art);
+    return `<tr>
+      <td><b>${esc(a.name.split(',')[0])}</b></td>
+      <td class="r num muted">${w.erwartet.toFixed(1)} ${esc(l.einheit)}</td>
+      <td class="r num"><input style="width:74px;text-align:right" type="number" step="0.1"
+            value="${w.gezaehlt}" data-count="${l.art}"></td>
+      <td class="r num" style="${auff ? 'color:var(--warn);font-weight:650' : ''}"
+        >${d > 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}</td>
+      <td class="r num muted">${chf(DB.zWert(heute, l.art))}</td>
+      <td class="r">${auff ? '<span class="tag t-warn">nachschauen</span>'
+                           : '<span class="tag t-ok">im Rahmen</span>'}</td></tr>`;
   }).join('');
 
-  const verlust = DB.lager.reduce((s, l) => s + Math.min(0, DB.lagerRechnung(l).diff * einzel(l.art)), 0);
-  const auffaellig = DB.lager.filter(l => { const R = DB.lagerRechnung(l);
-    return Math.abs(R.diff) / Math.max(1, R.erwartet) > 0.05; }).length;
+  /* ── the calendar of counts ── */
+  const imMonat = nr => DB.zaehlungen.filter(z => +z.datum.slice(3, 5) === nr);
+  const monatTabs = DB.monate.map(m =>
+    `<button class="tab ${LAGER_MONAT === m.nr ? 'on' : ''}" data-lmonat="${m.nr}"
+      >${esc(m.name)} <span class="muted">${imMonat(m.nr).length}×</span></button>`).join('');
+  const artSelect = `<label class="rfilter ${LAGER_ART ? 'an' : ''}"><span>Artikel</span>
+    <select data-lart="1"><option value="" ${LAGER_ART ? '' : 'selected'}>Alle Artikel</option>
+      ${DB.lager.map(l => `<option value="${l.art}" ${LAGER_ART === l.art ? 'selected' : ''}
+        >${esc(DB.artikel[l.art].name.split(',')[0])}</option>`).join('')}</select></label>`;
+
+  const tage = new Date(DB.jahr, LAGER_MONAT, 0).getDate();
+  const ersterWochentag = (new Date(DB.jahr, LAGER_MONAT - 1, 1).getDay() + 6) % 7;  // Mo = 0
+  const zellen = [];
+  for (let i = 0; i < ersterWochentag; i++) zellen.push('<div class="ktag leer"></div>');
+  for (let d = 1; d <= tage; d++) {
+    const datum = String(d).padStart(2, '0') + '.' + String(LAGER_MONAT).padStart(2, '0') + '.';
+    const z = DB.zaehlungen.find(x => x.datum === datum);
+    const istHeute = datum === DB.today;
+    let inhalt = '';
+    if (z) {
+      if (LAGER_ART) {
+        const diff = DB.zDiff(z, LAGER_ART), auff = DB.zAuff(z, LAGER_ART);
+        inhalt = `<button class="zpost ${auff ? 'auff' : 'ok'} ${LAGER_TAG === datum ? 'gewaehlt' : ''}"
+          data-ltag="${datum}">${diff > 0 ? '+' : '−'}${Math.abs(diff).toFixed(1)}
+          ${esc(DB.lager.find(l => l.art === LAGER_ART).einheit)}</button>`;
+      } else {
+        const auff = DB.lager.filter(l => DB.zAuff(z, l.art)).length;
+        inhalt = `<button class="zpost ${auff ? 'auff' : 'ok'} ${LAGER_TAG === datum ? 'gewaehlt' : ''}"
+          data-ltag="${datum}">${chf(DB.zTagWert(z))}${auff ? `<br>${auff} auffällig` : ''}</button>`;
+      }
+    }
+    zellen.push(`<div class="ktag ${istHeute ? 'heute' : ''} ${z ? 'gezaehlt' : ''}">
+      <div class="knr">${d}${istHeute ? '<span class="kheute">heute</span>' : ''}</div>${inhalt}</div>`);
+  }
+
+  /* ── one count day, in full ── */
+  let tagPanel = '';
+  const zt = LAGER_TAG && DB.zaehlungen.find(z => z.datum === LAGER_TAG);
+  if (zt) {
+    const vorher = DB.zaehlungen[DB.zaehlungen.indexOf(zt) - 1];
+    const auffaellige = DB.lager.filter(l => DB.zAuff(zt, l.art));
+    tagPanel = `<div class="card kontext" style="margin-top:14px">
+      <div class="wl"><span>Zählung ${esc(zt.datum)}${DB.jahr} · ${esc(zt.zeit)}</span>
+        <span class="r2">${vorher ? `verglichen mit der Zählung vom ${esc(vorher.datum)}` : 'erste Zählung'}</span></div>
+      <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Erwartet</th>
+        <th class="r">Gezählt</th><th class="r">Differenz</th><th class="r">Wert</th>
+        <th class="r">Status</th></tr></thead><tbody>
+        ${DB.lager.map(l => { const w = zt.werte[l.art], d = DB.zDiff(zt, l.art),
+            auff = DB.zAuff(zt, l.art);
+          return `<tr><td><b>${esc(DB.artikel[l.art].name.split(',')[0])}</b></td>
+            <td class="r num muted">${w.erwartet.toFixed(1)} ${esc(l.einheit)}</td>
+            <td class="r num">${w.gezaehlt.toFixed(1)} ${esc(l.einheit)}</td>
+            <td class="r num" style="${auff ? 'color:var(--warn);font-weight:650' : ''}"
+              >${d > 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}</td>
+            <td class="r num muted">${chf(DB.zWert(zt, l.art))}</td>
+            <td class="r">${auff ? '<span class="tag t-warn">nachschauen</span>'
+                                 : '<span class="tag t-ok">im Rahmen</span>'}</td></tr>`;
+        }).join('')}</tbody></table></div>
+      <div class="small" style="margin-top:11px;line-height:1.6">${auffaellige.length
+        ? `<b style="color:var(--warn)">${auffaellige.map(l =>
+            `${esc(DB.artikel[l.art].name.split(',')[0])} ${Math.abs(DB.zDiff(zt, l.art)).toFixed(1)}
+             ${esc(l.einheit)} zu wenig`).join(', ')}.</b>
+           ${vorher ? `Bei der Zählung vom ${esc(vorher.datum)} war das noch nicht so — dazwischen liegt
+             eine Woche, in der jemand nachschauen kann.` : ''}`
+        : 'Alles im Rahmen der Waage. Kein Posten fehlt.'}</div>
+      <div class="row" style="margin-top:11px"><button class="btn" data-ltagzu="1">Schliessen</button></div>
+    </div>`;
+  }
+
+  const verlust = DB.zTagWert(heute);
+  const auffHeute = DB.lager.filter(l => DB.zAuff(heute, l.art)).length;
+  const vorfaelle = DB.zaehlungen.filter(z => DB.lager.some(l => DB.zAuff(z, l.art))).length;
   return `<div class="grid g3" style="margin-bottom:20px">
-      <div class="card kpi"><div class="l">Gezählt</div><div class="n">${esc(DB.lagerStand)}</div>
-        <div class="d">davor ${esc(DB.lagerVorher)}</div></div>
-      <div class="card kpi"><div class="l">Differenz, Wert</div>
+      <div class="card kpi"><div class="l">Zuletzt gezählt</div>
+        <div class="n">${esc(heute.datum)} ${esc(heute.zeit)}</div>
+        <div class="d">${DB.zaehlungen.length} Zählungen seit der Eröffnung</div></div>
+      <div class="card kpi"><div class="l">Differenz heute</div>
         <div class="n" style="color:${verlust < -20 ? 'var(--warn)' : 'var(--ink)'}">${chf(verlust)}</div>
-        <div class="d">zu den Preisen, die zuletzt bezahlt wurden</div></div>
-      <div class="card kpi"><div class="l">Auffällig</div>
-        <div class="n">${auffaellig} von ${DB.lager.length}</div>
-        <div class="d">Mehr als 5 % Abweichung</div></div></div>
-    <table><thead><tr><th>Artikel</th><th class="r">Erwartet</th><th class="r">Gezählt</th>
-      <th class="r">Differenz</th><th class="r">Wert</th><th class="r">Status</th><th class="r"></th></tr></thead>
-      <tbody>${zeilen}</tbody></table>
-    <div class="small muted" style="margin-top:12px">«Erwartet» ist gerechnet, nicht gesetzt:
-      Anfangsbestand vom letzten Zählen, plus was diese Woche geliefert wurde, minus was die verkauften
-      Gerichte gebraucht haben. Eine Zeile anklicken zeigt die Rechnung dazu.</div>`;
+        <div class="d">${auffHeute} von ${DB.lager.length} auffällig</div></div>
+      <div class="card kpi"><div class="l">Zählungen mit Fehlmenge</div>
+        <div class="n">${vorfaelle} von ${DB.zaehlungen.length}</div>
+        <div class="d">mehr als 4 % und eine halbe Einheit</div></div></div>
+    <div class="sec">Die Zählung von heute früh</div>
+    <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Erwartet</th>
+      <th class="r">Gezählt</th><th class="r">Differenz</th><th class="r">Wert</th>
+      <th class="r">Status</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <div class="small muted" style="margin-top:10px">Eine Zahl ändern — Differenz, Wert und die
+      Kennzahlen oben rechnen sofort mit.</div>
+    <div class="sec" style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">Kalender
+      <span class="tabs" style="margin-bottom:0">${monatTabs}</span>
+      ${artSelect}</div>
+    <div class="kkopf">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(t => `<div>${t}</div>`).join('')}</div>
+    <div class="kgrid">${zellen.join('')}</div>
+    <div class="klegende">
+      <span><i class="freigegeben"></i>im Rahmen</span>
+      <span><i class="entwurf"></i>Fehlmenge</span>
+      <span class="muted">${LAGER_ART
+        ? `Zahl = Differenz bei ${esc(DB.artikel[LAGER_ART].name.split(',')[0])}`
+        : 'Zahl = Fehlmenge des Tages in Franken'} · einen Tag anklicken für die ganze Zählung</span></div>
+    ${tagPanel}`;
 };
 
 /* ── Aktionen ───────────────────────────────────────────────────────────── */
@@ -2923,12 +2991,12 @@ function offeneSachen() {
     was: `${knapp.map(d => d.tag).join(', ')} knapp besetzt`,
     warum: `Über ${DB.knappAb} Gedecke pro Person — ${knapp.map(d => d.tag + ': ' + d.gedecke + ' auf ' + d.besetzt).join(' · ')}` });
 
-  const lAuff = DB.lager.filter(l => { const R = DB.lagerRechnung(l);
-    return Math.abs(R.diff) / Math.max(1, R.erwartet) > 0.05; });
+  const zH = DB.zaehlungHeute();
+  const lAuff = DB.lager.filter(l => DB.zAuff(zH, l.art));
   if (lAuff.length) items.push({ ernst: 1, wo: 'lager', modul: 'Lager',
     was: `${lAuff.length} Artikel weich${lAuff.length > 1 ? 'en' : 't'} ab`,
     warum: lAuff.map(l => DB.artikel[l.art].name.split(',')[0]).join(', ') +
-           ` — zusammen ${chf(lAuff.reduce((s, l) => s + DB.lagerRechnung(l).diff * einzel(l.art), 0))}` });
+           ` — zusammen ${chf(lAuff.reduce((s, l) => s + DB.zWert(zH, l.art), 0))}` });
 
   return items.sort((a, b) => b.ernst - a.ernst);
 }
@@ -3085,10 +3153,10 @@ VIEWS.uebersicht = () => {
     }).join('')}</div>`, { go:'dienstplan', rechts:`Gedecke pro Person · >${DB.knappAb} knapp` });
 
   const lager = WG('', 'Lager gegen Verkauf', DB.lager.map(l => {
-    const R = DB.lagerRechnung(l);
-    const d = R.diff * einzel(l.art);
-    const max = Math.max(...DB.lager.map(x => Math.abs(DB.lagerRechnung(x).diff * einzel(x.art)))) || 1;
-    const auff = Math.abs(R.diff) / Math.max(1, R.erwartet) > 0.05;
+    const zH = DB.zaehlungHeute();
+    const d = DB.zWert(zH, l.art);
+    const max = Math.max(...DB.lager.map(x => Math.abs(DB.zWert(zH, x.art)))) || 1;
+    const auff = DB.zAuff(zH, l.art);
     return mini2(DB.artikel[l.art].name.split(',')[0],
       `<div class="bar"><i style="width:${(Math.abs(d) / max * 100).toFixed(0)}%;
         background:${auff ? 'var(--warn)' : 'var(--acc)'}"></i></div>`, chf(d), auff);
@@ -3234,10 +3302,13 @@ function aArtikel(k) {
   if (inG.length) z.push(`Steckt in ${inG.length} Gericht${inG.length > 1 ? 'en' : ''}: ` +
     inG.map(g => `${esc(g.name)} (${marge(g).toFixed(1)}%)`).join(', '));
   if (ak) z.push(`Aktion bis ${esc(ak.bis)}: ${chf(ak.neu)} — spart ${chf((a.preis - ak.neu) / a.menge * ak.monat)} bei Ihrer üblichen Menge`);
-  if (l) { const R = DB.lagerRechnung(l);
-    z.push(`Lager: ${l.gezaehlt} ${esc(l.einheit)} gezählt, ${R.erwartet.toFixed(1)} erwartet ` +
-           `(${l.anfang} + ${R.geliefert} geliefert − ${(R.kalk + R.rest).toFixed(1)} verbraucht) — ` +
-           `${chf(R.diff * ep)}`); }
+  if (l) { const zH = DB.zaehlungHeute(), w = zH.werte[k];
+    // und wann es das letzte Mal auffällig war
+    const frueher = [...DB.zaehlungen].reverse().find(z => z !== zH && DB.zAuff(z, k));
+    z.push(`Lager heute: ${w.gezaehlt} ${esc(l.einheit)} gezählt, ${w.erwartet} erwartet — ` +
+           `${chf(DB.zWert(zH, k))}` +
+           (frueher ? `. Auffällig war es zuletzt bei der Zählung vom ${esc(frueher.datum)} ` +
+                      `(${DB.zDiff(frueher, k).toFixed(1)} ${esc(l.einheit)})` : '')); }
   return bau(`${esc(a.name)} · ${esc(a.lief)}`, z,
     [off ? { t:'Rechnungen', go:'rechnungen' } : null, inG.length ? { t:'Gerichte', go:'gerichte' } : null,
      ak ? { t:'Aktionen', go:'aktionen' } : null].filter(Boolean));
@@ -3388,13 +3459,14 @@ const ANTWORT = {
     ], [{ t:'Rechnungen', go:'rechnungen' }]);
   },
   lager() {
-    const rows = DB.lager.map(l => ({ l, R: DB.lagerRechnung(l),
-        d: DB.lagerRechnung(l).diff * einzel(l.art) }))
+    const zH = DB.zaehlungHeute();
+    const rows = DB.lager.map(l => ({ l, w: zH.werte[l.art], auff: DB.zAuff(zH, l.art),
+        d: DB.zWert(zH, l.art) }))
       .sort((a, b) => a.d - b.d);
     const sum = rows.reduce((s, r) => s + r.d, 0);
-    return bau(`Lager gegen Verkauf · gezählt ${esc(DB.lagerStand)}`,
-      rows.map(r => `${esc(kurz(r.l.art))}: ${r.l.gezaehlt} statt ${r.R.erwartet.toFixed(1)} ${esc(r.l.einheit)} — ` +
-        `${Math.abs(r.R.diff) / Math.max(1, r.R.erwartet) > 0.05 ? '<span class="hl">' + chf(r.d) + '</span>' : chf(r.d)}`)
+    return bau(`Lager · gezählt ${esc(zH.datum)} ${esc(zH.zeit)} · ${DB.zaehlungen.length} Zählungen seit der Eröffnung`,
+      rows.map(r => `${esc(kurz(r.l.art))}: ${r.w.gezaehlt} statt ${r.w.erwartet} ${esc(r.l.einheit)} — ` +
+        `${r.auff ? '<span class="hl">' + chf(r.d) + '</span>' : chf(r.d)}`)
         .concat([`Zusammen <b>${chf(sum)}</b> Differenz.`]),
       [{ t:'Lager', go:'lager' }]);
   },
@@ -3490,10 +3562,9 @@ const ANTWORT = {
       posten.push({ t: `${r.id}: ${fehlt} Position${fehlt > 1 ? 'en' : ''} nicht geliefert, aber verrechnet`,
         v: (z.best - z.gel) * z.preis, wo:'rechnungen' });
     });
-    DB.lager.filter(l => { const R = DB.lagerRechnung(l);
-        return R.diff < 0 && Math.abs(R.diff) / Math.max(1, R.erwartet) > 0.05; })
+    DB.lager.filter(l => DB.zDiff(DB.zaehlungHeute(), l.art) < 0 && DB.zAuff(DB.zaehlungHeute(), l.art))
       .forEach(l => posten.push({ t:`${kurz(l.art)} fehlt im Lager`,
-        v: Math.abs(DB.lagerRechnung(l).diff * einzel(l.art)), wo:'lager' }));
+        v: Math.abs(DB.zWert(DB.zaehlungHeute(), l.art)), wo:'lager' }));
     DB.aktionen.filter(a => !a.genommen).forEach(a => { const art = DB.artikel[a.art];
       posten.push({ t:`Aktion ${kurz(a.art)} nicht genommen`,
         v: (art.preis - a.neu) / art.menge * a.monat, wo:'aktionen' }); });
@@ -3781,10 +3852,11 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-rreset]')) {
     RECH_F = { lief:'', art:'', jahr:'', monat:'', zeit:'', status:'', betrag:'', sort:'datum', q:'' };
     RECH_DOK = null; render(); return; }
-  const lg = e.target.closest('[data-lager]');
-  if (lg && !e.target.closest('input')) {
-    LAGER_OFFEN = LAGER_OFFEN === lg.dataset.lager ? null : lg.dataset.lager; render(); return; }
-  if (e.target.closest('[data-lagerzu]')) { LAGER_OFFEN = null; render(); return; }
+  const lm = e.target.closest('[data-lmonat]');
+  if (lm) { LAGER_MONAT = +lm.dataset.lmonat; LAGER_TAG = null; render(); return; }
+  const lt = e.target.closest('[data-ltag]');
+  if (lt) { LAGER_TAG = LAGER_TAG === lt.dataset.ltag ? null : lt.dataset.ltag; render(); return; }
+  if (e.target.closest('[data-ltagzu]')) { LAGER_TAG = null; render(); return; }
 
   const dk = e.target.closest('[data-dok]');
   // no scrolling: the document opens under the row, which is already in view
@@ -3844,7 +3916,7 @@ function renderTippend(el) {
 
 document.addEventListener('input', e => {
   const c = e.target.closest('[data-count]');
-  if (c) { DB.lager.find(l => l.art === c.dataset.count).gezaehlt = +c.value || 0;
+  if (c) { DB.zaehlungHeute().werte[c.dataset.count].gezaehlt = +c.value || 0;
            renderTippend(c); return; }
   const k = e.target.closest('[data-karte]');
   if (k) { const g = DB.gerichte.find(x => x.id === k.dataset.karte); g.karte = +k.value || g.karte;
@@ -3914,6 +3986,8 @@ function bildLesen(p, datei) {
 }
 
 document.addEventListener('change', e => {
+  const la = e.target.closest('[data-lart]');
+  if (la) { LAGER_ART = la.value; LAGER_TAG = null; render(); return; }
   const rfs = e.target.closest('[data-rf]');
   if (rfs) {
     RECH_F[rfs.dataset.rf] = rfs.value;
