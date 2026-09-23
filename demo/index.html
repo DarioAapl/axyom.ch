@@ -713,13 +713,17 @@ const DB = {
                {art:'speck', m:0.04}, {art:'bratfett', m:0.02}, {art:'fond', m:1} ] },
   ],
 
-  // die Artikel, die gezählt werden
+  /* Die Toleranz gehört dem Haus, nicht der Software: eine Küche, die Fisch
+     filetiert, hat beim Fisch einen anderen Abschnitt als bei Kartoffeln.
+     «prozent» und «menge» gelten für alle, «tolProzent»/«tolMenge» je Artikel
+     überschreiben sie. */
+  toleranz: { prozent: 4, menge: 0.5 },
   lager: [
     { art:'butter',    einheit:'kg' },
     { art:'rahm',      einheit:'l'  },
     { art:'kalb',      einheit:'kg' },
     { art:'kartoffel', einheit:'kg' },
-    { art:'egli',      einheit:'kg' },
+    { art:'egli',      einheit:'kg', tolProzent: 8 },   // filetieren kostet Abschnitt
   ],
   lagerStand:'heute 06:20',
 
@@ -1110,13 +1114,19 @@ DB.zaehlungen = (() => {
 DB.zaehlungHeute = () => DB.zaehlungen[DB.zaehlungen.length - 1];
 DB.zDiff = (z, art) => { const w = z.werte[art]; return w ? +(w.gezaehlt - w.erwartet).toFixed(1) : 0; };
 DB.zWert = (z, art) => DB.zDiff(z, art) * (DB.artikel[art].bezahlt / DB.artikel[art].menge);
-/* Auffällig heisst: mehr als 4% UND mehr als eine halbe Einheit. Prozent allein
-   schlägt bei kleinen Beständen schon bei Waagenrundung aus — 0.2 kg Fisch von
-   3.4 kg sind 6%, und das ist ein Abschnitt, kein Vorfall. */
+/* Auffällig heisst: über der Toleranz in Prozent UND in Menge. Beides, weil
+   Prozent allein bei kleinen Beständen schon bei der Waagenrundung ausschlägt
+   und eine Menge allein bei grossen Beständen nie. Die Werte sind einstellbar —
+   das Haus weiss besser als die Software, was bei ihm Abschnitt ist. */
+DB.tol = art => { const l = DB.lager.find(x => x.art === art) || {};
+  return { prozent: l.tolProzent ?? DB.toleranz.prozent,
+           menge:   l.tolMenge   ?? DB.toleranz.menge,
+           eigen:   l.tolProzent !== undefined || l.tolMenge !== undefined }; };
 DB.zAuff = (z, art) => { const w = z.werte[art];
   if (!w) return false;
+  const t = DB.tol(art);
   const d = Math.abs(w.gezaehlt - w.erwartet);
-  return d > 0.5 && d / Math.max(1, w.erwartet) > 0.04; };
+  return d > t.menge && d / Math.max(1, w.erwartet) * 100 > t.prozent; };
 // der Tag als Ganzes: Summe der Fehlmengen in Franken
 DB.zTagWert = z => DB.lager.reduce((s, l) => s + Math.min(0, DB.zWert(z, l.art)), 0);
 
@@ -1530,7 +1540,8 @@ const HILFE = {
     'Der Kalender darunter zeigt jede Zählung im Monat. Grün heisst im Rahmen der Waage, orange heisst Fehlmenge — so sehen Sie nicht nur DASS etwas fehlt, sondern ab welcher Woche.',
     'Auf einen Artikel einschränken zeigt dessen Verlauf: Butter lag wochenlang bei −0.3 kg und am 07.09. plötzlich bei −2.4 kg. Dazwischen liegt eine Woche, in der jemand nachschauen kann.',
     'Einen Tag anklicken öffnet die ganze Zählung dieses Tages, verglichen mit der Zählung davor.',
-    'Auffällig heisst mehr als 4 % und mehr als eine halbe Einheit — Prozent allein schlägt bei kleinen Beständen schon bei der Waagenrundung aus. Grün heisst also «klein», nicht «null».',
+    'Die Toleranz gehört Ihnen: oben beim Kalender für alle Artikel — in Prozent und als Mindestmenge, weil Prozent allein bei kleinen Beständen schon bei der Waagenrundung ausschlägt — und in der Bilanztabelle je Artikel. Beim Eglifilet stehen 8 %, weil Filetieren Abschnitt kostet.',
+    'Die Einstellung rechnet sofort durch: bei 2 % sind 11 der 13 Zählungen auffällig, bei 10 % nur 3. So sehen Sie, wo Ihre eigene Grenze liegt, statt sie von der Software vorgesetzt zu bekommen. Grün heisst «klein», nicht «null».',
     'Genau darum steht unter dem Kalender die Summe über alle Zählungen: die kleinen, grünen Differenzen kosten in drei Monaten mehr als die vier Vorfälle zusammen. Eine Zeile dort anklicken schränkt den Kalender auf diesen Artikel ein.',
   ],
   aktionen: [
@@ -2137,12 +2148,18 @@ VIEWS.lager = () => {
   const bilanz = `<div class="card" style="margin-top:16px">
     <div class="wl"><span>Über alle ${DB.zaehlungen.length} Zählungen</span>
       <span class="r2">seit dem ${esc(DB.eroeffnet)}</span></div>
-    <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Fehlt zusammen</th>
+    <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Toleranz</th>
+      <th class="r">Fehlt zusammen</th>
       <th class="r">Wert</th><th class="r">davon aus Fehlmengen</th>
       <th class="r">davon im Rahmen</th></tr></thead><tbody>
       ${bilanzZeilen.map(b => `<tr class="click ${LAGER_ART === b.l.art ? 'gewaehlt' : ''}"
           data-lartrow="${b.l.art}">
         <td><b>${esc(DB.artikel[b.l.art].name.split(',')[0])}</b></td>
+        <td class="r num"><input type="number" step="0.5" min="0" max="50"
+            style="width:64px;text-align:right" data-tolart="${b.l.art}"
+            value="${DB.tol(b.l.art).prozent}"
+            ${DB.tol(b.l.art).eigen ? 'style="width:64px;text-align:right;border-color:var(--acc);background:var(--okbg);color:var(--acci);font-weight:650"' : ''}>
+          <span class="muted small">%</span></td>
         <td class="r num">${b.summe > 0 ? '+' : '−'}${Math.abs(b.summe).toFixed(1)} ${esc(b.l.einheit)}</td>
         <td class="r num" style="font-weight:650">${chf(b.wert)}</td>
         <td class="r num muted">${b.vorfaelle.length
@@ -2150,7 +2167,10 @@ VIEWS.lager = () => {
           : 'keine'}</td>
         <td class="r num muted">${chf(b.kleinWert)} · ${b.klein.length}×</td></tr>`).join('')}
       </tbody></table></div>
-    <div class="small muted" style="margin-top:11px;line-height:1.6">Eine Differenz von −0.4 l ist grün,
+    <div class="small muted" style="margin-top:11px;line-height:1.6">Die Toleranz ist Ihre Entscheidung:
+      oben für alle Artikel, in der Spalte je Artikel — beim Eglifilet stehen ${DB.tol('egli').prozent} %,
+      weil Filetieren Abschnitt kostet. Alles darunter ist grün.
+      Eine Differenz von −0.4 l ist grün,
       weil sie in der Waage liegt — nicht, weil sie nichts kostet. Dreizehn Mal −0.4 sind
       ${chf(Math.abs(bilanzZeilen.reduce((s, b) => s + b.kleinWert, 0)))} in drei Monaten, ohne dass je
       ein Alarm nötig war. Die Fehlmengen daneben sind die Fälle, bei denen es sich lohnt,
@@ -2168,7 +2188,8 @@ VIEWS.lager = () => {
         <div class="d">${auffHeute} von ${DB.lager.length} auffällig</div></div>
       <div class="card kpi"><div class="l">Zählungen mit Fehlmenge</div>
         <div class="n">${vorfaelle} von ${DB.zaehlungen.length}</div>
-        <div class="d">mehr als 4 % und eine halbe Einheit</div></div></div>
+        <div class="d">mehr als ${DB.toleranz.prozent} % und ${DB.toleranz.menge} Einheiten${
+          DB.lager.some(l => DB.tol(l.art).eigen) ? ', wo nichts anderes gesetzt ist' : ''}</div></div></div>
     <div class="sec">Die Zählung von heute früh</div>
     <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Erwartet</th>
       <th class="r">Gezählt</th><th class="r">Differenz</th><th class="r">Wert</th>
@@ -2177,11 +2198,22 @@ VIEWS.lager = () => {
       Kennzahlen oben rechnen sofort mit.</div>
     <div class="sec" style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">Kalender
       <span class="tabs" style="margin-bottom:0">${monatTabs}</span>
-      ${artSelect}</div>
+      ${artSelect}
+      <label class="rfilter ${DB.toleranz.prozent !== 4 ? 'an' : ''}"><span>Toleranz %</span>
+        <input type="number" step="0.5" min="0" max="50" style="width:78px;text-align:right"
+          data-tolp="1" value="${DB.toleranz.prozent}"></label>
+      <label class="rfilter ${DB.toleranz.menge !== 0.5 ? 'an' : ''}"><span>Mindestmenge</span>
+        <input type="number" step="0.1" min="0" style="width:78px;text-align:right"
+          data-tolm="1" value="${DB.toleranz.menge}"></label>
+      ${(DB.toleranz.prozent !== 4 || DB.toleranz.menge !== 0.5
+         || DB.lager.some(l => DB.tol(l.art).eigen && l.art !== 'egli'))
+        ? '<button class="btn" data-tolreset="1" style="align-self:flex-end">Toleranz zurücksetzen</button>'
+        : ''}</div>
     <div class="kkopf">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(t => `<div>${t}</div>`).join('')}</div>
     <div class="kgrid">${zellen.join('')}</div>
     <div class="klegende">
-      <span><i class="freigegeben"></i>im Rahmen — unter 4 % und unter einer halben Einheit</span>
+      <span><i class="freigegeben"></i>im Rahmen — unter ${DB.toleranz.prozent} % und unter
+        ${DB.toleranz.menge} ${LAGER_ART ? esc(DB.lager.find(l => l.art === LAGER_ART).einheit) : 'Einheiten'}</span>
       <span><i class="entwurf"></i>Fehlmenge — darüber</span>
       <span class="muted">${LAGER_ART
         ? `Zahl = Differenz bei ${esc(DB.artikel[LAGER_ART].name.split(',')[0])}`
@@ -3890,8 +3922,14 @@ document.addEventListener('click', e => {
     RECH_DOK = null; render(); return; }
   const lm = e.target.closest('[data-lmonat]');
   if (lm) { LAGER_MONAT = +lm.dataset.lmonat; LAGER_TAG = null; render(); return; }
+  if (e.target.closest('[data-tolreset]')) {
+    DB.toleranz = { prozent: 4, menge: 0.5 };
+    DB.lager.forEach(l => { delete l.tolProzent; delete l.tolMenge; });
+    DB.lager.find(l => l.art === 'egli').tolProzent = 8;   // die Vorgabe des Hauses bleibt
+    render(); return; }
   const lr = e.target.closest('[data-lartrow]');
-  if (lr) { LAGER_ART = LAGER_ART === lr.dataset.lartrow ? '' : lr.dataset.lartrow;
+  if (lr && !e.target.closest('input')) {
+    LAGER_ART = LAGER_ART === lr.dataset.lartrow ? '' : lr.dataset.lartrow;
     LAGER_TAG = null; render(); return; }
   const lt = e.target.closest('[data-ltag]');
   if (lt) { LAGER_TAG = LAGER_TAG === lt.dataset.ltag ? null : lt.dataset.ltag; render(); return; }
@@ -3932,7 +3970,8 @@ document.addEventListener('click', e => {
    formatted value from DB. Typing «38» therefore produced «3.008» and needed a
    click between digits. Keep the typed text and the focus; formatting waits for
    the field to be left. */
-const TIPPFELDER = ['data-count', 'data-karte', 'data-kartepreis',
+const TIPPFELDER = ['data-count', 'data-tolp', 'data-tolm', 'data-tolart',
+                   'data-karte', 'data-kartepreis',
                    'data-posttext', 'data-posttags', 'data-postalt', 'data-postdatum',
                    'data-antwort', 'data-rsuche'];
 
@@ -3954,6 +3993,13 @@ function renderTippend(el) {
 }
 
 document.addEventListener('input', e => {
+  const tp = e.target.closest('[data-tolp]');
+  if (tp) { DB.toleranz.prozent = Math.max(0, +tp.value || 0); renderTippend(tp); return; }
+  const tm = e.target.closest('[data-tolm]');
+  if (tm) { DB.toleranz.menge = Math.max(0, +tm.value || 0); renderTippend(tm); return; }
+  const ta = e.target.closest('[data-tolart]');
+  if (ta) { const l = DB.lager.find(x => x.art === ta.dataset.tolart);
+    l.tolProzent = Math.max(0, +ta.value || 0); renderTippend(ta); return; }
   const c = e.target.closest('[data-count]');
   if (c) { DB.zaehlungHeute().werte[c.dataset.count].gezaehlt = +c.value || 0;
            renderTippend(c); return; }
