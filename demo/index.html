@@ -136,6 +136,10 @@ th.r,td.r{text-align:right}
 .rfilter > span{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--dim)}
 .rfilter select,.rfilter input{font-size:12.5px;padding:7px 9px;max-width:100%}
+/* a filter that is doing something says so */
+.rfilter.an > span{color:var(--acci)}
+.rfilter.an select,.rfilter.an input{border-color:var(--acc);background:var(--okbg);
+  color:var(--acci);font-weight:650;box-shadow:0 0 0 2px rgba(0,178,160,.10)}
 .rerg{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:baseline;font-size:12.5px;
   padding:0 2px 14px}
 .rerg b{font-size:15px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
@@ -1590,7 +1594,10 @@ function alleRechnungen() {
    article opens a panel about it: a price path straight out of the documents,
    not a second number kept somewhere else.
    ────────────────────────────────────────────────────────────────────────── */
-const RFELD = (name, wert, attr, optionen) => `<label class="rfilter">
+/* A set filter lights up: on a bar with eight controls you otherwise cannot see
+   why the list is short. «aktiv» is «anything but the default». */
+const RFELD = (name, wert, attr, optionen, standard = '') => `<label
+  class="rfilter ${String(wert) !== String(standard) ? 'an' : ''}">
   <span>${esc(name)}</span>
   <select data-rf="${attr}">${optionen.map(([v, t]) =>
     `<option value="${esc(v)}" ${String(v) === String(wert) ? 'selected' : ''}>${esc(t)}</option>`
@@ -1615,7 +1622,7 @@ function rechFilterbar(alle) {
       const opt = MONATE.map((n, i) => { const c = zahl(i + 1);
         return `<option value="${i + 1}" ${String(i + 1) === String(RECH_F.monat) ? 'selected' : ''}
           ${c ? '' : 'disabled'}>${n}${c ? ` (${c})` : ' —'}</option>`; }).join('');
-      return `<label class="rfilter"><span>Monat</span>
+      return `<label class="rfilter ${RECH_F.monat ? 'an' : ''}"><span>Monat</span>
         <select data-rf="monat"><option value="" ${RECH_F.monat ? '' : 'selected'}
           >Alle Monate</option>${opt}</select></label>`;
     })()}
@@ -1627,17 +1634,20 @@ function rechFilterbar(alle) {
     ${RFELD('Betrag', RECH_F.betrag, 'betrag', [['', 'Beliebig'], ['0-500', 'bis CHF 500'],
       ['500-1500', 'CHF 500 – 1500'], ['1500-', 'über CHF 1500']])}
     ${RFELD('Sortierung', RECH_F.sort, 'sort', [['datum', 'Neueste zuerst'], ['alt', 'Älteste zuerst'],
-      ['betrag', 'Grösste zuerst'], ['lief', 'Nach Lieferant']])}
-    <label class="rfilter" style="flex:1 1 220px">
+      ['betrag', 'Grösste zuerst'], ['lief', 'Nach Lieferant']], 'datum')}
+    <label class="rfilter ${RECH_F.q.trim() ? 'an' : ''}" style="flex:1 1 200px">
       <span>Freitext</span>
       <input data-rsuche="1" id="rsuche" type="text" value="${esc(RECH_F.q)}"
         placeholder="Nummer, Notiz, Betrag …"></label>
-    ${rechAktiv() ? '<button class="btn" data-rreset="1" style="align-self:flex-end">Zurücksetzen</button>' : ''}
+    <button class="btn ${rechAktiv() ? 'acc' : ''}" data-rreset="1" ${rechAktiv() ? '' : 'disabled'}
+      style="align-self:flex-end">Filter zurücksetzen${rechAktiv() ? ` (${rechAnzahl()})` : ''}</button>
   </div>`;
 }
 // sorting is not a filter, but «Zurücksetzen» has to be reachable after it too
-const rechAktiv = () => !!(RECH_F.lief || RECH_F.art || RECH_F.jahr || RECH_F.monat || RECH_F.zeit
-                        || RECH_F.status || RECH_F.betrag || RECH_F.q.trim() || RECH_F.sort !== 'datum');
+const rechAnzahl = () => [RECH_F.lief, RECH_F.art, RECH_F.jahr, RECH_F.monat, RECH_F.zeit,
+                          RECH_F.status, RECH_F.betrag, RECH_F.q.trim(),
+                          RECH_F.sort !== 'datum' ? 'sort' : ''].filter(Boolean).length;
+const rechAktiv = () => rechAnzahl() > 0;
 
 /* free text still searches everything, including the articles on the lines */
 function rechText(r, q) {
