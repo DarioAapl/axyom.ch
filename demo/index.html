@@ -303,6 +303,11 @@ tr.gewaehlt td{background:var(--wash)}
 .kpost.gewaehlt{border-color:currentColor}
 /* eine Zählung im Kalender */
 .ktag.gezaehlt{border-color:var(--line)}
+.zahnrad{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.zahnrad:hover{border-color:var(--acc);color:var(--acci);background:var(--wash)}
+.zahnrad.an{background:var(--acc);border-color:var(--acc);color:#fff}
+.zutatform{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;padding:0 16px}
 .zpost{display:block;width:100%;text-align:left;font-family:inherit;font-size:10.5px;font-weight:650;
   line-height:1.3;padding:5px 7px;border-radius:6px;cursor:pointer;border:1px solid transparent}
 .zpost.ok{background:var(--okbg);color:var(--acci)}
@@ -1205,6 +1210,9 @@ const pct = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n).toFixed(1) + '
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const TICK = '<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="#fff" ' +
   'stroke-width="2.6" stroke-linecap="round"><path d="M4 10.5l4 4 8-9"/></svg>';
+// Zahnrad: Zutat und Toleranz bearbeiten
+const ZAHNRAD = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" ' +
+  'fill-rule="evenodd"><path d="M6.56,1.05 L9.44,1.05 L9.11,2.77 L10.92,3.51 L11.90,2.07 L13.93,4.10 L12.49,5.08 L13.23,6.89 L14.95,6.56 L14.95,9.44 L13.23,9.11 L12.49,10.92 L13.93,11.90 L11.90,13.93 L10.92,12.49 L9.11,13.23 L9.44,14.95 L6.56,14.95 L6.89,13.23 L5.08,12.49 L4.10,13.93 L2.07,11.90 L3.51,10.92 L2.77,9.11 L1.05,9.44 L1.05,6.56 L2.77,6.89 L3.51,5.08 L2.07,4.10 L4.10,2.07 L5.08,3.51 L6.89,2.77 Z M8 5.2a2.8 2.8 0 100 5.6 2.8 2.8 0 000-5.6Z"/></svg>';
 
 /* A card entry, resolved: an entry with «ref» is a dish, and its price is the
    one Gerichte works with — read through, never copied. */
@@ -1310,6 +1318,7 @@ let RECH_DOK = null;     // the invoice shown as a document
 let LAGER_MONAT = 9;     // der Monat im Zähl-Kalender
 let LAGER_ART = '';      // auf einen Artikel eingeschränkt
 let LAGER_TAG = null;    // die geöffnete Zählung
+let LAGER_EDIT = null;   // die Zutat, die bearbeitet wird
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
 /* How urgent a module's open count is: 3 = now, 2 = today, 1 = can wait.
@@ -1540,7 +1549,7 @@ const HILFE = {
     'Der Kalender darunter zeigt jede Zählung im Monat. Grün heisst im Rahmen der Waage, orange heisst Fehlmenge — so sehen Sie nicht nur DASS etwas fehlt, sondern ab welcher Woche.',
     'Auf einen Artikel einschränken zeigt dessen Verlauf: Butter lag wochenlang bei −0.3 kg und am 07.09. plötzlich bei −2.4 kg. Dazwischen liegt eine Woche, in der jemand nachschauen kann.',
     'Einen Tag anklicken öffnet die ganze Zählung dieses Tages, verglichen mit der Zählung davor.',
-    'Die Toleranz gehört Ihnen: oben beim Kalender für alle Artikel — in Prozent und als Mindestmenge, weil Prozent allein bei kleinen Beständen schon bei der Waagenrundung ausschlägt — und in der Bilanztabelle je Artikel. Beim Eglifilet stehen 8 %, weil Filetieren Abschnitt kostet.',
+    'Das Zahnrad links neben jeder Zutat öffnet sie: Bezeichnung, Packungsgrösse und die eigene Toleranz — in Prozent und als Mindestmenge, weil Prozent allein bei kleinen Beständen schon bei der Waagenrundung ausschlägt. Beim Eglifilet stehen 8 %, weil Filetieren Abschnitt kostet, bei Kartoffeln reichen 4 %.',
     'Die Einstellung rechnet sofort durch: bei 2 % sind 11 der 13 Zählungen auffällig, bei 10 % nur 3. So sehen Sie, wo Ihre eigene Grenze liegt, statt sie von der Software vorgesetzt zu bekommen. Grün heisst «klein», nicht «null».',
     'Genau darum steht unter dem Kalender die Summe über alle Zählungen: die kleinen, grünen Differenzen kosten in drei Monaten mehr als die vier Vorfälle zusammen. Eine Zeile dort anklicken schränkt den Kalender auf diesen Artikel ein.',
   ],
@@ -2052,8 +2061,13 @@ VIEWS.lager = () => {
   const zeilen = DB.lager.map(l => {
     const a = DB.artikel[l.art], w = heute.werte[l.art];
     const d = DB.zDiff(heute, l.art), auff = DB.zAuff(heute, l.art);
-    return `<tr>
-      <td><b>${esc(a.name.split(',')[0])}</b></td>
+    const t = DB.tol(l.art);
+    const auf = LAGER_EDIT === l.art;
+    return `<tr class="${auf ? 'gewaehlt' : ''}">
+      <td style="width:34px"><button class="zahnrad ${auf ? 'an' : ''}" data-lagerset="${l.art}"
+        title="Zutat und Toleranz bearbeiten">${ZAHNRAD}</button></td>
+      <td><b>${esc(a.name.split(',')[0])}</b>
+        ${t.eigen ? `<span class="muted small"> · Toleranz ${t.prozent} %</span>` : ''}</td>
       <td class="r num muted">${w.erwartet.toFixed(1)} ${esc(l.einheit)}</td>
       <td class="r num"><input style="width:74px;text-align:right" type="number" step="0.1"
             value="${w.gezaehlt}" data-count="${l.art}"></td>
@@ -2061,7 +2075,38 @@ VIEWS.lager = () => {
         >${d > 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}</td>
       <td class="r num muted">${chf(DB.zWert(heute, l.art))}</td>
       <td class="r">${auff ? '<span class="tag t-warn">nachschauen</span>'
-                           : '<span class="tag t-ok">im Rahmen</span>'}</td></tr>`;
+                           : '<span class="tag t-ok">im Rahmen</span>'}</td></tr>
+      ${auf ? `<tr class="detailzeile"><td colspan="7">
+        <div class="detailkopf"><span class="dpfeil">↳</span><b>${esc(a.name)}</b>
+          <span class="muted">Zutat und Toleranz</span>
+          <button class="btn" data-lagersetzu="1" style="margin-left:auto">Schliessen</button></div>
+        <div class="zutatform">
+          <label class="rfilter" style="flex:1 1 240px"><span>Bezeichnung</span>
+            <input type="text" data-zname="${l.art}" value="${esc(a.name)}"></label>
+          <label class="rfilter"><span>Packungsgrösse</span>
+            <input type="number" step="0.5" min="0.1" style="width:96px;text-align:right"
+              data-zmenge="${l.art}" value="${a.menge}"></label>
+          <label class="rfilter"><span>Einheit</span>
+            <input type="text" style="width:72px" data-zeinheit="${l.art}" value="${esc(a.einheit)}"></label>
+          <label class="rfilter ${t.eigen ? 'an' : ''}"><span>Toleranz %</span>
+            <input type="number" step="0.5" min="0" max="50" style="width:84px;text-align:right"
+              data-ztolp="${l.art}" value="${t.prozent}"></label>
+          <label class="rfilter ${t.eigen ? 'an' : ''}"><span>Mindestmenge</span>
+            <input type="number" step="0.1" min="0" style="width:96px;text-align:right"
+              data-ztolm="${l.art}" value="${t.menge}"></label>
+          ${t.eigen ? `<button class="btn" data-ztolreset="${l.art}"
+            style="align-self:flex-end">Auf ${DB.toleranz.prozent} % / ${DB.toleranz.menge} zurück</button>` : ''}
+        </div>
+        <div class="small muted" style="padding:10px 16px 0;max-width:86ch;line-height:1.6">
+          Die Toleranz gehört dem Haus: eine Küche, die Fisch filetiert, hat beim Fisch einen anderen
+          Abschnitt als bei Kartoffeln. Beides muss überschritten sein — Prozent allein schlägt bei
+          kleinen Beständen schon bei der Waagenrundung aus.
+          <b>Jetzt: ${DB.zaehlungen.filter(z => DB.zAuff(z, l.art)).length} von
+          ${DB.zaehlungen.length} Zählungen auffällig</b> bei ${t.prozent} % und ${t.menge}
+          ${esc(l.einheit)}.<br>
+          Geliefert von <b>${esc(a.lief)}</b> · zuletzt bezahlt ${chf(a.bezahlt)} pro Packung ·
+          <span class="link" data-go="rechnungen">Rechnungen ansehen</span>. Preis und Lieferant kommen
+          aus den Rechnungen und werden dort entschieden, nicht hier.</div></td></tr>` : ''}`;
   }).join('');
 
   /* ── the calendar of counts ── */
@@ -2148,18 +2193,12 @@ VIEWS.lager = () => {
   const bilanz = `<div class="card" style="margin-top:16px">
     <div class="wl"><span>Über alle ${DB.zaehlungen.length} Zählungen</span>
       <span class="r2">seit dem ${esc(DB.eroeffnet)}</span></div>
-    <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Toleranz</th>
-      <th class="r">Fehlt zusammen</th>
+    <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Fehlt zusammen</th>
       <th class="r">Wert</th><th class="r">davon aus Fehlmengen</th>
       <th class="r">davon im Rahmen</th></tr></thead><tbody>
       ${bilanzZeilen.map(b => `<tr class="click ${LAGER_ART === b.l.art ? 'gewaehlt' : ''}"
           data-lartrow="${b.l.art}">
         <td><b>${esc(DB.artikel[b.l.art].name.split(',')[0])}</b></td>
-        <td class="r num"><input type="number" step="0.5" min="0" max="50"
-            style="width:64px;text-align:right" data-tolart="${b.l.art}"
-            value="${DB.tol(b.l.art).prozent}"
-            ${DB.tol(b.l.art).eigen ? 'style="width:64px;text-align:right;border-color:var(--acc);background:var(--okbg);color:var(--acci);font-weight:650"' : ''}>
-          <span class="muted small">%</span></td>
         <td class="r num">${b.summe > 0 ? '+' : '−'}${Math.abs(b.summe).toFixed(1)} ${esc(b.l.einheit)}</td>
         <td class="r num" style="font-weight:650">${chf(b.wert)}</td>
         <td class="r num muted">${b.vorfaelle.length
@@ -2167,10 +2206,7 @@ VIEWS.lager = () => {
           : 'keine'}</td>
         <td class="r num muted">${chf(b.kleinWert)} · ${b.klein.length}×</td></tr>`).join('')}
       </tbody></table></div>
-    <div class="small muted" style="margin-top:11px;line-height:1.6">Die Toleranz ist Ihre Entscheidung:
-      oben für alle Artikel, in der Spalte je Artikel — beim Eglifilet stehen ${DB.tol('egli').prozent} %,
-      weil Filetieren Abschnitt kostet. Alles darunter ist grün.
-      Eine Differenz von −0.4 l ist grün,
+    <div class="small muted" style="margin-top:11px;line-height:1.6">Eine Differenz von −0.4 l ist grün,
       weil sie in der Waage liegt — nicht, weil sie nichts kostet. Dreizehn Mal −0.4 sind
       ${chf(Math.abs(bilanzZeilen.reduce((s, b) => s + b.kleinWert, 0)))} in drei Monaten, ohne dass je
       ein Alarm nötig war. Die Fehlmengen daneben sind die Fälle, bei denen es sich lohnt,
@@ -2191,29 +2227,21 @@ VIEWS.lager = () => {
         <div class="d">mehr als ${DB.toleranz.prozent} % und ${DB.toleranz.menge} Einheiten${
           DB.lager.some(l => DB.tol(l.art).eigen) ? ', wo nichts anderes gesetzt ist' : ''}</div></div></div>
     <div class="sec">Die Zählung von heute früh</div>
-    <div class="scrollx"><table><thead><tr><th>Artikel</th><th class="r">Erwartet</th>
+    <div class="scrollx"><table><thead><tr><th></th><th>Artikel</th><th class="r">Erwartet</th>
       <th class="r">Gezählt</th><th class="r">Differenz</th><th class="r">Wert</th>
       <th class="r">Status</th></tr></thead><tbody>${zeilen}</tbody></table></div>
     <div class="small muted" style="margin-top:10px">Eine Zahl ändern — Differenz, Wert und die
-      Kennzahlen oben rechnen sofort mit.</div>
+      Kennzahlen oben rechnen sofort mit. Das Zahnrad links öffnet die Zutat: Bezeichnung,
+      Packungsgrösse und die Toleranz, ab der eine Differenz auffällig ist.</div>
     <div class="sec" style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">Kalender
       <span class="tabs" style="margin-bottom:0">${monatTabs}</span>
-      ${artSelect}
-      <label class="rfilter ${DB.toleranz.prozent !== 4 ? 'an' : ''}"><span>Toleranz %</span>
-        <input type="number" step="0.5" min="0" max="50" style="width:78px;text-align:right"
-          data-tolp="1" value="${DB.toleranz.prozent}"></label>
-      <label class="rfilter ${DB.toleranz.menge !== 0.5 ? 'an' : ''}"><span>Mindestmenge</span>
-        <input type="number" step="0.1" min="0" style="width:78px;text-align:right"
-          data-tolm="1" value="${DB.toleranz.menge}"></label>
-      ${(DB.toleranz.prozent !== 4 || DB.toleranz.menge !== 0.5
-         || DB.lager.some(l => DB.tol(l.art).eigen && l.art !== 'egli'))
-        ? '<button class="btn" data-tolreset="1" style="align-self:flex-end">Toleranz zurücksetzen</button>'
-        : ''}</div>
+      ${artSelect}</div>
     <div class="kkopf">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(t => `<div>${t}</div>`).join('')}</div>
     <div class="kgrid">${zellen.join('')}</div>
     <div class="klegende">
-      <span><i class="freigegeben"></i>im Rahmen — unter ${DB.toleranz.prozent} % und unter
-        ${DB.toleranz.menge} ${LAGER_ART ? esc(DB.lager.find(l => l.art === LAGER_ART).einheit) : 'Einheiten'}</span>
+      <span><i class="freigegeben"></i>im Rahmen — unter ${LAGER_ART ? DB.tol(LAGER_ART).prozent : DB.toleranz.prozent} %
+        und unter ${LAGER_ART ? DB.tol(LAGER_ART).menge : DB.toleranz.menge}
+        ${LAGER_ART ? esc(DB.lager.find(l => l.art === LAGER_ART).einheit) : 'Einheiten'}</span>
       <span><i class="entwurf"></i>Fehlmenge — darüber</span>
       <span class="muted">${LAGER_ART
         ? `Zahl = Differenz bei ${esc(DB.artikel[LAGER_ART].name.split(',')[0])}`
@@ -3922,11 +3950,13 @@ document.addEventListener('click', e => {
     RECH_DOK = null; render(); return; }
   const lm = e.target.closest('[data-lmonat]');
   if (lm) { LAGER_MONAT = +lm.dataset.lmonat; LAGER_TAG = null; render(); return; }
-  if (e.target.closest('[data-tolreset]')) {
-    DB.toleranz = { prozent: 4, menge: 0.5 };
-    DB.lager.forEach(l => { delete l.tolProzent; delete l.tolMenge; });
-    DB.lager.find(l => l.art === 'egli').tolProzent = 8;   // die Vorgabe des Hauses bleibt
+  const ls = e.target.closest('[data-lagerset]');
+  if (ls) { LAGER_EDIT = LAGER_EDIT === ls.dataset.lagerset ? null : ls.dataset.lagerset;
     render(); return; }
+  if (e.target.closest('[data-lagersetzu]')) { LAGER_EDIT = null; render(); return; }
+  const zr = e.target.closest('[data-ztolreset]');
+  if (zr) { const l = DB.lager.find(x => x.art === zr.dataset.ztolreset);
+    delete l.tolProzent; delete l.tolMenge; render(); return; }
   const lr = e.target.closest('[data-lartrow]');
   if (lr && !e.target.closest('input')) {
     LAGER_ART = LAGER_ART === lr.dataset.lartrow ? '' : lr.dataset.lartrow;
@@ -3970,8 +4000,8 @@ document.addEventListener('click', e => {
    formatted value from DB. Typing «38» therefore produced «3.008» and needed a
    click between digits. Keep the typed text and the focus; formatting waits for
    the field to be left. */
-const TIPPFELDER = ['data-count', 'data-tolp', 'data-tolm', 'data-tolart',
-                   'data-karte', 'data-kartepreis',
+const TIPPFELDER = ['data-count', 'data-zname', 'data-zmenge', 'data-zeinheit',
+                   'data-ztolp', 'data-ztolm', 'data-karte', 'data-kartepreis',
                    'data-posttext', 'data-posttags', 'data-postalt', 'data-postdatum',
                    'data-antwort', 'data-rsuche'];
 
@@ -3993,13 +4023,19 @@ function renderTippend(el) {
 }
 
 document.addEventListener('input', e => {
-  const tp = e.target.closest('[data-tolp]');
-  if (tp) { DB.toleranz.prozent = Math.max(0, +tp.value || 0); renderTippend(tp); return; }
-  const tm = e.target.closest('[data-tolm]');
-  if (tm) { DB.toleranz.menge = Math.max(0, +tm.value || 0); renderTippend(tm); return; }
-  const ta = e.target.closest('[data-tolart]');
-  if (ta) { const l = DB.lager.find(x => x.art === ta.dataset.tolart);
-    l.tolProzent = Math.max(0, +ta.value || 0); renderTippend(ta); return; }
+  /* der Zutat-Editor: Bezeichnung, Packung, Toleranz */
+  const zf = ['zname', 'zmenge', 'zeinheit', 'ztolp', 'ztolm']
+    .map(k => [k, e.target.closest(`[data-${k}]`)]).find(([, el]) => el);
+  if (zf) {
+    const [feld, el] = zf, key = el.dataset[feld];
+    const a = DB.artikel[key], l = DB.lager.find(x => x.art === key);
+    if (feld === 'zname') a.name = el.value;
+    else if (feld === 'zmenge') a.menge = Math.max(0.1, +el.value || a.menge);
+    else if (feld === 'zeinheit') { a.einheit = el.value; l.einheit = el.value; }
+    else if (feld === 'ztolp') l.tolProzent = Math.max(0, +el.value || 0);
+    else l.tolMenge = Math.max(0, +el.value || 0);
+    renderTippend(el); return;
+  }
   const c = e.target.closest('[data-count]');
   if (c) { DB.zaehlungHeute().werte[c.dataset.count].gezaehlt = +c.value || 0;
            renderTippend(c); return; }
