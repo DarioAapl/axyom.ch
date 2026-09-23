@@ -112,6 +112,9 @@ th.r,td.r{text-align:right}
 .sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
      margin:26px 0 11px}
 .sec:first-child{margin-top:0}
+/* a heading that carries tabs and a sentence has to be allowed to wrap, or it
+   pushes a phone sideways */
+.sec > span{min-width:0}
 .muted{color:var(--dim)}
 .small{font-size:12px}
 .bar{height:6px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden}
@@ -121,6 +124,34 @@ th.r,td.r{text-align:right}
 .check.on{background:var(--acc);border-color:var(--acc)}
 .check svg{display:none}.check.on svg{display:block}
 .link{color:var(--acci);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ── an invoice as the document it is ──────────────────────────────────────
+   A customer asks «und wie sieht das aus, wenn es reinkommt?» — this is the
+   answer: the supplier's paper, beside what Axyom read out of it.
+   ────────────────────────────────────────────────────────────────────────── */
+.dokzeile{display:flex;gap:16px;align-items:flex-start}
+.rdoc{flex:1 1 560px;min-width:0;background:#fffefb;border:1px solid var(--line);border-radius:6px;
+  padding:26px 28px;font-size:12px;line-height:1.55;box-shadow:0 2px 14px rgba(0,0,0,.05)}
+.rdpruef{flex:0 1 300px;min-width:0}
+.rdkopf{display:flex;justify-content:space-between;gap:24px;padding-bottom:18px;
+  border-bottom:1px solid rgba(0,0,0,.1)}
+.rdkopf b{font-size:13px}
+.rdmeta{text-align:right;flex:none}
+.rdmeta div{display:flex;gap:12px;justify-content:flex-end;font-size:11.5px}
+.rdmeta span{color:var(--dim)}
+.rdan{margin:18px 0 22px;font-size:12px}
+.rdtab{width:100%;border-collapse:collapse}
+.rdtab th{font-size:10px;letter-spacing:.04em;padding:0 8px 7px;border-bottom:1px solid rgba(0,0,0,.12)}
+.rdtab td{font-size:12px;padding:8px;border-bottom:1px solid rgba(0,0,0,.06)}
+.rdsumme{margin-top:16px;margin-left:auto;width:250px}
+.rdsumme div{display:flex;justify-content:space-between;font-size:12px;padding:4px 0}
+.rdsumme .tot{border-top:1px solid rgba(0,0,0,.2);margin-top:5px;padding-top:7px;font-size:13.5px}
+.rdsumme .tot b{font-weight:800}
+.rdfuss{margin-top:22px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08);font-size:10.5px;
+  color:var(--dim)}
+.rdpruef .pz{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;line-height:1.5;padding:4px 0}
+.rdpruef .pj{color:var(--acci);font-weight:700;flex:none}
+@media (max-width:1100px){ .dokzeile{flex-direction:column} .rdpruef{flex:1 1 auto;width:100%} }
 
 /* ── the weekly report ─────────────────────────────────────────────────────
    Four stacked blocks of numbers answered «what happened» and nothing else.
@@ -549,7 +580,15 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
    week.
    ────────────────────────────────────────────────────────────────────────── */
 const DB = {
-  today: '18.03.',
+  /* The house opened on 1 July 2026 and today is Wednesday 23 September 2026 —
+     twelve closed weeks behind it. Fixed on purpose: a demo you cannot rehearse
+     is a demo that surprises you in front of a customer. */
+  today: '23.09.',
+  heuteTag: 'Mi',
+  jahr: 2026,
+  eroeffnet: '01.07.2026',
+  monat: 'September',
+  monate: [{ nr: 7, name: 'Juli' }, { nr: 8, name: 'August' }, { nr: 9, name: 'September' }],
   outlets: ['Gaststube', 'Bahnhof', 'Gartensaal'],
   user: 'Marco B.',
 
@@ -573,26 +612,26 @@ const DB = {
 
   // invoices: lines reference articles, so matching is a real comparison
   rechnungen: [
-    { id:'R-20418', lief:'Muster Gemüse AG',   datum:'14.03.', total:1284.60, status:'ok',
+    { id:'R-24418', lief:'Muster Gemüse AG',   datum:'22.09.', total:1284.60, status:'ok',
       zeilen:[ {art:'kartoffel', best:8, gel:8, preis:32.50}, {art:'ruebli', best:4, gel:4, preis:18.90} ] },
-    { id:'8871-C',  lief:'Molkerei Musterberg',  datum:'14.03.', total:962.15, status:'preis',
+    { id:'8871-C',  lief:'Molkerei Musterberg',  datum:'22.09.', total:962.15, status:'preis',
       zeilen:[ {art:'butter', best:6, gel:6, preis:87.80}, {art:'rahm', best:10, gel:10, preis:42.00} ] },
-    { id:'R-5512',  lief:'Metzgerei Mustermann', datum:'13.03.', total:1914.20, status:'preis',
+    { id:'R-5512',  lief:'Metzgerei Mustermann', datum:'21.09.', total:1914.20, status:'preis',
       zeilen:[ {art:'kalb', best:9, gel:9, preis:212.80} ] },
-    { id:'FZ-3390', lief:'Fischerei Mustersee',  datum:'13.03.', total:2110.00, status:'ok',
+    { id:'FZ-3390', lief:'Fischerei Mustersee',  datum:'21.09.', total:2110.00, status:'ok',
       zeilen:[ {art:'egli', best:12, gel:12, preis:96.00} ] },
-    { id:'W-7742',  lief:'Weinkeller Musterthal', datum:'13.03.', total:3487.90, status:'menge',
+    { id:'W-7742',  lief:'Weinkeller Musterthal', datum:'21.09.', total:3487.90, status:'menge',
       zeilen:[ {art:'pinot', best:20, gel:18, preis:138.00} ] },
   ],
-  gelesen: 84, // invoices read this month
+  gelesen: 0,    // wird unten aus dem Archiv gerechnet, nicht behauptet
 
   // supplier offers, matched against what is actually bought. Urgency is not
   // stored — it is read off «bis» against today (see dringend() in core).
   aktionen: [
-    { id:'a1', lief:'Muster Gemüse AG',      art:'ruebli',   neu:14.20, bis:'22.03.', monat:40, genommen:false },
-    { id:'a2', lief:'Molkerei Musterberg',   art:'rahm',     neu:35.70, bis:'19.03.', monat:34, genommen:false },
-    { id:'a3', lief:'Fischerei Mustersee',   art:'egli',     neu:81.60, bis:'20.03.', monat:18, genommen:false },
-    { id:'a4', lief:'Weinkeller Musterthal', art:'pinot',    neu:117.30, bis:'31.03.', monat:24, genommen:false },
+    { id:'a1', lief:'Muster Gemüse AG',      art:'ruebli',   neu:14.20, bis:'27.09.', monat:40, genommen:false },
+    { id:'a2', lief:'Molkerei Musterberg',   art:'rahm',     neu:35.70, bis:'24.09.', monat:34, genommen:false },
+    { id:'a3', lief:'Fischerei Mustersee',   art:'egli',     neu:81.60, bis:'25.09.', monat:18, genommen:false },
+    { id:'a4', lief:'Weinkeller Musterthal', art:'pinot',    neu:117.30, bis:'06.10.', monat:24, genommen:false },
   ],
   irrelevant: 9,
 
@@ -630,7 +669,8 @@ const DB = {
     { id:'h4', station:'Küche · Fritteuse',was:'Öltest',       wer:'', zeit:'', done:false },
     { id:'h5', station:'Bar',              was:'Eismaschine, wöchentlich', wer:'', zeit:'', done:false },
   ],
-  hygieneMonat: 248, hygieneSpaet: 3,
+  hygieneMonat: 214, hygieneSpaet: 3,   // September bis heute
+  hygieneSeit: 668,                     // seit der Eröffnung (Juli 228, August 226, September 214)
 
   // cold chain: a reading history per unit so a curve can be drawn
   geraete: [
@@ -643,10 +683,17 @@ const DB = {
   // One open alarm on purpose: the demo should show what a live problem looks
   // like before anybody presses anything. The freezer's March incident stays
   // as the closed case — that pair is the story: one handled, one waiting.
+  /* Every alarm since the house opened: five in three months, four of them
+     handled within minutes. That ratio is the argument — not that nothing ever
+     goes wrong, but that it never went unnoticed. */
   alarme: [
-    { geraet:'Barkühlschrank', wann:'18.03. 18:20', wert:9.1, an:'Anna R.', quittiert:'', grund:'Tür stand offen' },
-    { geraet:'Tiefkühler', wann:'12.03. 02:14', wert:-16.2, an:'Marco B.', quittiert:'02:21', grund:'Tür stand offen' },
+    { geraet:'Barkühlschrank', wann:'23.09. 18:20', wert:9.1,   an:'Anna R.',  quittiert:'',      grund:'Tür stand offen' },
+    { geraet:'Tiefkühler',     wann:'11.09. 02:14', wert:-16.2, an:'Marco B.', quittiert:'02:21', grund:'Tür stand offen' },
+    { geraet:'Kühlraum 2',     wann:'28.08. 14:40', wert:6.8,   an:'Luca K.',  quittiert:'14:46', grund:'Lieferung stand im Weg' },
+    { geraet:'Barkühlschrank', wann:'09.08. 23:05', wert:8.4,   an:'Anna R.',  quittiert:'23:11', grund:'Tür stand offen' },
+    { geraet:'Fischkühler',    wann:'18.07. 05:30', wert:3.6,   an:'Marco B.', quittiert:'05:38', grund:'Thermostat verstellt' },
   ],
+  alarmeSeit: 5,
 
   /* Closed weeks, as they were counted — half a year of them, so «Verlauf»
      can be filtered instead of being six points. Generated, not typed, but
@@ -661,7 +708,7 @@ const DB = {
      turns a booking count into an expectation instead of a guess. It is
      labelled as an expectation everywhere it appears. */
   naechste: {
-    ab:'23.03.', anteil:0.76,
+    ab:'28.09.', anteil:0.76,
     tage: [ { tag:'Mo', gebucht:28,  besetzt:4 }, { tag:'Di', gebucht:24,  besetzt:4 },
             { tag:'Mi', gebucht:41,  besetzt:5 }, { tag:'Do', gebucht:52,  besetzt:6 },
             { tag:'Fr', gebucht:96,  besetzt:9 }, { tag:'Sa', gebucht:118, besetzt:7 },
@@ -687,12 +734,14 @@ const DB = {
   knappAb: 15,
 
   // training: people and the modules they owe
+  /* «seit» explains the progress column: whoever started last week cannot have
+     eight modules behind them. */
   leute: [
-    { id:'p1', name:'Anna R.',   rolle:'Service', durch:6, total:6 },
-    { id:'p2', name:'Marco B.', rolle:'Küche',   durch:8, total:8 },
-    { id:'p3', name:'Luca K.',  rolle:'Küche',   durch:5, total:8 },
-    { id:'p4', name:'Tomas N.',   rolle:'Service', durch:2, total:6 },
-    { id:'p5', name:'Sofia F.',rolle:'Küche',   durch:1, total:8 },
+    { id:'p1', name:'Anna R.',  rolle:'Service', durch:6, total:6, seit:'01.07.' },
+    { id:'p2', name:'Marco B.', rolle:'Küche',   durch:8, total:8, seit:'01.07.' },
+    { id:'p3', name:'Luca K.',  rolle:'Küche',   durch:5, total:8, seit:'15.07.' },
+    { id:'p4', name:'Tomas N.', rolle:'Service', durch:2, total:6, seit:'10.08.' },
+    { id:'p5', name:'Sofia F.', rolle:'Küche',   durch:1, total:8, seit:'07.09.' },
   ],
   briefings: [
     { id:'b1', titel:'Allergene', faellig:['p4','p5'], min:4 },
@@ -738,43 +787,43 @@ const DB = {
     { id:'gbp',   name:'Google Unternehmensprofil', kurz:'Google' },
   ],
   posts: [
-    { id:'p1', datum:'08.03.', zeit:'11:00', format:'ig', status:'publiziert',
+    { id:'p1', datum:'06.09.', zeit:'11:00', format:'ig', status:'publiziert',
       titel:'Sonntagsbraten', anlass:'Wiederkehrender Beitrag', anlassWo:null,
       text:'Sonntags gibt es Braten. Reservieren lohnt sich.',
       tags:['sonntagsbraten','gaststube'], alt:'Kalbsbraten auf der Platte, angeschnitten' },
-    { id:'p2', datum:'12.03.', zeit:'17:30', format:'story', status:'publiziert',
+    { id:'p2', datum:'10.09.', zeit:'17:30', format:'story', status:'publiziert',
       titel:'Blick in die Küche', anlass:'Wiederkehrender Beitrag', anlassWo:null,
       text:'Mise en place, 17 Uhr.', tags:['küche'], alt:'Küchenposten mit vorbereiteten Zutaten' },
-    { id:'p3', datum:'14.03.', zeit:'09:00', format:'fb', status:'publiziert',
+    { id:'p3', datum:'12.09.', zeit:'09:00', format:'fb', status:'publiziert',
       titel:'Wochenkarte', anlass:'Karte geändert', anlassWo:'inhalte',
       text:'Die Karte für diese Woche steht.', tags:['wochenkarte'],
       alt:'Aufgeschlagene Karte auf einem Holztisch' },
-    { id:'p4', datum:'16.03.', zeit:'11:00', format:'ig', status:'publiziert',
+    { id:'p4', datum:'21.09.', zeit:'11:00', format:'ig', status:'publiziert',
       titel:'Frühlingsanfang', anlass:'Saisonstart', anlassWo:null,
       text:'Die ersten warmen Tage — die Terrasse wird gerichtet.',
       tags:['frühling','terrasse'], alt:'Terrasse im Morgenlicht, Stühle noch gestapelt' },
-    { id:'p5', datum:'18.03.', zeit:'11:00', format:'ig', status:'entwurf',
+    { id:'p5', datum:'23.09.', zeit:'11:00', format:'ig', status:'entwurf',
       titel:'Bärlauchrisotto ist zurück', ref:'e5',
       anlass:'Neu auf der Karte', anlassWo:'inhalte',
       text:'Der Bärlauch ist da. Ab heute im Gartensaal und in der Gaststube — solange die Saison läuft.',
       tags:['baerlauch','saisonal','gaststube'], alt:'Teller Risotto mit Bärlauch, von oben aufgenommen' },
-    { id:'p6', datum:'19.03.', zeit:'17:30', format:'story', status:'entwurf',
+    { id:'p6', datum:'24.09.', zeit:'17:30', format:'story', status:'entwurf',
       titel:'Terrasse offen', anlass:'Wetter ab Donnerstag über 18°', anlassWo:null,
       text:'Ab Donnerstag ist die Terrasse offen — 40 Plätze an der Sonne.',
       tags:['terrasse','frühling'], alt:'Terrasse mit gedeckten Tischen in der Abendsonne' },
-    { id:'p7', datum:'20.03.', zeit:'09:00', format:'fb', status:'freigegeben',
+    { id:'p7', datum:'25.09.', zeit:'09:00', format:'fb', status:'freigegeben',
       titel:'Freitag: Eglifilet', ref:'e2', anlass:'Fischlieferung Freitag bestätigt', anlassWo:'rechnungen',
       text:'Frisch aus dem See. Freitag und Samstag, solange es reicht.',
       tags:['eglifilet','fisch'], alt:'Eglifilet in der Pfanne mit Butter' },
-    { id:'p8', datum:'21.03.', zeit:'10:00', format:'gbp', status:'freigegeben',
+    { id:'p8', datum:'26.09.', zeit:'10:00', format:'gbp', status:'freigegeben',
       titel:'Sonntag länger offen', anlass:'Öffnungszeiten geändert', anlassWo:null,
       text:'Sonntags ist die Küche bis 21 Uhr offen.', tags:[],
       alt:'Eingang der Gaststube mit Öffnungszeiten' },
-    { id:'p9', datum:'24.03.', zeit:'11:00', format:'ig', status:'entwurf',
+    { id:'p9', datum:'29.09.', zeit:'11:00', format:'ig', status:'entwurf',
       titel:'Rüeblisuppe', ref:'e3', anlass:'Aktion Rüebli bis 22.03.', anlassWo:'aktionen',
       text:'Die Rüeblisuppe bleibt auf der Karte, solange die Rüebli so gut sind.',
       tags:['rüeblisuppe','suppe'], alt:'Teller Rüeblisuppe mit Rahmhaube' },
-    { id:'p10', datum:'27.03.', zeit:'17:30', format:'story', status:'entwurf',
+    { id:'p10', datum:'02.10.', zeit:'17:30', format:'story', status:'entwurf',
       titel:'Offene Weine neu', anlass:'Weinkarte geändert', anlassWo:'inhalte',
       text:'Fünf neue offene Weine ab dieser Woche.', tags:['wein'],
       alt:'Zwei Gläser Rotwein auf der Bar' },
@@ -792,7 +841,7 @@ const DB = {
   bewertungen: [
     /* Replies a restaurateur would actually sign: short, no grovelling, and
        they name what was done rather than promising to «weitergeben». */
-    { id:'r1', quelle:'Google', sterne:4, wann:'vor 2 Tagen', thema:'Tempo im Mittagsservice',
+    { id:'r1', quelle:'Google', sterne:4, wann:'21.09.', thema:'Tempo im Mittagsservice',
       text:'Schöner Abend, allerdings haben wir mittags zwischen den Gängen länger gewartet.',
       antwort:'Danke für die Rückmeldung. Mittags waren die Pausen zwischen den Gängen zu lang — wir haben die Besetzung am Mittag angepasst.',
       ton:'sachlich', status:'entwurf',
@@ -800,7 +849,7 @@ const DB = {
         { ton:'kurz',       text:'Danke für die Rückmeldung. Wir haben die Besetzung am Mittag angepasst.' },
         { ton:'sachlich',   text:'Danke für die Rückmeldung. Mittags waren die Pausen zwischen den Gängen zu lang — wir haben die Besetzung am Mittag angepasst.' },
         { ton:'persönlich', text:'Danke, dass Sie das schreiben. Mittags hat es zwischen den Gängen zu lange gedauert; seit dieser Woche steht eine Person mehr am Mittag. Schauen Sie wieder vorbei.' } ] },
-    { id:'r2', quelle:'OpenTable', sterne:5, wann:'vor 3 Tagen', thema:'Preis-Leistung Weinkarte',
+    { id:'r2', quelle:'OpenTable', sterne:5, wann:'20.09.', thema:'Preis-Leistung Weinkarte',
       text:'Die offenen Weine sind für die Lage sehr fair kalkuliert.',
       antwort:'Danke. Die offenen Weine wechseln wir alle zwei Wochen — es lohnt sich, wieder hineinzuschauen.',
       ton:'sachlich', status:'entwurf',
@@ -808,12 +857,16 @@ const DB = {
         { ton:'kurz',       text:'Danke. Die offene Auswahl wechselt alle zwei Wochen.' },
         { ton:'sachlich',   text:'Danke. Die offenen Weine wechseln wir alle zwei Wochen — es lohnt sich, wieder hineinzuschauen.' },
         { ton:'persönlich', text:'Danke, das hören wir gern. Bei den offenen Weinen probieren wir alle zwei Wochen etwas Neues aus — fragen Sie beim nächsten Mal, was gerade im Glas ist.' } ] },
-    { id:'r3', quelle:'Google', sterne:3, wann:'vor 5 Tagen', thema:'Portionsgrösse, Hauptgänge',
+    { id:'r3', quelle:'Google', sterne:3, wann:'18.09.', thema:'Portionsgrösse, Hauptgänge',
       text:'Gut gekocht, aber der Hauptgang war für den Preis klein.',
       antwort:'Danke für die offenen Worte. Wir haben die Portionen bei den Hauptgängen nachgewogen und zwei davon angepasst.',
       ton:'sachlich', status:'gesendet', varianten:[] },
   ],
-  bewMonat:34, bewBeantwortet:31, schnitt:4.6, schnittVorher:4.5,
+  bewMonat:34, bewBeantwortet:31, schnitt:4.6, schnittVorher:4.4,
+  bewSeit:96,                           // Bewertungen seit der Eröffnung
+  /* Die Note seit der Eröffnung: die ersten Wochen kosten, danach zieht es an. */
+  bewVerlauf:[ { monat:'Juli', n:24, schnitt:4.1 }, { monat:'August', n:38, schnitt:4.4 },
+               { monat:'September', n:34, schnitt:4.6 } ],
 
   // The four dishes above are the ones costed line by line. A week also sells
   // the rest of the card and a lot of drinks, and the rota covers all of it —
@@ -825,43 +878,116 @@ const DB = {
   log: [],   // what the demo has changed, shown in Auswertungen
 };
 
-/* ── half a year of closed weeks ───────────────────────────────────────────
-   A restaurant year has a shape, and it is not a sine wave: autumn builds,
-   December is the best month until it stops dead over the holidays, January is
-   quiet, February is worse, and March picks up. «faktor» is that year, written
-   out week by week rather than computed, because a restaurateur reads this
-   column and either recognises it or does not.
+/* ── every week since the house opened ─────────────────────────────────────
+   Twelve closed weeks, 1 July to 20 September 2026. The shape is the one a new
+   restaurant actually has, and it is written out rather than computed, because
+   this is the column a restaurateur reads first:
 
-   Two things fall out of the shape by themselves and are worth the demo:
-   personnel costs are WORST in the quiet weeks (the rota cannot shrink as fast
-   as the guests disappear) and food cost is slightly better when the house is
-   full. No Math.random anywhere — the same numbers on every laptop.
+     KW 27  opening, five days, curiosity and half the tables
+     KW 28  the dip after the opening — the curious have been
+     KW 29–31  July finds its level, tourists and terrace
+     KW 32–33  Betriebsferien of the neighbourhood, quiet
+     KW 34–36  August back up, the terrace still full
+     KW 37–38  September, regulars return, the best two weeks so far
+
+   Personnel is worst at the start and in the quiet weeks: the rota cannot
+   shrink as fast as the guests disappear, and a new house is overstaffed while
+   it learns. No Math.random — the same numbers on every laptop.
    ────────────────────────────────────────────────────────────────────────── */
 DB.wochen = (() => {
-  const KW = [...Array(14).keys()].map(i => 39 + i).concat([...Array(11).keys()].map(i => i + 1));
-  const faktor = [
-    0.94, 0.96, 0.99, 1.00, 1.02,      // Herbst baut auf
-    1.01, 1.03, 1.02, 1.05, 1.07,      // November, Metzgete-Saison
-    1.12, 1.16, 1.18,                  // Weihnachtsessen
-    0.58, 0.64,                        // Feiertage: zwei halbe Wochen
-    0.80, 0.86, 0.88, 0.90,            // Januar, ruhig
-    0.87, 0.89, 0.92,                  // Februar, am ruhigsten
-    0.94, 0.97, 1.005,                 // März zieht an
+  const w = [
+    { kw:'KW 27', ab:'01.07.', gedecke:241, proGedeck:57.20, wareQ:0.291, persQ:0.512, note:'Eröffnung, fünf Tage' },
+    { kw:'KW 28', ab:'06.07.', gedecke:348, proGedeck:56.40, wareQ:0.286, persQ:0.478 },
+    { kw:'KW 29', ab:'13.07.', gedecke:402, proGedeck:57.80, wareQ:0.279, persQ:0.455 },
+    { kw:'KW 30', ab:'20.07.', gedecke:437, proGedeck:58.60, wareQ:0.272, persQ:0.441 },
+    { kw:'KW 31', ab:'27.07.', gedecke:459, proGedeck:59.10, wareQ:0.268, persQ:0.434 },
+    { kw:'KW 32', ab:'03.08.', gedecke:388, proGedeck:58.20, wareQ:0.274, persQ:0.468, note:'Betriebsferien im Quartier' },
+    { kw:'KW 33', ab:'10.08.', gedecke:371, proGedeck:57.90, wareQ:0.277, persQ:0.474 },
+    { kw:'KW 34', ab:'17.08.', gedecke:468, proGedeck:59.40, wareQ:0.265, persQ:0.438 },
+    { kw:'KW 35', ab:'24.08.', gedecke:502, proGedeck:60.20, wareQ:0.259, persQ:0.428 },
+    { kw:'KW 36', ab:'31.08.', gedecke:518, proGedeck:60.80, wareQ:0.254, persQ:0.433 },
+    { kw:'KW 37', ab:'07.09.', gedecke:536, proGedeck:61.30, wareQ:0.251, persQ:0.424 },
+    { kw:'KW 38', ab:'14.09.', gedecke:548, proGedeck:61.70, wareQ:0.249, persQ:0.418 },
   ];
-  const start = new Date(2025, 8, 22);     // Montag, 22.09.2025 = KW 39
-  return KW.map((kw, i) => {
-    const d = new Date(start.getTime() + i * 7 * 86400000);
-    const ab = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
-    const f = faktor[i];
-    const gedecke = Math.round(545 * f);
-    const proGedeck = 60.9 + (f - 0.95) * 4;          // volle Wochen trinken mehr
-    const umsatz = Math.round(gedecke * proGedeck);
-    const wareQ = 0.250 - (f - 0.95) * 0.02;
-    const persQ = 0.405 + (1.05 - f) * 0.09;          // die Schicht schrumpft langsamer als die Gäste
-    return { kw: 'KW ' + kw, ab, umsatz, gedecke,
-             einsatz: Math.round(umsatz * wareQ), personal: Math.round(umsatz * persQ) };
-  });
+  return w.map(x => { const umsatz = Math.round(x.gedecke * x.proGedeck);
+    return { kw:x.kw, ab:x.ab, gedecke:x.gedecke, umsatz, note:x.note,
+             einsatz: Math.round(umsatz * x.wareQ), personal: Math.round(umsatz * x.persQ) }; });
 })();
+
+/* ── the invoice archive ───────────────────────────────────────────────────
+   Every invoice since the house opened, so a customer can page back through
+   July instead of being told that it works.
+
+   It is built from the week's food cost, not invented per invoice: each week's
+   Wareneinsatz is split across the suppliers by their share of the purchasing,
+   and each supplier's share across the days it actually delivers — produce and
+   dairy twice a week, meat once, fish for the weekend, wine every other week.
+   The LINES are generated first and the total is their sum plus VAT, so the
+   document adds up to the figure in the list; a demo invoice whose lines do not
+   match its total is the first thing an accountant notices.
+
+   Swiss VAT: food 2.6%, wine 8.1%. Six invoices carry the decision that was
+   taken back then, which is what makes the archive worth opening.
+   ────────────────────────────────────────────────────────────────────────── */
+DB.archiv = (() => {
+  const LIEF = [
+    { lief:'Muster Gemüse AG',      kurz:'R',  tage:[1, 4], anteil:0.20, mwst:2.6 },
+    { lief:'Molkerei Musterberg',   kurz:'MB', tage:[1, 4], anteil:0.16, mwst:2.6 },
+    { lief:'Metzgerei Mustermann',  kurz:'MM', tage:[2],    anteil:0.26, mwst:2.6 },
+    { lief:'Fischerei Mustersee',   kurz:'FZ', tage:[4],    anteil:0.16, mwst:2.6 },
+    { lief:'Weinkeller Musterthal', kurz:'W',  tage:[3],    anteil:0.22, mwst:8.1, jedeZweite:true },
+  ];
+  const tagName = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  const out = [];
+  const nr = {};
+  DB.wochen.forEach((w, wi) => {
+    const [t, m] = w.ab.split('.').map(Number);
+    LIEF.forEach(L => {
+      if (L.jedeZweite && wi % 2) return;
+      // was dieser Lieferant in dieser Woche liefert, auf seine Tage verteilt
+      const wochenNetto = w.einsatz * L.anteil * (L.jedeZweite ? 2 : 1);
+      const arts = Object.entries(DB.artikel).filter(([, a]) => a.lief === L.lief);
+      L.tage.forEach((td, ti) => {
+        const netto = wochenNetto * (L.tage.length === 2 ? (ti ? 0.45 : 0.55) : 1);
+        const d = new Date(DB.jahr, m - 1, t + td);
+        const datum = String(d.getDate()).padStart(2, '0') + '.' +
+                      String(d.getMonth() + 1).padStart(2, '0') + '.';
+        /* Zeilen zuerst: der Betrag ist deren Summe, nicht umgekehrt. */
+        const gewicht = [0.46, 0.32, 0.22];
+        const zeilen = arts.slice(0, 3).map(([k, a], i) => {
+          const menge = Math.max(1, Math.round(netto * (gewicht[i] || 0.2) / a.preis));
+          return { art: k, name: a.name, menge, preis: a.preis, summe: +(menge * a.preis).toFixed(2) };
+        });
+        const summe = zeilen.reduce((s, z) => s + z.summe, 0);
+        nr[L.kurz] = (nr[L.kurz] || 1000) + 1;
+        out.push({ id: L.kurz + '-' + nr[L.kurz], lief: L.lief, datum, wochentag: tagName[td],
+                   zeilen, netto: +summe.toFixed(2), mwst: L.mwst,
+                   total: +(summe * (1 + L.mwst / 100)).toFixed(2),
+                   kw: w.kw, status: 'abgeglichen' });
+      });
+    });
+  });
+  /* The note has to sit on an invoice from the supplier who sells that article —
+     a decision about Rahm on a produce invoice is the kind of detail that makes
+     a customer stop trusting the screen. */
+  const markiere = (lief, n, notiz) => {
+    const r = out.filter(x => x.lief === lief)[n];
+    if (r) { r.status = 'erledigt'; r.notiz = notiz; }
+  };
+  markiere('Muster Gemüse AG',      4,  'Preis Kartoffeln von CHF 29.80 auf CHF 32.50 übernommen');
+  markiere('Muster Gemüse AG',      11, 'Zwei Kisten Rüebli nicht geliefert — Rechnung um CHF 37.80 gekürzt');
+  markiere('Molkerei Musterberg',   6,  'Preis Rahm von CHF 39.50 auf CHF 42.00 übernommen');
+  markiere('Fischerei Mustersee',   3,  'Eine Position Eglifilet doppelt verrechnet — CHF 96.00 gekürzt');
+  markiere('Molkerei Musterberg',   10, 'Preis Butter von CHF 74.20 auf CHF 78.40 übernommen');
+  markiere('Metzgerei Mustermann',  7,  'Speckwürfel zum Aktionspreis bezogen — CHF 18.60 gespart');
+  return out.sort((a, b) => (+b.datum.slice(3, 5) - +a.datum.slice(3, 5))
+                         || (+b.datum.slice(0, 2) - +a.datum.slice(0, 2)));
+})();
+
+/* Claims that can be counted have to be counted: «96 Rechnungen diesen Monat»
+   would be a number nobody can find in the archive. */
+DB.gelesen = DB.archiv.filter(r => +r.datum.slice(3, 5) === 9).length + DB.rechnungen.length;
+DB.gelesenSeit = DB.archiv.length + DB.rechnungen.length;
 
 /* ── synthetic histories, so the widgets have curves to draw ───────────────
    Deterministic on purpose: a demo that looks different on every reload is a
@@ -982,10 +1108,10 @@ const MODULES = [
   { id:'gerichte',    name:'Gerichte',    titel:'Gerichte',              sub:'Kalkuliert mit den Preisen, die Sie zuletzt bezahlt haben' },
   { id:'hygiene',     name:'Hygiene',     titel:'Kontrollen heute',      sub:'Abgehakt an der Station, am Handy' },
   { id:'temperatur',  name:'Temperatur',  titel:'Kühlkette',             sub:'Alle paar Minuten gemessen, Tag und Nacht' },
-  { id:'dienstplan',  name:'Dienstplan',  titel:'Woche vom 16. März',    sub:'Bereits gebuchte Gedecke, daneben die Vorjahreswoche' },
+  { id:'dienstplan',  name:'Dienstplan',  titel:'Woche vom 21. September',    sub:'Bereits gebuchte Gedecke, daneben die Vorjahreswoche' },
   { id:'schulung',    name:'Schulung',    titel:'Wer was kann',          sub:'Aus Ihren eigenen Rezepten und Hausregeln gebaut' },
   { id:'inhalte',     name:'Inhalte',     titel:'Karte und Inhalte',     sub:'Einmal geändert, an einer Stelle' },
-  { id:'social',      name:'Social Media',titel:'Beiträge im März',      sub:'Kalender und Kanäle · entworfen aus dem, was sich im Haus geändert hat' },
+  { id:'social',      name:'Social Media',titel:'Beiträge im September',      sub:'Kalender und Kanäle · entworfen aus dem, was sich im Haus geändert hat' },
   { id:'bewertungen', name:'Bewertungen', titel:'Letzte 30 Tage',        sub:'Google, Buchungsplattformen und Gästebuch in einer Liste' },
   { id:'auswertungen',name:'Auswertungen',titel:'Die Woche',             sub:'Was bleibt, wie es zustande kommt, wie es sich entwickelt — und was nächste Woche gebucht ist' },
 ];
@@ -993,7 +1119,9 @@ const MODULES = [
 let AKTIV = 'uebersicht';
 let OFFEN = null;        // the invoice currently expanded
 let SOCIAL_TAB = 'kalender';
-let VERLAUF_W = 6;       // how many weeks the Verlauf shows
+let VERLAUF_W = 8;       // how many weeks the Verlauf shows
+let RECH_MONAT = 9;      // which month the invoice archive shows
+let RECH_DOK = null;     // the invoice shown as a document
 let POST_OFFEN = null;   // the post being edited, opened from either social view
 
 /* How urgent a module's open count is: 3 = now, 2 = today, 1 = can wait.
@@ -1213,7 +1341,7 @@ const HILFE = {
     'Gemeldet wird, was abweicht: ein Preis, der gestiegen ist, oder eine Menge, die verrechnet, aber nicht geliefert wurde.',
     '«Preis übernehmen» schreibt den neuen Preis in die Kalkulation — die Margen in Gerichte und die Zahlen in Auswertungen rechnen sofort damit.',
     '«Beim Lieferanten nachfragen» hält die Rechnung offen, bis der Lieferant antwortet. Es wird nichts unterstellt, es wird gefragt.',
-    'Abgetippt wird nichts. In diesem Monat sind 84 Rechnungen gelesen worden; drei brauchen eine Entscheidung.',
+    `Abgetippt wird nichts: ${DB.gelesenSeit} Rechnungen seit der Eröffnung, davon ${DB.gelesen} in diesem Monat. Das Archiv unten lässt sich Monat für Monat durchgehen — jede Rechnung ist so zu sehen, wie sie gekommen ist.`,
   ],
   lager: [
     'Einmal zählen, am Handy. Die Spalte «Erwartet» ist, was nach Lieferungen und Verkäufen da sein müsste.',
@@ -1239,7 +1367,7 @@ const HILFE = {
     'Die Kontrollen des Tages, pro Station, so wie sie ohnehin anfallen.',
     'Abhaken schreibt Namen und Uhrzeit ins Protokoll. Diese Aufzeichnung ist der Nachweis — es wird nichts zweimal geschrieben.',
     'Offene Kontrollen erscheinen in der Übersicht, bis sie erledigt sind.',
-    'Der Monat lässt sich als eine Datei ausgeben, wenn die Kontrolle kommt.',
+    `Der Monat lässt sich als eine Datei ausgeben, wenn die Kontrolle kommt: ${DB.hygieneSeit} Einträge seit der Eröffnung.`,
   ],
   temperatur: [
     'Ein Fühler pro Gerät misst alle paar Minuten, Tag und Nacht, auch wenn niemand im Haus ist.',
@@ -1419,13 +1547,96 @@ VIEWS.rechnungen = () => {
   }
 
   const offen = DB.rechnungen.filter(r => r.status !== 'ok' && r.status !== 'erledigt').length;
-  return `<table><thead><tr><th>Lieferant</th><th>Nummer</th><th>Datum</th>
+
+  /* ── the archive: every invoice since the house opened ── */
+  const imMonat = m => DB.archiv.filter(r => +r.datum.slice(3, 5) === m);
+  const monatTabs = DB.monate.map(m =>
+    `<button class="tab ${RECH_MONAT === m.nr ? 'on' : ''}" data-rmonat="${m.nr}"
+      >${esc(m.name)} <span class="muted">${imMonat(m.nr).length}</span></button>`).join('');
+  const liste = imMonat(RECH_MONAT);
+  const archivZeilen = liste.map(r => `<tr class="click" data-dok="${r.id}">
+      <td class="muted num">${esc(r.datum)} <span class="muted">${esc(r.wochentag)}</span></td>
+      <td><b>${esc(r.lief)}</b>${r.notiz ? `<div class="small muted zeile1">${esc(r.notiz)}</div>` : ''}</td>
+      <td class="muted">${esc(r.id)}</td>
+      <td class="r num">${chf(r.total)}</td>
+      <td class="r"><span class="tag ${r.status === 'erledigt' ? 't-warn' : 't-ok'}"
+        >${r.status === 'erledigt' ? 'entschieden' : 'abgeglichen'}</span></td>
+      <td class="r"><span class="link">Rechnung ansehen</span></td></tr>`).join('');
+
+  /* ── one invoice as the document it is ── */
+  let dok = '';
+  if (RECH_DOK) {
+    const r = DB.archiv.find(x => x.id === RECH_DOK);
+    if (r) {
+      const adressen = {
+        'Muster Gemüse AG':      ['Muster Gemüse AG', 'Feldweg 8', '9306 Musterwil'],
+        'Molkerei Musterberg':   ['Molkerei Musterberg AG', 'Bergstrasse 44', '9114 Musterberg'],
+        'Metzgerei Mustermann':  ['Metzgerei Mustermann GmbH', 'Dorfstrasse 3', '9203 Musterdorf'],
+        'Fischerei Mustersee':   ['Fischerei Mustersee', 'Seestrasse 21', '8640 Musterau'],
+        'Weinkeller Musterthal': ['Weinkeller Musterthal AG', 'Rebhalde 5', '9475 Musterthal'],
+      }[r.lief] || [r.lief, '', ''];
+      const mwstBetrag = +(r.netto * r.mwst / 100).toFixed(2);
+      dok = `<div class="sec">Rechnung ${esc(r.id)}</div>
+        <div class="dokzeile">
+          <div class="rdoc">
+            <div class="rdkopf">
+              <div><b>${esc(adressen[0])}</b><br>${esc(adressen[1])}<br>${esc(adressen[2])}<br>
+                <span class="muted">MWST-Nr. CHE-${112 + r.id.length}.${400 + r.zeilen.length}.${r.id.slice(-3)}</span></div>
+              <div class="rdmeta">
+                <div><span>Rechnung</span><b>${esc(r.id)}</b></div>
+                <div><span>Datum</span><b>${esc(r.datum)}${DB.jahr}</b></div>
+                <div><span>Lieferung</span><b>${esc(r.datum)}${DB.jahr}</b></div>
+                <div><span>Kunde</span><b>4021</b></div></div></div>
+            <div class="rdan">Gaststube Musterthal<br>Musterstrasse 12<br>9000 Musterstadt</div>
+            <table class="rdtab"><thead><tr><th>Menge</th><th>Artikel</th>
+              <th class="r">Einzelpreis</th><th class="r">Betrag</th></tr></thead><tbody>
+              ${r.zeilen.map(z => `<tr><td class="num">${z.menge}</td><td>${esc(z.name)}</td>
+                <td class="r num">${chf(z.preis)}</td><td class="r num">${chf(z.summe)}</td></tr>`).join('')}
+              </tbody></table>
+            <div class="rdsumme">
+              <div><span>Netto</span><b>${chf(r.netto)}</b></div>
+              <div><span>MWST ${r.mwst.toFixed(1).replace('.', ',')}%</span><b>${chf(mwstBetrag)}</b></div>
+              <div class="tot"><span>Total CHF</span><b>${chf(r.total)}</b></div></div>
+            <div class="rdfuss">Zahlbar innert 30 Tagen · QR-Rechnung im Anhang ·
+              ${r.mwst === 2.6 ? 'Lebensmittel, reduzierter Satz 2,6%' : 'Getränke mit Alkohol, Normalsatz 8,1%'}</div>
+          </div>
+          <div class="card rdpruef">
+            <div class="wl"><span>Was Axyom geprüft hat</span></div>
+            <div class="pz"><span class="pj">✓</span><div>${r.zeilen.length === 1
+              ? 'Die Position einem Artikel zugeordnet.'
+              : `Alle ${r.zeilen.length} Positionen einem Artikel zugeordnet.`}</div></div>
+            <div class="pz"><span class="pj">✓</span><div>Preise gegen die letzte Lieferung verglichen.</div></div>
+            <div class="pz"><span class="pj">✓</span><div>Mengen gegen die Bestellung verglichen.</div></div>
+            <div class="pz"><span class="pj">✓</span><div>MWST-Satz plausibel: ${r.mwst.toFixed(1).replace('.', ',')}%
+              für ${r.mwst === 2.6 ? 'Lebensmittel' : 'alkoholische Getränke'}.</div></div>
+            ${r.notiz ? `<div class="pz"><span class="pj" style="color:var(--warn)">!</span>
+              <div><b>Damals entschieden:</b> ${esc(r.notiz)}</div></div>` : ''}
+            <div class="small muted" style="margin-top:11px;padding-top:9px;
+                 border-top:1px solid var(--soft)">Gelesen beim Eingang am ${esc(r.datum)}${DB.jahr}.
+              Abgetippt wurde nichts.</div>
+            <div class="row" style="margin-top:11px"><button class="btn" data-dokzu="1">Schliessen</button></div>
+          </div></div>`;
+    }
+  }
+
+  return `<div class="sec">Braucht eine Entscheidung</div>
+    <table><thead><tr><th>Lieferant</th><th>Nummer</th><th>Datum</th>
       <th class="r">Total</th><th class="r">Status</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="small muted" style="margin-top:12px">Diesen Monat
       <b style="color:var(--ink)">${DB.gelesen} Rechnungen gelesen</b> ·
       ${offen} brauchen eine Entscheidung ·
       ${OFFEN ? 'unten die Positionen' : 'eine Zeile anklicken, um die Positionen zu sehen'}</div>
-    ${detail}`;
+    ${detail}
+    ${dok}
+    <div class="sec" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">Archiv
+      <span class="tabs" style="margin-bottom:0">${monatTabs}</span>
+      <span class="muted" style="font-weight:600;letter-spacing:0;text-transform:none"
+        >seit der Eröffnung am ${esc(DB.eroeffnet)}: ${DB.archiv.length} Rechnungen</span></div>
+    <table><thead><tr><th>Datum</th><th>Lieferant</th><th>Nummer</th><th class="r">Total</th>
+      <th class="r">Status</th><th class="r"></th></tr></thead><tbody>${archivZeilen}</tbody></table>
+    <div class="small muted" style="margin-top:12px">${esc(DB.monate.find(m => m.nr === RECH_MONAT).name)}:
+      ${liste.length} Rechnungen, zusammen ${chf(liste.reduce((s, r) => s + r.total, 0))} ·
+      eine Zeile anklicken, um die Rechnung zu sehen</div>`;
 };
 
 /* ── Lager ──────────────────────────────────────────────────────────────── */
@@ -1567,7 +1778,7 @@ VIEWS.hygiene = () => {
       : `<div class="card good" style="margin-top:16px"><div class="small">
           Alle Kontrollen von heute sind erledigt. Der Monat lässt sich als eine Datei ausgeben.</div>
           <div class="row" style="margin-top:11px">
-          <button class="btn" data-act="haccp-export">Nachweis März exportieren</button></div></div>`}
+          <button class="btn" data-act="haccp-export">Nachweis ${esc(DB.monat)} exportieren</button></div></div>`}
     <div class="sec">Im Protokoll</div>
     <table><tbody>${DB.hygiene.filter(h => h.done).map(h => `<tr>
         <td><b>${esc(h.station)}</b> <span class="muted">· ${esc(h.was)}</span></td>
@@ -1601,8 +1812,9 @@ VIEWS.temperatur = () => {
       <div class="card kpi"><div class="l">Jetzt im Alarm</div>
         <div class="n" style="color:${jetztBad ? 'var(--bad)' : 'var(--ink)'}">${jetztBad}</div>
         <div class="d">Gemessen, ob jemand im Haus ist oder nicht</div></div>
-      <div class="card kpi"><div class="l">Letzte 30 Tage</div><div class="n">${DB.alarme.length} Alarme</div>
-        <div class="d">Dieselbe Aufzeichnung ist das HACCP-Protokoll</div></div></div>
+      <div class="card kpi"><div class="l">Seit der Eröffnung</div>
+        <div class="n">${DB.alarme.length} Alarme</div>
+        <div class="d">${DB.alarme.filter(a => a.quittiert).length} quittiert, im Schnitt in 6 Minuten</div></div></div>
     <table><thead><tr><th>Gerät</th><th>Wo</th><th class="r">Jetzt</th><th class="r">Bereich</th>
       <th class="r">Status</th><th class="r"></th></tr></thead><tbody>${rows}</tbody></table>
     <div class="small muted" style="margin-top:12px">Axyom misst — geöffnet oder geschaltet wird nichts.
@@ -1732,7 +1944,7 @@ VIEWS.inhalte = () => {
       <div class="mock-h" style="font-size:12px">Unsere Karte</div>${zeilenHtml}`;
     if (z.typ === 'res') return `<div class="mock-res"><div class="dat">Tischreservation · heute</div>
       ${zeilenHtml}</div>`;
-    if (z.typ === 'pdf') return `<div class="mock-paper"><div class="kl">Karte · März</div>${zeilenHtml}</div>`;
+    if (z.typ === 'pdf') return `<div class="mock-paper"><div class="kl">Karte · ${esc(DB.monat)}</div>${zeilenHtml}</div>`;
     if (z.typ === 'ig') return `<div class="mock-bild"></div>
       <div class="mock-p" style="color:var(--ink);font-size:11.5px">${c
         ? `<b>gaststube</b> Neu auf der Karte: ${esc(neuste.name)}, ${chf(c.preis)}. 🌿`
@@ -1887,7 +2099,7 @@ VIEWS.social = () => {
   /* ── the month ── */
   const kalender = () => {
     const heute = tag(DB.today);
-    const erster = 1, tage = 31, startWochentag = 7;   // 1. März ist ein Sonntag
+    const erster = 1, tage = 30, startWochentag = 2;   // 1. September 2026 ist ein Dienstag
     const zellen = [];
     for (let i = 1; i < startWochentag; i++) zellen.push('<div class="ktag leer"></div>');
     for (let d = erster; d <= tage; d++) {
@@ -1916,7 +2128,7 @@ VIEWS.social = () => {
     return `<div class="card" style="margin-bottom:14px">
       <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:11px">
         <div><b style="font-size:14px">${esc(k.name)}</b>
-          <span class="small muted"> · ${posts.length} im März${dr ? `, ${dr} im Entwurf` : ''}</span></div>
+          <span class="small muted"> · ${posts.length} im ${esc(DB.monat)}${dr ? `, ${dr} im Entwurf` : ''}</span></div>
         <span class="small muted">${naechster ? `nächster: ${esc(naechster.datum)} ${esc(naechster.zeit)}` : 'nichts geplant'}</span></div>
       ${posts.length ? `<table style="table-layout:fixed;width:100%"><colgroup>
           <col style="width:98px"><col><col style="width:104px"><col style="width:86px"></colgroup>
@@ -1934,7 +2146,7 @@ VIEWS.social = () => {
     `<button class="tab ${SOCIAL_TAB === id ? 'on' : ''}" data-socialtab="${id}">${n}</button>`).join('');
 
   return `<div class="grid g3" style="margin-bottom:18px">
-      <div class="card kpi"><div class="l">März</div><div class="n">${DB.posts.length} Beiträge</div>
+      <div class="card kpi"><div class="l">${esc(DB.monat)}</div><div class="n">${DB.posts.length} Beiträge</div>
         <div class="d">Auf ${DB.kanaele.length} Kanälen</div></div>
       <div class="card kpi"><div class="l">Warten auf Freigabe</div>
         <div class="n" style="color:${entwuerfe.length ? 'var(--warn)' : 'var(--ink)'}">${entwuerfe.length}</div>
@@ -1999,6 +2211,15 @@ VIEWS.bewertungen = () => {
       <div class="card kpi"><div class="l">Häufigstes Thema</div>
         <div class="n" style="font-size:19px;line-height:1.3">${esc(DB.themen[0].thema)}</div>
         <div class="d">${DB.themen[0].n}× erwähnt</div></div></div>
+    <div class="sec">Seit der Eröffnung</div>
+    <div class="card" style="margin-bottom:16px"><div class="row" style="gap:28px;flex-wrap:wrap">
+      ${DB.bewVerlauf.map(m => `<div><div class="vk">${esc(m.monat)}</div>
+        <div class="vl2">${m.schnitt.toFixed(1)}</div>
+        <div class="vn muted">${m.n} Bewertungen</div></div>`).join('')}
+      <div style="flex:1;min-width:220px;align-self:center">
+        <div class="small muted" style="line-height:1.6">${DB.bewSeit} Bewertungen in drei Monaten.
+        Die ersten Wochen kosten — die Note steigt, seit die Antworten am selben Tag rausgehen.</div></div>
+    </div></div>
     <div class="sec">Worum es ging</div>
     <table><tbody>${themen}</tbody></table>
     <div class="small muted" style="margin-top:10px">Sie lesen nicht «Note ${DB.schnitt.toFixed(1)}»,
@@ -2072,15 +2293,18 @@ VIEWS.auswertungen = () => {
       Gerichte kommen aus <span class="link" data-go="gerichte">Gerichte</span> und rechnen mit den Preisen,
       die zuletzt bezahlt wurden.</div>`;
 
-  const alleWochen = [...DB.wochen, { kw:'KW 12', ab:'16.03.', umsatz, gedecke, einsatz, personal, jetzt:true }];
+  const alleWochen = [...DB.wochen, { kw:'KW 39', ab:'21.09.', umsatz, gedecke, einsatz, personal, jetzt:true }];
   const reihe = alleWochen.slice(-Math.min(VERLAUF_W, alleWochen.length));
-  const filter = [6, 13, 26].filter(n => n <= alleWochen.length).map(n =>
-    `<button class="tab ${VERLAUF_W === n ? 'on' : ''}" data-verlauf="${n}">${n} Wochen</button>`).join('');
+  // 13 is every week the house has existed, so it is labelled as that
+  const filter = [4, 8, 13].filter(n => n <= alleWochen.length).map(n =>
+    `<button class="tab ${VERLAUF_W === n ? 'on' : ''}" data-verlauf="${n}"
+      >${n === alleWochen.length ? 'seit Eröffnung' : n + ' Wochen'}</button>`).join('');
   const wochenZeilen = reihe.map(w => {
     const db = w.umsatz - w.einsatz - w.personal;
     return `<tr${w.jetzt ? ' style="background:var(--wash)"' : ''}>
       <td><b>${esc(w.kw)}</b> <span class="muted small">ab ${esc(w.ab)}</span>
-        ${w.jetzt ? '<span class="tag t-ok">diese Woche</span>' : ''}</td>
+        ${w.jetzt ? '<span class="tag t-ok">diese Woche</span>' : ''}
+        ${w.note ? `<span class="muted small"> · ${esc(w.note)}</span>` : ''}</td>
       <td class="r num">${chf(w.umsatz)}</td>
       <td class="r num muted">${w.gedecke}</td>
       <td class="r num muted">${chf(w.umsatz / w.gedecke)}</td>
@@ -2109,7 +2333,7 @@ VIEWS.auswertungen = () => {
           <span class="r2">die laufende Woche rechnet live mit</span></div>
         <div style="font-size:13px;line-height:1.65">${satz}</div>
         <div class="small muted" style="margin-top:9px">Abgeschlossene Wochen stehen fest;
-          KW 12 ändert sich, sobald in einem Modul etwas entschieden wird.</div></div>
+          ${reihe[reihe.length - 1].kw} ändert sich, sobald in einem Modul etwas entschieden wird.</div></div>
       <div class="card vchart">
         <div class="wl"><span>Umsatz pro Woche</span>
           <span class="r2">${reihe.length} Wochen</span></div>
@@ -2176,7 +2400,7 @@ VIEWS.auswertungen = () => {
     <div class="sec">Was zu tun ist</div>
     <div class="card ${DB.hygiene.some(h => !h.done) || DB.alarme.some(a => !a.quittiert) ? 'warn' : 'tint'}">
       ${hinweise.map(h => `<div class="small" style="line-height:1.8">· ${h}</div>`).join('')}</div>
-    <div class="sec" style="display:flex;align-items:center;gap:14px">Verlauf
+    <div class="sec" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">Verlauf
       <span class="tabs" style="margin-bottom:0">${filter}</span>
       <span class="muted" style="font-weight:600;letter-spacing:0;text-transform:none">${
         esc(reihe[0].kw)} bis ${esc(reihe[reihe.length - 1].kw)}</span></div>
@@ -2379,7 +2603,7 @@ VIEWS.uebersicht = () => {
         ${DB.hygiene.filter(h => !h.done).map(h =>
           `<div style="font-size:10.5px;color:var(--warn);line-height:1.45">${esc(h.station)}</div>`).join('')
          || '<div style="font-size:11px;color:var(--acci)">lückenlos</div>'}
-        <div class="sm2">${DB.hygieneMonat} Einträge im März</div></div></div>`,
+        <div class="sm2">${DB.hygieneMonat} Einträge im ${esc(DB.monat)}</div></div></div>`,
     { go:'hygiene' });
 
   /* margins, themes, offers, shifts, stock — all one-liners */
@@ -2611,7 +2835,7 @@ function aLieferant(name) {
   const offen = rs.filter(r => r.status !== 'ok' && r.status !== 'erledigt');
   const ak = DB.aktionen.filter(a => a.lief === name && !a.genommen);
   return bau(esc(name), [
-    `${rs.length} Rechnung${rs.length > 1 ? 'en' : ''} im März, zusammen <b>${chf(rs.reduce((s, r) => s + r.total, 0))}</b>`,
+    `${rs.length} Rechnung${rs.length > 1 ? 'en' : ''} im ${esc(DB.monat)}, zusammen <b>${chf(rs.reduce((s, r) => s + r.total, 0))}</b>`,
     offen.length ? `<span class="hl">${offen.map(r => r.id + ' — ' +
         (r.status === 'preis' ? 'Preis geändert' : 'Menge stimmt nicht')).join(', ')}</span>` : 'Nichts offen.',
     `Sie kaufen dort: ${arts.map(([, a]) => esc(a.name.split(',')[0])).join(', ')}`,
@@ -2676,7 +2900,7 @@ const ANTWORT = {
   },
   auswertungen() {
     const z = zahlen();
-    return bau(`Woche vom 16. März`, [
+    return bau(`Woche vom 21. September`, [
       `Umsatz <b>${chf(z.umsatz)}</b> auf ${z.gedecke} Gedecke — ${chf(z.umsatz / z.gedecke)} pro Gedeck`,
       `Wareneinsatz ${chf(z.einsatz)} (${(z.einsatz / z.umsatz * 100).toFixed(1)}%), Rohertrag ${chf(z.roh)} (${(z.roh / z.umsatz * 100).toFixed(1)}%)`,
       `Personal ${chf(z.personal)} für ${z.std} Stunden — ${(z.personal / z.umsatz * 100).toFixed(1)}% vom Umsatz`,
@@ -2713,7 +2937,7 @@ const ANTWORT = {
   },
   rechnungen() {
     const offen = DB.rechnungen.filter(r => r.status === 'preis' || r.status === 'menge');
-    return bau(`${DB.rechnungen.length} Rechnungen im Ausschnitt · ${DB.gelesen} im März gelesen`, [
+    return bau(`${DB.rechnungen.length} Rechnungen im Ausschnitt · ${DB.gelesen} im ${esc(DB.monat)} gelesen`, [
       offen.length ? offen.map(r => `<b>${esc(r.id)}</b> ${esc(r.lief)} — ` +
         (r.status === 'preis' ? 'Preis abweichend' : 'Menge abweichend') + `, ${chf(r.total)}`).join('<br>')
         : 'Nichts offen — alle geprüft.',
@@ -2749,7 +2973,7 @@ const ANTWORT = {
       offen.length ? `<span class="hl">Offen: ${offen.map(h => esc(h.station) + ' (' + esc(h.was) + ')').join(', ')}</span>`
         : 'Heute lückenlos.',
       done.map(h => `${esc(h.station)} — ${esc(h.wer)}, ${esc(h.zeit)}`).join('<br>'),
-      `${DB.hygieneMonat} Einträge im März, ${DB.hygieneSpaet} davon verspätet. Dieselbe Aufzeichnung ist der Nachweis.`,
+      `${DB.hygieneMonat} Einträge im ${esc(DB.monat)}, ${DB.hygieneSpaet} davon verspätet. Dieselbe Aufzeichnung ist der Nachweis.`,
     ], [{ t:'Hygiene', go:'hygiene' }]);
   },
   temperatur() {
@@ -2765,7 +2989,7 @@ const ANTWORT = {
   dienstplan() {
     const knapp = DB.woche.filter(d => d.gedecke / d.besetzt > DB.knappAb);
     const std = DB.woche.reduce((s, d) => s + d.stunden, 0);
-    return bau(`Woche vom 16. März · ${DB.woche.reduce((s, d) => s + d.gedecke, 0)} Gedecke`, [
+    return bau(`Woche vom 21. September · ${DB.woche.reduce((s, d) => s + d.gedecke, 0)} Gedecke`, [
       DB.woche.map(d => `${esc(TAGE[d.tag])}: ${d.gedecke} auf ${d.besetzt} Personen (${(d.gedecke / d.besetzt).toFixed(0)}/Person)` +
         (d.gedecke / d.besetzt > DB.knappAb ? ' <span class="hl">knapp</span>' : '')).join('<br>'),
       knapp.length ? `Knapp: ${knapp.map(d => esc(TAGE[d.tag])).join(', ')} — über ${DB.knappAb} Gedecke pro Person.` : 'Keine Schicht ist knapp.',
@@ -2803,7 +3027,7 @@ const ANTWORT = {
   },
   social() {
     const d = DB.posts.filter(p => p.status === 'entwurf');
-    return bau(`${DB.posts.length} Beiträge im März · ${DB.kanaele.length} Kanäle`, [
+    return bau(`${DB.posts.length} Beiträge im ${esc(DB.monat)} · ${DB.kanaele.length} Kanäle`, [
       DB.posts.map(p => `${esc(p.datum)} ${esc(p.zeit)} ${esc(KANAL(p.format).kurz)}: «${esc(p.titel)}» — ${
         p.status === 'entwurf' ? '<span class="hl">Entwurf</span>' : esc(p.status)}`).join('<br>'),
       d.length ? `${d.length} warten auf Freigabe. Ohne Freigabe geht nichts raus.` : 'Alles freigegeben.',
@@ -2982,7 +3206,7 @@ const ACTIONS = {
   },
   'haccp-export'() {
     const n = DB.hygiene.filter(h => h.done).length;
-    toast(`Nachweis März erzeugt — ${DB.hygieneMonat} Einträge, jeder mit Name und Uhrzeit. ` +
+    toast(`Nachweis ${esc(DB.monat)} erzeugt — ${DB.hygieneMonat} Einträge, jeder mit Name und Uhrzeit. ` +
           `(In der Demo wird keine Datei geschrieben.)`, 1);
     logge(`HACCP-Nachweis exportiert (${n} Kontrollen heute)`);
   },
@@ -3108,6 +3332,14 @@ document.addEventListener('click', e => {
   }
   const hb = e.target.closest('#hilfe-btn');
   if (hb) { document.querySelector('.flug:not(.weg):not(.schnell)') ? flugWeg(true) : hilfeZeigen(hb); return; }
+
+  const rm = e.target.closest('[data-rmonat]');
+  if (rm) { RECH_MONAT = +rm.dataset.rmonat; RECH_DOK = null; render(); return; }
+  const dk = e.target.closest('[data-dok]');
+  if (dk) { RECH_DOK = RECH_DOK === dk.dataset.dok ? null : dk.dataset.dok; render();
+    if (RECH_DOK) $('#view .rdoc')?.scrollIntoView({ block:'center', behavior:'smooth' });
+    return; }
+  if (e.target.closest('[data-dokzu]')) { RECH_DOK = null; render(); return; }
 
   const vf = e.target.closest('[data-verlauf]');
   if (vf) { VERLAUF_W = +vf.dataset.verlauf; render(); return; }
