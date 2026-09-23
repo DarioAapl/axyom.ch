@@ -58,6 +58,15 @@ header{padding:20px 28px 16px;border-bottom:1px solid var(--soft);display:flex;
        align-items:flex-end;justify-content:space-between;gap:20px;position:sticky;top:0;background:#fff;z-index:5}
 header h1{font-size:20px;font-weight:700;letter-spacing:-.015em}
 header .sub{font-size:12.5px;color:var(--dim);margin-top:3px}
+#hilfe-btn{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  color:var(--dim);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;flex:none;
+  line-height:1;padding:0;position:relative;top:1px}
+#hilfe-btn:hover{border-color:var(--acc);color:var(--acci);background:var(--wash)}
+#hilfe-btn.an{background:var(--acc);border-color:var(--acc);color:#fff}
+.card.hilfe{background:var(--wash);border-color:rgba(0,178,160,.3);margin-bottom:18px}
+.hilfeliste{margin:0;padding-left:20px}
+.hilfeliste li{font-size:12.5px;line-height:1.6;padding:4px 0 4px 3px}
+.hilfeliste li::marker{font-weight:700;color:var(--acci)}
 header .demo{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
        color:var(--acci);background:var(--wash);padding:5px 9px;border-radius:6px;white-space:nowrap}
 .body{padding:22px 28px 40px;flex:1}
@@ -487,7 +496,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
   </aside>
   <main>
     <header>
-      <div><h1 id="h-title"></h1><div class="sub" id="h-sub"></div></div>
+      <div>
+        <div class="row" style="gap:9px">
+          <h1 id="h-title"></h1>
+          <button id="hilfe-btn" title="Was macht dieser Bereich?" aria-label="Hilfe">?</button></div>
+        <div class="sub" id="h-sub"></div></div>
       <div class="demo">Demo · Beispieldaten</div>
     </header>
     <div class="body" id="view"></div>
@@ -1044,7 +1057,8 @@ function render() {
   $('#h-title').textContent = m.titel;
   $('#h-sub').textContent = m.sub;
   const y = window.scrollY;
-  $('#view').innerHTML = VIEWS[AKTIV]();
+  $('#view').innerHTML = hilfePanel() + VIEWS[AKTIV]();
+  $('#hilfe-btn').classList.toggle('an', HILFE_OFFEN.has(AKTIV));
   tabellenEinpacken();
   renderRail();
   if (ZULETZT !== AKTIV) { ZULETZT = AKTIV; window.scrollTo(0, 0); }
@@ -1160,6 +1174,113 @@ const W = (titel, inner, opts = {}) => `<div class="card ${opts.cls || ''}"
     <div class="l" style="font-size:10.5px;font-weight:700;letter-spacing:.06em;
          text-transform:uppercase;color:var(--dim)">${esc(titel)}</div>
     ${opts.rechts || ''}</div>${inner}</div>`;
+/* ── «Was macht dieser Bereich?» ────────────────────────────────────────────
+   One question mark per module, one numbered list behind it. Written for the
+   person looking at the screen for the first time: what it does, what it
+   decides, and what happens elsewhere when they act here. Each list names the
+   mechanism, not the benefit — a restaurateur can judge a mechanism.
+   ────────────────────────────────────────────────────────────────────────── */
+const HILFE = {
+  uebersicht: [
+    'Die Ampel oben sagt in einem Blick, ob etwas dringend ist: rot heisst jetzt, gelb heisst heute, grün heisst kann warten — und nennt gleich die dringendste Sache.',
+    'Die Liste darunter kommt nicht aus diesem Bereich, sondern aus den Modulen selbst. Wird eine Sache dort erledigt, verschwindet sie hier.',
+    'Die vier Zahlen oben sind die laufende Woche, live gerechnet — dieselbe Rechnung wie in Auswertungen, nicht eine zweite.',
+    'Jede Kachel und jede Zeile springt dorthin, wo die Sache tatsächlich erledigt wird.',
+  ],
+  rechnungen: [
+    'Jede Rechnung wird beim Eingang gelesen — per Mail oder Post — und Position für Position mit Ihrer Bestellung und dem zuletzt bezahlten Preis verglichen.',
+    'Gemeldet wird, was abweicht: ein Preis, der gestiegen ist, oder eine Menge, die verrechnet, aber nicht geliefert wurde.',
+    '«Preis übernehmen» schreibt den neuen Preis in die Kalkulation — die Margen in Gerichte und die Zahlen in Auswertungen rechnen sofort damit.',
+    '«Beim Lieferanten nachfragen» hält die Rechnung offen, bis der Lieferant antwortet. Es wird nichts unterstellt, es wird gefragt.',
+    'Abgetippt wird nichts. In diesem Monat sind 84 Rechnungen gelesen worden; drei brauchen eine Entscheidung.',
+  ],
+  lager: [
+    'Einmal zählen, am Handy. Die Spalte «Erwartet» ist, was nach Lieferungen und Verkäufen da sein müsste.',
+    'Die Differenz wird zum zuletzt bezahlten Preis bewertet — Sie sehen nicht nur fehlende Kilo, sondern Franken.',
+    'Mehr als 5% Abweichung wird markiert. Darunter ist Waage und Rundung, darüber ist etwas passiert.',
+    'Eine gezählte Zahl ändern — Differenz, Wert und die Kennzahl oben rechnen sofort mit.',
+  ],
+  aktionen: [
+    'Die Aktionen Ihrer Lieferanten werden gelesen, sobald die Preislisten kommen.',
+    'Gezeigt wird nur, was Sie tatsächlich kaufen. Neun weitere Angebote dieser Woche betreffen nichts aus Ihrem Sortiment und erscheinen gar nicht.',
+    'Die Ersparnis ist auf Ihre übliche Monatsmenge gerechnet, nicht auf den Kistenpreis.',
+    'Rot heisst: läuft in drei Tagen oder weniger aus. Die Spalte sagt, wie viele Tage bleiben.',
+    '«Übernehmen» setzt die Position auf die Bestellliste.',
+  ],
+  gerichte: [
+    'Der Wareneinsatz je Gericht kommt aus dem Rezept und den Preisen, die Sie zuletzt bezahlt haben — nicht aus einer Preisliste von letztem Jahr.',
+    'Marge vom Preis und Aufschlag stehen nebeneinander, weil beide im Gespräch vorkommen: 200% Aufschlag sind 66.7% Marge.',
+    'Kartenpreis ändern — Marge und Wochenrohertrag rechnen mit, bevor die Karte gedruckt ist.',
+    '«Preis bewegt» markiert Gerichte, deren Zutaten teurer geworden sind.',
+    'Die letzte Spalte zeigt, welches Gericht wirklich trägt. Die höchste Marge ist selten der grösste Beitrag.',
+  ],
+  hygiene: [
+    'Die Kontrollen des Tages, pro Station, so wie sie ohnehin anfallen.',
+    'Abhaken schreibt Namen und Uhrzeit ins Protokoll. Diese Aufzeichnung ist der Nachweis — es wird nichts zweimal geschrieben.',
+    'Offene Kontrollen erscheinen in der Übersicht, bis sie erledigt sind.',
+    'Der Monat lässt sich als eine Datei ausgeben, wenn die Kontrolle kommt.',
+  ],
+  temperatur: [
+    'Ein Fühler pro Gerät misst alle paar Minuten, Tag und Nacht, auch wenn niemand im Haus ist.',
+    'Verlässt ein Gerät seinen Bereich, geht die Meldung an die diensthabende Person — und an die nächste, wenn niemand quittiert.',
+    'Dieselbe Aufzeichnung ist das HACCP-Protokoll: der Alarm, der Wert, die Uhrzeit, wer quittiert hat.',
+    'Axyom misst und meldet. Geöffnet oder geschaltet wird nichts — dafür ist der Kältemonteur zuständig.',
+    '«Demo: Störung auslösen» spielt den Fall nach, damit Sie den Ablauf sehen, ohne auf einen echten Alarm zu warten.',
+  ],
+  dienstplan: [
+    'Die bereits gebuchten Gedecke stehen neben derselben Woche im Vorjahr.',
+    'Besetzung ändern — Stunden, Personalkosten und die Kosten pro Gedeck rechnen sofort mit.',
+    'Mehr als 15 Gedecke auf eine Person wird als knapp markiert; die Übersicht und der Wochenbericht nennen den Tag.',
+    'Die geplanten Kosten fliessen direkt in Auswertungen. Es ist die geplante Schicht, nicht gestempelte Zeit.',
+  ],
+  schulung: [
+    'Wer welches Modul durch hat, auf einen Blick — aus Ihren eigenen Rezepten und Hausregeln gebaut.',
+    'Ändert sich etwas Wichtiges, geht ein Briefing an genau die Personen, die es betrifft.',
+    'Ein Briefing dauert vier bis sechs Minuten und läuft am Handy, vor oder nach der Schicht.',
+    'Der Fortschritt zählt mit, sodass bei einer Kontrolle nachweisbar ist, wer was wann bekommen hat.',
+  ],
+  inhalte: [
+    'Die ganze Karte an einer Stelle: die vier kalkulierten Gerichte und die Einträge, die nur auf der Karte stehen.',
+    'Die kalkulierten Gerichte führen denselben Preis wie Gerichte — hier geändert heisst dort neu kalkuliert, und umgekehrt.',
+    'Darunter sehen Sie, was der Gast auf jedem Kanal gerade sieht. Ein Kanal, der noch nicht freigegeben ist, zeigt den alten Preis — und sagt es.',
+    'Eine Freigabe bringt alle Kanäle auf denselben Stand, in einem Schritt.',
+    'Ohne Ihre Freigabe erreicht keine Änderung einen Gast.',
+  ],
+  social: [
+    'Die Entwürfe entstehen aus dem, was sich im Haus geändert hat. Bei jedem Beitrag steht der Anlass und ein Link dorthin.',
+    'Zwei Ansichten auf dieselben Beiträge: der Monat als Kalender, und nach Kanal. Ein Klick öffnet denselben Editor.',
+    'Nennt ein Beitrag einen Preis, kommt dieser aus der Karte. Ändert sich der Preis, ändert sich der Text.',
+    'Bild wählen oder hineinziehen; die Vorschau schneidet es so zu, wie der Kanal es zuschneidet.',
+    'Freigeben ist Ihre Entscheidung. Wer einen freigegebenen Beitrag ändert, zieht die Freigabe zurück — was freigegeben war, ist nicht mehr das, was rausginge.',
+  ],
+  bewertungen: [
+    'Google, Buchungsplattformen und Gästebuch stehen in einer Liste.',
+    'Gruppiert wird nach Thema, nicht nach Note: «14× Tempo im Mittagsservice» sagt mehr als «4.6».',
+    'Zu jeder Bewertung gibt es einen Antwortentwurf. Sie können jeden Satz ändern — sobald Sie das tun, steht es dran.',
+    '«Anders formulieren» wechselt die Tonlage: kurz, sachlich, persönlich.',
+    'Gesendet wird in der Sprache, in der der Gast geschrieben hat. Die Antwortquote zählt mit.',
+  ],
+  auswertungen: [
+    'Zuerst steht, was bleibt: der Deckungsbeitrag, sein Vergleich zur Vorwoche und wie viele Rappen von jedem Franken das sind.',
+    'Der Balken zeigt, wohin der Franken geht — Ware, Personal, Rest — jeweils neben dem Branchenwert, damit die Prozente etwas bedeuten.',
+    'Darunter steht die Rechnung Zeile für Zeile: Umsatz mit seinen Quellen, minus Ware, minus Personal.',
+    '«Was zu tun ist» sind die offenen Punkte der Woche, mit Links dorthin.',
+    'Der Verlauf lässt sich auf 6, 13 oder 26 Wochen stellen. Abgeschlossene Wochen stehen fest, die laufende rechnet live mit.',
+    'Nächste Woche ist keine Prognose aus dem Nichts, sondern der Buchungsstand hochgerechnet — und es steht dabei, auf welcher Annahme.',
+  ],
+};
+
+let HILFE_OFFEN = new Set();   // per Modul, damit sie nicht überallhin mitwandert
+
+function hilfePanel() {
+  if (!HILFE_OFFEN.has(AKTIV) || !HILFE[AKTIV]) return '';
+  return `<div class="card hilfe">
+    <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:10px">
+      <div class="l" style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+           color:var(--acci)">Was dieser Bereich macht</div>
+      <button class="btn" data-hilfe="zu">Schliessen</button></div>
+    <ol class="hilfeliste">${HILFE[AKTIV].map(t => `<li>${t}</li>`).join('')}</ol></div>`;
+}
 const VIEWS = {};
 
 /* ── Rechnungen ─────────────────────────────────────────────────────────── */
@@ -2897,6 +3018,12 @@ document.addEventListener('click', e => {
     } else { h.wer = ''; h.zeit = ''; }
     render(); return;
   }
+
+  if (e.target.closest('#hilfe-btn')) {
+    HILFE_OFFEN.has(AKTIV) ? HILFE_OFFEN.delete(AKTIV) : HILFE_OFFEN.add(AKTIV);
+    render(); return;
+  }
+  if (e.target.closest('[data-hilfe]')) { HILFE_OFFEN.delete(AKTIV); render(); return; }
 
   const vf = e.target.closest('[data-verlauf]');
   if (vf) { VERLAUF_W = +vf.dataset.verlauf; render(); return; }
