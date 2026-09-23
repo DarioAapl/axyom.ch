@@ -236,10 +236,15 @@ th.r,td.r{text-align:right}
 /* the master indicator: one band across the top of the Übersicht */
 .ampel{display:flex;align-items:center;gap:6px;background:var(--dark);border-radius:12px;
   padding:10px 14px;color:#fff}
-.ampel .frage{width:19px;height:19px;border-radius:50%;border:1px solid rgba(255,255,255,.22);
-  background:none;color:rgba(255,255,255,.55);font-family:inherit;font-size:11px;font-weight:700;
-  line-height:1;padding:0;cursor:pointer;flex:none;align-self:center}
-.ampel .frage:hover{border-color:var(--acc);color:var(--acc)}
+/* a translucent 19px circle on a dark band is invisible in a demo: this one
+   has to be findable by someone who has never seen the screen */
+.ampel .frage{height:23px;border-radius:99px;border:1px solid rgba(255,255,255,.34);
+  background:rgba(255,255,255,.07);color:rgba(255,255,255,.82);font-family:inherit;font-size:11px;
+  font-weight:650;line-height:1;padding:0 10px;cursor:pointer;flex:none;align-self:center;
+  margin-left:4px;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.ampel .frage b{font-size:12px;font-weight:700;color:var(--acc)}
+.ampel .frage:hover{border-color:var(--acc);color:#fff;background:rgba(0,178,160,.18)}
+@media (max-width:700px){ .ampel .frage span{display:none} .ampel .frage{padding:0 7px} }
 .ampel .trenn{width:1px;align-self:stretch;background:rgba(255,255,255,.12);margin:0 12px}
 /* the flying hint */
 .flug{position:fixed;z-index:70;background:var(--dark);color:#fff;border-radius:11px;
@@ -2327,7 +2332,8 @@ VIEWS.uebersicht = () => {
       ${stufen.map(s => `<button class="lampe ${s.anzahl ? 'an ' + s.k : ''}"
         ${s.wo ? `data-go="${s.wo}"` : ''} ${s.anzahl ? '' : 'disabled'}>
         <span class="glas">${s.anzahl || ''}</span><span class="txt">${s.n}</span></button>`).join('')}
-      <button class="frage" data-ampelhilfe="1" title="Was bedeuten die Farben?">?</button>
+      <button class="frage" data-ampelhilfe="1" title="Was bedeuten die Farben?"
+        ><b>?</b><span>Farben</span></button>
       <div class="trenn"></div>
       <div class="jetzt">${dring
         ? `<div class="was"><b>${esc(dring.was)}</b><div class="why">${dring.warum}</div></div>
