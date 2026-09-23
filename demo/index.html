@@ -62,11 +62,9 @@ header .sub{font-size:12.5px;color:var(--dim);margin-top:3px}
   color:var(--dim);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;flex:none;
   line-height:1;padding:0;position:relative;top:1px}
 #hilfe-btn:hover{border-color:var(--acc);color:var(--acci);background:var(--wash)}
-#hilfe-btn.an{background:var(--acc);border-color:var(--acc);color:#fff}
-.card.hilfe{background:var(--wash);border-color:rgba(0,178,160,.3);margin-bottom:18px}
-.hilfeliste{margin:0;padding-left:20px}
-.hilfeliste li{font-size:12.5px;line-height:1.6;padding:4px 0 4px 3px}
-.hilfeliste li::marker{font-weight:700;color:var(--acci)}
+.hilfeliste{margin:0;padding-left:19px}
+.hilfeliste li{font-size:11.5px;line-height:1.55;padding:4px 0 4px 2px;color:rgba(255,255,255,.88)}
+.hilfeliste li::marker{font-weight:700;color:var(--acc)}
 header .demo{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
        color:var(--acci);background:var(--wash);padding:5px 9px;border-radius:6px;white-space:nowrap}
 .body{padding:22px 28px 40px;flex:1}
@@ -247,9 +245,14 @@ th.r,td.r{text-align:right}
 @media (max-width:700px){ .ampel .frage span{display:none} .ampel .frage{padding:0 7px} }
 .ampel .trenn{width:1px;align-self:stretch;background:rgba(255,255,255,.12);margin:0 12px}
 /* the flying hint */
-.flug{position:fixed;z-index:70;background:var(--dark);color:#fff;border-radius:11px;
-  padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.28);font-size:11.5px;line-height:1.55;
-  opacity:0;transform:translateY(-6px);transition:opacity .18s,transform .18s;pointer-events:none}
+.flug{position:fixed;z-index:70;background:var(--dark);color:#fff;border-radius:12px;
+  padding:12px 14px;box-shadow:0 14px 38px rgba(0,0,0,.32);font-size:11.5px;line-height:1.55;
+  opacity:0;transform:translateY(-6px);transition:opacity .18s,transform .18s}
+.flug.gross{padding:14px 16px}
+.flug .fk{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--acc);margin-bottom:9px}
+.flug .fu{font-size:10px;color:rgba(255,255,255,.38);margin-top:10px;padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.1)}
 .flug.da{opacity:1;transform:translateY(0)}
 .flug.weg{opacity:0;transition:opacity 1.4s ease-in}
 .flug b{color:#fff;font-weight:650}
@@ -1075,8 +1078,7 @@ function render() {
   $('#h-title').textContent = m.titel;
   $('#h-sub').textContent = m.sub;
   const y = window.scrollY;
-  $('#view').innerHTML = hilfePanel() + VIEWS[AKTIV]();
-  $('#hilfe-btn').classList.toggle('an', HILFE_OFFEN.has(AKTIV));
+  $('#view').innerHTML = VIEWS[AKTIV]();
   tabellenEinpacken();
   renderRail();
   if (ZULETZT !== AKTIV) { ZULETZT = AKTIV; window.scrollTo(0, 0); }
@@ -1288,45 +1290,56 @@ const HILFE = {
   ],
 };
 
-let HILFE_OFFEN = new Set();   // per Modul, damit sie nicht überallhin mitwandert
-
-function hilfePanel() {
-  if (!HILFE_OFFEN.has(AKTIV) || !HILFE[AKTIV]) return '';
-  return `<div class="card hilfe">
-    <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:10px">
-      <div class="l" style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-           color:var(--acci)">Was dieser Bereich macht</div>
-      <button class="btn" data-hilfe="zu">Schliessen</button></div>
-    <ol class="hilfeliste">${HILFE[AKTIV].map(t => `<li>${t}</li>`).join('')}</ol></div>`;
-}
-
 /* ── a hint that flies in and leaves again ─────────────────────────────────
    For the small explanations that are not worth a panel. It is appended to
    <body>, not to the view, so a re-render cannot wipe it mid-read, and it
    fades out by itself — nothing to close, nothing that stays in the way.
    ────────────────────────────────────────────────────────────────────────── */
 let flugTimer;
-function flugHinweis(anker, html, dauer = 6000) {
+function flugWeg() {
+  clearTimeout(flugTimer);
+  document.querySelectorAll('.flug').forEach(f => {
+    f.classList.add('weg');
+    f.addEventListener('transitionend', () => f.remove(), { once: true });
+  });
+}
+
+function flugHinweis(anker, html, dauer = 6000, cls = '') {
   document.querySelectorAll('.flug').forEach(f => f.remove());
   clearTimeout(flugTimer);
   const f = document.createElement('div');
-  f.className = 'flug';
+  f.className = 'flug ' + cls;
   f.innerHTML = html;
   document.body.appendChild(f);
   const a = anker.getBoundingClientRect();
   // keep it on screen: prefer below the anchor, flip up if there is no room
   const platzUnten = window.innerHeight - a.bottom;
-  const breite = Math.min(320, window.innerWidth - 24);
+  // a list of five points in a 320px column is a tall thin wall of text
+  const breite = Math.min(cls.includes('gross') ? 430 : 320, window.innerWidth - 24);
   f.style.width = breite + 'px';
   f.style.left = Math.max(12, Math.min(a.left - 12, window.innerWidth - breite - 12)) + 'px';
   if (platzUnten > f.offsetHeight + 20) f.style.top = (a.bottom + 10) + 'px';
   else f.style.top = Math.max(12, a.top - f.offsetHeight - 10) + 'px';
   requestAnimationFrame(() => f.classList.add('da'));
-  flugTimer = setTimeout(() => {
-    f.classList.add('weg');
-    f.addEventListener('transitionend', () => f.remove(), { once: true });
-  }, dauer);
+  // reading should not be interrupted: the clock stops while the pointer is on it
+  const starten = () => { clearTimeout(flugTimer); flugTimer = setTimeout(flugWeg, dauer); };
+  f.addEventListener('mouseenter', () => clearTimeout(flugTimer));
+  f.addEventListener('mouseleave', starten);
+  starten();
   return f;
+}
+
+/* The module explanation: same flying hint, longer on screen because there is
+   more to read — six seconds per list would be a race. */
+function hilfeZeigen(anker) {
+  const punkte = HILFE[AKTIV];
+  if (!punkte) return;
+  const m = MODULES.find(x => x.id === AKTIV);
+  flugHinweis(anker,
+    `<div class="fk">${esc(m.name)} — was dieser Bereich macht</div>
+     <ol class="hilfeliste">${punkte.map(t => `<li>${t}</li>`).join('')}</ol>
+     <div class="fu">Verschwindet von selbst · Maus darauf hält ihn</div>`,
+    7000 + punkte.length * 2600, 'gross');
 }
 const VIEWS = {};
 
@@ -2923,7 +2936,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'chat-in') {
     chatFragen(e.target.value); e.target.value = '';
   }
-  if (e.key === 'Escape' && CHAT.offen) chatOeffnen(false);
+  if (e.key === 'Escape') { flugWeg(); if (CHAT.offen) chatOeffnen(false); }
 });
 /* ── actions ────────────────────────────────────────────────────────────────
    Each one mutates DB and re-renders. The cross-module consequences are the
@@ -3046,6 +3059,11 @@ const ACTIONS = {
 
 /* ── one delegated listener for the whole app ───────────────────────────── */
 document.addEventListener('click', e => {
+  // any click that is not inside the hint sends it away — this has to run
+  // before the branches that return, or a rail click leaves it hanging
+  if (document.querySelector('.flug:not(.weg)') && !e.target.closest('.flug')
+      && !e.target.closest('#hilfe-btn') && !e.target.closest('[data-ampelhilfe]')) flugWeg();
+
   const go = e.target.closest('[data-go]');
   if (go) { AKTIV = go.dataset.go; OFFEN = null; render(); return; }
 
@@ -3083,11 +3101,8 @@ document.addEventListener('click', e => {
         Stufe warten. Eine dunkle Lampe heisst: dort ist nichts.</div>`);
     return;
   }
-  if (e.target.closest('#hilfe-btn')) {
-    HILFE_OFFEN.has(AKTIV) ? HILFE_OFFEN.delete(AKTIV) : HILFE_OFFEN.add(AKTIV);
-    render(); return;
-  }
-  if (e.target.closest('[data-hilfe]')) { HILFE_OFFEN.delete(AKTIV); render(); return; }
+  const hb = e.target.closest('#hilfe-btn');
+  if (hb) { document.querySelector('.flug:not(.weg)') ? flugWeg() : hilfeZeigen(hb); return; }
 
   const vf = e.target.closest('[data-verlauf]');
   if (vf) { VERLAUF_W = +vf.dataset.verlauf; render(); return; }
