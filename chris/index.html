@@ -911,6 +911,17 @@ header .werkzeug{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify
 .treffer .gesperrt{padding:10px;font-size:11.5px;color:var(--warn);background:var(--warnbg);
   border-radius:9px;margin:4px}
 
+/* die Mandantenwahl, wenn aus der Gesamtsicht in ein Modul gegangen wird */
+.mwahlgross{display:flex;flex-direction:column;gap:8px}
+.mwahlgross button{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:11px;
+  border:1px solid var(--line);background:#fff;font-family:inherit;cursor:pointer;text-align:left;
+  width:100%}
+.mwahlgross button:hover,.mwahlgross button:active{border-color:var(--acc);background:var(--wash)}
+.mwahlgross button i{width:11px;height:11px;border-radius:50%;flex:none}
+.mwahlgross button .n{font-size:14px;font-weight:650;color:var(--ink)}
+.mwahlgross button .s{margin-left:auto;font-size:11.5px;color:var(--dim);white-space:nowrap}
+@media (max-width:820px){ .mwahlgross button{min-height:56px} }
+
 /* die Chronik einer Projektakte */
 .chronik{display:flex;flex-direction:column;gap:0}
 .chronik .cz{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--soft)}
@@ -1229,10 +1240,14 @@ const DB = {
         verteiler:['Lichtplaner Kompakt'], einwilligung:'27.02.2026, Formular Website' } ] },
   ],
 
-  /* ── Projekte als zentrale Akte (PRJ-01…05) ──────────────────────────── */
+  /* ── Projekte als zentrale Akte (PRJ-01…05) ────────────────────────────
+     «nr» bleibt im Datenstand, wird aber nirgends angezeigt: auf dem Schirm
+     steht der Kurzname. Das Konzept verlangt eine eigene Projektnummer
+     (PRJ-03); sie ist einen Handgriff entfernt, falls sie doch gebraucht wird. */
   projekte: [
     { id:'p1', nr:'P-26-041', mandant:'lp', kunde:'k1', standort:'s11',
       name:'Beleuchtung Schalterhalle, Filiale Musterlingen',
+      kurz:'Schalterhalle EMK',
       kategorie:'Sanierung', tags:['Beleuchtung','DALI','Etappe 1'],
       status:'in Ausführung', verantwortlich:'Lea', start:'14.08.2026', termin:'16.10.2026',
       projektadresse:'a11', rechnungsempfaenger:'s12',
@@ -1241,6 +1256,7 @@ const DB = {
       frei:['Lea','Marco','Chris'] },
     { id:'p2', nr:'P-26-018', mandant:'hb', kunde:'k2', standort:'s21',
       name:'48 Zimmer Betten und Matratzen, Etappe 2',
+      kurz:'Betten Seeblick',
       kategorie:'Möblierung', tags:['Hotel','Etappe 2'],
       status:'geliefert', verantwortlich:'Chris', start:'02.06.2026', termin:'29.08.2026',
       projektadresse:'a22', rechnungsempfaenger:'s21',
@@ -1248,6 +1264,7 @@ const DB = {
       frei:['Chris','Lea'] },
     { id:'p3', nr:'P-26-009', mandant:'iw', kunde:'k4', standort:'s41',
       name:'Whirlpool Suite 3',
+      kurz:'Whirlpool Suite 3',
       kategorie:'Neuanlage', tags:['Whirlpool','Garantie'],
       status:'Garantiefall offen', verantwortlich:'Chris', start:'11.04.2026', termin:'30.05.2026',
       projektadresse:'a41', rechnungsempfaenger:'s41',
@@ -1256,6 +1273,7 @@ const DB = {
       frei:['Chris'] },
     { id:'p4', nr:'P-26-052', mandant:'lp', kunde:'k5', standort:'s52',
       name:'Parkbeleuchtung Mustermatte, Etappe 2',
+      kurz:'Parkbeleuchtung',
       kategorie:'Öffentlicher Raum', tags:['Aussenbeleuchtung','Ausschreibung'],
       status:'Offerte offen', verantwortlich:'Lea', start:'—', termin:'offen',
       projektadresse:'a52', rechnungsempfaenger:'s51',
@@ -1263,6 +1281,7 @@ const DB = {
       frei:['Lea','Marco'] },
     { id:'p5', nr:'P-26-047', mandant:'lp', kunde:'k3', standort:'s31',
       name:'Musterleuchten Ausstellung Büro Muster & Partner',
+      kurz:'Musterleuchten',
       kategorie:'Muster/Leihe', tags:['Muster','Kein Verkauf'],
       status:'läuft', verantwortlich:'Chris', start:'01.09.2026', termin:'31.10.2026',
       projektadresse:'a31', rechnungsempfaenger:'s31',
@@ -1598,8 +1617,8 @@ const DB = {
       bewegungen:[{ datum:'01.09.2026', menge:-3, grund:'Ausstellung', projekt:'p5', wer:'Chris' },
                   { datum:'12.08.2026', menge:+6, grund:'Zugang Muster', projekt:null, wer:'Chris' }] },
     { id:'l2', mandant:'lp', kat:'Werkzeug', name:'Luxmeter LM-2', einheit:'Stk',
-      bestand:1, min:1, ort:'ausgeliehen', nr:'WZ-0007', ausgeliehen:'Marco, Projekt P-26-052',
-      bewegungen:[{ datum:'08.09.2026', menge:-1, grund:'Ausleihe', projekt:'p4', wer:'Marco' }] },
+      bestand:1, min:1, ort:'ausgeliehen', nr:'WZ-0007', ausgeliehen:'Marco, Projekt Parkbeleuchtung',
+      bewegungen:[{ datum:'08.09.2026', menge:-1, grund:'Ausleihe Parkbeleuchtung', projekt:'p4', wer:'Marco' }] },
     { id:'l3', mandant:'lp', kat:'Kabel/Laufmeter', name:'Kabel NYM 3 × 1.5', einheit:'lfm',
       bestand:212, min:100, ort:'Rolle A', nr:'KA-0003',
       bewegungen:[{ datum:'04.09.2026', menge:-88, grund:'Verbrauch Montage', projekt:'p1', wer:'Marco' },
@@ -1739,7 +1758,7 @@ const DB = {
       aktion:'versendet', detail:'an kreditoren@emk.example, 1 Anhang' },
     { datum:'18.09.2026 15:31', wer:'Lea', mandant:'lp', objekt:'RG-26-0091',
       aktion:'finalisiert', detail:'PDF erzeugt, SHA-256 gespeichert, Nummer aus Kreis RG vergeben' },
-    { datum:'16.09.2026 11:20', wer:'Lea', mandant:'lp', objekt:'P-26-041',
+    { datum:'16.09.2026 11:20', wer:'Lea', mandant:'lp', objekt:'Schalterhalle EMK',
       aktion:'Zeit korrigiert', detail:'t5 von 2.0 h auf 1.5 h, Grund: Doppelerfassung' },
     { datum:'14.09.2026 09:12', wer:'Sandra', mandant:'hb', objekt:'RG-26-0079',
       aktion:'Mahnung versendet', detail:'Stufe 1, keine Gebühr' },
@@ -1937,49 +1956,52 @@ const ic = id => `<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="curren
 /* ── Was offen ist: das füttert Leiste und Übersicht ─────────────────────── */
 function offeneSachen() {
   const items = [];
+  /* Jeder Eintrag trägt den Mandanten, aus dem er kommt: in der Gesamtsicht
+     ist der Sprung sonst nicht eindeutig. */
   mDok().filter(d => d.typ === 'RG' && d.status === 'überfällig').forEach(d => {
     const tage = Math.round((dz(DB.heute) - dz(d.faellig)) / 1 % 100) || 0;
-    items.push({ ernst:3, wo:'zahlungen', modul:'Zahlungen', ref:d.id,
+    items.push({ ernst:3, wo:'zahlungen', modul:'Zahlungen', ref:d.id, mand:d.mandant, art:'dok',
       was:`${d.nr}: ${chf(offenBetrag(d))} überfällig`,
       warum:`${K(d.kunde).name} · fällig war ${d.faellig}${d.mahnstufe
         ? ` · Mahnstufe ${d.mahnstufe} versendet` : ''} · Teilzahlung berücksichtigt` });
   });
   mFaelle().filter(f => f.status !== 'erledigt').forEach(f => {
-    items.push({ ernst:2, wo:'service', modul:'Service', ref:f.id,
+    items.push({ ernst:2, wo:'service', modul:'Service', ref:f.id, mand:f.mandant, art:'fall',
       was:`${f.nr}: ${f.titel}`,
       warum:`${K(f.kunde).name} · ${f.status} · Frist ${f.frist} · Kosten ${f.kosten}` });
   });
   DB.aktivitaeten.filter(a => a.status === 'überfällig').forEach(a => {
-    items.push({ ernst:2, wo:'projekte', modul:'Projekte', ref:a.projekt,
+    items.push({ ernst:2, wo:'projekte', modul:'Projekte', ref:a.projekt, mand:(P(a.projekt)||{}).mandant, art:'projekt',
       was:a.was, warum:`fällig war ${a.faellig} · ${a.wer} · ${a.notiz}` });
   });
   if (!IMPORT_ANGEWENDET && imBlick('lp')) {
     const i = DB.importlauf;
-    items.push({ ernst:2, wo:'import', modul:'Preisimport', ref:'imp1',
+    items.push({ ernst:2, wo:'import', modul:'Preisimport', ref:null, mand:'lp',
       was:`Preisliste ${i.hersteller}: ${i.analyse.geaendert} geändert, ${i.analyse.fehler} fehlerhaft`,
       warum:`analysiert am ${i.hochgeladen} · wartet auf Bestätigung · Stichtag ${i.stichtag}` });
   }
   DB.aktivitaeten.filter(a => a.status === 'offen' && a.faellig === DB.heute).forEach(a => {
-    items.push({ ernst:2, wo:'verkauf', modul:'Verkauf', ref:a.bezug,
+    items.push({ ernst:2, wo:'verkauf', modul:'Verkauf', ref:a.bezug, mand:(D(a.bezug)||{}).mandant, art:'dok',
       was:a.was, warum:`heute fällig · ${a.wer} · ${a.notiz}` });
   });
   mDok().filter(d => d.typ === 'OF' && d.status === 'versendet').forEach(d => {
-    items.push({ ernst:1, wo:'verkauf', modul:'Verkauf', ref:d.id,
+    items.push({ ernst:1, wo:'verkauf', modul:'Verkauf', ref:d.id, mand:d.mandant, art:'dok',
       was:`${d.nr} offen: ${chf(brutto(d))}`,
       warum:`${K(d.kunde).name} · versendet ${d.datum}${d.nachfassAm
         ? ` · nachfassen ${d.nachfassAm}` : ''}` });
   });
   mDok().filter(d => d.typ === 'OF' && d.status === 'Entwurf').forEach(d => {
-    items.push({ ernst:1, wo:'verkauf', modul:'Verkauf', ref:d.id,
+    items.push({ ernst:1, wo:'verkauf', modul:'Verkauf', ref:d.id, mand:d.mandant, art:'dok',
       was:`${d.nr} ist Entwurf`, warum:`${K(d.kunde).name} · ${d.titel} · noch nicht finalisiert` });
   });
   const unverrechnet = mZeiten().filter(t => t.verrechenbar && !t.dok);
   if (unverrechnet.length) items.push({ ernst:1, wo:'zeiten', modul:'Zeiten', ref:null,
+    mand:MANDANT === 'alle' ? (P(unverrechnet[0].projekt)||{}).mandant : MANDANT,
     was:`${unverrechnet.length} Zeitbuchungen nicht verrechnet`,
     warum:`${unverrechnet.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h · ` +
           `${chf(unverrechnet.reduce((s, t) => s + t.dauer * t.satz, 0))} verrechenbar` });
   mLager().filter(l => l.bestand < l.min).forEach(l => {
-    items.push({ ernst:1, wo:'lager', modul:'Lager', ref:l.id,
+    items.push({ ernst:1, wo:'lager', modul:'Lager', ref:l.id, mand:l.mandant, art:'lager',
       was:`${l.name}: ${l.bestand} ${l.einheit} unter Mindestbestand`,
       warum:`Mindestbestand ${l.min} ${l.einheit} · ${l.ort}` });
   });
@@ -2093,6 +2115,78 @@ function renderTreffer() {
 /* ── Rendern ─────────────────────────────────────────────────────────────── */
 const VIEWS = {};
 
+/* ── «Alle Mandanten» ist eine Auswertungssicht, kein Arbeitsplatz ────────
+   Summieren darf man über die Mandanten, arbeiten nicht: eine Offerte, eine
+   Zahlung, eine Zeitbuchung gehört immer zu genau einer Einheit. Darum gilt
+   die Gesamtsicht nur für die Übersicht; wer von dort in ein Modul geht,
+   entscheidet zuerst, in welchem Mandanten er arbeitet. Kommt der Sprung von
+   einem Datensatz (Beleg, Projekt, Suchtreffer), ist die Frage schon
+   beantwortet — dann wird der Mandant des Datensatzes gesetzt. */
+const gesamtNur = 'uebersicht';
+const pl = (n, ein, viele) => `${n} ${n === 1 ? ein : viele}`;
+function mandantWahl() {
+  /* Gehört der offene Datensatz nur zu bestimmten Mandanten, fragen wir auch
+     nur nach diesen — und sagen, warum. Ein Kunde, der bei zwei Einheiten
+     kauft, ist genau der Fall, für den es die Frage gibt. */
+  let nur = mandantenSicht(), grund = '';
+  if (AKTIV === 'kunden' && KUNDE_OFFEN) {
+    const ms = kundeMandanten(KUNDE_OFFEN).filter(m => mandantenSicht().includes(m));
+    if (ms.length) { nur = ms;
+      grund = `<b>${esc(K(KUNDE_OFFEN).name)}</b> ist Kunde bei ${ms.length === 1
+        ? 'einem Mandanten' : ms.length + ' Mandanten'} — in welchem wollen Sie arbeiten?`; }
+  }
+  const zaehl = {
+    kunden:      id => pl(DB.kunden.filter(k => kundeMandanten(k.id).includes(id)).length, 'Kunde', 'Kunden'),
+    projekte:    id => pl(DB.projekte.filter(p => p.mandant === id).length, 'Projekt', 'Projekte'),
+    verkauf:     id => pl(DB.dokumente.filter(d => d.mandant === id).length, 'Beleg', 'Belege'),
+    produkte:    id => pl(DB.artikel.filter(a => a.mandant === id).length, 'Artikel', 'Artikel'),
+    import:      id => id === 'lp' ? '1 Lauf offen' : 'kein Lauf offen',
+    zeiten:      id => DB.zeiten.filter(t => DB.projekte.some(p => p.id === t.projekt
+                   && p.mandant === id)).reduce((s, t) => s + t.dauer, 0).toFixed(1) + ' h erfasst',
+    zahlungen:   id => chf0(DB.dokumente.filter(d => d.mandant === id && d.typ === 'RG'
+                   && offenBetrag(d) > 0.005).reduce((s, d) => s + offenBetrag(d), 0)) + ' offen',
+    versand:     id => pl(DB.versand.filter(v => DB.dokumente.some(d => d.id === v.dok
+                   && d.mandant === id)).length, 'Sendung', 'Sendungen'),
+    service:     id => pl(DB.faelle.filter(f => f.mandant === id).length, 'Fall', 'Fälle'),
+    lager:       id => pl(DB.lager.filter(l => l.mandant === id).length, 'Position', 'Positionen'),
+    archiv:      id => pl(DB.dokumente.filter(d => d.mandant === id && d.final).length,
+                   'finaler Beleg', 'finale Belege'),
+  }[AKTIV] || (() => '');
+  const m = MODULES.find(x => x.id === AKTIV);
+  return `<div class="card" style="max-width:62ch">
+    <div class="wl"><span>Mandant wählen</span><span class="r2">Gesamtsicht ist aktiv</span></div>
+    <p style="font-size:13px;line-height:1.6;margin-bottom:14px">${grund ||
+      `<b>${esc(m.titel)}</b> arbeitet in einem Mandanten, nicht über alle. Eine Offerte, eine
+       Zahlung, eine Zeitbuchung gehört zu genau einer Einheit — darum fragt der Prototyp hier
+       nach, statt die drei zu vermischen.`}</p>
+    <div class="mwahlgross">
+      ${nur.map(id => `<button data-mandant="${id}" data-bleib="1">
+        <i style="background:${M(id).farbe}"></i>
+        <span class="n">${esc(M(id).name)}</span>
+        <span class="s">${esc(zaehl(id))}</span></button>`).join('')}
+    </div>
+    <p class="small muted" style="margin-top:13px;line-height:1.6">Die Gesamtsicht über alle
+      Mandanten bleibt auf der <span class="link" data-go="uebersicht">Übersicht</span> — dort
+      werden Zahlen verglichen und summiert, und jede Zeile springt in den Mandanten, zu dem sie
+      gehört.</p></div>`;
+}
+
+/* der Mandant eines Datensatzes — damit ein Sprung aus der Gesamtsicht landet */
+function mandantVon(art, id) {
+  if (art === 'dok')     return (D(id) || {}).mandant;
+  if (art === 'projekt') return (P(id) || {}).mandant;
+  if (art === 'artikel') return (A(id) || {}).mandant;
+  if (art === 'fall')    return (DB.faelle.find(f => f.id === id) || {}).mandant;
+  if (art === 'lager')   return (DB.lager.find(l => l.id === id) || {}).mandant;
+  if (art === 'kunde')   { const ms = kundeMandanten(id); return ms.length === 1 ? ms[0] : null; }
+  return null;
+}
+function mandantMit(art, id) {
+  if (MANDANT !== 'alle') return;
+  const m = mandantVon(art, id);
+  if (m && mandantenSicht().includes(m)) MANDANT = m;
+}
+
 function render() {
   if (!modulErlaubt(AKTIV)) AKTIV = MODULES.find(m => modulErlaubt(m.id)).id;
   const m = MODULES.find(x => x.id === AKTIV);
@@ -2100,7 +2194,8 @@ function render() {
   $('#h-sub').textContent = m.sub;
   const y = window.scrollY;
   const seitlich = [...$('#view').querySelectorAll('.scrollx')].map(e => e.scrollLeft);
-  $('#view').innerHTML = VIEWS[AKTIV]();
+  $('#view').innerHTML = (MANDANT === 'alle' && AKTIV !== gesamtNur)
+    ? mandantWahl() : VIEWS[AKTIV]();
   tabellenEinpacken();
   renderRail();
   renderTreffer();
@@ -2242,7 +2337,7 @@ const HILFE = {
     'Die Ampel oben fasst zusammen, was offen ist: rot heisst jetzt, gelb heisst heute, grün heisst kann warten. Daneben steht die dringendste Sache im Klartext.',
     'Die Liste darunter entsteht nicht hier. Jedes Modul meldet, was bei ihm offen ist — überfällige Rechnung, Garantiefall, Wiedervorlage, nicht verrechnete Zeit, unterschrittener Mindestbestand. Wird es dort erledigt, verschwindet es hier.',
     'Die Kennzahlen gelten für den Mandanten links: Umsatz, offene und überfällige Rechnungen, offene Offerten, Erfolgsquote, Marge und Zeiten.',
-    'Mit «Alle Mandanten» werden dieselben Kennzahlen summiert und verglichen. Diese Gesamtansicht ist an eine Rolle gebunden, nicht an einen Knopf.',
+    'Mit «Alle Mandanten» werden dieselben Kennzahlen summiert und verglichen. Diese Gesamtansicht ist an eine Rolle gebunden, nicht an einen Knopf — und sie gilt nur hier: wer von der Gesamtsicht in ein Modul geht, wählt zuerst den Mandanten, in dem er arbeitet. Gearbeitet wird in einer Einheit, verglichen über alle.',
     'Jede Kachel und jede Zeile springt auf den Datensatz, aus dem die Zahl kommt. Eine Kennzahl ohne Weg zum Beleg ist ein Bild.',
     'Unten rechts steht «fragen»: eine Frage in eigenen Worten, statt zu wissen, in welchem Modul die Antwort liegt. Der Assistent liest denselben Datenstand und hält sich an dieselben Rechte — was eine Rolle nicht sehen darf, sagt er nicht.',
     'Stornierte Belege und Gutschriften sind in jeder Zahl gleich behandelt: sie zählen nicht als Umsatz, verschwinden aber auch nicht aus der Geschichte.',
@@ -2466,18 +2561,20 @@ VIEWS.uebersicht = () => {
       { k:'r', n:'jetzt', ernst:3 }, { k:'y', n:'heute', ernst:2 },
       { k:'g', n:'kann warten', ernst:1 },
     ].map(s => { const t = items.filter(i => i.ernst === s.ernst);
-      return { ...s, anzahl:t.length, wo:t[0] && t[0].wo }; });
+      return { ...s, anzahl:t.length, wo:t[0] && t[0].wo, mand:t[0] && t[0].mand }; });
     const eins = items[0];
     return `<div class="w12"><div class="ampel">
       ${stufen.map(s => `<button class="lampe ${s.anzahl ? 'an ' + s.k : ''}"
-        ${s.wo ? `data-go="${s.wo}"` : ''} ${s.anzahl ? '' : 'disabled'}>
+        ${s.wo ? `data-go="${s.wo}" ${s.mand ? `data-mand="${s.mand}"` : ''}` : ''}
+        ${s.anzahl ? '' : 'disabled'}>
         <span class="glas">${s.anzahl || ''}</span><span class="txt">${s.n}</span></button>`).join('')}
       <button class="frage" data-ampelhilfe="1" title="Was bedeuten die Farben?"
         ><b>?</b><span>Farben</span></button>
       <div class="trenn"></div>
       <div class="jetzt">${eins
         ? `<div class="was"><b>${esc(eins.was)}</b><div class="why">${esc(eins.warum)}</div></div>
-           <span class="hin" data-go="${eins.wo}">In ${esc(eins.modul)} ansehen &rsaquo;</span>`
+           <span class="hin" data-go="${eins.wo}" data-mand="${eins.mand || ''}"
+             data-ref="${eins.ref || ''}">In ${esc(eins.modul)} ansehen &rsaquo;</span>`
         : `<div class="was"><b>Nichts offen</b>
              <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`}</div>
       </div></div>`;
@@ -2502,7 +2599,8 @@ VIEWS.uebersicht = () => {
   /* ── Entscheidungen ── */
   const zeigen = dring.slice(0, 4), rest = dring.slice(4);
   const dec = KARTE('', '', (zeigen.length
-      ? zeigen.map(i => `<div class="dec ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}">
+      ? zeigen.map(i => `<div class="dec ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}"
+          data-mand="${i.mand || ''}" data-ref="${i.ref || ''}">
           <div class="row" style="justify-content:space-between;gap:6px">
             <b>${esc(i.was)}</b>
             <span class="tag ${i.ernst === 3 ? 't-bad' : 't-warn'}">${i.ernst === 3 ? 'jetzt' : 'heute'}</span></div>
@@ -2510,7 +2608,8 @@ VIEWS.uebersicht = () => {
       : `<div class="dec calm"><b>Nichts offen</b>
           <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`)
     + ((rest.length || spaeter.length) ? `<div class="chips" style="margin-top:7px">${
-        rest.concat(spaeter).map(i => `<span class="chip s${i.ernst}" data-go="${i.wo}">${esc(i.was)}</span>`).join('')
+        rest.concat(spaeter).map(i => `<span class="chip s${i.ernst}" data-go="${i.wo}"
+          data-mand="${i.mand || ''}" data-ref="${i.ref || ''}">${esc(i.was)}</span>`).join('')
       }</div>` : ''));
 
   /* ── Wiedervorlagen (ACT-02) ── */
@@ -2527,7 +2626,7 @@ VIEWS.uebersicht = () => {
   /* ── Projekte ── */
   const proj = KARTE('', 'Projekte', mProjekte().slice(0, 5).map(p => `
     <div class="mini2" data-projekt="${p.id}" style="cursor:pointer">
-      <div class="top"><span class="nm2">${esc(p.nr)} · ${esc(p.name.split(',')[0])}</span>
+      <div class="top"><span class="nm2">${esc(p.kurz)}</span>
         <span class="vl2">${esc(p.status)}</span></div>
       <div style="font-size:11px;color:var(--dim);margin-top:2px">${esc(K(p.kunde).name)} ·
         ${esc(M(p.mandant).name)} · ${esc(p.verantwortlich)}</div></div>`).join(''),
@@ -2615,7 +2714,7 @@ VIEWS.uebersicht = () => {
         ? KARTE('', 'Marge je Projekt', mProjekte().map(p => { const x = marge(p.id);
             const max = Math.max(...mProjekte().map(q => Math.abs(marge(q.id).db)), 1);
             return `<div class="mini2" data-projekt="${p.id}" style="cursor:pointer">
-              <div class="top"><span class="nm2">${esc(p.nr)}</span>
+              <div class="top"><span class="nm2">${esc(p.kurz)}</span>
                 <span class="vl2">${chf0(x.db)}</span></div>
               <div class="bar"><i style="width:${(Math.abs(x.db) / max * 100).toFixed(0)}%;
                 background:${x.db < 0 ? 'var(--warn)' : 'var(--acc)'}"></i></div></div>`;
@@ -2781,7 +2880,7 @@ function kundeDetail(k) {
       <div class="scrollx"><table><thead><tr><th>Projekt</th><th>Standort</th><th>Status</th>
         <th>Verantwortlich</th><th>Termin</th></tr></thead><tbody>
         ${DB.projekte.filter(p => p.kunde === k.id && imBlick(p.mandant) && projektErlaubt(p.id))
-          .map(p => `<tr class="click" data-projekt="${p.id}"><td><b>${esc(p.nr)}</b>
+          .map(p => `<tr class="click" data-projekt="${p.id}"><td><b>${esc(p.kurz)}</b>
             <div class="small muted">${esc(p.name)}</div></td>
             <td>${esc(standort(k.id, p.standort).name)}</td><td>${esc(p.status)}</td>
             <td>${esc(p.verantwortlich)}</td><td class="num">${esc(p.termin)}</td></tr>`).join('')}
@@ -2812,14 +2911,14 @@ VIEWS.projekte = () => {
   const m = marge(p.id);
 
   const wahl = `<div class="tabs">${liste.map(x =>
-    `<button class="tab ${x.id === p.id ? 'on' : ''}" data-projekt="${x.id}">${esc(x.nr)}</button>`).join('')}</div>`;
+    `<button class="tab ${x.id === p.id ? 'on' : ''}" data-projekt="${x.id}">${esc(x.kurz)}</button>`).join('')}</div>`;
 
   const kopf = `<div class="card" style="margin-bottom:16px">
     <div class="row" style="justify-content:space-between;align-items:flex-start;gap:14px">
       <div style="min-width:0">
         <div class="small muted">${esc(M(p.mandant).name)} · ${esc(p.kategorie)}</div>
         <h2 style="font-size:19px;font-weight:700;letter-spacing:-.01em;margin:3px 0 4px">
-          ${esc(p.nr)} · ${esc(p.name)}</h2>
+          ${esc(p.name)}</h2>
         <div class="small muted" style="line-height:1.6;max-width:80ch">${esc(p.beschreibung)}</div>
         <div class="row" style="margin-top:9px;gap:5px">${p.tags.map(t =>
           `<span class="chip">${esc(t)}</span>`).join('')}</div></div>
@@ -2942,7 +3041,7 @@ VIEWS.projekte = () => {
     const pdfs = dok.filter(d => d.final);
     inhalt = `<div class="card">
       <div class="wl"><span>Projektexport als ZIP</span>
-        <span class="r2">${esc(p.nr)}_${esc(K(p.kunde).kurz)}.zip</span></div>
+        <span class="r2">${esc(p.kurz.replace(/\s+/g, '-'))}_${esc(K(p.kunde).kurz)}.zip</span></div>
       <div class="small muted" style="line-height:1.6;margin-bottom:12px;max-width:92ch">
         Das Archiv ist ohne diese Anwendung lesbar: Ordnerstruktur, Originaldateien, Beleg-PDFs,
         die Chronik als PDF und dieselben Daten maschinenlesbar als JSON und CSV.</div>
@@ -3025,7 +3124,7 @@ VIEWS.verkauf = () => {
       <td><b>${esc(d.nr)}</b><div class="small muted">${esc(TYPKURZ[d.typ])}${d.art ? ' · ' + esc(d.art) : ''}</div></td>
       <td class="num">${esc(d.datum)}</td>
       <td>${esc(K(d.kunde).name)}<div class="small muted">${esc(d.adresseName)}</div></td>
-      <td>${d.projekt ? esc(P(d.projekt).nr) : '<span class="muted">—</span>'}</td>
+      <td>${d.projekt ? esc(P(d.projekt).kurz) : '<span class="muted">—</span>'}</td>
       <td><span class="tag ${STATUSFARBE(d.status)}">${esc(d.status)}</span>
         ${d.final ? '' : ' <span class="tag t-mute">nicht final</span>'}</td>
       <td class="r num">${d.ohnePreise ? '<span class="muted">ohne Preise</span>' : chf(netto(d))}</td>
@@ -3116,7 +3215,7 @@ function dokDetail(d) {
       <div class="rdmeta">
         <div><span>${esc(TYP[d.typ])}</span><b>${esc(d.nr)}</b></div>
         <div><span>Datum</span>${esc(d.datum)}</div>
-        ${d.projekt ? `<div><span>Projekt</span>${esc(P(d.projekt).nr)}</div>` : ''}
+        ${d.projekt ? `<div><span>Projekt</span>${esc(P(d.projekt).kurz)}</div>` : ''}
         <div><span>Kunde</span>${esc(k.nr)}</div>
         ${d.zahlungsziel ? `<div><span>Zahlungsziel</span>${d.zahlungsziel} Tage</div>` : ''}</div></div>
     <div class="rdan"><b>${esc(d.adresseName)}</b><br>${esc(c.anrede)} ${esc(c.name)}<br>
@@ -3454,7 +3553,7 @@ VIEWS.zeiten = () => {
     <div class="row" style="gap:10px;align-items:flex-end">
       <label class="rfilter" style="flex:1 1 220px"><span>Projekt</span>
         <select data-zprojekt="1">${mProjekte().map(p =>
-          `<option value="${p.id}">${esc(p.nr)} · ${esc(p.name.split(',')[0])}</option>`).join('')}</select></label>
+          `<option value="${p.id}">${esc(p.kurz)}</option>`).join('')}</select></label>
       <label class="rfilter" style="flex:1 1 220px"><span>Tätigkeit</span>
         <input type="text" data-ztext="1" value="Einregulierung" placeholder="woran gearbeitet wird"></label>
       <label class="rfilter"><span>Dauer</span>
@@ -3475,7 +3574,7 @@ VIEWS.zeiten = () => {
               stroke-width="2.6" stroke-linecap="round"><path d="M4 10.5l4 4 8-9"/></svg></div>`
         : ''}</td>
       <td class="num">${esc(t.datum)}</td>
-      <td>${esc(P(t.projekt).nr)}<div class="small muted">${esc(K(P(t.projekt).kunde).kurz)}</div></td>
+      <td>${esc(P(t.projekt).kurz)}<div class="small muted">${esc(K(P(t.projekt).kunde).kurz)}</div></td>
       <td>${esc(t.wer)}</td>
       <td>${esc(t.taetigkeit)}${t.notiz ? `<div class="small muted">${esc(t.notiz)}</div>` : ''}</td>
       <td class="r num">${t.dauer.toFixed(2)} h</td>
@@ -3505,7 +3604,7 @@ VIEWS.zeiten = () => {
           ${zeile('Ausgewählte Stunden',
             ZEIT_WAHL.reduce((s, id) => s + DB.zeiten.find(x => x.id === id).dauer, 0).toFixed(2) + ' h')}
           ${zeile('Betrag netto', chf(wahlSumme), 'zum jeweiligen Stundensatz')}
-          ${zeile('Projekte', wahlProjekte.map(p => esc(P(p).nr)).join(', '),
+          ${zeile('Projekte', wahlProjekte.map(p => esc(P(p).kurz)).join(', '),
             wahlProjekte.length > 1 ? 'je Projekt eine eigene Rechnung' : 'eine Rechnung')}
         </div>
         <div class="row" style="margin-top:12px">
@@ -3521,7 +3620,7 @@ VIEWS.zeiten = () => {
     <div class="grid g2" style="gap:14px">
       <div class="card"><div class="wl"><span>Nach Projekt</span></div>
         ${proProjekt.map(x => `<div class="mini2">
-          <div class="top"><span class="nm2">${esc(x.p.nr)} · ${esc(x.p.name.split(',')[0])}</span>
+          <div class="top"><span class="nm2">${esc(x.p.kurz)}</span>
             <span class="vl2">${x.h.toFixed(1)} h</span></div>
           <div class="bar"><i style="width:${(x.h / Math.max(...proProjekt.map(y => y.h)) * 100).toFixed(0)}%"></i></div>
           <div class="small muted" style="margin-top:3px">${chf(x.verr)} verrechenbar${
@@ -3781,7 +3880,7 @@ VIEWS.service = () => {
         <div><div class="small muted">Kunde</div>
           <div style="font-weight:600"><span class="link" data-kunde="${f.kunde}">${esc(K(f.kunde).name)}</span></div></div>
         <div><div class="small muted">Projekt</div>
-          <div style="font-weight:600"><span class="link" data-projekt="${f.projekt}">${esc(P(f.projekt).nr)}</span></div></div>
+          <div style="font-weight:600"><span class="link" data-projekt="${f.projekt}">${esc(P(f.projekt).kurz)}</span></div></div>
         <div><div class="small muted">Lieferant</div>
           <div style="font-weight:600">${esc(f.lieferant)}</div></div>
         <div><div class="small muted">Kostenübernahme</div>
@@ -3868,7 +3967,7 @@ VIEWS.lager = () => {
                 <td class="r num" style="color:${b.menge < 0 ? 'var(--warn)' : 'var(--acci)'};font-weight:650">
                   ${b.menge > 0 ? '+' : '−'}${Math.abs(b.menge)} ${esc(l.einheit)}</td>
                 <td>${esc(b.grund)}</td>
-                <td>${b.projekt ? `<span class="link" data-projekt="${b.projekt}">${esc(P(b.projekt).nr)}</span>` : '—'}</td>
+                <td>${b.projekt ? `<span class="link" data-projekt="${b.projekt}">${esc(P(b.projekt).kurz)}</span>` : '—'}</td>
                 <td>${esc(b.wer)}</td></tr>`).join('')
                 : '<tr><td colspan="5" class="muted">Noch keine Bewegung.</td></tr>'}
               </tbody></table></div>
@@ -4155,7 +4254,7 @@ function aKunde(k) {
       `${esc(k.rechnungsmail)}`,
     of && rg ? `Der Adressfall: Offerte ${esc(of.nr)} an ${esc(of.adresseName)}, Rechnung ` +
       `${esc(rg.nr)} an ${esc(rg.adresseName)} — ein Debitor, zwei Adressen, beide als Snapshot.` : '',
-    proj.length ? `Projekte: ${proj.map(p => `<b>${esc(p.nr)}</b> ${esc(p.status)}`).join(', ')}` : '',
+    proj.length ? `Projekte: ${proj.map(p => `<b>${esc(p.kurz)}</b> ${esc(p.status)}`).join(', ')}` : '',
     offen.length ? `<span class="hl">Offen: ${offen.map(d => `${esc(d.nr)} ${chf(offenBetrag(d))}` +
       (d.status === 'überfällig' ? ' (überfällig)' : '')).join(', ')}</span>`
       : `Nichts offen — ${dok.filter(d => d.typ === 'RG').length} Rechnungen, alle bezahlt.`,
@@ -4169,15 +4268,15 @@ function aKunde(k) {
 function aProjekt(p) {
   if (!modulErlaubt('projekte')) return modulSperre('projekte');
   if (!projektErlaubt(p.id)) return bau('Dieses Projekt ist nicht freigegeben',
-    [sperre(p.nr),
-     `Freigegeben sind: ${mProjekte().map(x => esc(x.nr)).join(', ') || 'keines'}.`],
+    [sperre(p.kurz),
+     `Freigegeben sind: ${mProjekte().map(x => esc(x.kurz)).join(', ') || 'keines'}.`],
     [{ t:'Was darf meine Rolle sehen?' }]);
   const dok = DB.dokumente.filter(d => d.projekt === p.id);
   const z = DB.zeiten.filter(t => t.projekt === p.id);
   const m = marge(p.id);
   const faelle = DB.faelle.filter(f => f.projekt === p.id);
   const akt = DB.aktivitaeten.filter(a => a.projekt === p.id && a.status !== 'erledigt');
-  return bau(`${esc(p.nr)} · ${esc(p.name)}`, [
+  return bau(esc(p.name), [
     `${esc(K(p.kunde).name)}, ${esc(standort(p.kunde, p.standort).name)} · ${esc(p.status)} · ` +
       `${esc(p.verantwortlich)} · Termin ${esc(p.termin)}`,
     dok.length ? `Belege: ${dok.map(d => `${esc(d.nr)} (${esc(d.status)})`).join(', ')}` : 'Noch kein Beleg.',
@@ -4205,7 +4304,7 @@ function aBeleg(d) {
   const snap = d.pos.filter(p => p.art && Math.abs(A(p.art).liste - p.preis) > 0.005);
   return bau(`${esc(TYP[d.typ])} ${esc(d.nr)} · ${esc(d.datum)}`, [
     `${esc(K(d.kunde).name)}, adressiert an <b>${esc(d.adresseName)}</b>` +
-      (d.projekt ? ` · Projekt ${esc(P(d.projekt).nr)}` : ''),
+      (d.projekt ? ` · Projekt ${esc(P(d.projekt).kurz)}` : ''),
     d.ohnePreise ? `${d.pos.length} Positionen, bewusst ohne Preise gedruckt.`
       : `Netto ${chf(netto(d))}, MWST ${chf(mwstAuf(d))}, <b>Total ${chf(brutto(d))}</b>` +
         (d.abzug ? ` — nach Abzug von ${chf(d.abzug.betrag)} (${esc(d.abzug.was)})` : ''),
@@ -4232,7 +4331,7 @@ function aBeleg(d) {
       `${vers.length} Eintrag${vers.length > 1 ? 'e' : ''} in der Historie.` : '',
     imBlickHinweis(d.mandant),
   ], [{ t:'Beleg öffnen', go:'verkauf', ref:d.id },
-      d.projekt ? { t:P(d.projekt).nr, go:'projekte', ref:d.projekt } : null,
+      d.projekt ? { t:P(d.projekt).kurz, go:'projekte', ref:d.projekt } : null,
       d.typ === 'RG' && offenBetrag(d) > 0.005 ? { t:'Zahlungen', go:'zahlungen', ref:d.id } : null,
       d.final && modulErlaubt('archiv') ? { t:'Archiv', go:'archiv' } : null].filter(Boolean));
 }
@@ -4290,7 +4389,7 @@ function aFall(f) {
   const d = f.bezugDok ? D(f.bezugDok) : null;
   const p = d ? d.pos.find(x => x.nr === f.bezugPos) : null;
   return bau(`${esc(f.nr)} · ${esc(f.titel)}`, [
-    `${esc(K(f.kunde).name)}, Projekt ${esc(P(f.projekt).nr)} · gemeldet ${esc(f.gemeldet)} · ` +
+    `${esc(K(f.kunde).name)}, Projekt ${esc(P(f.projekt).kurz)} · gemeldet ${esc(f.gemeldet)} · ` +
       `<b>${esc(f.status)}</b> · Frist ${esc(f.frist)}`,
     esc(f.fehler),
     `Lieferant ${esc(f.lieferant)}, Kostenübernahme ${esc(f.kosten)}, verantwortlich ${esc(f.verantwortlich)}`,
@@ -4337,7 +4436,7 @@ function aRolle(r) {
     `Module: ${r.module === '*' ? 'alle zwölf' : r.module.length + ' von 12 — ' +
       r.module.map(id => esc(MODULES.find(m => m.id === id).name)).join(', ')}`,
     `Mandanten: ${r.mandanten === '*' ? 'alle' : r.mandanten.map(id => esc(M(id).name)).join(', ')}`,
-    `Projekte: ${r.projekte === '*' ? 'alle freigegebenen' : r.projekte.map(id => esc(P(id).nr)).join(', ')}`,
+    `Projekte: ${r.projekte === '*' ? 'alle freigegebenen' : r.projekte.map(id => esc(P(id).kurz)).join(', ')}`,
     `EK, Marge, interne Kostensätze: <b>${r.ek ? 'sichtbar' : 'gesperrt'}</b> · ` +
       `Kontakte und interne Notizen: <b>${r.notizen ? 'sichtbar' : 'gesperrt'}</b>`,
     `Finalisieren ${r.finalisieren ? 'erlaubt' : 'nicht erlaubt'} · Versenden ` +
@@ -4354,13 +4453,13 @@ function aPerson(name) {
   return bau(esc(name), [
     r ? `Rolle ${esc(r.name)}: ${esc(r.was)}` : '',
     `${z.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h auf ${proj.length} Projekten erfasst`,
-    proj.map(p => `${esc(P(p).nr)}: ${z.filter(t => t.projekt === p)
+    proj.map(p => `${esc(P(p).kurz)}: ${z.filter(t => t.projekt === p)
       .reduce((s, t) => s + t.dauer, 0).toFixed(1)} h`).join(' · '),
     darf('ek') ? `Interne Zeitkosten: ${chf(z.reduce((s, t) => s + t.dauer * t.kosten, 0))}`
       : sperre('Der interne Kostensatz'),
     DB.projekte.filter(p => p.verantwortlich === name).length
       ? `Verantwortlich für ${DB.projekte.filter(p => p.verantwortlich === name)
-          .map(p => esc(p.nr)).join(', ')}` : '',
+          .map(p => esc(p.kurz)).join(', ')}` : '',
   ], [{ t:'Zeiten', go:'zeiten' }]);
 }
 
@@ -4373,7 +4472,7 @@ function aStandort({ k, s }) {
     `${esc(a.typ)}: ${esc(a.zeile)}, ${esc(a.plz)} ${esc(a.ort)}`,
     darf('notizen') ? `Kontakte: ${s.kontakte.map(c => esc(kontakt(k.id, c).name) + ' (' +
       esc(kontakt(k.id, c).funktion) + ')').join(', ')}` : sperre('Die Kontakte'),
-    proj.length ? `Projekte hier: ${proj.map(p => esc(p.nr)).join(', ')}` : 'Kein Projekt an diesem Standort.',
+    proj.length ? `Projekte hier: ${proj.map(p => esc(p.kurz)).join(', ')}` : 'Kein Projekt an diesem Standort.',
     dok.length ? `${dok.length} Beleg${dok.length > 1 ? 'e' : ''} sind an diese Adresse gegangen: ` +
       dok.map(d => esc(d.nr)).join(', ') : '',
     `Der Standort hängt am Kunden, nicht daneben: ${esc(k.name)} bleibt der Debitor.`,
@@ -4432,7 +4531,7 @@ const ANTWORT = {
     const liste = mProjekte().map(p => ({ p, m:marge(p.id) }))
       .sort((a, b) => b.m.db - a.m.db);
     return bau('Marge je Projekt', liste.map(({ p, m }) =>
-      `<b>${esc(p.nr)}</b> ${esc(p.name.split(',')[0])}: Rohertrag ${chf(m.roh)}, ` +
+      `<b>${esc(p.kurz)}</b>: Rohertrag ${chf(m.roh)}, ` +
       `Deckungsbeitrag <b>${chf(m.db)}</b>${m.db < 0 ? ' <span class="hl">(negativ)</span>' : ''} · ` +
       `${m.stunden.toFixed(1)} h, ${chf(m.intern)} interne Kosten`)
       .concat(['Gerechnet mit dem EK, der in der Position eingefroren ist — nicht mit dem ' +
@@ -4577,14 +4676,14 @@ const ANTWORT = {
     return bau('Offerte → Auftrag → Lieferschein → Rechnung', [
       'Ein Beleg wird nicht neu getippt, sondern umgewandelt, mit wählbaren Mengen und ' +
         'Positionen.',
-      p ? `Am Beispiel ${esc(p.nr)}: ${dok.map(d => `${esc(d.nr)} (${esc(TYPKURZ[d.typ])}, ` +
+      p ? `Am Beispiel ${esc(p.kurz)}: ${dok.map(d => `${esc(d.nr)} (${esc(TYPKURZ[d.typ])}, ` +
         `${esc(d.status)})`).join(' → ')}` : '',
       'Der Lieferschein nimmt die offenen Mengen und darf ohne Preise gedruckt werden.',
       'Akonto-, Teil- und Schlussrechnung verrechnen, was schon fakturiert ist; eine weitere ' +
         'Rechnung auf einen vollständig fakturierten Auftrag lehnt das System ab.',
       'Finalisieren vergibt die Nummer aus dem Kreis des Mandanten und friert den Beleg ein; ' +
         'geändert wird danach nur über Storno und Gutschrift.',
-    ], [{ t:'Verkauf', go:'verkauf' }, p ? { t:p.nr, go:'projekte', ref:p.id } : null].filter(Boolean));
+    ], [{ t:'Verkauf', go:'verkauf' }, p ? { t:p.kurz, go:'projekte', ref:p.id } : null].filter(Boolean));
   },
   mandanten() {
     return bau(`${DB.mandanten.length} Mandanten in einer Installation`, [
@@ -4940,8 +5039,8 @@ const ACTIONS = {
   'zip-export'(el) {
     const p = P(el.dataset.id);
     const dok = DB.dokumente.filter(d => d.projekt === p.id && d.final);
-    protokoll(p.nr, 'exportiert', `Projektexport ZIP, ${dok.length} PDF, Chronik und Metadaten`);
-    toast(`Projektexport <b>${esc(p.nr)}_${esc(K(p.kunde).kurz)}.zip</b> zusammengestellt:
+    protokoll(p.kurz, 'exportiert', `Projektexport ZIP, ${dok.length} PDF, Chronik und Metadaten`);
+    toast(`Projektexport <b>${esc(p.kurz.replace(/\s+/g, '-'))}_${esc(K(p.kunde).kurz)}.zip</b> zusammengestellt:
       ${dok.length} Beleg-PDF, ${DB.dateien.filter(f => f.projekt === p.id).length} Dateien,
       Chronik, projekt.json und die Prüfsummen. Der Download braucht einen Server — im Prototyp
       steht die Liste.`, 1);
@@ -4997,8 +5096,8 @@ const ACTIONS = {
     const satz = verr ? 145 : 0;
     DB.zeiten.push({ id:neueId(), projekt:pid, datum:DB.heute, wer:wer(), taetigkeit:text,
       dauer, verrechenbar:verr, satz, kosten:78, dok:null });
-    protokoll(P(pid).nr, 'Zeit erfasst', `${dauer.toFixed(2)} h ${text}, ${verr ? 'verrechenbar' : 'nicht verrechenbar'}`);
-    toast(`${dauer.toFixed(2)} h auf <b>${esc(P(pid).nr)}</b> gebucht${verr
+    protokoll(P(pid).kurz, 'Zeit erfasst', `${dauer.toFixed(2)} h ${text}, ${verr ? 'verrechenbar' : 'nicht verrechenbar'}`);
+    toast(`${dauer.toFixed(2)} h auf <b>${esc(P(pid).kurz)}</b> gebucht${verr
       ? ` · ${chf(dauer * satz)} verrechenbar` : ' · nicht verrechenbar'}.`, 1);
   },
   'zeiten-fakturieren'() {
@@ -5023,7 +5122,7 @@ const ACTIONS = {
       DB.dokumente.push(neu);
       meine.forEach(t => { t.dok = neu.id; });
       erzeugt.push({ neu, h:meine.reduce((s, t) => s + t.dauer, 0) });
-      protokoll(`Entwurf RG ${p.nr}`, 'aus Zeiten erzeugt',
+      protokoll(`Entwurf RG ${p.kurz}`, 'aus Zeiten erzeugt',
         `${meine.length} Buchungen, ${meine.reduce((s, t) => s + t.dauer, 0).toFixed(2)} h`);
     });
     ZEIT_WAHL = [];
@@ -5116,21 +5215,35 @@ document.addEventListener('click', e => {
   if (t) {
     AKTIV = t.dataset.treffer;
     const ref = t.dataset.ref;
-    if (AKTIV === 'kunden') { KUNDE_OFFEN = ref; KUNDE_TAB = 'stamm'; }
-    if (AKTIV === 'projekte') PROJEKT_OFFEN = ref;
-    if (AKTIV === 'verkauf') DOK_OFFEN = ref;
-    if (AKTIV === 'produkte') ART_OFFEN = ref;
-    if (AKTIV === 'service') FALL_OFFEN = ref;
+    if (AKTIV === 'kunden') { KUNDE_OFFEN = ref; KUNDE_TAB = 'stamm'; mandantMit('kunde', ref); }
+    if (AKTIV === 'projekte') { PROJEKT_OFFEN = ref; mandantMit('projekt', ref); }
+    if (AKTIV === 'verkauf') { DOK_OFFEN = ref; mandantMit('dok', ref); }
+    if (AKTIV === 'produkte') { ART_OFFEN = ref; mandantMit('artikel', ref); }
+    if (AKTIV === 'service') { FALL_OFFEN = ref; mandantMit('fall', ref); }
     SUCHE = ''; SUCHE_OFFEN = false; $('#sfeld').value = '';
     render(); return;
   }
 
   const m = e.target.closest('[data-mandant]');
-  if (m) { MANDANT = m.dataset.mandant; DOK_OFFEN = null; KUNDE_OFFEN = null;
-    PROJEKT_OFFEN = null; FALL_OFFEN = null; ART_OFFEN = null;
-    toast(MANDANT === 'alle'
-      ? `Gesamtansicht über ${mandantenSicht().length} Mandanten — nur für berechtigte Rollen.`
-      : `Mandant <b>${esc(M().lang)}</b>: eigene Stammdaten, Nummernkreise, Absender und Layouts.`, 1);
+  if (m) {
+    MANDANT = m.dataset.mandant;
+    /* «bleib» kommt von der Mandantenwahl mitten im Modul: dort war schon ein
+       Datensatz geöffnet, und der soll offen bleiben. Der Umschalter in der
+       Leiste räumt dagegen auf — sonst zeigt er einen Beleg aus einem anderen
+       Mandanten. */
+    if (!m.dataset.bleib) { DOK_OFFEN = null; KUNDE_OFFEN = null;
+      PROJEKT_OFFEN = null; FALL_OFFEN = null; ART_OFFEN = null; }
+    if (MANDANT === 'alle') {
+      /* Die Gesamtsicht ist eine Auswertungssicht: dort wird verglichen, nicht
+         gearbeitet. Also landet sie auf der Übersicht. */
+      AKTIV = gesamtNur; DOK_OFFEN = null; KUNDE_OFFEN = null; FALL_OFFEN = null; ART_OFFEN = null;
+      toast(`Gesamtsicht über ${mandantenSicht().length} Mandanten — hier werden Zahlen
+        verglichen und summiert. Für jedes andere Modul wählen Sie einen Mandanten, damit
+        sich die drei Einheiten nicht vermischen.`, 1);
+    } else {
+      toast(`Mandant <b>${esc(M().lang)}</b>: eigene Stammdaten, Nummernkreise, Absender
+        und Layouts.`, 1);
+    }
     render(); return; }
 
   const ah = e.target.closest('[data-ampelhilfe]');
@@ -5157,11 +5270,16 @@ document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
   if (go) {
     AKTIV = go.dataset.go;
-    const ref = go.dataset.ref;
+    const ref = go.dataset.ref, mand = go.dataset.mand;
+    /* Aus der Gesamtsicht heraus: der Mandant des angeklickten Datensatzes
+       gewinnt — sonst müsste man zweimal entscheiden. */
+    if (MANDANT === 'alle' && mand && mandantenSicht().includes(mand)) MANDANT = mand;
     if (ref) {
-      if (AKTIV === 'verkauf' || AKTIV === 'zahlungen') DOK_OFFEN = ref;
-      if (AKTIV === 'projekte') PROJEKT_OFFEN = ref;
-      if (AKTIV === 'service') FALL_OFFEN = ref;
+      if (AKTIV === 'verkauf' || AKTIV === 'zahlungen') { DOK_OFFEN = ref; mandantMit('dok', ref); }
+      if (AKTIV === 'projekte') { PROJEKT_OFFEN = ref; mandantMit('projekt', ref); }
+      if (AKTIV === 'service') { FALL_OFFEN = ref; mandantMit('fall', ref); }
+      if (AKTIV === 'produkte') { ART_OFFEN = ref; mandantMit('artikel', ref); }
+      if (AKTIV === 'kunden') { KUNDE_OFFEN = ref; mandantMit('kunde', ref); }
     }
     render(); return;
   }
@@ -5169,6 +5287,7 @@ document.addEventListener('click', e => {
   /* Kunden */
   const k = e.target.closest('[data-kunde]');
   if (k) { KUNDE_OFFEN = KUNDE_OFFEN === k.dataset.kunde ? null : k.dataset.kunde;
+    mandantMit('kunde', k.dataset.kunde);
     if (AKTIV !== 'kunden') { AKTIV = 'kunden'; KUNDE_OFFEN = k.dataset.kunde; }
     KUNDE_TAB = 'stamm'; render(); return; }
   if (e.target.closest('[data-kundezu]')) { KUNDE_OFFEN = null; render(); return; }
@@ -5177,7 +5296,7 @@ document.addEventListener('click', e => {
 
   /* Projekte */
   const p = e.target.closest('[data-projekt]');
-  if (p) { PROJEKT_OFFEN = p.dataset.projekt;
+  if (p) { PROJEKT_OFFEN = p.dataset.projekt; mandantMit('projekt', p.dataset.projekt);
     if (AKTIV !== 'projekte') AKTIV = 'projekte';
     render(); return; }
   const pt = e.target.closest('[data-ptab]');
@@ -5186,6 +5305,7 @@ document.addEventListener('click', e => {
   /* Belege */
   const d = e.target.closest('[data-dok]');
   if (d) { DOK_OFFEN = DOK_OFFEN === d.dataset.dok ? null : d.dataset.dok;
+    mandantMit('dok', d.dataset.dok);
     if (AKTIV !== 'verkauf' && AKTIV !== 'zahlungen') { AKTIV = 'verkauf'; DOK_OFFEN = d.dataset.dok; }
     render(); return; }
   if (e.target.closest('[data-dokzu]')) { DOK_OFFEN = null; render(); return; }
@@ -5212,7 +5332,7 @@ document.addEventListener('click', e => {
 
   /* Service */
   const fl = e.target.closest('[data-fall]');
-  if (fl) { FALL_OFFEN = fl.dataset.fall; render(); return; }
+  if (fl) { FALL_OFFEN = fl.dataset.fall; mandantMit('fall', fl.dataset.fall); render(); return; }
   const fs = e.target.closest('[data-fstatus]');
   if (fs) { const f = DB.faelle.find(x => x.id === (FALL_OFFEN || mFaelle()[0].id));
     f.status = fs.dataset.fstatus;
