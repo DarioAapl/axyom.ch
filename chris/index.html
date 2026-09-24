@@ -911,14 +911,6 @@ header .werkzeug{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify
 .treffer .gesperrt{padding:10px;font-size:11.5px;color:var(--warn);background:var(--warnbg);
   border-radius:9px;margin:4px}
 
-/* die Anforderungs-ID neben der Funktion, die sie erfüllt */
-.aid{display:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9.5px;
-  font-weight:600;letter-spacing:.02em;color:var(--acci);background:var(--okbg);
-  border:1px solid rgba(0,178,160,.28);border-radius:5px;padding:1px 5px;vertical-align:2px;
-  white-space:nowrap}
-body.ids .aid{display:inline-block}
-body.ids .aid + .aid{margin-left:3px}
-
 /* die Chronik einer Projektakte */
 .chronik{display:flex;flex-direction:column;gap:0}
 .chronik .cz{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--soft)}
@@ -1067,7 +1059,6 @@ body.ids .aid + .aid{margin-left:3px}
         <!-- IAM-01/02: die Rolle entscheidet, was überhaupt gezeigt wird -->
         <div class="rolle"><label for="rfeld">Rolle</label>
           <select id="rfeld"></select></div>
-        <button class="btn" id="idbtn" title="Die Anforderungs-IDs aus dem Grobkonzept einblenden">IDs</button>
         <div class="demo">Prototyp · Beispieldaten</div>
       </div>
     </header>
@@ -1820,7 +1811,6 @@ let MANDANT = 'lp';         // MAN-01: der Mandant, in dem gearbeitet wird
 let ROLLE = 'admin';        // IAM-01: die Rolle, die zusieht
 let AKTIV = 'uebersicht';
 let ZULETZT = null;
-let IDS = false;            // die Anforderungs-IDs aus dem Grobkonzept
 let KUNDE_OFFEN = null, PROJEKT_OFFEN = 'p1', DOK_OFFEN = null, FALL_OFFEN = null;
 let IMPORT_KAT = 'geaendert', IMPORT_ANGEWENDET = false;
 let ZEIT_WAHL = [];         // TIM-04: die Zeiten, die in die Rechnung sollen
@@ -1944,9 +1934,6 @@ const ICON = {
 const ic = id => `<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor"
   stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${ICON[id] || ''}</svg>`;
 
-/* die Anforderungs-ID neben der Funktion, die sie erfüllt (Kippschalter «IDs») */
-const aid = (...ids) => ids.map(i => `<span class="aid" title="Anforderung aus dem Grobkonzept">${i}</span>`).join('');
-
 /* ── Was offen ist: das füttert Leiste und Übersicht ─────────────────────── */
 function offeneSachen() {
   const items = [];
@@ -2008,7 +1995,7 @@ function renderRail() {
   const sicht = mandantenSicht();
   $('#mwahl').innerHTML =
     (gesamtsicht() ? `<button data-mandant="alle" class="alle ${MANDANT === 'alle' ? 'on' : ''}"
-        title="MAN-05: nur für berechtigte Rollen">Alle Mandanten
+        title="Gesamtsicht — nur für berechtigte Rollen">Alle Mandanten
         <span class="kn">${sicht.length}</span></button>` : '') +
     DB.mandanten.filter(m => sicht.includes(m.id)).map(m =>
       `<button data-mandant="${m.id}" class="${MANDANT === m.id ? 'on' : ''}">
@@ -2024,8 +2011,6 @@ function renderRail() {
     <span style="opacity:.75">${esc(r.was)}</span>`;
   $('#rfeld').innerHTML = DB.rollen.map(x =>
     `<option value="${x.id}" ${x.id === ROLLE ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
-  document.body.classList.toggle('ids', IDS);
-  $('#idbtn').classList.toggle('acc', IDS);
 }
 
 /* ── Globale Suche (SEA-01…03) ───────────────────────────────────────────
@@ -2101,8 +2086,8 @@ function renderTreffer() {
           <div class="tz1">${esc(t.z1)}</div><div class="tz2">${esc(t.z2)}</div></button>`).join('')).join('')
     : '<div class="leer">Nichts gefunden.</div>')
     + (e.gesperrt ? `<div class="gesperrt">${e.gesperrt} weitere Treffer sind für die Rolle
-        «${esc(R().name)}» gesperrt und werden nicht angezeigt — auch nicht als Vorschautext.
-        <span class="aid">SEA-03</span></div>` : '');
+        «${esc(R().name)}» gesperrt und werden nicht angezeigt — auch nicht als
+        Vorschautext.</div>` : '');
 }
 
 /* ── Rendern ─────────────────────────────────────────────────────────────── */
@@ -2250,107 +2235,106 @@ function renderTippend(el) {
    Ein Fragezeichen pro Modul, eine numerierte Liste dahinter. Die Listen
    erklären die Funktion, nicht die Beispieldaten auf dem Schirm: sie bleiben
    richtig, wenn im Prototyp herumgeklickt wird, und sie lesen sich in einem
-   echten Mandanten gleich. Wo eine Anforderung aus dem Grobkonzept dahinter
-   steht, ist sie genannt — dafür ist oben der Schalter «IDs».
+   echten Mandanten gleich.
    ────────────────────────────────────────────────────────────────────────── */
 const HILFE = {
   uebersicht: [
-    'Die Ampel oben fasst zusammen, was offen ist: rot heisst jetzt, gelb heisst heute, grün heisst kann warten. Daneben steht die dringendste Sache im Klartext (DSH-04).',
+    'Die Ampel oben fasst zusammen, was offen ist: rot heisst jetzt, gelb heisst heute, grün heisst kann warten. Daneben steht die dringendste Sache im Klartext.',
     'Die Liste darunter entsteht nicht hier. Jedes Modul meldet, was bei ihm offen ist — überfällige Rechnung, Garantiefall, Wiedervorlage, nicht verrechnete Zeit, unterschrittener Mindestbestand. Wird es dort erledigt, verschwindet es hier.',
-    'Die Kennzahlen gelten für den Mandanten links: Umsatz, offene und überfällige Rechnungen, offene Offerten, Erfolgsquote, Marge und Zeiten (DSH-01).',
-    'Mit «Alle Mandanten» werden dieselben Kennzahlen summiert und verglichen. Diese Gesamtansicht ist an eine Rolle gebunden, nicht an einen Knopf (MAN-05, DSH-02).',
-    'Jede Kachel und jede Zeile springt auf den Datensatz, aus dem die Zahl kommt. Eine Kennzahl ohne Weg zum Beleg ist ein Bild (DSH-03).',
-    'Unten rechts steht «fragen»: eine Frage in eigenen Worten, statt zu wissen, in welchem Modul die Antwort liegt. Der Assistent liest denselben Datenstand und hält sich an dieselben Rechte — was eine Rolle nicht sehen darf, sagt er nicht (SEA-01, IAM-02).',
-    'Stornierte Belege und Gutschriften sind in jeder Zahl gleich behandelt: sie zählen nicht als Umsatz, verschwinden aber auch nicht aus der Geschichte (DSH-05).',
+    'Die Kennzahlen gelten für den Mandanten links: Umsatz, offene und überfällige Rechnungen, offene Offerten, Erfolgsquote, Marge und Zeiten.',
+    'Mit «Alle Mandanten» werden dieselben Kennzahlen summiert und verglichen. Diese Gesamtansicht ist an eine Rolle gebunden, nicht an einen Knopf.',
+    'Jede Kachel und jede Zeile springt auf den Datensatz, aus dem die Zahl kommt. Eine Kennzahl ohne Weg zum Beleg ist ein Bild.',
+    'Unten rechts steht «fragen»: eine Frage in eigenen Worten, statt zu wissen, in welchem Modul die Antwort liegt. Der Assistent liest denselben Datenstand und hält sich an dieselben Rechte — was eine Rolle nicht sehen darf, sagt er nicht.',
+    'Stornierte Belege und Gutschriften sind in jeder Zahl gleich behandelt: sie zählen nicht als Umsatz, verschwinden aber auch nicht aus der Geschichte.',
   ],
   kunden: [
-    'Der Kunde ist der Debitor, nicht die Filiale. Firmenstamm mit Kundennummer, UID, Zahlungsziel, Status, Tags und internen Notizen (CRM-01).',
-    'Darunter hängen beliebig viele Standorte mit eigenen Kontakten, und beliebig viele Adressen mit Typ: Hauptsitz, Rechnung, Lieferung, Projekt oder Filiale (CRM-02, CRM-03).',
-    'Am Kunden stehen die Standard-Rechnungsadresse, die Rechnungs-E-Mail und das Zahlungsziel. Ein Projekt oder ein einzelner Beleg darf davon abweichen — genau das ist der Fall «Offerte an die Filiale, Rechnung an die zentrale Rechnungsstelle» (CRM-04).',
-    'Jeder Beleg speichert Adresse und Kontakt als Snapshot. Zieht der Kunde um, ändert sich die alte Rechnung nicht (CRM-06).',
-    'Beim Kontakt stehen Verteiler und Einwilligung mit Quelle und Datum, und es ist sichtbar, welche Newsletter-Ausgabe wann an ihn ging (NWL-01, NWL-02, NWL-05).',
-    'Interne Notizen und Kontaktdaten sind ein eigenes Recht. Wer sie nicht haben soll, sieht an ihrer Stelle einen Hinweis statt eines leeren Feldes (IAM-02).',
+    'Der Kunde ist der Debitor, nicht die Filiale. Firmenstamm mit Kundennummer, UID, Zahlungsziel, Status, Tags und internen Notizen.',
+    'Darunter hängen beliebig viele Standorte mit eigenen Kontakten, und beliebig viele Adressen mit Typ: Hauptsitz, Rechnung, Lieferung, Projekt oder Filiale.',
+    'Am Kunden stehen die Standard-Rechnungsadresse, die Rechnungs-E-Mail und das Zahlungsziel. Ein Projekt oder ein einzelner Beleg darf davon abweichen — genau das ist der Fall «Offerte an die Filiale, Rechnung an die zentrale Rechnungsstelle».',
+    'Jeder Beleg speichert Adresse und Kontakt als Snapshot. Zieht der Kunde um, ändert sich die alte Rechnung nicht.',
+    'Beim Kontakt stehen Verteiler und Einwilligung mit Quelle und Datum, und es ist sichtbar, welche Newsletter-Ausgabe wann an ihn ging.',
+    'Interne Notizen und Kontaktdaten sind ein eigenes Recht. Wer sie nicht haben soll, sieht an ihrer Stelle einen Hinweis statt eines leeren Feldes.',
   ],
   projekte: [
-    'Das Projekt ist die Akte: Mandant, Kunde, Standort, Projektadresse, Rechnungsempfänger, Verantwortlicher, Termine, Kategorie und Tags (PRJ-01, PRJ-03).',
-    'Die Chronik führt alles zusammen, was zum Projekt gehört — Offerten, Aufträge, Lieferscheine, Rechnungen, Gutschriften, Zeiten, Dateien, Versand und Garantiefälle, in einer Spur (PRJ-02).',
-    'Die Dateiablage kennt Kategorien, Versionen statt stiller Überschreibung und sensible Unterlagen, die nur bestimmte Rollen sehen — Lieferantenkonditionen etwa gehören nicht in jede Hand (FIL-01, FIL-04, FIL-05).',
-    'Die Marge rechnet mit dem eingefrorenen EK der fakturierten Positionen, den verrechneten Stunden und den internen Zeitkosten. Sie ist ein eigenes Recht, kein Nebeneffekt (MAR-01…04).',
-    'Der Projektexport ist ein ZIP mit Ordnerstruktur, Originaldateien, Beleg-PDFs, Chronik und einer maschinenlesbaren Übersicht — lesbar ohne diese Anwendung (PRJ-04, EXP-03).',
-    'Zugriff auf ein Projekt wird pro Person freigegeben. Eine projektbezogene Rolle sieht die anderen Projekte nicht, auch nicht in der Suche (PRJ-05, SEA-03).',
+    'Das Projekt ist die Akte: Mandant, Kunde, Standort, Projektadresse, Rechnungsempfänger, Verantwortlicher, Termine, Kategorie und Tags.',
+    'Die Chronik führt alles zusammen, was zum Projekt gehört — Offerten, Aufträge, Lieferscheine, Rechnungen, Gutschriften, Zeiten, Dateien, Versand und Garantiefälle, in einer Spur.',
+    'Die Dateiablage kennt Kategorien, Versionen statt stiller Überschreibung und sensible Unterlagen, die nur bestimmte Rollen sehen — Lieferantenkonditionen etwa gehören nicht in jede Hand.',
+    'Die Marge rechnet mit dem eingefrorenen EK der fakturierten Positionen, den verrechneten Stunden und den internen Zeitkosten. Sie ist ein eigenes Recht, kein Nebeneffekt.',
+    'Der Projektexport ist ein ZIP mit Ordnerstruktur, Originaldateien, Beleg-PDFs, Chronik und einer maschinenlesbaren Übersicht — lesbar ohne diese Anwendung.',
+    'Zugriff auf ein Projekt wird pro Person freigegeben. Eine projektbezogene Rolle sieht die anderen Projekte nicht, auch nicht in der Suche.',
   ],
   verkauf: [
-    'Ein Beleg wird nicht neu getippt, sondern umgewandelt: Offerte → Auftragsbestätigung → Lieferschein → Rechnung, mit wählbaren Mengen und Positionen (DOC-01).',
-    'Die Kette zeigt bei jedem Schritt, was übernommen wurde und was offen blieb. Ein Lieferschein darf ohne Preise gedruckt werden (DOC-03).',
-    'Akonto-, Teil- und Schlussrechnung verrechnen bereits fakturierte Beträge und weisen den Restbetrag aus. Überfakturierung ist keine Frage der Sorgfalt, sondern eine Rechenregel (DOC-04).',
-    'Nummern kommen aus fortlaufenden Kreisen je Mandant und Belegtyp. Eine stornierte Nummer wird nicht wiederverwendet (DOC-05, MAN-03).',
-    'Finalisieren erzeugt die unveränderbare Fassung: PDF, Prüfsumme, Zeitpunkt, Benutzer. Korrigiert wird danach nur über Storno und Gutschrift plus neuen Beleg — nie durch stilles Ändern (ARC-01, ARC-04, DOC-06).',
-    'Jede Position trägt Preis, EK, Rabatt und MWST-Satz als Snapshot. Ein späterer Preisimport verändert historische Belege nicht (ART-06, IMP-07).',
-    'Layout, Absender, Zahlungsangaben und Textvorlagen gehören zum Mandanten, nicht zum Programm (DOC-09, MAN-02).',
+    'Ein Beleg wird nicht neu getippt, sondern umgewandelt: Offerte → Auftragsbestätigung → Lieferschein → Rechnung, mit wählbaren Mengen und Positionen.',
+    'Die Kette zeigt bei jedem Schritt, was übernommen wurde und was offen blieb. Ein Lieferschein darf ohne Preise gedruckt werden.',
+    'Akonto-, Teil- und Schlussrechnung verrechnen bereits fakturierte Beträge und weisen den Restbetrag aus. Überfakturierung ist keine Frage der Sorgfalt, sondern eine Rechenregel.',
+    'Nummern kommen aus fortlaufenden Kreisen je Mandant und Belegtyp. Eine stornierte Nummer wird nicht wiederverwendet.',
+    'Finalisieren erzeugt die unveränderbare Fassung: PDF, Prüfsumme, Zeitpunkt, Benutzer. Korrigiert wird danach nur über Storno und Gutschrift plus neuen Beleg — nie durch stilles Ändern.',
+    'Jede Position trägt Preis, EK, Rabatt und MWST-Satz als Snapshot. Ein späterer Preisimport verändert historische Belege nicht.',
+    'Layout, Absender, Zahlungsangaben und Textvorlagen gehören zum Mandanten, nicht zum Programm.',
   ],
   produkte: [
-    'Artikel und Leistungen in einem Stamm: Hersteller, Lieferant, Artikelnummer, Einheit, MWST-Satz, Beschreibung, Bild und Dokumentenanhänge (ART-01).',
-    'Listenpreis, Einkaufspreis und Verkaufspreis stehen getrennt, jeder mit Gültigkeit. Rabatt ist eine Regel, kein überschriebener Preis (ART-02).',
-    'Rabatte gelten nach Hersteller, Lieferant oder Kunde, mit Zeitraum und Vorrang. Welche Regel gegriffen hat, bleibt nachvollziehbar (ART-03).',
-    'Die Preishistorie zeigt jede Version mit Gültig-ab-Datum. So ist erklärbar, warum eine Offerte vom August einen anderen Preis trägt als die Liste von heute (IMP-06).',
-    'EK, Rabattkonditionen und Margen sind sensible Felder. Eine Rolle ohne dieses Recht sieht sie nirgends — nicht in der Liste, nicht im Export, nicht in der Suche (IAM-02, MAR-04).',
-    'Produktbilder lassen sich pro Beleg oder pro Position ein- und ausblenden (ART-05).',
+    'Artikel und Leistungen in einem Stamm: Hersteller, Lieferant, Artikelnummer, Einheit, MWST-Satz, Beschreibung, Bild und Dokumentenanhänge.',
+    'Listenpreis, Einkaufspreis und Verkaufspreis stehen getrennt, jeder mit Gültigkeit. Rabatt ist eine Regel, kein überschriebener Preis.',
+    'Rabatte gelten nach Hersteller, Lieferant oder Kunde, mit Zeitraum und Vorrang. Welche Regel gegriffen hat, bleibt nachvollziehbar.',
+    'Die Preishistorie zeigt jede Version mit Gültig-ab-Datum. So ist erklärbar, warum eine Offerte vom August einen anderen Preis trägt als die Liste von heute.',
+    'EK, Rabattkonditionen und Margen sind sensible Felder. Eine Rolle ohne dieses Recht sieht sie nirgends — nicht in der Liste, nicht im Export, nicht in der Suche.',
+    'Produktbilder lassen sich pro Beleg oder pro Position ein- und ausblenden.',
   ],
   import: [
-    'Eine Preisliste kommt als XLSX oder CSV. Vor dem Import stehen Vorschau, Zeichensatz- und Formatprüfung und ein Validierungsbericht (IMP-01).',
-    'Die Spalten werden von Hand zugeordnet, und die Zuordnung wird als Profil je Hersteller gespeichert — beim nächsten Mal genügt ein Klick (IMP-02, IMP-03).',
-    'Dann kommt die Änderungsanalyse: neu, geändert, unverändert, nicht mehr enthalten, fehlerhaft — mit altem und neuem Wert je Zeile (IMP-04).',
-    'Angewendet wird erst nach Bestätigung, mit Stichtag. Der ganze Lauf wird protokolliert: Benutzer, Zeit, Quelldatei, Ergebnis (IMP-05).',
-    'Der Import schreibt neue Preisversionen und überschreibt keine Historie. Offerten, Aufträge, Lieferscheine und Rechnungen behalten ihre damaligen Preise, EK und Rabatte (IMP-06, IMP-07).',
-    'Ein fehlerhafter, noch nicht verwendeter Lauf lässt sich zurücknehmen (IMP-08).',
+    'Eine Preisliste kommt als XLSX oder CSV. Vor dem Import stehen Vorschau, Zeichensatz- und Formatprüfung und ein Validierungsbericht.',
+    'Die Spalten werden von Hand zugeordnet, und die Zuordnung wird als Profil je Hersteller gespeichert — beim nächsten Mal genügt ein Klick.',
+    'Dann kommt die Änderungsanalyse: neu, geändert, unverändert, nicht mehr enthalten, fehlerhaft — mit altem und neuem Wert je Zeile.',
+    'Angewendet wird erst nach Bestätigung, mit Stichtag. Der ganze Lauf wird protokolliert: Benutzer, Zeit, Quelldatei, Ergebnis.',
+    'Der Import schreibt neue Preisversionen und überschreibt keine Historie. Offerten, Aufträge, Lieferscheine und Rechnungen behalten ihre damaligen Preise, EK und Rabatte.',
+    'Ein fehlerhafter, noch nicht verwendeter Lauf lässt sich zurücknehmen.',
   ],
   zeiten: [
-    'Zeiten werden pro Projekt erfasst, am Schreibtisch oder am Handy — dieselbe Oberfläche, installierbar als PWA (TIM-01, SYS-03).',
-    'Start/Stopp oder von Hand nachgetragen, mit Datum, Dauer, Tätigkeit und Notiz (TIM-02).',
-    'Jede Buchung trägt verrechenbar oder nicht, den Mitarbeiter, den externen Stundensatz und den internen Kostensatz. Der interne Satz ist ein sensibles Feld (TIM-03, IAM-02).',
-    'Nicht verrechnete Zeiten lassen sich filtern, auswählen und als Rechnungspositionen übernehmen (TIM-04).',
-    'Nach der Übernahme sind die Buchungen als verrechnet markiert und mit der Rechnung verknüpft — gegen doppelte Fakturierung (TIM-05).',
-    'Auswertungen nach Mandant, Projekt, Mitarbeiter, Tätigkeit und Zeitraum; Korrekturen nur mit Änderungsprotokoll (TIM-06, ARC-03).',
+    'Zeiten werden pro Projekt erfasst, am Schreibtisch oder am Handy — dieselbe Oberfläche, installierbar als PWA.',
+    'Start/Stopp oder von Hand nachgetragen, mit Datum, Dauer, Tätigkeit und Notiz.',
+    'Jede Buchung trägt verrechenbar oder nicht, den Mitarbeiter, den externen Stundensatz und den internen Kostensatz. Der interne Satz ist ein sensibles Feld.',
+    'Nicht verrechnete Zeiten lassen sich filtern, auswählen und als Rechnungspositionen übernehmen.',
+    'Nach der Übernahme sind die Buchungen als verrechnet markiert und mit der Rechnung verknüpft — gegen doppelte Fakturierung.',
+    'Auswertungen nach Mandant, Projekt, Mitarbeiter, Tätigkeit und Zeitraum; Korrekturen nur mit Änderungsprotokoll.',
   ],
   zahlungen: [
-    'Zahlungseingänge werden von Hand erfasst: Datum, Betrag, Referenz, Teilzahlung möglich, Restbetrag wird gerechnet (PAY-01).',
-    'Die Debitorenliste zeigt offen und überfällig mit Fälligkeit und Alterung — 1–30, 31–60, über 60 Tage (PAY-02).',
-    'Mahnstufen, Fristen, Gebühren und Texte sind konfigurierbar, je Mandant und bei Bedarf je Kunde (PAY-03).',
-    'Eine Mahnung wird vorbereitet und freigegeben, nicht heimlich verschickt. Automatischer Versand ist später möglich, aber abschaltbar (PAY-04).',
-    'Zu jeder Mahnung gehört die vollständige Versand- und Statushistorie (PAY-05).',
-    'Ein Kundenguthaben ist ein eigenes Konto mit Entstehungsgrund, Verwendung, Restbetrag und unveränderlichen Bewegungen; es lässt sich auf eine Rechnung anwenden (DOC-07).',
+    'Zahlungseingänge werden von Hand erfasst: Datum, Betrag, Referenz, Teilzahlung möglich, Restbetrag wird gerechnet.',
+    'Die Debitorenliste zeigt offen und überfällig mit Fälligkeit und Alterung — 1–30, 31–60, über 60 Tage.',
+    'Mahnstufen, Fristen, Gebühren und Texte sind konfigurierbar, je Mandant und bei Bedarf je Kunde.',
+    'Eine Mahnung wird vorbereitet und freigegeben, nicht heimlich verschickt. Automatischer Versand ist später möglich, aber abschaltbar.',
+    'Zu jeder Mahnung gehört die vollständige Versand- und Statushistorie.',
+    'Ein Kundenguthaben ist ein eigenes Konto mit Entstehungsgrund, Verwendung, Restbetrag und unveränderlichen Bewegungen; es lässt sich auf eine Rechnung anwenden.',
     'Buchhalterische Verbuchung, E-Banking und Zahlungsverkehr gehören ausdrücklich nicht dazu. Zahlungsstatus, Debitorenübersicht, Mahnwesen und Exporte gehören dazu (Abgrenzung, Abschnitt 1.1).',
   ],
   versand: [
-    'Eine Maske für alles, was hinausgeht: Beleg oder Mahnung, Absender, An, CC, BCC, Betreff, Nachricht (SND-01).',
-    'Die Empfänger werden aus Kunde, Standort, Projekt und Rechnungsstelle vorgeschlagen und dürfen von Hand geändert werden (SND-02).',
-    'Vorlagen mit Platzhaltern gehören dem Mandanten und dem Belegtyp — eine Offerte klingt anders als eine Mahnung (SND-03).',
-    'Das erzeugte PDF hängt automatisch an; weitere Anhänge kommen aus der Projekt- und Dateiablage (SND-04).',
-    'Die Historie hält Zeitpunkt, Benutzer, Empfänger, Betreff, Anhänge, Status und Fehlermeldung. Erneut senden erzeugt einen neuen Eintrag und überschreibt den alten nicht (SND-05, SND-06).',
-    'Newsletter laufen über dieselbe Idee, aber mit Einwilligung, Abmeldung und Empfängerhistorie (NWL-02, NWL-04).',
+    'Eine Maske für alles, was hinausgeht: Beleg oder Mahnung, Absender, An, CC, BCC, Betreff, Nachricht.',
+    'Die Empfänger werden aus Kunde, Standort, Projekt und Rechnungsstelle vorgeschlagen und dürfen von Hand geändert werden.',
+    'Vorlagen mit Platzhaltern gehören dem Mandanten und dem Belegtyp — eine Offerte klingt anders als eine Mahnung.',
+    'Das erzeugte PDF hängt automatisch an; weitere Anhänge kommen aus der Projekt- und Dateiablage.',
+    'Die Historie hält Zeitpunkt, Benutzer, Empfänger, Betreff, Anhänge, Status und Fehlermeldung. Erneut senden erzeugt einen neuen Eintrag und überschreibt den alten nicht.',
+    'Newsletter laufen über dieselbe Idee, aber mit Einwilligung, Abmeldung und Empfängerhistorie.',
   ],
   service: [
-    'Ein Fall hat eine Nummer, einen Kunden, ein Projekt, ein Produkt, eine Menge, eine Fehlerbeschreibung, einen Lieferanten, einen Status, die Kostenübernahme, Termine und einen Verantwortlichen (SRV-01).',
-    'Er zeigt zurück auf die ursprüngliche Offerte, den Auftrag, die Lieferung, die Rechnung, die Position und das Lieferdatum — auch Jahre später (SRV-02, SRV-05).',
-    'Fotos, PDFs, Kommunikation, Notizen und die Statushistorie hängen am Fall, nicht in einem Mailpostfach (SRV-03).',
-    'Der Workflow ist konfigurierbar: gemeldet → geprüft → Ersatz bestellt → erledigt oder abgelehnt (SRV-04).',
-    'Offene Fälle und ihre Fristen stehen auf der Übersicht, solange sie offen sind (SRV-05, DSH-04).',
+    'Ein Fall hat eine Nummer, einen Kunden, ein Projekt, ein Produkt, eine Menge, eine Fehlerbeschreibung, einen Lieferanten, einen Status, die Kostenübernahme, Termine und einen Verantwortlichen.',
+    'Er zeigt zurück auf die ursprüngliche Offerte, den Auftrag, die Lieferung, die Rechnung, die Position und das Lieferdatum — auch Jahre später.',
+    'Fotos, PDFs, Kommunikation, Notizen und die Statushistorie hängen am Fall, nicht in einem Mailpostfach.',
+    'Der Workflow ist konfigurierbar: gemeldet → geprüft → Ersatz bestellt → erledigt oder abgelehnt.',
+    'Offene Fälle und ihre Fristen stehen auf der Übersicht, solange sie offen sind.',
   ],
   lager: [
-    'Kategorien für Muster, Werkzeug, Kabel nach Laufmeter, Leuchten, Ersatzteile, Poolteile und Verbrauchsmaterial (INV-01).',
-    'Je Artikel Bild, Einheit, Bestand, Lagerort, Mindestbestand, Inventar- oder Seriennummer und optional Anschaffungsdaten (INV-02).',
-    'Bestandsbewegungen tragen Menge, Grund, Projekt, Benutzer und Zeitstempel. Stück und Laufmeter gelten gleichwertig (INV-03).',
-    'Werkzeug und Muster können an eine Person oder ein Projekt ausgeliehen werden, mit Rückgabe im Blick (INV-04).',
-    'Bewusst schlank: keine Disposition, keine Beschaffung, keine Mehrlagerlogik in Version 1 — die Struktur ist aber darauf vorbereitet (INV-05).',
+    'Kategorien für Muster, Werkzeug, Kabel nach Laufmeter, Leuchten, Ersatzteile, Poolteile und Verbrauchsmaterial.',
+    'Je Artikel Bild, Einheit, Bestand, Lagerort, Mindestbestand, Inventar- oder Seriennummer und optional Anschaffungsdaten.',
+    'Bestandsbewegungen tragen Menge, Grund, Projekt, Benutzer und Zeitstempel. Stück und Laufmeter gelten gleichwertig.',
+    'Werkzeug und Muster können an eine Person oder ein Projekt ausgeliehen werden, mit Rückgabe im Blick.',
+    'Bewusst schlank: keine Disposition, keine Beschaffung, keine Mehrlagerlogik in Version 1 — die Struktur ist aber darauf vorbereitet.',
   ],
   archiv: [
-    'Finale Belege liegen unveränderbar: Status FINAL, Erstellzeit, Benutzer, Mandant und Belegnummer stehen dabei (ARC-01).',
-    'Zu jeder finalen Datei gehört eine kryptografische Prüfsumme, die regelmässig nachgerechnet wird. Weicht sie ab, ist das ein Ereignis, kein Zufall (ARC-02).',
-    'Das Protokoll hält Erstellung, Finalisierung, Versand, Download, Status- und Zahlungsänderung, Storno und Rechteänderung — mit Akteur und Zeit (ARC-03, IAM-05).',
-    'Eine finale Rechnung wird nie still geändert. Korrektur heisst Storno oder Gutschrift plus neuer Beleg, und beide bleiben verknüpft sichtbar (ARC-04).',
-    'Im Beleg bleiben die Snapshots von Stammdaten, Adresse, Preis, Rabatt und MWST erhalten (ARC-05).',
-    'Aufbewahrung und Löschung sind je Datenklasse festgelegt; gesetzliche Fristen und Datenschutz werden zusammen betrachtet (ARC-06).',
-    'Sicherung heisst: täglich, zusätzlich auf getrenntem Speicher, verschlüsselt, überwacht — und regelmässig zurückgespielt. Ein Backup ohne Wiederherstellungstest ist eine Vermutung (BKP-01…06).',
+    'Finale Belege liegen unveränderbar: Status FINAL, Erstellzeit, Benutzer, Mandant und Belegnummer stehen dabei.',
+    'Zu jeder finalen Datei gehört eine kryptografische Prüfsumme, die regelmässig nachgerechnet wird. Weicht sie ab, ist das ein Ereignis, kein Zufall.',
+    'Das Protokoll hält Erstellung, Finalisierung, Versand, Download, Status- und Zahlungsänderung, Storno und Rechteänderung — mit Akteur und Zeit.',
+    'Eine finale Rechnung wird nie still geändert. Korrektur heisst Storno oder Gutschrift plus neuer Beleg, und beide bleiben verknüpft sichtbar.',
+    'Im Beleg bleiben die Snapshots von Stammdaten, Adresse, Preis, Rabatt und MWST erhalten.',
+    'Aufbewahrung und Löschung sind je Datenklasse festgelegt; gesetzliche Fristen und Datenschutz werden zusammen betrachtet.',
+    'Sicherung heisst: täglich, zusätzlich auf getrenntem Speicher, verschlüsselt, überwacht — und regelmässig zurückgespielt. Ein Backup ohne Wiederherstellungstest ist eine Vermutung.',
     '«geBüV-tauglich» ist kein Feature-Etikett: dazu gehören Verfahrensdokumentation, Verantwortlichkeiten, Rechte und betriebliche Kontrollen. Der Prototyp zeigt, was die Technik dafür beitragen kann.',
   ],
 };
@@ -2404,8 +2388,7 @@ function hilfeZeigen(anker) {
   flugHinweis(anker,
     `<div class="fk">${esc(m.name)} — was dieser Bereich macht</div>
      <ol class="hilfeliste">${punkte.map(t => `<li>${t}</li>`).join('')}</ol>
-     <div class="fu">Erklärt die Funktion, nicht die Beispieldaten · die IDs in Klammern sind die
-       Anforderungen aus dem Grobkonzept ·
+     <div class="fu">Erklärt die Funktion, nicht die Beispieldaten ·
        ${tippgeraet() ? 'schliesst mit dem Kreuz oder von selbst, Antippen hält ihn'
                       : 'verschwindet von selbst, Maus darauf hält ihn'}</div>`,
     8000 + punkte.length * 2800, 'weit');
@@ -2431,10 +2414,10 @@ const zeile = (nm, wert, hint = '', cls = '') =>
   `<div class="z ${cls}"><div class="nm">${nm}</div><div class="wert">${wert}</div>
    ${hint ? `<div class="hint">${hint}</div>` : ''}</div>`;
 /* wo eine Rolle nichts sehen darf, steht das da — nicht ein leeres Feld */
-const gesperrt = (was, id) => `<span class="verdeckt" title="Recht fehlt">
+const gesperrt = was => `<span class="verdeckt" title="Recht fehlt">
   <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
     <rect x="3" y="7" width="10" height="7" rx="1.4"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7"/></svg>
-  ${esc(was)}</span>${id ? aid(id) : ''}`;
+  ${esc(was)}</span>`;
 
 /* ── Kennzahlen eines Mandanten (DSH-01) ─────────────────────────────────── */
 function kennzahlen(mid) {
@@ -2506,14 +2489,14 @@ VIEWS.uebersicht = () => {
   const kpis =
     kpi('Umsatz ' + DB.jahr, chf0(z.umsatz),
         `${DB.dokumente.filter(d => imBlick(d.mandant) && d.typ === 'RG').length} Rechnungen, ` +
-        `Gutschriften abgezogen ${aid('DSH-05')}`, 'verkauf') +
+        `Gutschriften abgezogen`, 'verkauf') +
     kpi('Offen', chf0(z.offen), `${z.offenAnz} Rechnungen · davon ${chf0(z.ueber)} überfällig`, 'zahlungen') +
     kpi('Offene Offerten', chf0(z.offerten),
         `${z.offertenAnz} Belege · Erfolgsquote ${z.quote.toFixed(0)} % (${z.quoteText})`, 'verkauf') +
     kpi(darf('ek') ? 'Materialrohertrag' : 'Projekte',
         darf('ek') ? chf0(z.marge) : String(z.projekte),
-        darf('ek') ? `${z.margeQuote.toFixed(1)} % vom Materialumsatz ${aid('MAR-01')}`
-                   : `in ${sicht} · Marge nur mit Recht ${aid('MAR-04')}`,
+        darf('ek') ? `${z.margeQuote.toFixed(1)} % vom Materialumsatz`
+                   : `in ${sicht} · Marge nur mit Berechtigung`,
         darf('ek') ? 'projekte' : 'projekte');
 
   /* ── Entscheidungen ── */
@@ -2539,7 +2522,7 @@ VIEWS.uebersicht = () => {
       <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600">${esc(a.was)}</div>
         <div style="font-size:11px;color:var(--dim)">${esc(a.wer)} · ${esc(a.bezugArt)}</div></div>
       ${spaet ? '<span class="tag t-warn">spät</span>' : ''}</div>`;
-  }).join(''), { rechts:`${DB.aktivitaeten.filter(a => a.status === 'überfällig').length} überfällig ${aid('ACT-02')}` });
+  }).join(''), { rechts:`${DB.aktivitaeten.filter(a => a.status === 'überfällig').length} überfällig` });
 
   /* ── Projekte ── */
   const proj = KARTE('', 'Projekte', mProjekte().slice(0, 5).map(p => `
@@ -2548,7 +2531,7 @@ VIEWS.uebersicht = () => {
         <span class="vl2">${esc(p.status)}</span></div>
       <div style="font-size:11px;color:var(--dim);margin-top:2px">${esc(K(p.kunde).name)} ·
         ${esc(M(p.mandant).name)} · ${esc(p.verantwortlich)}</div></div>`).join(''),
-    { go:'projekte', rechts:`${mProjekte().length} im Blick ${aid('PRJ-01')}` });
+    { go:'projekte', rechts:`${mProjekte().length} im Blick` });
 
   /* ── Debitoren-Alterung (PAY-02) ── */
   const offeneRg = mDok().filter(d => d.typ === 'RG' && (d.status === 'offen' || d.status === 'überfällig'));
@@ -2564,7 +2547,7 @@ VIEWS.uebersicht = () => {
       <div class="bar"><i style="width:${(e.b / maxE * 100).toFixed(0)}%;
         background:${e.l === 'nicht fällig' ? 'var(--acc)' : 'var(--warn)'}"></i></div>
       <div style="font-size:11px;color:var(--dim);margin-top:3px">${e.n} Rechnungen</div></div>`).join(''),
-    { go:'zahlungen', rechts:`Alterung ${aid('PAY-02')}` });
+    { go:'zahlungen', rechts:`Alterung` });
 
   /* ── Service ── */
   const srv = KARTE('', 'Garantie und Service', mFaelle().length ? mFaelle().map(f => `
@@ -2573,18 +2556,18 @@ VIEWS.uebersicht = () => {
       <div style="font-size:11px;color:var(--dim);margin-top:2px">${esc(K(f.kunde).name)} ·
         Kosten ${esc(f.kosten)} · Frist ${esc(f.frist)}</div></div>`).join('')
     : '<div class="sm2">Keine Fälle im Blick.</div>',
-    { go:'service', rechts:`${mFaelle().filter(f => f.status !== 'erledigt').length} offen ${aid('SRV-05')}` });
+    { go:'service', rechts:`${mFaelle().filter(f => f.status !== 'erledigt').length} offen` });
 
   /* ── Zeiten ── */
   const zt = KARTE('', 'Zeiten', `
     <div class="wf" style="border:none">
       ${zeile('Erfasst', z.stunden.toFixed(1) + ' h', esc(sicht))}
       ${zeile('Verrechenbar, noch nicht fakturiert', z.stundenOffen.toFixed(1) + ' h',
-        `<span class="link" data-go="zeiten">übernehmen ${aid('TIM-04')}</span>`, 'ab')}
+        `<span class="link" data-go="zeiten">übernehmen</span>`, 'ab')}
       ${darf('ek')
         ? zeile('Interne Zeitkosten', chf0(mZeiten().reduce((s, t) => s + t.dauer * t.kosten, 0)),
-            'Kostensatz je Mitarbeiter ' + aid('TIM-03'))
-        : zeile('Interne Zeitkosten', gesperrt('sensibles Feld', 'IAM-02'), '')}
+            'Kostensatz je Mitarbeiter ')
+        : zeile('Interne Zeitkosten', gesperrt('sensibles Feld'), '')}
     </div>`, { go:'zeiten' });
 
   /* ── Mandantenvergleich, nur in der Gesamtsicht (DSH-02) ── */
@@ -2607,7 +2590,7 @@ VIEWS.uebersicht = () => {
         <td class="r num"><b>${mandantenSicht().reduce((s, id) => s + kennzahlen(id).faelle, 0)}</b></td></tr>
       </tbody></table></div>
     <div class="small muted" style="margin-top:10px">Diese Ansicht ist an die Rolle gebunden:
-      «${esc(R().name)}» darf ${mandantenSicht().length} Mandanten sehen. ${aid('MAN-05','DSH-02')}</div>`);
+      «${esc(R().name)}» darf ${mandantenSicht().length} Mandanten sehen.</div>`);
 
   return `<div class="dash">${ampel}
     ${kopfband(MANDANT === 'alle' ? 'Alle Mandanten in Zahlen' : M().lang + ' in Zahlen',
@@ -2636,12 +2619,12 @@ VIEWS.uebersicht = () => {
                 <span class="vl2">${chf0(x.db)}</span></div>
               <div class="bar"><i style="width:${(Math.abs(x.db) / max * 100).toFixed(0)}%;
                 background:${x.db < 0 ? 'var(--warn)' : 'var(--acc)'}"></i></div></div>`;
-          }).join(''), { go:'projekte', rechts:`Deckungsbeitrag ${aid('MAR-03')}` })
+          }).join(''), { go:'projekte', rechts:`Deckungsbeitrag` })
         : KARTE('', 'Marge je Projekt', `<div class="rsperre" style="margin:0">
             <b>Nicht für diese Rolle</b>
             <div>EK, Rabattkonditionen, Margen und interne Kostensätze sind sensible Felder.
               «${esc(R().name)}» sieht sie in keiner Liste, in keinem Export und in keinem
-              Suchtreffer. ${aid('IAM-02','MAR-04')}</div></div>`)}
+              Suchtreffer.</div></div>`)}
       ${zt}</div>
     </div>
     <div class="small muted" style="margin-top:18px;line-height:1.6;max-width:92ch">
@@ -2675,15 +2658,15 @@ VIEWS.kunden = () => {
       </tr>` + (KUNDE_OFFEN === x.id ? kundeDetail(x) : '');
   }).join('');
 
-  return `<div class="sec">Kundenstamm ${aid('CRM-01')}
+  return `<div class="sec">Kundenstamm
       <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">
         · ${liste.length} Kunden in ${MANDANT === 'alle' ? 'allen Mandanten' : M().name}</span></div>
     <div class="scrollx"><table><thead><tr><th>Kunde</th><th>Mandant</th><th>Standorte</th>
       <th>Kontakte</th><th>Zahlungsziel</th><th class="r">Belege</th><th class="r">Offen</th>
       </tr></thead><tbody>${zeilen}</tbody></table></div>
     <div class="small muted" style="margin-top:11px;line-height:1.6;max-width:92ch">
-      Eine Zeile öffnet den Kunden. Im Grobkonzept ist der Kundenstamm mandantenbezogen
-      (MAN-01); im Prototyp erscheint dieselbe Firma bei mehreren Mandanten, damit sichtbar
+      Eine Zeile öffnet den Kunden. Im Konzept ist der Kundenstamm je Mandant
+      geführt; im Prototyp erscheint dieselbe Firma bei mehreren Mandanten, damit sichtbar
       wird, wozu die Gesamtansicht dient — Hotel Seeblick kauft Betten und einen Whirlpool.</div>`;
 };
 
@@ -2698,7 +2681,7 @@ function kundeDetail(k) {
   if (KUNDE_TAB === 'stamm') {
     inhalt = `<div class="grid g2" style="gap:14px">
       <div class="card tint">
-        <div class="wl"><span>Firmenstamm ${aid('CRM-01')}</span></div>
+        <div class="wl"><span>Firmenstamm</span></div>
         <div class="wf" style="border:none">
           ${zeile('Kundennummer', esc(k.nr))}
           ${zeile('UID / MWST', esc(k.uid))}
@@ -2706,26 +2689,26 @@ function kundeDetail(k) {
           ${zeile('E-Mail', esc(k.mail))}
           ${zeile('Website', esc(k.web))}
           ${zeile('Status', `<span class="tag t-ok">${esc(k.status)}</span>`)}
-          ${zeile('Tags', k.tags.map(t => `<span class="chip">${esc(t)}</span>`).join(' '))}
+          ${zeile('Tags', k.tags.map(t => `<span class="chip">${esc(t)}</span>`).join(''))}
         </div></div>
       <div class="card tint">
-        <div class="wl"><span>Konditionen und Rechnungsstelle ${aid('CRM-04')}</span></div>
+        <div class="wl"><span>Konditionen und Rechnungsstelle</span></div>
         <div class="wf" style="border:none">
           ${zeile('Zahlungsziel', k.zahlungsziel + ' Tage')}
           ${zeile('Standard-Rechnungsadresse', (a => `${esc(a.zeile)}, ${esc(a.plz)} ${esc(a.ort)}`)(adr(k.id, k.rechnungsadresse)))}
           ${zeile('Rechnungs-E-Mail', esc(k.rechnungsmail))}
           ${zeile('Rabattregel', (r => r ? `${r.wert} % ${r.art.toLowerCase()}rabatt, ${r.ab}–${r.bis}`
-            : 'keine')(DB.rabatte.find(r => r.art === 'Kunde' && r.ziel === k.id)) + ' ' + aid('ART-03'))}
+            : 'keine')(DB.rabatte.find(r => r.art === 'Kunde' && r.ziel === k.id)) + ' ')}
         </div>
         <div style="margin-top:12px">
-          <div class="wl"><span>Interne Notiz ${aid('IAM-02')}</span></div>
+          <div class="wl"><span>Interne Notiz</span></div>
           ${darf('notizen')
             ? `<div class="small" style="line-height:1.6;color:var(--ink)">${esc(k.notiz)}</div>`
             : `<div>${gesperrt('Interne Notizen sind für «' + R().name + '» gesperrt')}</div>`}</div>
       </div></div>
       ${of && rg && of.adresse !== rg.adresse ? `
       <div class="card good" style="margin-top:14px">
-        <div class="wl"><span>Der Adressfall ${aid('CRM-04','CRM-06')}</span>
+        <div class="wl"><span>Der Adressfall</span>
           <span class="r2">ein Kunde, zwei Adressen</span></div>
         <div class="grid g2" style="gap:12px">
           <div><div class="small muted">Offerte ${esc(of.nr)} vom ${esc(of.datum)} ging an</div>
@@ -2750,7 +2733,7 @@ function kundeDetail(k) {
         <td>${s.kontakte.map(c => esc(kontakt(k.id, c).name)).join(', ')}</td>
         <td class="r num">${DB.projekte.filter(p => p.standort === s.id).length}</td></tr>`; }).join('')}
       </tbody></table></div>
-      <div class="sec" style="margin-top:18px">Alle Adressen ${aid('CRM-03')}</div>
+      <div class="sec" style="margin-top:18px">Alle Adressen</div>
       <div class="scrollx"><table><thead><tr><th>Typ</th><th>Adresse</th><th>Verwendung</th>
         </tr></thead><tbody>
         ${k.adressen.map(a => `<tr><td><span class="tag t-mute">${esc(a.typ)}</span></td>
@@ -2770,7 +2753,7 @@ function kundeDetail(k) {
           : '<span class="muted small">keiner</span>'}</td>
         <td class="small muted">${esc(c.einwilligung)}</td></tr>`).join('')}
       </tbody></table></div>
-      <div class="sec" style="margin-top:18px">Was an diese Kontakte ging ${aid('NWL-05')}</div>
+      <div class="sec" style="margin-top:18px">Was an diese Kontakte ging</div>
       <div class="scrollx"><table><thead><tr><th>Ausgabe</th><th>Thema</th><th>Versendet</th>
         <th class="r">Empfänger</th><th class="r">Zugestellt</th><th>Status</th></tr></thead><tbody>
         ${DB.kampagnen.map(c => `<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.thema)}</td>
@@ -2779,11 +2762,10 @@ function kundeDetail(k) {
           <td><span class="tag ${c.status === 'versendet' ? 't-ok' : 't-warn'}">${esc(c.status)}</span></td>
           </tr>`).join('')}</tbody></table></div>
       <div class="small muted" style="margin-top:10px">Einwilligung, Quelle und Zeitpunkt stehen am
-        Kontakt; eine Abmeldung wirkt dauerhaft und über alle Kampagnen. ${aid('NWL-02')}</div>`
+        Kontakt; eine Abmeldung wirkt dauerhaft und über alle Kampagnen.</div>`
       : `<div class="rsperre"><b>Kontaktdaten sind gesperrt</b>
           <div>Die Rolle «${esc(R().name)}» hat kein Recht auf Kontakte und interne Notizen.
-            Auch die Suche gibt dazu keine Treffer und keine Vorschautexte aus.
-            ${aid('IAM-02','SEA-03')}</div></div>`;
+            Auch die Suche gibt dazu keine Treffer und keine Vorschautexte aus.</div></div>`;
   }
   if (KUNDE_TAB === 'belege') {
     inhalt = `<div class="scrollx"><table><thead><tr><th>Beleg</th><th>Datum</th><th>Adressiert an</th>
@@ -2819,8 +2801,7 @@ function kundeDetail(k) {
 VIEWS.projekte = () => {
   const liste = mProjekte();
   if (!liste.length) return `<div class="rsperre"><b>Keine Projekte freigegeben</b>
-    <div>Die Rolle «${esc(R().name)}» sieht nur ausdrücklich zugewiesene Projekte.
-      ${aid('PRJ-05')}</div></div>`;
+    <div>Die Rolle «${esc(R().name)}» sieht nur ausdrücklich zugewiesene Projekte.</div></div>`;
   const p = liste.find(x => x.id === PROJEKT_OFFEN) || liste[0];
   const k = K(p.kunde);
   const dok = DB.dokumente.filter(d => d.projekt === p.id);
@@ -2836,7 +2817,7 @@ VIEWS.projekte = () => {
   const kopf = `<div class="card" style="margin-bottom:16px">
     <div class="row" style="justify-content:space-between;align-items:flex-start;gap:14px">
       <div style="min-width:0">
-        <div class="small muted">${esc(M(p.mandant).name)} · ${esc(p.kategorie)} ${aid('PRJ-03')}</div>
+        <div class="small muted">${esc(M(p.mandant).name)} · ${esc(p.kategorie)}</div>
         <h2 style="font-size:19px;font-weight:700;letter-spacing:-.01em;margin:3px 0 4px">
           ${esc(p.nr)} · ${esc(p.name)}</h2>
         <div class="small muted" style="line-height:1.6;max-width:80ch">${esc(p.beschreibung)}</div>
@@ -2848,13 +2829,13 @@ VIEWS.projekte = () => {
         <div class="small muted" style="margin-top:7px">Verantwortlich ${esc(p.verantwortlich)}<br>
           ${esc(p.start)} → ${esc(p.termin)}</div></div></div>
     <div class="grid g4" style="margin-top:16px;gap:12px">
-      <div><div class="small muted">Kunde ${aid('PRJ-01')}</div>
+      <div><div class="small muted">Kunde</div>
         <div style="font-weight:600"><span class="link" data-kunde="${k.id}">${esc(k.name)}</span></div></div>
       <div><div class="small muted">Standort</div>
         <div style="font-weight:600">${esc(standort(k.id, p.standort).name)}</div></div>
       <div><div class="small muted">Projektadresse</div>
         <div style="font-weight:600">${(a => `${esc(a.zeile)}, ${esc(a.plz)} ${esc(a.ort)}`)(adr(k.id, p.projektadresse))}</div></div>
-      <div><div class="small muted">Rechnungsempfänger ${aid('CRM-04')}</div>
+      <div><div class="small muted">Rechnungsempfänger</div>
         <div style="font-weight:600">${esc(standort(k.id, p.rechnungsempfaenger).name)}</div></div>
     </div></div>`;
 
@@ -2885,7 +2866,7 @@ VIEWS.projekte = () => {
         t:`Wiedervorlage: ${a.was}`, s:`${a.wer} · ${a.status} · ${a.notiz}`, go:null })),
     ].sort((a, b) => dz(b.d) - dz(a.d));
     const sym = { dok:'▤', geld:'⬤', mail:'✉', datei:'📄', zeit:'◷', fall:'⚠', akt:'◔' };
-    inhalt = `<div class="card"><div class="wl"><span>Chronik ${aid('PRJ-02')}</span>
+    inhalt = `<div class="card"><div class="wl"><span>Chronik</span>
         <span class="r2">${spur.length} Einträge · neueste oben</span></div>
       <div class="chronik">${spur.map(e => `<div class="cz ${e.art === 'dok' ? 'dok' : e.art === 'geld' ? 'geld' : ''}"
         ${e.go ? `data-go="${e.go}" ${e.ref ? `data-ref="${e.ref}"` : ''} style="cursor:pointer"` : ''}>
@@ -2899,7 +2880,7 @@ VIEWS.projekte = () => {
       ${dateien.map(f => `<tr><td><b>${esc(f.name)}</b>${f.notiz
         ? `<div class="small muted">${esc(f.notiz)}</div>` : ''}</td>
         <td><span class="tag t-mute">${esc(f.kat)}</span></td>
-        <td class="num">v${f.version}${f.version > 1 ? ` ${aid('FIL-04')}` : ''}</td>
+        <td class="num">v${f.version}${f.version > 1 ? `` : ''}</td>
         <td class="num">${esc(f.groesse)}</td><td class="num">${esc(f.datum)}</td>
         <td>${esc(f.wer)}</td></tr>`).join('')}
       </tbody></table></div>
@@ -2907,10 +2888,10 @@ VIEWS.projekte = () => {
         <b>${versteckt} Datei${versteckt > 1 ? 'en' : ''} ausgeblendet</b>
         <div>Lieferanten- und EK-Unterlagen sind an ein eigenes Recht gebunden. Die Rolle
           «${esc(R().name)}» sieht sie nicht in der Liste, findet sie nicht über die Suche und
-          kann sie nicht herunterladen. ${aid('FIL-05','IAM-03')}</div></div>` : ''}
+          kann sie nicht herunterladen.</div></div>` : ''}
       <div class="small muted" style="margin-top:11px;line-height:1.6;max-width:92ch">
         Eine neue Fassung ersetzt die alte nicht, sie wird zur nächsten Version; gelöschte Dateien
-        liegen im Papierkorb, bis die Aufbewahrungsregel greift. ${aid('FIL-04','ARC-06')}</div>`;
+        liegen im Papierkorb, bis die Aufbewahrungsregel greift.</div>`;
   }
   if (PROJ_TAB === 'zeiten') {
     inhalt = `<div class="scrollx"><table><thead><tr><th>Datum</th><th>Wer</th><th>Tätigkeit</th>
@@ -2928,7 +2909,7 @@ VIEWS.projekte = () => {
       <div class="row" style="margin-top:13px;gap:20px">
         <div><div class="small muted">Erfasst</div>
           <div style="font-weight:650">${zeiten.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h</div></div>
-        <div><div class="small muted">Verrechenbar offen ${aid('TIM-04')}</div>
+        <div><div class="small muted">Verrechenbar offen</div>
           <div style="font-weight:650;color:var(--warn)">
             ${zeiten.filter(t => t.verrechenbar && !t.dok).reduce((s, t) => s + t.dauer, 0).toFixed(1)} h
             · ${chf(zeiten.filter(t => t.verrechenbar && !t.dok).reduce((s, t) => s + t.dauer * t.satz, 0))}</div></div>
@@ -2937,48 +2918,48 @@ VIEWS.projekte = () => {
   }
   if (PROJ_TAB === 'marge') {
     inhalt = darf('ek') ? `<div class="wf">
-        ${zeile('Materialumsatz, fakturiert', chf(m.umsatz), 'aus den Rechnungspositionen mit Artikelbezug ' + aid('MAR-01'))}
+        ${zeile('Materialumsatz, fakturiert', chf(m.umsatz), 'aus den Rechnungspositionen mit Artikelbezug ')}
         ${zeile('./. Einkauf, eingefroren zum Belegdatum', '− ' + chf(m.ek),
-          'EK-Snapshot der Position, nicht heutiger EK ' + aid('ART-06','IMP-07'), 'ab')}
+          'EK-Snapshot der Position, nicht heutiger EK ', 'ab')}
         ${zeile('Materialrohertrag', chf(m.roh), m.umsatz ? `${m.quote.toFixed(1)} % vom Materialumsatz` : '', 'summe')}
         ${zeile('+ Freie Positionen und Pauschalen', '+ ' + chf(m.frei), 'ohne Artikelbezug, ohne EK')}
         ${zeile('+ Verrechnete Planung und Arbeit', '+ ' + chf(m.verrechnet),
-          `${zeiten.filter(t => t.verrechenbar).reduce((s, t) => s + t.dauer, 0).toFixed(1)} h zum Stundensatz ` + aid('MAR-02'))}
+          `${zeiten.filter(t => t.verrechenbar).reduce((s, t) => s + t.dauer, 0).toFixed(1)} h zum Stundensatz `)}
         ${zeile('./. Interne Zeitkosten', '− ' + chf(m.intern),
-          `${m.stunden.toFixed(1)} h zum Kostensatz ` + aid('MAR-02'), 'ab')}
-        ${zeile('Projektdeckungsbeitrag', chf(m.db), 'aus Einzelpositionen und Zeiten abgeleitet ' + aid('MAR-03'), 'summe')}
+          `${m.stunden.toFixed(1)} h zum Kostensatz `, 'ab')}
+        ${zeile('Projektdeckungsbeitrag', chf(m.db), 'aus Einzelpositionen und Zeiten abgeleitet ', 'summe')}
       </div>
       <div class="small muted" style="margin-top:12px;line-height:1.6;max-width:92ch">
         Jede Zeile ist nachrechenbar: die Positionen stehen im Beleg, die Stunden in der
         Zeiterfassung. Nichts hier ist geschätzt, und nichts ändert sich, wenn morgen eine neue
-        Preisliste kommt — die Positionen tragen ihren eigenen EK. ${aid('MAR-01','MAR-03')}</div>`
+        Preisliste kommt — die Positionen tragen ihren eigenen EK.</div>`
       : `<div class="rsperre"><b>Marge ist für diese Rolle gesperrt</b>
         <div>EK, Rabattkonditionen, Margen und interne Kostensätze sind sensible Feldgruppen.
           Verbergen in der Oberfläche genügt nicht: dieselbe Prüfung gilt für Suche, Export,
-          Download und Schnittstelle. ${aid('IAM-02','MAR-04')}</div></div>`;
+          Download und Schnittstelle.</div></div>`;
   }
   if (PROJ_TAB === 'export') {
     const pdfs = dok.filter(d => d.final);
     inhalt = `<div class="card">
-      <div class="wl"><span>Projektexport als ZIP ${aid('PRJ-04','EXP-03')}</span>
+      <div class="wl"><span>Projektexport als ZIP</span>
         <span class="r2">${esc(p.nr)}_${esc(K(p.kunde).kurz)}.zip</span></div>
       <div class="small muted" style="line-height:1.6;margin-bottom:12px;max-width:92ch">
         Das Archiv ist ohne diese Anwendung lesbar: Ordnerstruktur, Originaldateien, Beleg-PDFs,
         die Chronik als PDF und dieselben Daten maschinenlesbar als JSON und CSV.</div>
       <div class="wf">
-        ${zeile('01_Belege/', `${pdfs.length} PDF`, pdfs.map(d => esc(d.nr)).join(', '))}
+        ${zeile('01_Belege/', `${pdfs.length} PDF`, pdfs.map(d => esc(d.nr)).join(','))}
         ${zeile('02_Dateien/', `${dateien.length} Dateien`, 'Originale, jeweils neueste Version')}
         ${zeile('03_Dateien_Versionen/', `${dateien.filter(f => f.version > 1).length} älter`, 'frühere Fassungen')}
         ${zeile('04_Zeiten/', `${zeiten.length} Buchungen`, 'zeiten.csv')}
         ${zeile('05_Service/', `${faelle.length} Fälle`, 'mit Statushistorie')}
         ${zeile('Chronik.pdf', `${dok.length + zeiten.length + dateien.length} Einträge`, 'lesbar für Menschen')}
         ${zeile('projekt.json', 'Metadaten', 'Kunde, Adressen, Beträge, Beziehungen')}
-        ${zeile('pruefsummen.txt', `${pdfs.length} SHA-256`, 'je finale Datei ' + aid('ARC-02'), 'summe')}
+        ${zeile('pruefsummen.txt', `${pdfs.length} SHA-256`, 'je finale Datei ', 'summe')}
       </div>
       <div class="row" style="margin-top:14px">
         ${darf('exportieren')
           ? `<button class="btn acc" data-act="zip-export" data-id="${p.id}">ZIP erzeugen</button>`
-          : gesperrt('Export ist für «' + R().name + '» gesperrt', 'IAM-01')}
+          : gesperrt('Export ist für «' + R().name + '» gesperrt')}
         <span class="small muted">Im Prototyp wird die Liste erzeugt, keine Datei — hier läuft
           kein Server.</span></div></div>`;
   }
@@ -3037,7 +3018,7 @@ VIEWS.verkauf = () => {
       ? '<button class="btn" data-vreset="1" style="align-self:flex-end">Filter zurücksetzen</button>' : ''}
     <div style="margin-left:auto;align-self:flex-end" class="small muted">
       ${liste.length} Belege · ${chf(liste.filter(d => d.typ === 'RG' && d.status !== 'storniert')
-        .reduce((s, d) => s + brutto(d), 0))} fakturiert ${aid('DOC-08')}</div></div>`;
+        .reduce((s, d) => s + brutto(d), 0))} fakturiert</div></div>`;
 
   const zeilen = liste.map(d => `
     <tr class="click ${DOK_OFFEN === d.id ? 'gewaehlt' : ''}" data-dok="${d.id}">
@@ -3054,7 +3035,7 @@ VIEWS.verkauf = () => {
     </tr>` + (DOK_OFFEN === d.id ? dokDetail(d) : '')).join('');
 
   const kreise = `<div class="card tint" style="margin-top:18px">
-    <div class="wl"><span>Nummernkreise ${aid('DOC-05','MAN-03')}</span>
+    <div class="wl"><span>Nummernkreise</span>
       <span class="r2">${esc(M().lang)}</span></div>
     <div class="row" style="gap:18px">
       ${Object.entries(M().kreise).map(([t, n]) => `<div>
@@ -3068,7 +3049,7 @@ VIEWS.verkauf = () => {
       wiederverwendet: die Lücke ist das Beweisstück, nicht der Fehler.</div></div>`;
 
   return `${filter}
-    <div class="sec">Belegkette und Status ${aid('DOC-01','DOC-08')}
+    <div class="sec">Belegkette und Status
       <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">
         · eine Zeile öffnet den Beleg, wie er hinausgegangen ist</span></div>
     <div class="scrollx"><table><thead><tr><th>Beleg</th><th>Datum</th><th>Kunde</th><th>Projekt</th>
@@ -3147,59 +3128,59 @@ function dokDetail(d) {
       <tbody>${zeilen}</tbody></table>
     ${summen}
     <div class="rdfuss">${esc(stellen)} · ${esc(m.iban)} · ${esc(m.absender)}<br>
-      Layout: ${esc(m.layout)} ${aid('DOC-09','MAN-02')}
-      ${d.typ === 'RG' ? '<br>QR-Zahlteil: im Detailkonzept festzulegen (DOC-10)' : ''}</div></div>`;
+      Layout: ${esc(m.layout)}
+      ${d.typ === 'RG' ? '<br>QR-Zahlteil: im Detailkonzept festzulegen' : ''}</div></div>`;
 
   /* die rechte Spalte: was das System dazu weiss und was jetzt möglich ist */
   const naechste = [];
   if (!d.final && darf('finalisieren'))
     naechste.push(`<button class="btn acc" data-act="finalisieren" data-id="${d.id}">
-      Finalisieren ${aid('ARC-01')}</button>`);
+      Finalisieren</button>`);
   if (d.typ === 'OF' && d.final && d.status === 'versendet' && darf('finalisieren'))
     naechste.push(`<button class="btn" data-act="of-angenommen" data-id="${d.id}">Als angenommen markieren</button>`);
   if (d.typ === 'OF' && d.status === 'angenommen' && darf('finalisieren')
       && !DB.dokumente.some(x => x.vorgaenger === d.id && x.typ === 'AB'))
     naechste.push(`<button class="btn acc" data-act="wandeln" data-id="${d.id}" data-ziel="AB">
-      In Auftragsbestätigung ${aid('DOC-01')}</button>`);
+      In Auftragsbestätigung</button>`);
   if (d.typ === 'AB' && darf('finalisieren')) {
     naechste.push(`<button class="btn" data-act="wandeln" data-id="${d.id}" data-ziel="LS">
-      Lieferschein für offene Mengen ${aid('DOC-03')}</button>`);
+      Lieferschein für offene Mengen</button>`);
     naechste.push(`<button class="btn" data-act="wandeln" data-id="${d.id}" data-ziel="RG">
-      Rechnung, Akonto verrechnet ${aid('DOC-04')}</button>`);
+      Rechnung, Akonto verrechnet</button>`);
   }
   if (d.typ === 'RG' && d.final && d.status !== 'storniert' && offenBetrag(d) > 0.005)
-    naechste.push(`<button class="btn" data-go="zahlungen" data-ref="${d.id}">Zahlung erfassen ${aid('PAY-01')}</button>`);
+    naechste.push(`<button class="btn" data-go="zahlungen" data-ref="${d.id}">Zahlung erfassen</button>`);
   if (d.typ === 'RG' && d.final && d.status !== 'storniert' && darf('finalisieren'))
     naechste.push(`<button class="btn" data-act="storno" data-id="${d.id}">
-      Stornieren über Gutschrift ${aid('ARC-04','DOC-06')}</button>`);
+      Stornieren über Gutschrift</button>`);
   if (darf('versenden'))
-    naechste.push(`<button class="btn" data-act="zum-versand" data-id="${d.id}">Versenden ${aid('SND-01')}</button>`);
+    naechste.push(`<button class="btn" data-act="zum-versand" data-id="${d.id}">Versenden</button>`);
 
   const pruef = `<div class="rdpruef">
     <div class="card" style="margin-bottom:12px">
       <div class="wl"><span>Was das System dazu weiss</span></div>
       <div class="pz"><span class="pj">✓</span><div>Adresse und Kontakt sind als Snapshot
-        gespeichert. Ein Umzug des Kunden ändert diesen Beleg nicht. ${aid('CRM-06','ARC-05')}</div></div>
+        gespeichert. Ein Umzug des Kunden ändert diesen Beleg nicht.</div></div>
       <div class="pz"><span class="pj">✓</span><div>Jede Position trägt Preis, Rabatt, MWST-Satz
-        ${darf('ek') ? 'und Einkaufspreis ' : ''}von damals. ${aid('ART-06')}</div></div>
+        ${darf('ek') ? 'und Einkaufspreis ' : ''}von damals.</div></div>
       ${d.final ? `<div class="pz"><span class="pj">✓</span><div>Finalisiert am ${esc(d.finalAm)}
         von ${esc(d.finalVon)} · Nummer aus dem Kreis ${d.typ} des Mandanten
-        ${esc(M(d.mandant).name)}. ${aid('DOC-05')}</div></div>` :
+        ${esc(M(d.mandant).name)}.</div></div>` :
         `<div class="pz"><span class="pj" style="color:var(--warn)">•</span><div>Noch Entwurf:
           keine Nummer aus dem Kreis, keine Prüfsumme, kein Versand.</div></div>`}
       ${d.storniertAm ? `<div class="pz"><span class="pj" style="color:var(--bad)">✕</span>
         <div>Storniert am ${esc(d.storniertAm)} über ${esc(d.storniertDurch)}. Das PDF bleibt
-          unverändert erhalten. ${aid('ARC-04')}</div></div>` : ''}
+          unverändert erhalten.</div></div>` : ''}
       ${d.ersetzt ? `<div class="pz"><span class="pj">✓</span><div>Ersetzt
         ${esc(D(d.ersetzt).nr)}, das storniert wurde.</div></div>` : ''}
       ${d.nachfassAm ? `<div class="pz"><span class="pj">◔</span><div>Follow-up automatisch auf
-        ${esc(d.nachfassAm)} gesetzt, beim Versand. ${aid('ACT-03')}</div></div>` : ''}
+        ${esc(d.nachfassAm)} gesetzt, beim Versand.</div></div>` : ''}
       ${d.vorgaenger ? `<div class="pz"><span class="pj">↳</span><div>Übernommen aus
         <span class="link" data-dok="${d.vorgaenger}">${esc(D(d.vorgaenger).nr)}</span> —
-        ohne Neueingabe. ${aid('DOC-01')}</div></div>` : ''}
+        ohne Neueingabe.</div></div>` : ''}
     </div>
     ${d.final ? `<div class="card" style="margin-bottom:12px">
-      <div class="wl"><span>Archiv und Prüfsumme ${aid('ARC-01','ARC-02')}</span></div>
+      <div class="wl"><span>Archiv und Prüfsumme</span></div>
       <div class="small muted" style="margin-bottom:6px">SHA-256 über die eingefrorene Fassung,
         im Browser gerechnet:</div>
       <div class="hash">${esc(d.hash || '… wird berechnet')}</div>
@@ -3214,7 +3195,7 @@ function dokDetail(d) {
     <div class="card">
       <div class="wl"><span>Was jetzt möglich ist</span></div>
       ${naechste.length ? `<div class="row" style="gap:7px">${naechste.join('')}</div>`
-        : `<div>${gesperrt('Für «' + R().name + '» gibt es hier keine Aktion', 'IAM-01')}</div>`}
+        : `<div>${gesperrt('Für «' + R().name + '» gibt es hier keine Aktion')}</div>`}
     </div></div>`;
 
   return `<tr class="detailzeile"><td colspan="8">
@@ -3233,25 +3214,24 @@ VIEWS.produkte = () => {
       || (r.art === 'Lieferant' && r.ziel === x.lieferant));
     return `<tr class="click ${ART_OFFEN === x.id ? 'gewaehlt' : ''}" data-artikel="${x.id}">
       <td><b>${esc(x.nr)}</b><div class="small muted">${esc(x.kategorie)}</div></td>
-      <td>${esc(x.name)}${x.anhang.length ? `<div class="small muted">${x.anhang.length} Anhänge
-        ${aid('ART-01')}</div>` : ''}</td>
+      <td>${esc(x.name)}${x.anhang.length ? `<div class="small muted">${x.anhang.length} Anhänge</div>` : ''}</td>
       <td>${esc(x.hersteller)}<div class="small muted">${esc(x.lieferant)}</div></td>
       <td class="num">${esc(x.einheit)}</td>
       <td class="r num">${chf(x.liste)}</td>
-      <td class="r num">${darf('ek') ? chf(x.ek) : gesperrt('EK', 'IAM-02')}</td>
+      <td class="r num">${darf('ek') ? chf(x.ek) : gesperrt('EK')}</td>
       <td class="r num">${darf('ek') ? (rab ? rab.wert + ' %' : '—') : ''}</td>
       <td class="r num">${x.mwst} %</td>
       <td class="r num">${x.versionen.length}</td>
       </tr>` + (ART_OFFEN === x.id ? artikelDetail(x) : '');
   }).join('');
 
-  return `<div class="sec">Artikel und Leistungen ${aid('ART-01','ART-02')}
+  return `<div class="sec">Artikel und Leistungen
       <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">
         · ${liste.length} im Mandanten ${esc(MANDANT === 'alle' ? 'aller Mandanten' : M().name)}</span></div>
     <div class="scrollx"><table><thead><tr><th>Nummer</th><th>Bezeichnung</th><th>Hersteller</th>
       <th>Einheit</th><th class="r">Liste</th><th class="r">EK</th><th class="r">Rabatt</th>
       <th class="r">MWST</th><th class="r">Preisversionen</th></tr></thead><tbody>${zeilen}</tbody></table></div>
-    <div class="sec" style="margin-top:22px">Rabattregeln ${aid('ART-03')}</div>
+    <div class="sec" style="margin-top:22px">Rabattregeln</div>
     ${darf('ek') ? `<div class="scrollx"><table><thead><tr><th>Art</th><th>Ziel</th>
       <th class="r">Rabatt</th><th>Gültig</th><th class="r">Vorrang</th><th>Notiz</th>
       </tr></thead><tbody>
@@ -3262,7 +3242,7 @@ VIEWS.produkte = () => {
       </tbody></table></div>`
     : `<div class="rsperre"><b>Rabattkonditionen sind gesperrt</b>
         <div>Für «${esc(R().name)}» sind EK und Rabattkonditionen nicht sichtbar — auch nicht
-          über Suche oder Export. ${aid('IAM-02')}</div></div>`}`;
+          über Suche oder Export.</div></div>`}`;
 };
 
 function artikelDetail(x) {
@@ -3277,7 +3257,7 @@ function artikelDetail(x) {
       <button class="btn" data-artzu="1" style="margin-left:auto">Schliessen</button></div>
     <div class="grid g2" style="gap:14px;padding:0 16px">
       <div class="card tint">
-        <div class="wl"><span>Preishistorie ${aid('IMP-06')}</span>
+        <div class="wl"><span>Preishistorie</span>
           <span class="r2">${x.versionen.length} Versionen</span></div>
         <div class="wf" style="border:none">
           ${[...x.versionen].reverse().map((v, i) => zeile(
@@ -3288,7 +3268,7 @@ function artikelDetail(x) {
         <div class="small muted" style="margin-top:10px;line-height:1.6">Jede Version hat ihr
           Gültig-ab-Datum. Ein Import legt eine neue Version an und überschreibt keine alte.</div></div>
       <div class="card tint">
-        <div class="wl"><span>Verwendet in Belegen ${aid('IMP-07')}</span>
+        <div class="wl"><span>Verwendet in Belegen</span>
           <span class="r2">${verwendet.length} Positionen</span></div>
         ${verwendet.length ? `<div class="wf" style="border:none">
           ${verwendet.map(({ d, p }) => zeile(
@@ -3303,7 +3283,7 @@ function artikelDetail(x) {
           : '<div class="small muted">Noch in keinem Beleg verwendet.</div>'}</div>
     </div>
     ${x.anhang.length ? `<div style="padding:12px 16px 0">
-      <div class="small muted">Anhänge ${aid('ART-01')}</div>
+      <div class="small muted">Anhänge</div>
       <div class="row" style="gap:6px;margin-top:5px">${x.anhang.map(a =>
         `<span class="chip">${esc(a)}</span>`).join('')}</div></div>` : ''}
     </td></tr>`;
@@ -3355,19 +3335,19 @@ VIEWS.import = () => {
 
   return `<div class="grid g2" style="gap:14px;margin-bottom:18px">
     <div class="card">
-      <div class="wl"><span>Importlauf ${aid('IMP-01','IMP-05')}</span>
+      <div class="wl"><span>Importlauf</span>
         <span class="r2">${esc(i.status)}</span></div>
       <div class="wf" style="border:none">
         ${zeile('Quelldatei', esc(i.datei), esc(i.zeichensatz))}
         ${zeile('Hersteller', esc(i.hersteller))}
         ${zeile('Hochgeladen', esc(i.hochgeladen), 'von ' + esc(i.wer))}
-        ${zeile('Importprofil', esc(i.profil), 'wiederverwendbar ' + aid('IMP-03'))}
+        ${zeile('Importprofil', esc(i.profil), 'wiederverwendbar ')}
         ${zeile('Zeilen in der Datei', String(i.zeilen))}
         ${zeile('Stichtag', `<input type="text" data-stichtag="1" value="${esc(i.stichtag)}"
-          style="width:110px;text-align:right">`, 'Gültig-ab der neuen Versionen ' + aid('IMP-06'))}
+          style="width:110px;text-align:right">`, 'Gültig-ab der neuen Versionen ')}
       </div></div>
     <div class="card">
-      <div class="wl"><span>Spaltenzuordnung ${aid('IMP-02')}</span>
+      <div class="wl"><span>Spaltenzuordnung</span>
         <span class="r2">${esc(i.profil)}</span></div>
       <div class="mapping">
         ${i.mapping.map((m, n) => `<div class="mq">${esc(m.quelle)}</div>
@@ -3379,24 +3359,24 @@ VIEWS.import = () => {
           </select>`).join('')}
       </div></div></div>
 
-    <div class="sec">Änderungsanalyse ${aid('IMP-04')}</div>
+    <div class="sec">Änderungsanalyse</div>
     <div class="ianalyse">${kat.map(c => `<div class="ik ${c.cls} ${IMPORT_KAT === c.id ? 'on' : ''}"
       data-ikat="${c.id}"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('')}</div>
     ${probe()}
 
     ${IMPORT_ANGEWENDET ? `
       <div class="card good" style="margin-top:18px">
-        <div class="wl"><span>Import angewendet ${aid('IMP-05','IMP-06')}</span>
+        <div class="wl"><span>Import angewendet</span>
           <span class="r2">Stichtag ${esc(i.stichtag)}</span></div>
         <div class="small" style="line-height:1.6;max-width:92ch">
           ${i.analyse.neu} Artikel neu angelegt, ${i.analyse.geaendert} Artikel haben eine neue
           Preisversion mit Gültig-ab ${esc(i.stichtag)}. Keine alte Version wurde überschrieben,
           kein Beleg verändert. Der Lauf steht im Protokoll.</div>
         <div class="row" style="margin-top:12px">
-          <button class="btn" data-act="import-zurueck">Lauf zurücknehmen ${aid('IMP-08')}</button>
+          <button class="btn" data-act="import-zurueck">Lauf zurücknehmen</button>
           <span class="small muted">möglich, solange keine neue Offerte damit gerechnet hat</span></div></div>`
       : `<div class="card" style="margin-top:18px">
-        <div class="wl"><span>Bestätigen ${aid('IMP-05')}</span></div>
+        <div class="wl"><span>Bestätigen</span></div>
         <div class="small muted" style="line-height:1.6;max-width:92ch;margin-bottom:12px">
           Erst mit der Bestätigung werden Preisversionen geschrieben. Die ${i.analyse.fehler}
           fehlerhaften Zeilen werden dabei übersprungen und bleiben im Bericht stehen.</div>
@@ -3404,10 +3384,10 @@ VIEWS.import = () => {
           ${darf('admin') || ROLLE === 'mitarbeiter'
             ? `<button class="btn acc" data-act="import-anwenden">
                 Import mit Stichtag ${esc(i.stichtag)} anwenden</button>`
-            : gesperrt('Import ist für «' + R().name + '» gesperrt', 'IAM-01')}
+            : gesperrt('Import ist für «' + R().name + '» gesperrt')}
           <button class="btn" data-act="import-bericht">Validierungsbericht ansehen</button></div></div>`}
 
-    <div class="sec" style="margin-top:22px">Was mit bestehenden Belegen passiert ${aid('IMP-07')}</div>
+    <div class="sec" style="margin-top:22px">Was mit bestehenden Belegen passiert</div>
     <div class="scrollx"><table><thead><tr><th>Beleg</th><th>Position</th><th class="r">Preis im Beleg</th>
       <th class="r">Neue Preisliste</th><th>Wirkung auf den Beleg</th></tr></thead><tbody>
       ${betroffen.map(b => `<tr><td><b><span class="link" data-dok="${b.d.id}">${esc(b.d.nr)}</span></b>
@@ -3422,7 +3402,7 @@ VIEWS.import = () => {
       Das ist das Abnahmekriterium aus Abschnitt 15: der Preisimport verändert keine gespeicherte
       Dokumentposition, und die Historie zeigt alten und neuen Wert samt Stichtag.</div>
 
-    <div class="sec" style="margin-top:22px">Frühere Läufe ${aid('IMP-05')}</div>
+    <div class="sec" style="margin-top:22px">Frühere Läufe</div>
     <div class="scrollx"><table><thead><tr><th>Datum</th><th>Datei</th><th>Von</th><th>Ergebnis</th>
       <th>Stichtag</th></tr></thead><tbody>
       ${i.frueher.map(f => `<tr><td class="num">${esc(f.datum)}</td><td>${esc(f.datei)}</td>
@@ -3455,22 +3435,22 @@ VIEWS.zeiten = () => {
   const kpis = `<div class="grid g4" style="margin-bottom:18px">
     <div class="card kpi"><div class="l">Erfasst</div>
       <div class="n">${zeiten.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h</div>
-      <div class="d">${zeiten.length} Buchungen ${aid('TIM-01')}</div></div>
+      <div class="d">${zeiten.length} Buchungen</div></div>
     <div class="card kpi"><div class="l">Verrechenbar, offen</div>
       <div class="n" style="color:var(--warn)">${offen.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h</div>
-      <div class="d">${chf(offen.reduce((s, t) => s + t.dauer * t.satz, 0))} ${aid('TIM-04')}</div></div>
+      <div class="d">${chf(offen.reduce((s, t) => s + t.dauer * t.satz, 0))}</div></div>
     <div class="card kpi"><div class="l">Nicht verrechenbar</div>
       <div class="n">${zeiten.filter(t => !t.verrechenbar).reduce((s, t) => s + t.dauer, 0).toFixed(1)} h</div>
       <div class="d">Akquisition, Garantie, Nacharbeit</div></div>
     <div class="card kpi"><div class="l">Interne Zeitkosten</div>
       <div class="n">${darf('ek') ? chf0(zeiten.reduce((s, t) => s + t.dauer * t.kosten, 0))
         : '<span class="verdeckt">gesperrt</span>'}</div>
-      <div class="d">${darf('ek') ? 'Kostensatz je Mitarbeiter ' + aid('TIM-03')
-        : 'sensibles Feld ' + aid('IAM-02')}</div></div></div>`;
+      <div class="d">${darf('ek') ? 'Kostensatz je Mitarbeiter'
+        : 'sensibles Feld, für diese Rolle gesperrt'}</div></div></div>`;
 
   const timer = `<div class="card tint" style="margin-bottom:18px">
-    <div class="wl"><span>Zeit erfassen ${aid('TIM-01','TIM-02')}</span>
-      <span class="r2">geht am Handy genauso — dieselbe Oberfläche ${aid('SYS-03')}</span></div>
+    <div class="wl"><span>Zeit erfassen</span>
+      <span class="r2">geht am Handy genauso — dieselbe Oberfläche</span></div>
     <div class="row" style="gap:10px;align-items:flex-end">
       <label class="rfilter" style="flex:1 1 220px"><span>Projekt</span>
         <select data-zprojekt="1">${mProjekte().map(p =>
@@ -3481,7 +3461,7 @@ VIEWS.zeiten = () => {
         <input type="number" step="0.25" min="0" data-zdauer="1" value="1.5" style="width:96px;text-align:right"></label>
       <label class="rfilter"><span>Verrechenbar</span>
         <select data-zverr="1"><option value="ja">ja</option><option value="nein">nein</option></select></label>
-      ${R().nurlesen ? gesperrt('Nur Lesen', 'IAM-01')
+      ${R().nurlesen ? gesperrt('Nur Lesen')
         : '<button class="btn acc" data-act="zeit-buchen">Buchung anlegen</button>'}
     </div>
     <div class="small muted" style="margin-top:9px">Im Prototyp legt der Knopf die Buchung sofort an;
@@ -3511,14 +3491,14 @@ VIEWS.zeiten = () => {
   const wahlProjekte = [...new Set(ZEIT_WAHL.map(id => DB.zeiten.find(x => x.id === id).projekt))];
 
   return `${kpis}${timer}
-    <div class="sec">Buchungen ${aid('TIM-03')}</div>
+    <div class="sec">Buchungen</div>
     <div class="scrollx"><table><thead><tr><th></th><th>Datum</th><th>Projekt</th><th>Wer</th>
       <th>Tätigkeit</th><th class="r">Dauer</th><th class="r">Satz</th><th class="r">Verrechenbar</th>
       ${darf('ek') ? '<th class="r">Interne Kosten</th>' : ''}<th>Status</th>
       </tr></thead><tbody>${zeilen}</tbody></table></div>
 
     <div class="card ${ZEIT_WAHL.length ? 'good' : 'tint'}" style="margin-top:16px">
-      <div class="wl"><span>In eine Rechnung übernehmen ${aid('TIM-04','TIM-05')}</span>
+      <div class="wl"><span>In eine Rechnung übernehmen</span>
         <span class="r2">${ZEIT_WAHL.length} ausgewählt</span></div>
       ${ZEIT_WAHL.length ? `
         <div class="wf" style="border:none">
@@ -3537,7 +3517,7 @@ VIEWS.zeiten = () => {
         : `<div class="small muted">Häkchen bei den offenen, verrechenbaren Buchungen setzen —
             dann entsteht daraus ein Rechnungsentwurf mit einer Position je Tätigkeit.</div>`}</div>
 
-    <div class="sec" style="margin-top:22px">Auswertung ${aid('TIM-06')}</div>
+    <div class="sec" style="margin-top:22px">Auswertung</div>
     <div class="grid g2" style="gap:14px">
       <div class="card"><div class="wl"><span>Nach Projekt</span></div>
         ${proProjekt.map(x => `<div class="mini2">
@@ -3566,7 +3546,7 @@ VIEWS.zahlungen = () => {
       <div class="d">${rg.length} Rechnungen</div></div>
     <div class="card kpi"><div class="l">Offen</div>
       <div class="n">${chf0(offeneRg.reduce((s, d) => s + offenBetrag(d), 0))}</div>
-      <div class="d">${offeneRg.length} Rechnungen ${aid('PAY-02')}</div></div>
+      <div class="d">${offeneRg.length} Rechnungen</div></div>
     <div class="card kpi"><div class="l">Überfällig</div>
       <div class="n" style="color:var(--warn)">${chf0(offeneRg.filter(d => d.status === 'überfällig')
         .reduce((s, d) => s + offenBetrag(d), 0))}</div>
@@ -3574,7 +3554,7 @@ VIEWS.zahlungen = () => {
     <div class="card kpi"><div class="l">Eingegangen</div>
       <div class="n">${chf0(DB.zahlungen.filter(z => mDok().some(d => d.id === z.dok))
         .reduce((s, z) => s + z.betrag, 0))}</div>
-      <div class="d">${DB.zahlungen.length} Zahlungen ${aid('PAY-01')}</div></div></div>`;
+      <div class="d">${DB.zahlungen.length} Zahlungen</div></div></div>`;
 
   const zeilen = offeneRg.map(d => `<tr class="${DOK_OFFEN === d.id ? 'gewaehlt' : ''}">
     <td><b>${esc(d.nr)}</b><div class="small muted">${esc(M(d.mandant).name)}</div></td>
@@ -3596,7 +3576,7 @@ VIEWS.zahlungen = () => {
     </tr>` + (DOK_OFFEN === d.id ? zahlungDetail(d) : '')).join('');
 
   const guthaben = DB.guthaben.map(g => `<div class="card tint">
-    <div class="wl"><span>Kundenguthaben ${aid('DOC-07')}</span>
+    <div class="wl"><span>Kundenguthaben</span>
       <span class="r2">${esc(K(g.kunde).name)}</span></div>
     <div class="wf" style="border:none">
       ${g.bewegungen.map(b => zeile(`${esc(b.datum)} · ${esc(b.grund)}`,
@@ -3608,13 +3588,13 @@ VIEWS.zahlungen = () => {
       an einer bestehenden Rechnung.</div></div>`).join('');
 
   return `${kpis}
-    <div class="sec">Offene Debitoren ${aid('PAY-02')}</div>
+    <div class="sec">Offene Debitoren</div>
     <div class="scrollx"><table><thead><tr><th>Rechnung</th><th>Kunde</th><th>Datum</th><th>Fällig</th>
       <th class="r">Total</th><th class="r">Bezahlt</th><th class="r">Offen</th><th>Alterung</th>
       <th>Mahnung</th><th></th></tr></thead><tbody>${zeilen}</tbody></table></div>
 
     <div class="grid g2" style="gap:14px;margin-top:18px">
-      <div class="card"><div class="wl"><span>Mahnstufen ${aid('PAY-03')}</span>
+      <div class="card"><div class="wl"><span>Mahnstufen</span>
           <span class="r2">${esc(M().lang)}</span></div>
         <div class="scrollx"><table><thead><tr><th>Stufe</th><th class="r">Tage nach Fälligkeit</th>
           <th class="r">Gebühr</th><th>Text</th></tr></thead><tbody>
@@ -3624,10 +3604,10 @@ VIEWS.zahlungen = () => {
           </tbody></table></div>
         <div class="small muted" style="margin-top:10px;line-height:1.6">Je Mandant und bei Bedarf
           je Kunde konfigurierbar. Eine Mahnung wird vorbereitet und freigegeben — automatischer
-          Versand ist später möglich und abschaltbar. ${aid('PAY-04')}</div></div>
+          Versand ist später möglich und abschaltbar.</div></div>
       ${guthaben}</div>
 
-    <div class="sec" style="margin-top:22px">Zahlungseingänge ${aid('PAY-01')}</div>
+    <div class="sec" style="margin-top:22px">Zahlungseingänge</div>
     <div class="scrollx"><table><thead><tr><th>Datum</th><th>Rechnung</th><th>Kunde</th><th>Art</th>
       <th>Referenz</th><th class="r">Betrag</th></tr></thead><tbody>
       ${DB.zahlungen.filter(z => mDok().some(d => d.id === z.dok)).map(z => `<tr>
@@ -3647,7 +3627,7 @@ function zahlungDetail(d) {
       <span class="muted">${esc(K(d.kunde).name)} · offen ${chf(offenBetrag(d))}</span>
       <button class="btn" data-dokzu="1" style="margin-left:auto">Schliessen</button></div>
     <div class="grid g2" style="gap:14px;padding:0 16px">
-      <div class="card"><div class="wl"><span>Zahlung erfassen ${aid('PAY-01')}</span></div>
+      <div class="card"><div class="wl"><span>Zahlung erfassen</span></div>
         <div class="row" style="gap:10px;align-items:flex-end">
           <label class="rfilter"><span>Datum</span>
             <input type="text" data-zdatum="1" value="${esc(DB.heute)}" style="width:110px"></label>
@@ -3658,11 +3638,11 @@ function zahlungDetail(d) {
             <input type="text" data-zref="1" value="QR 21 00000 00000 ${esc(d.nr.slice(-5))}"></label>
           ${darf('exportieren')
             ? `<button class="btn acc" data-act="zahlung-buchen" data-id="${d.id}">Buchen</button>`
-            : gesperrt('kein Recht', 'IAM-01')}</div>
+            : gesperrt('kein Recht')}</div>
         <div class="small muted" style="margin-top:9px">Teilzahlung möglich: der Restbetrag wird
           gerechnet, der Status folgt daraus. Verbucht wird in der Buchhaltung, nicht hier
           (Abgrenzung 1.1).</div></div>
-      <div class="card"><div class="wl"><span>Mahnwesen ${aid('PAY-03','PAY-04','PAY-05')}</span></div>
+      <div class="card"><div class="wl"><span>Mahnwesen</span></div>
         <div class="wf" style="border:none">
           ${zeile('Fällig seit', esc(d.faellig))}
           ${zeile('Bisherige Stufe', d.mahnstufe ? `Stufe ${d.mahnstufe} am ${esc(d.mahnungAm)}` : 'keine')}
@@ -3675,7 +3655,7 @@ function zahlungDetail(d) {
           ${regel && darf('versenden')
             ? `<button class="btn" data-act="mahnung-vorbereiten" data-id="${d.id}">
                 Stufe ${regel.stufe} vorbereiten</button>` : ''}
-          <button class="btn" data-act="zum-versand" data-id="${d.id}">Versandhistorie ${aid('PAY-05')}</button>
+          <button class="btn" data-act="zum-versand" data-id="${d.id}">Versandhistorie</button>
         </div></div></div></td></tr>`;
 }
 
@@ -3701,7 +3681,7 @@ VIEWS.versand = () => {
     .replace('{{absender}}', M(wahl.mandant).lang);
 
   const maske = `<div class="card" style="margin-bottom:18px">
-    <div class="wl"><span>Versandmaske ${aid('SND-01','SND-02','SND-03')}</span>
+    <div class="wl"><span>Versandmaske</span>
       <span class="r2">${esc(M(wahl.mandant).absender)}</span></div>
     <div class="row" style="gap:10px;align-items:flex-end;margin-bottom:12px">
       <label class="rfilter" style="flex:1 1 240px"><span>Beleg</span>
@@ -3723,25 +3703,25 @@ VIEWS.versand = () => {
         .replace('{{projekt}}', wahl.projekt ? P(wahl.projekt).name : wahl.titel))}"></div>
     <div class="pfeld"><label>Nachricht · Platzhalter sind eingesetzt</label>
       <textarea data-mailtext="1" rows="5">${esc(text)}</textarea></div>
-    <div class="pfeld"><label>Anhänge ${aid('SND-04')}</label>
+    <div class="pfeld"><label>Anhänge</label>
       <div class="row" style="gap:6px">${anhaenge.map((a, i) =>
         `<span class="chip ${i === 0 ? 's1' : ''}">${esc(a)}</span>`).join('')}</div></div>
     <div class="row" style="margin-top:12px">
       ${darf('versenden')
         ? `<button class="btn acc" data-act="senden" data-id="${wahl.id}">Senden</button>`
-        : gesperrt('Versand ist für «' + R().name + '» gesperrt', 'IAM-01')}
+        : gesperrt('Versand ist für «' + R().name + '» gesperrt')}
       <span class="small muted">Das erzeugte PDF hängt automatisch an; jeder Versand erzeugt
         einen Eintrag in der Historie und lässt den alten unverändert.</span></div></div>`;
 
-  const historie = `<div class="sec">Versandhistorie ${aid('SND-05','SND-06')}</div>
+  const historie = `<div class="sec">Versandhistorie</div>
     <div class="scrollx"><table><thead><tr><th>Zeitpunkt</th><th>Beleg</th><th>An</th><th>Betreff</th>
       <th>Anhänge</th><th>Von</th><th>Status</th><th></th></tr></thead><tbody>
       ${DB.versand.filter(v => v.status !== 'nicht versendet' && mDok().some(d => d.id === v.dok))
         .map(v => `<tr><td class="num">${esc(v.datum)}</td>
         <td><span class="link" data-dok="${v.dok}">${esc(D(v.dok).nr)}</span>
           ${v.mahnung ? `<div class="small muted">Mahnung Stufe ${v.mahnung}</div>` : ''}</td>
-        <td class="small">${esc(v.an.join(', '))}${v.cc.length
-          ? `<div class="muted">CC ${esc(v.cc.join(', '))}</div>` : ''}</td>
+        <td class="small">${esc(v.an.join(','))}${v.cc.length
+          ? `<div class="muted">CC ${esc(v.cc.join(','))}</div>` : ''}</td>
         <td class="small">${esc(v.betreff)}</td>
         <td class="small muted">${v.anhang.map(esc).join('<br>')}</td>
         <td>${esc(v.wer)}</td>
@@ -3751,7 +3731,7 @@ VIEWS.versand = () => {
         </tr>`).join('')}
       </tbody></table></div>`;
 
-  const nl = `<div class="sec" style="margin-top:22px">Newsletter ${aid('NWL-03','NWL-04')}</div>
+  const nl = `<div class="sec" style="margin-top:22px">Newsletter</div>
     <div class="scrollx"><table><thead><tr><th>Ausgabe</th><th>Thema</th><th>Verteiler</th>
       <th>Versendet</th><th class="r">Empfänger</th><th class="r">Zugestellt</th>
       <th class="r">Fehlgeschlagen</th><th class="r">Abgemeldet</th><th>Status</th>
@@ -3769,7 +3749,7 @@ VIEWS.versand = () => {
     <div class="small muted" style="margin-top:10px;line-height:1.6;max-width:92ch">
       Einwilligung, Quelle und Zeitpunkt hängen am Kontakt; eine Abmeldung wirkt dauerhaft über
       alle Kampagnen. Zustellraten kommen vom Versanddienst — was er nicht liefert, wird auch
-      nicht behauptet. ${aid('NWL-02','NWL-04')}</div>`;
+      nicht behauptet.</div>`;
 
   return maske + historie + nl;
 };
@@ -3790,8 +3770,7 @@ VIEWS.service = () => {
     <div class="card" style="margin-bottom:16px">
       <div class="row" style="justify-content:space-between;align-items:flex-start;gap:14px">
         <div style="min-width:0">
-          <div class="small muted">${esc(M(f.mandant).name)} · gemeldet ${esc(f.gemeldet)}
-            ${aid('SRV-01')}</div>
+          <div class="small muted">${esc(M(f.mandant).name)} · gemeldet ${esc(f.gemeldet)}</div>
           <h2 style="font-size:19px;font-weight:700;margin:3px 0 4px">${esc(f.nr)} · ${esc(f.titel)}</h2>
           <div class="small" style="line-height:1.6;max-width:80ch">${esc(f.fehler)}</div></div>
         <div style="flex:none;text-align:right">
@@ -3809,7 +3788,7 @@ VIEWS.service = () => {
           <div style="font-weight:600">${esc(f.kosten)}</div></div></div></div>
 
     <div class="grid g2" style="gap:14px">
-      <div class="card"><div class="wl"><span>Woher das Teil kam ${aid('SRV-02')}</span></div>
+      <div class="card"><div class="wl"><span>Woher das Teil kam</span></div>
         ${dok && pos ? `<div class="wf" style="border:none">
           ${zeile('Artikel', esc(A(f.artikel).name), esc(A(f.artikel).nr))}
           ${zeile('Menge im Fall', `${f.menge} ${esc(A(f.artikel).einheit)}`)}
@@ -3820,8 +3799,8 @@ VIEWS.service = () => {
         </div>
         <div class="small muted" style="margin-top:10px;line-height:1.6">Der Weg zurück auf
           Lieferung, Position und Lieferdatum ist der Grund, warum ein Fall auch in drei Jahren
-          noch beantwortbar ist. ${aid('SRV-05')}</div>` : '<div class="small muted">Kein Belegbezug.</div>'}</div>
-      <div class="card"><div class="wl"><span>Status und Verlauf ${aid('SRV-03','SRV-04')}</span></div>
+          noch beantwortbar ist.</div>` : '<div class="small muted">Kein Belegbezug.</div>'}</div>
+      <div class="card"><div class="wl"><span>Status und Verlauf</span></div>
         <div class="row" style="gap:6px;margin-bottom:12px">${schritte.map(s =>
           `<button class="tab ${f.status === s ? 'on' : ''}" data-fstatus="${s}"
             ${R().nurlesen ? 'disabled' : ''}>${s}</button>`).join('')}</div>
@@ -3855,14 +3834,14 @@ VIEWS.lager = () => {
   return `<div class="grid g3" style="margin-bottom:18px">
       <div class="card kpi"><div class="l">Positionen</div>
         <div class="n">${mLager().length}</div>
-        <div class="d">in ${kats.length} Kategorien ${aid('INV-01')}</div></div>
+        <div class="d">in ${kats.length} Kategorien</div></div>
       <div class="card kpi"><div class="l">Unter Mindestbestand</div>
         <div class="n" style="color:${unter.length ? 'var(--warn)' : 'inherit'}">${unter.length}</div>
         <div class="d">${unter.map(l => esc(l.name)).join(', ') || 'alles im Rahmen'}</div></div>
       <div class="card kpi"><div class="l">Ausgeliehen</div>
         <div class="n">${mLager().filter(l => l.ausgeliehen).length}</div>
         <div class="d">${mLager().filter(l => l.ausgeliehen).map(l => esc(l.ausgeliehen)).join(' · ')
-          || 'nichts unterwegs'} ${aid('INV-04')}</div></div></div>
+          || 'nichts unterwegs'}</div></div></div>
     <div class="tabs"><button class="tab ${!LAGER_KAT ? 'on' : ''}" data-lkat="">Alle</button>
       ${kats.map(c => `<button class="tab ${LAGER_KAT === c ? 'on' : ''}" data-lkat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div class="scrollx"><table><thead><tr><th>Artikel</th><th>Kategorie</th><th>Nummer</th>
@@ -3898,14 +3877,13 @@ VIEWS.lager = () => {
                 <input type="number" step="1" data-bmenge="1" value="-1" style="width:96px;text-align:right"></label>
               <label class="rfilter" style="flex:1 1 200px"><span>Grund</span>
                 <input type="text" data-bgrund="1" value="Verbrauch Montage"></label>
-              ${R().nurlesen ? gesperrt('Nur Lesen', 'IAM-01')
-                : `<button class="btn acc" data-act="lager-buchen" data-id="${l.id}">Bewegung buchen ${aid('INV-03')}</button>`}
+              ${R().nurlesen ? gesperrt('Nur Lesen')
+                : `<button class="btn acc" data-act="lager-buchen" data-id="${l.id}">Bewegung buchen</button>`}
             </div></div></td></tr>` : '')).join('')}
       </tbody></table></div>
     <div class="small muted" style="margin-top:11px;line-height:1.6;max-width:92ch">
       Bewusst schlank: Stück und Laufmeter, Lagerort, Mindestbestand, Ausleihe. Keine Disposition,
-      keine Beschaffung, keine Mehrlagerlogik in Version 1 — die Struktur ist darauf vorbereitet.
-      ${aid('INV-05')}</div>`;
+      keine Beschaffung, keine Mehrlagerlogik in Version 1 — die Struktur ist darauf vorbereitet.</div>`;
 };
 
 /* ── Archiv, Audit, Sicherung (ARC, BKP, EXP) ───────────────────────────── */
@@ -3913,7 +3891,7 @@ VIEWS.archiv = () => {
   const final = mDok().filter(d => d.final);
   const b = DB.backup;
 
-  const belege = `<div class="sec">Finale Belege ${aid('ARC-01','ARC-02')}</div>
+  const belege = `<div class="sec">Finale Belege</div>
     <div class="scrollx"><table><thead><tr><th>Beleg</th><th>Finalisiert</th><th>Von</th>
       <th>Prüfsumme (SHA-256)</th><th>Zustand</th><th></th></tr></thead><tbody>
       ${final.map(d => `<tr>
@@ -3934,10 +3912,10 @@ VIEWS.archiv = () => {
       <button class="btn acc" data-act="alle-pruefen">Alle ${final.length} Prüfsummen nachrechnen</button>
       <span class="small muted">Die Prüfsummen werden im Browser über die eingefrorene Fassung
         gerechnet — hier läuft kein Server. Im System prüft das ein geplanter Lauf regelmässig
-        und meldet jede Abweichung. ${aid('ARC-02')}</span></div>`;
+        und meldet jede Abweichung.</span></div>`;
 
   const korrektur = `<div class="card good" style="margin-top:18px">
-    <div class="wl"><span>Korrektur einer finalen Rechnung ${aid('ARC-04','DOC-06')}</span></div>
+    <div class="wl"><span>Korrektur einer finalen Rechnung</span></div>
     ${(() => {
       const st = DB.dokumente.find(d => d.storniertAm && imBlick(d.mandant));
       if (!st) return '<div class="small muted">Im gewählten Mandanten liegt kein Stornofall.</div>';
@@ -3960,7 +3938,7 @@ VIEWS.archiv = () => {
         wiederverwendet, und alle drei Belege bleiben verknüpft sichtbar.</div>`;
     })()}</div>`;
 
-  const audit = `<div class="sec" style="margin-top:22px">Protokoll ${aid('ARC-03','IAM-05')}</div>
+  const audit = `<div class="sec" style="margin-top:22px">Protokoll</div>
     <div class="scrollx"><table><thead><tr><th>Zeitpunkt</th><th>Wer</th><th>Mandant</th><th>Objekt</th>
       <th>Aktion</th><th>Detail</th></tr></thead><tbody>
       ${DB.audit.filter(a => a.mandant === '—' || imBlick(a.mandant)).slice(0, 14).map(a => `<tr>
@@ -3972,10 +3950,10 @@ VIEWS.archiv = () => {
         <td class="small muted">${esc(a.detail)}</td></tr>`).join('')}
       </tbody></table></div>
     <div class="small muted" style="margin-top:10px">Das Protokoll ist nur für berechtigte Personen
-      einsehbar und soll manipulationsgeschützt geführt werden. ${aid('ARC-07')}</div>`;
+      einsehbar und soll manipulationsgeschützt geführt werden.</div>`;
 
   const sicherung = `<div class="grid g2" style="gap:14px;margin-top:22px">
-    <div class="card"><div class="wl"><span>Sicherung ${aid('BKP-01','BKP-02','BKP-06')}</span>
+    <div class="card"><div class="wl"><span>Sicherung</span>
         <span class="r2">${esc(b.langzeit)}</span></div>
       <div class="scrollx"><table><thead><tr><th>Zeitpunkt</th><th>Art</th><th>Ziel</th>
         <th class="r">Grösse</th><th>Ergebnis</th></tr></thead><tbody>
@@ -3986,8 +3964,8 @@ VIEWS.archiv = () => {
                <div class="small muted">${esc(l.fehler)}</div>`}</td></tr>`).join('')}
         </tbody></table></div>
       <div class="small muted" style="margin-top:10px;line-height:1.6">${esc(b.restore)}.
-        Ein Backup ohne Wiederherstellungstest ist eine Vermutung. ${aid('BKP-05')}</div></div>
-    <div class="card"><div class="wl"><span>Aufbewahrung und Löschung ${aid('ARC-06')}</span></div>
+        Ein Backup ohne Wiederherstellungstest ist eine Vermutung.</div></div>
+    <div class="card"><div class="wl"><span>Aufbewahrung und Löschung</span></div>
       <div class="wf" style="border:none">
         ${b.fristen.map(f => zeile(esc(f.klasse), esc(f.frist), esc(f.grund))).join('')}
       </div>
@@ -3995,21 +3973,21 @@ VIEWS.archiv = () => {
         Datenschutz werden zusammen betrachtet: aufbewahren, solange es sein muss, und löschen,
         sobald es sein darf.</div></div></div>`;
 
-  const exporte = `<div class="sec" style="margin-top:22px">Exporte und Datenhoheit ${aid('EXP-01','EXP-04','EXP-05')}</div>
+  const exporte = `<div class="sec" style="margin-top:22px">Exporte und Datenhoheit</div>
     <div class="scrollx"><table><thead><tr><th>Export</th><th>Inhalt</th><th>Format</th><th></th>
       </tr></thead><tbody>
       ${[
-        ['Kunden und Kontakte', `${DB.kunden.length} Kunden, ${DB.kunden.reduce((s, k) => s + k.kontakte.length, 0)} Kontakte`, 'CSV, XLSX', 'EXP-01'],
-        ['Artikel und Preise', `${DB.artikel.length} Artikel mit allen Preisversionen`, 'CSV, XLSX', 'EXP-01'],
-        ['Belege', `${final.length} finale PDF, Sammeldownload`, 'PDF, ZIP', 'EXP-02'],
-        ['Projektexport', 'Struktur, Dateien, PDFs, Chronik, Metadaten', 'ZIP', 'EXP-03'],
-        ['Mandanten-Komplettexport', `alles zu ${esc(MANDANT === 'alle' ? 'jedem Mandanten' : M().lang)}`, 'ZIP', 'EXP-04'],
-        ['Treuhänderpaket', 'Rechnungen, Gutschriften, Zahlungen, Mahnungen', 'CSV, XLSX, PDF', 'EXP-05'],
-      ].map(([n, i, f, id]) => `<tr><td><b>${n}</b></td><td class="small">${i}</td>
-        <td><span class="tag t-mute">${f}</span> ${aid(id)}</td>
+        ['Kunden und Kontakte', `${DB.kunden.length} Kunden, ${DB.kunden.reduce((s, k) => s + k.kontakte.length, 0)} Kontakte`, 'CSV, XLSX'],
+        ['Artikel und Preise', `${DB.artikel.length} Artikel mit allen Preisversionen`, 'CSV, XLSX'],
+        ['Belege', `${final.length} finale PDF, Sammeldownload`, 'PDF, ZIP'],
+        ['Projektexport', 'Struktur, Dateien, PDFs, Chronik, Metadaten', 'ZIP'],
+        ['Mandanten-Komplettexport', `alles zu ${esc(MANDANT === 'alle' ? 'jedem Mandanten' : M().lang)}`, 'ZIP'],
+        ['Treuhänderpaket', 'Rechnungen, Gutschriften, Zahlungen, Mahnungen', 'CSV, XLSX, PDF'],
+      ].map(([n, i, f]) => `<tr><td><b>${n}</b></td><td class="small">${i}</td>
+        <td><span class="tag t-mute">${f}</span></td>
         <td class="r">${darf('exportieren')
           ? `<button class="btn" data-act="export" data-was="${esc(n)}">erzeugen</button>`
-          : gesperrt('gesperrt', 'IAM-01')}</td></tr>`).join('')}
+          : gesperrt('gesperrt')}</td></tr>`).join('')}
       </tbody></table></div>
     <div class="small muted" style="margin-top:10px;line-height:1.6;max-width:92ch">
       Datenhoheit heisst: jederzeit vollständig herauskommen — auch für einen Anbieterwechsel.
@@ -4033,7 +4011,7 @@ VIEWS.archiv = () => {
        Grenze eines Prototyps ohne Modell dahinter.
      * DIE RECHTE GELTEN AUCH HIER. Was eine Rolle auf dem Schirm nicht sehen
        darf, bekommt sie auch nicht als Antwort — sonst wäre der Assistent das
-       Loch im Berechtigungsmodell (IAM-02, SEA-03).
+       Loch im Berechtigungsmodell.
      * es wird nie «nichts» geantwortet: eine unklare Frage fällt auf das
        zurück, was gerade offen ist, mit Wegen dorthin.
    ────────────────────────────────────────────────────────────────────────── */
@@ -4147,10 +4125,10 @@ const mod = id => `<span class="mod">${esc(MODULES.find(m => m.id === id).name)}
 
 /* Was eine Rolle nicht sehen darf, sagt der Assistent genauso wenig wie die
    Liste — und sagt, dass er es nicht sagt. */
-const sperre = (was, ids) => `<span class="hl">${esc(was)} — für die Rolle «${esc(R().name)}» ` +
-  `gesperrt (${ids}), auch hier und nicht nur auf dem Schirm.</span>`;
+const sperre = was => `<span class="hl">${esc(was)} — für die Rolle «${esc(R().name)}» gesperrt, ` +
+  `auch hier und nicht nur auf dem Schirm.</span>`;
 const modulSperre = id => bau('Dazu darf ich nichts sagen',
-  [sperre(MODULES.find(m => m.id === id).name, 'IAM-01, SEA-03'),
+  [sperre(MODULES.find(m => m.id === id).name),
    `Als «Admin» oder «Mitarbeiter» steht es offen. Die Rolle wechseln Sie oben rechts.`],
   [{ t:'Was darf meine Rolle sehen?' }]);
 /* gehört das Ding in den Blick, in dem gerade gearbeitet wird? */
@@ -4181,7 +4159,7 @@ function aKunde(k) {
     offen.length ? `<span class="hl">Offen: ${offen.map(d => `${esc(d.nr)} ${chf(offenBetrag(d))}` +
       (d.status === 'überfällig' ? ' (überfällig)' : '')).join(', ')}</span>`
       : `Nichts offen — ${dok.filter(d => d.typ === 'RG').length} Rechnungen, alle bezahlt.`,
-    darf('notizen') ? `Notiz: ${esc(k.notiz)}` : sperre('Die interne Notiz', 'IAM-02'),
+    darf('notizen') ? `Notiz: ${esc(k.notiz)}` : sperre('Die interne Notiz'),
     imBlickHinweis(kundeMandanten(k.id)[0]),
   ], [{ t:'Kunden', go:'kunden', ref:k.id },
       proj.length ? { t:proj[0].nr, go:'projekte', ref:proj[0].id } : null,
@@ -4191,7 +4169,7 @@ function aKunde(k) {
 function aProjekt(p) {
   if (!modulErlaubt('projekte')) return modulSperre('projekte');
   if (!projektErlaubt(p.id)) return bau('Dieses Projekt ist nicht freigegeben',
-    [sperre(p.nr, 'PRJ-05, SEA-03'),
+    [sperre(p.nr),
      `Freigegeben sind: ${mProjekte().map(x => esc(x.nr)).join(', ') || 'keines'}.`],
     [{ t:'Was darf meine Rolle sehen?' }]);
   const dok = DB.dokumente.filter(d => d.projekt === p.id);
@@ -4209,7 +4187,7 @@ function aProjekt(p) {
     darf('ek')
       ? `Marge: Materialrohertrag <b>${chf(m.roh)}</b>, Deckungsbeitrag <b>${chf(m.db)}</b> ` +
         `(nach ${chf(m.intern)} internen Zeitkosten)`
-      : sperre('Die Marge', 'IAM-02, MAR-04'),
+      : sperre('Die Marge'),
     faelle.length ? `<span class="hl">Servicefall: ${faelle.map(f =>
       `${esc(f.nr)} ${esc(f.status)}, Frist ${esc(f.frist)}`).join(', ')}</span>` : '',
     akt.length ? `Wiedervorlage: ${akt.map(a => `${esc(a.was)} (${esc(a.faellig)})`).join(', ')}` : '',
@@ -4228,7 +4206,7 @@ function aBeleg(d) {
   return bau(`${esc(TYP[d.typ])} ${esc(d.nr)} · ${esc(d.datum)}`, [
     `${esc(K(d.kunde).name)}, adressiert an <b>${esc(d.adresseName)}</b>` +
       (d.projekt ? ` · Projekt ${esc(P(d.projekt).nr)}` : ''),
-    d.ohnePreise ? `${d.pos.length} Positionen, bewusst ohne Preise gedruckt (DOC-03).`
+    d.ohnePreise ? `${d.pos.length} Positionen, bewusst ohne Preise gedruckt.`
       : `Netto ${chf(netto(d))}, MWST ${chf(mwstAuf(d))}, <b>Total ${chf(brutto(d))}</b>` +
         (d.abzug ? ` — nach Abzug von ${chf(d.abzug.betrag)} (${esc(d.abzug.was)})` : ''),
     d.typ === 'RG' && d.status !== 'storniert'
@@ -4248,7 +4226,7 @@ function aBeleg(d) {
     snap.length ? `${snap.length} Position${snap.length > 1 ? 'en' : ''} ${snap.length > 1 ? 'tragen' : 'trägt'} ` +
       `einen anderen Preis als die heutige Liste: ` +
       snap.map(p => `${esc(p.text.split(',')[0])} ${chf(p.preis)} statt ${chf(A(p.art).liste)}`).join(', ') +
-      ` — der Beleg behält seinen Snapshot (IMP-07).` : '',
+      ` — der Beleg behält seinen Snapshot.` : '',
     nach.length ? `Daraus entstanden: ${nach.map(x => `${esc(x.nr)} (${esc(TYPKURZ[x.typ])})`).join(', ')}` : '',
     vers.length ? `Versendet ${esc(vers[0].datum)} an ${esc(vers[0].an.join(', '))}, ` +
       `${vers.length} Eintrag${vers.length > 1 ? 'e' : ''} in der Historie.` : '',
@@ -4273,7 +4251,7 @@ function aArtikel(a) {
     darf('ek')
       ? `Liste <b>${chf(a.liste)}</b>, EK ${chf(a.ek)}, VK ${chf(a.vk)}` +
         (rab ? ` · ${rab.wert} % ${rab.art}rabatt (${esc(rab.ab)}–${esc(rab.bis)})` : '')
-      : `Liste <b>${chf(a.liste)}</b> · ${sperre('EK und Rabattkonditionen', 'IAM-02')}`,
+      : `Liste <b>${chf(a.liste)}</b> · ${sperre('EK und Rabattkonditionen')}`,
     `${a.versionen.length} Preisversion${a.versionen.length > 1 ? 'en' : ''}: ` +
       a.versionen.map(v => `ab ${esc(v.ab)} ${chf(v.liste)}`).join(', '),
     neuerPreis && !IMPORT_ANGEWENDET
@@ -4298,7 +4276,7 @@ function aLieferant(name) {
   return bau(esc(name), [
     `${arts.length} Artikel im Stamm: ${arts.slice(0, 5).map(a => esc(a.name.split(',')[0])).join(', ')}`,
     darf('ek') && rab ? `${rab.wert} % ${rab.art}rabatt, ${esc(rab.ab)}–${esc(rab.bis)}, Vorrang ${rab.prio}`
-      : rab ? sperre('Die Konditionen', 'IAM-02') : '',
+      : rab ? sperre('Die Konditionen') : '',
     imp ? `<span class="hl">Preisliste ${esc(imp.datei)} liegt analysiert vor: ${imp.analyse.neu} neu, ` +
       `${imp.analyse.geaendert} geändert, ${imp.analyse.fehler} fehlerhaft — wartet auf Bestätigung.</span>` : '',
     faelle.length ? `Garantie: ${faelle.map(f => `${esc(f.nr)} ${esc(f.titel)} (${esc(f.status)}, ` +
@@ -4349,7 +4327,7 @@ function aMandant(m) {
     `Umsatz ${DB.jahr}: <b>${chf(z.umsatz)}</b>, offen ${chf(z.offen)}, davon ${chf(z.ueber)} überfällig`,
     `${z.projekte} Projekte, ${z.faelle} offene Servicefälle, ${z.stunden.toFixed(1)} h erfasst`,
     mandantenSicht().includes(m.id) ? '' :
-      `Für «${esc(R().name)}» ist dieser Mandant nicht freigegeben (MAN-04).`,
+      `Für «${esc(R().name)}» ist dieser Mandant nicht freigegeben.`,
   ], [{ t:'Übersicht', go:'uebersicht' }, { t:'Verkauf', go:'verkauf' }]);
 }
 
@@ -4365,7 +4343,7 @@ function aRolle(r) {
     `Finalisieren ${r.finalisieren ? 'erlaubt' : 'nicht erlaubt'} · Versenden ` +
       `${r.versenden ? 'erlaubt' : 'nicht erlaubt'} · Exportieren ${r.exportieren ? 'erlaubt' : 'nicht erlaubt'}`,
     `Dieselbe Prüfung gilt in der Liste, in der Suche, im Export, im Download — und in dieser ` +
-      `Antwort. Verbergen in der Oberfläche allein wäre kein Recht (IAM-01…03).`,
+      `Antwort. Verbergen in der Oberfläche allein wäre kein Recht.`,
   ], [{ t:'Was darf meine Rolle sehen?' }, { t:'Übersicht', go:'uebersicht' }]);
 }
 
@@ -4379,7 +4357,7 @@ function aPerson(name) {
     proj.map(p => `${esc(P(p).nr)}: ${z.filter(t => t.projekt === p)
       .reduce((s, t) => s + t.dauer, 0).toFixed(1)} h`).join(' · '),
     darf('ek') ? `Interne Zeitkosten: ${chf(z.reduce((s, t) => s + t.dauer * t.kosten, 0))}`
-      : sperre('Der interne Kostensatz', 'IAM-02, TIM-03'),
+      : sperre('Der interne Kostensatz'),
     DB.projekte.filter(p => p.verantwortlich === name).length
       ? `Verantwortlich für ${DB.projekte.filter(p => p.verantwortlich === name)
           .map(p => esc(p.nr)).join(', ')}` : '',
@@ -4394,19 +4372,19 @@ function aStandort({ k, s }) {
   return bau(`${esc(s.name)} · ${esc(k.name)}`, [
     `${esc(a.typ)}: ${esc(a.zeile)}, ${esc(a.plz)} ${esc(a.ort)}`,
     darf('notizen') ? `Kontakte: ${s.kontakte.map(c => esc(kontakt(k.id, c).name) + ' (' +
-      esc(kontakt(k.id, c).funktion) + ')').join(', ')}` : sperre('Die Kontakte', 'IAM-02'),
+      esc(kontakt(k.id, c).funktion) + ')').join(', ')}` : sperre('Die Kontakte'),
     proj.length ? `Projekte hier: ${proj.map(p => esc(p.nr)).join(', ')}` : 'Kein Projekt an diesem Standort.',
     dok.length ? `${dok.length} Beleg${dok.length > 1 ? 'e' : ''} sind an diese Adresse gegangen: ` +
       dok.map(d => esc(d.nr)).join(', ') : '',
-    `Der Standort hängt am Kunden, nicht daneben: ${esc(k.name)} bleibt der Debitor (CRM-02).`,
+    `Der Standort hängt am Kunden, nicht daneben: ${esc(k.name)} bleibt der Debitor.`,
   ], [{ t:'Kunde öffnen', go:'kunden', ref:k.id },
       proj.length ? { t:proj[0].nr, go:'projekte', ref:proj[0].id } : null].filter(Boolean));
 }
 
 function aKontakt({ k, c }) {
   if (!darf('notizen')) return bau('Kontaktdaten sind gesperrt',
-    [sperre('Kontakte und interne Notizen', 'IAM-02'),
-     'Auch die Suche gibt dazu keine Treffer und keine Vorschautexte aus (SEA-03).'],
+    [sperre('Kontakte und interne Notizen'),
+     'Auch die Suche gibt dazu keine Treffer und keine Vorschautexte aus.'],
     [{ t:'Was darf meine Rolle sehen?' }]);
   const kamp = DB.kampagnen.filter(x => c.verteiler.includes(x.verteiler));
   return bau(`${esc(c.anrede)} ${esc(c.name)} · ${esc(k.name)}`, [
@@ -4414,7 +4392,7 @@ function aKontakt({ k, c }) {
     c.verteiler.length ? `Verteiler: ${c.verteiler.map(esc).join(', ')} · Einwilligung ${esc(c.einwilligung)}`
       : 'In keinem Verteiler — kein Newsletter, keine Einwilligung nötig.',
     kamp.length ? `Erhalten: ${kamp.map(x => `${esc(x.name)} (${esc(x.status)})`).join(', ')}` : '',
-    'Einwilligung, Quelle und Zeitpunkt hängen am Kontakt; eine Abmeldung wirkt dauerhaft (NWL-02).',
+    'Einwilligung, Quelle und Zeitpunkt hängen am Kontakt; eine Abmeldung wirkt dauerhaft.',
   ], [{ t:'Kunde öffnen', go:'kunden', ref:k.id }, { t:'Versand', go:'versand' }]);
 }
 
@@ -4435,12 +4413,12 @@ const ANTWORT = {
     return bau(`${MANDANT === 'alle' ? 'Alle Mandanten' : esc(M().lang)} in Zahlen`, [
       `Umsatz ${DB.jahr}: <b>${chf(z.umsatz)}</b> — aus ${DB.dokumente.filter(d =>
         imBlick(d.mandant) && d.typ === 'RG').length} Rechnungen, Gutschriften abgezogen, ` +
-        `stornierte nicht gezählt (DSH-05)`,
+        `stornierte nicht gezählt`,
       `Offen ${chf(z.offen)} in ${z.offenAnz} Rechnungen, davon <b>${chf(z.ueber)}</b> überfällig`,
       `Offene Offerten ${chf(z.offerten)} in ${z.offertenAnz} Belegen · Erfolgsquote ` +
         `${z.quote.toFixed(0)} % (${z.quoteText})`,
       darf('ek') ? `Materialrohertrag ${chf(z.marge)} (${z.margeQuote.toFixed(1)} % vom Materialumsatz), ` +
-        `Deckungsbeitrag über alle Projekte ${chf(z.db)}` : sperre('Marge und Rohertrag', 'MAR-04'),
+        `Deckungsbeitrag über alle Projekte ${chf(z.db)}` : sperre('Marge und Rohertrag'),
       `${z.stunden.toFixed(1)} h erfasst, davon ${z.stundenOffen.toFixed(1)} h verrechenbar und offen`,
       'Jede Zahl ist aus den Belegen gerechnet, keine ist hinterlegt.',
     ], [{ t:'Übersicht', go:'uebersicht' }, { t:'Zahlungen', go:'zahlungen' },
@@ -4448,7 +4426,7 @@ const ANTWORT = {
   },
   marge() {
     if (!darf('ek')) return bau('Marge ist für diese Rolle gesperrt',
-      [sperre('EK, Marge und interne Kostensätze', 'IAM-02, MAR-04'),
+      [sperre('EK, Marge und interne Kostensätze'),
        'Das gilt in jedem Modul, in der Suche, im Export — und hier.'],
       [{ t:'Was darf meine Rolle sehen?' }]);
     const liste = mProjekte().map(p => ({ p, m:marge(p.id) }))
@@ -4458,7 +4436,7 @@ const ANTWORT = {
       `Deckungsbeitrag <b>${chf(m.db)}</b>${m.db < 0 ? ' <span class="hl">(negativ)</span>' : ''} · ` +
       `${m.stunden.toFixed(1)} h, ${chf(m.intern)} interne Kosten`)
       .concat(['Gerechnet mit dem EK, der in der Position eingefroren ist — nicht mit dem ' +
-        'heutigen. Darum bleibt die Zahl stabil, wenn eine neue Preisliste kommt (MAR-01, IMP-07).']),
+        'heutigen. Darum bleibt die Zahl stabil, wenn eine neue Preisliste kommt.']),
       [{ t:'Projekte', go:'projekte' }, { t:'Wo liegt Geld?' }]);
   },
   zahlungen() {
@@ -4471,7 +4449,7 @@ const ANTWORT = {
         (bezahlt(d) ? `, ${chf(bezahlt(d))} bereits bezahlt` : '')),
       `Mahnstufen: ${DB.mahnstufen.map(s => `${s.stufe} nach ${s.nach} Tagen` +
         (s.gebuehr ? ` (${chf(s.gebuehr)})` : '')).join(', ')} — vorbereiten und freigeben, ` +
-        `nicht automatisch senden (PAY-04).`,
+        `nicht automatisch senden.`,
       'Verbucht wird in der Buchhaltung; hier stehen Status, Alterung, Mahnwesen und Exporte.',
     ], [{ t:'Zahlungen', go:'zahlungen' }, { t:'Versand', go:'versand' }]);
   },
@@ -4480,11 +4458,11 @@ const ANTWORT = {
     const arts = mArtikel();
     return bau(`${arts.length} Artikel und Leistungen`, [
       `Liste, EK und VK stehen getrennt, jeder mit Gültigkeit; Rabatt ist eine Regel, kein ` +
-        `überschriebener Preis (ART-02, ART-03).`,
+        `überschriebener Preis.`,
       darf('ek')
         ? `Teuerste Position: ${(a => `${esc(a.name.split(',')[0])} ${chf(a.liste)} (EK ${chf(a.ek)})`)(
             arts.reduce((x, a) => a.liste > x.liste ? a : x))}`
-        : sperre('EK und Rabattkonditionen', 'IAM-02'),
+        : sperre('EK und Rabattkonditionen'),
       `${arts.reduce((s, a) => s + a.versionen.length, 0)} Preisversionen insgesamt — die Historie ` +
         `erklärt, warum eine Offerte vom August einen anderen Preis trägt als die Liste von heute.`,
       !IMPORT_ANGEWENDET ? `<span class="hl">Ein Importlauf liegt analysiert vor: ` +
@@ -4502,13 +4480,13 @@ const ANTWORT = {
         `<span class="hl">${i.analyse.fehler} fehlerhaft</span>`,
       IMPORT_ANGEWENDET
         ? `Angewendet mit Stichtag ${esc(i.stichtag)}: neue Preisversionen geschrieben, keine alte ` +
-          `überschrieben, kein Beleg verändert. Zurücknehmen ist möglich (IMP-08).`
+          `überschrieben, kein Beleg verändert. Zurücknehmen ist möglich.`
         : `Noch nicht angewendet — erst die Bestätigung mit Stichtag ${esc(i.stichtag)} schreibt ` +
-          `Preisversionen (IMP-05).`,
+          `Preisversionen.`,
       `Die ${i.analyse.fehler} fehlerhaften Zeilen: ${i.proben.fehler.map(f =>
         `Zeile ${f.zeile} ${esc(f.problem)}`).join(', ')} — sie werden übersprungen, nicht geraten.`,
       'Bestehende Offerten, Aufträge, Lieferscheine und Rechnungen behalten ihre Preise, EK und ' +
-        'Rabatte (IMP-07). Das ist prüfbar: fragen Sie nach einem Artikel.',
+        'Rabatte. Das ist prüfbar: fragen Sie nach einem Artikel.',
     ], [{ t:'Preisimport', go:'import' }, { t:'Was kostet DL-940-12W?' }]);
   },
   zeiten() {
@@ -4523,9 +4501,9 @@ const ANTWORT = {
         `— Akquisition, Garantie, Nacharbeit. Die Unterscheidung ist eine Eigenschaft der Buchung, ` +
         `keine Nachbearbeitung.`,
       darf('ek') ? `Interne Zeitkosten: ${chf(z.reduce((s, t) => s + t.dauer * t.kosten, 0))}`
-        : sperre('Der interne Kostensatz', 'IAM-02, TIM-03'),
+        : sperre('Der interne Kostensatz'),
       'Ausgewählte Zeiten werden zu Rechnungspositionen und sind danach gegen doppelte ' +
-        'Fakturierung gesperrt (TIM-04, TIM-05).',
+        'Fakturierung gesperrt.',
     ], [{ t:'Zeiten', go:'zeiten' }]);
   },
   archiv() {
@@ -4533,14 +4511,14 @@ const ANTWORT = {
     const final = mDok().filter(d => d.final);
     const st = DB.dokumente.find(d => d.storniertAm);
     return bau(`${final.length} finale Belege im Archiv`, [
-      `Jeder trägt Status FINAL, Erstellzeit, Benutzer, Mandant und Belegnummer (ARC-01).`,
+      `Jeder trägt Status FINAL, Erstellzeit, Benutzer, Mandant und Belegnummer.`,
       DB.hashEcht
         ? `Zu jedem gehört eine SHA-256-Prüfsumme über die eingefrorene Fassung, hier im Browser ` +
-          `gerechnet. «Alle Prüfsummen nachrechnen» rechnet sie erneut (ARC-02).`
+          `gerechnet. «Alle Prüfsummen nachrechnen» rechnet sie erneut.`
         : `Prüfsummen sind hinterlegt: ohne sicheren Kontext rechnet der Browser kein SHA-256.`,
       st ? `Korrektur läuft über Storno und Gutschrift: ${esc(st.nr)} wurde am ${esc(st.storniertAm)} ` +
         `über ${esc(st.storniertDurch)} storniert, das PDF bleibt unverändert, die Nummer wird nicht ` +
-        `wiederverwendet (ARC-04).` : '',
+        `wiederverwendet.` : '',
       `Das Protokoll hält ${DB.audit.length} Ereignisse: Erstellung, Finalisierung, Versand, ` +
         `Status- und Zahlungsänderung, Storno, Prüfung.`,
       '«geBüV-tauglich» ist kein Feature-Etikett: dazu gehören Verfahrensdokumentation, ' +
@@ -4549,16 +4527,16 @@ const ANTWORT = {
   },
   export() {
     return bau('Exporte und Datenhoheit', [
-      'Kunden, Kontakte, Produkte, Preise, Projekte, Zeiten, Rechnungen als CSV oder XLSX (EXP-01).',
-      'Belege als PDF, Sammeldownload als ZIP (EXP-02).',
+      'Kunden, Kontakte, Produkte, Preise, Projekte, Zeiten, Rechnungen als CSV oder XLSX.',
+      'Belege als PDF, Sammeldownload als ZIP.',
       'Projektexport mit Ordnerstruktur, Originaldateien, Beleg-PDFs, Chronik und ' +
-        'maschinenlesbaren Metadaten — lesbar ohne diese Anwendung (EXP-03).',
-      'Mandanten-Komplettexport für Anbieterwechsel oder Archivierung (EXP-04) und ein ' +
-        'Treuhänderpaket (EXP-05).',
+        'maschinenlesbaren Metadaten — lesbar ohne diese Anwendung.',
+      'Mandanten-Komplettexport für Anbieterwechsel oder Archivierung und ein ' +
+        'Treuhänderpaket.',
       darf('exportieren')
         ? `Ihre Rolle darf exportieren — und im Export gelten dieselben Feldrechte wie auf dem ` +
           `Schirm: ${darf('ek') ? 'EK und Marge sind enthalten' : 'EK und Marge sind nicht enthalten'}.`
-        : sperre('Der Export', 'IAM-01'),
+        : sperre('Der Export'),
     ], [{ t:'Archiv', go:'archiv' }, modulErlaubt('projekte') ? { t:'Projekte', go:'projekte' } : null]
        .filter(Boolean));
   },
@@ -4567,13 +4545,13 @@ const ANTWORT = {
     const fehler = b.letzte.find(l => !l.ok);
     return bau('Sicherung und Wiederherstellung', [
       `Täglich Datenbank und Dateien, zusätzlich eine Kopie auf getrenntem Speicher mit eigenen ` +
-        `Zugangsdaten — der Produktionszugang darf nicht alle Kopien löschen können (BKP-01, BKP-02).`,
+        `Zugangsdaten — der Produktionszugang darf nicht alle Kopien löschen können.`,
       `Letzter Lauf: ${esc(b.letzte[0].datum)}, ${esc(b.letzte[0].groesse)}, erfolgreich.`,
       fehler ? `<span class="hl">${esc(fehler.datum)} ist ein Lauf fehlgeschlagen: ` +
-        `${esc(fehler.fehler)}</span> — ein Backup ohne Meldung gilt nicht als erfüllt (BKP-06).` : '',
+        `${esc(fehler.fehler)}</span> — ein Backup ohne Meldung gilt nicht als erfüllt.` : '',
       `${esc(b.langzeit)}. ${esc(b.restore)}`,
       'Aufbewahrung je Datenklasse: ' + b.fristen.map(f => `${esc(f.klasse)} ${esc(f.frist)}`).join(', ') +
-        ' (ARC-06).',
+        '.',
     ], [{ t:'Archiv', go:'archiv' }]);
   },
   adressfall() {
@@ -4582,12 +4560,12 @@ const ANTWORT = {
     const rg = DB.dokumente.find(d => d.kunde === k.id && d.typ === 'RG' && d.adresse !== of.adresse);
     return bau('Ein Kunde, zwei Adressen', [
       `Der Kunde ist der Debitor: <b>${esc(k.name)}</b>, Nr. ${esc(k.nr)}. Filialen und Projektorte ` +
-        `hängen darunter, nicht daneben (CRM-01, CRM-02).`,
+        `hängen darunter, nicht daneben.`,
       `Offerte ${esc(of.nr)} ging an <b>${esc(of.adresseName)}</b>.`,
       `Rechnung ${esc(rg.nr)} ging an <b>${esc(rg.adresseName)}</b>, mit dem Zahlungsziel des ` +
         `Kunden (${k.zahlungsziel} Tage).`,
       `Kein zweiter Kundenstamm, keine doppelte Pflege — und beide Belege haben ihre Adresse als ` +
-        `Snapshot gespeichert: ein Umzug ändert sie nicht mehr (CRM-04, CRM-06).`,
+        `Snapshot gespeichert: ein Umzug ändert sie nicht mehr.`,
     ], [{ t:'Kunde öffnen', go:'kunden', ref:k.id }, { t:of.nr, go:'verkauf', ref:of.id },
         { t:rg.nr, go:'verkauf', ref:rg.id }]);
   },
@@ -4598,14 +4576,14 @@ const ANTWORT = {
     const dok = p ? DB.dokumente.filter(d => d.projekt === p.id) : [];
     return bau('Offerte → Auftrag → Lieferschein → Rechnung', [
       'Ein Beleg wird nicht neu getippt, sondern umgewandelt, mit wählbaren Mengen und ' +
-        'Positionen (DOC-01).',
+        'Positionen.',
       p ? `Am Beispiel ${esc(p.nr)}: ${dok.map(d => `${esc(d.nr)} (${esc(TYPKURZ[d.typ])}, ` +
         `${esc(d.status)})`).join(' → ')}` : '',
-      'Der Lieferschein nimmt die offenen Mengen und darf ohne Preise gedruckt werden (DOC-03).',
+      'Der Lieferschein nimmt die offenen Mengen und darf ohne Preise gedruckt werden.',
       'Akonto-, Teil- und Schlussrechnung verrechnen, was schon fakturiert ist; eine weitere ' +
-        'Rechnung auf einen vollständig fakturierten Auftrag lehnt das System ab (DOC-04).',
+        'Rechnung auf einen vollständig fakturierten Auftrag lehnt das System ab.',
       'Finalisieren vergibt die Nummer aus dem Kreis des Mandanten und friert den Beleg ein; ' +
-        'geändert wird danach nur über Storno und Gutschrift (DOC-05, ARC-04).',
+        'geändert wird danach nur über Storno und Gutschrift.',
     ], [{ t:'Verkauf', go:'verkauf' }, p ? { t:p.nr, go:'projekte', ref:p.id } : null].filter(Boolean));
   },
   mandanten() {
@@ -4614,7 +4592,7 @@ const ANTWORT = {
         `eigene Nummernkreise, eigenes Layout` +
         (mandantenSicht().includes(m.id) ? '' : ' — für Ihre Rolle nicht freigegeben')),
       `Ihre Rolle «${esc(R().name)}» sieht ${mandantenSicht().length} davon` +
-        (gesamtsicht() ? ' und darf die Gesamtansicht öffnen (MAN-05).' : '.'),
+        (gesamtsicht() ? ' und darf die Gesamtansicht öffnen.' : '.'),
       'Jeder fachliche Datensatz trägt seine Mandantenzuordnung; ein Zugriff über die Grenze ist ' +
         'ausdrücklich, nicht zufällig.',
     ], [{ t:'Übersicht', go:'uebersicht' }]);
@@ -4676,10 +4654,10 @@ ANTWORT.projekte = () => { const p = mProjekte()[0]; return p ? aProjekt(p) : mo
 ANTWORT.lager = () => { const l = mLager()[0]; return l ? aLagerartikel(l) : modulSperre('lager'); };
 ANTWORT.versand = () => bau('Versandzentrale', [
   `${DB.versand.filter(v => v.status !== 'nicht versendet').length} Sendungen in der Historie, ` +
-    `mit Zeitpunkt, Empfänger, Betreff, Anhängen und Status (SND-05).`,
+    `mit Zeitpunkt, Empfänger, Betreff, Anhängen und Status.`,
   'Empfänger werden aus Kunde, Standort, Projekt und Rechnungsstelle vorgeschlagen; Vorlagen ' +
-    'gehören dem Mandanten und dem Belegtyp (SND-02, SND-03).',
-  'Erneut senden erzeugt einen neuen Eintrag und überschreibt den alten nicht (SND-06).',
+    'gehören dem Mandanten und dem Belegtyp.',
+  'Erneut senden erzeugt einen neuen Eintrag und überschreibt den alten nicht.',
 ], [{ t:'Versand', go:'versand' }]);
 
 /* ── der Auflöser ────────────────────────────────────────────────────────── */
@@ -4845,8 +4823,7 @@ function wandeln(d, ziel) {
     const offen = summe - schon;
     if (offen <= 0.005) {
       toast(`Nichts offen: von ${esc(d.nr)} sind <b>${chf(schon)}</b> von ${chf(summe)} bereits
-        fakturiert. Eine weitere Rechnung würde überfakturieren — genau das ist die Regel aus
-        DOC-04.`, 2);
+        fakturiert. Eine weitere Rechnung würde überfakturieren.`, 2);
       return;
     }
     const neu = { ...basis, typ:'RG', art:schon > 0 ? 'Schlussrechnung' : 'Rechnung',
@@ -5154,11 +5131,6 @@ document.addEventListener('click', e => {
     toast(MANDANT === 'alle'
       ? `Gesamtansicht über ${mandantenSicht().length} Mandanten — nur für berechtigte Rollen.`
       : `Mandant <b>${esc(M().lang)}</b>: eigene Stammdaten, Nummernkreise, Absender und Layouts.`, 1);
-    render(); return; }
-
-  if (e.target.closest('#idbtn')) { IDS = !IDS;
-    toast(IDS ? 'Anforderungs-IDs eingeblendet: jede Funktion zeigt, welche Anforderung aus dem Grobkonzept sie erfüllt.'
-              : 'IDs ausgeblendet.', 1);
     render(); return; }
 
   const ah = e.target.closest('[data-ampelhilfe]');
