@@ -665,7 +665,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
        Handy wichtiger als ein Titel, der ohnehin daneben steht.
    ────────────────────────────────────────────────────────────────────────── */
 @media (max-width:820px){
-  .body{padding:16px 16px 56px}
+  .body{padding:16px 16px 108px}
   header{position:static;padding:14px 16px 12px;align-items:flex-start}
   header h1{font-size:19px;min-width:0}
   /* das Fragezeichen bleibt neben dem Titel: umgebrochen stand es allein auf
@@ -1073,6 +1073,21 @@ body.ids .aid + .aid{margin-left:3px}
     </header>
     <div class="body" id="view"></div>
   </main>
+</div>
+<!-- SEA-01 aus einer anderen Richtung: eine Frage statt eines Suchbegriffs.
+     Liest denselben Datenstand wie die Module und hält sich an dieselben
+     Rechte (IAM-02, SEA-03). -->
+<button id="chatbtn"><span class="pip"></span><svg class="logo" viewBox="0 0 1664 749"><use href="#axyomLogo"/></svg> fragen</button>
+<div id="chat">
+  <div class="top"><svg class="logo" viewBox="0 0 1664 749"><use href="#axyomLogo"/></svg><b>fragen</b>
+    <span class="s">liest Ihre Daten</span>
+    <button id="chat-zu" title="Schliessen (Esc)">&times;</button></div>
+  <div id="chat-log"></div>
+  <div class="foot">
+    <input id="chat-in" placeholder="Fragen Sie etwas — z.B. RG-26-0091 oder «was ist offen?»"
+      autocomplete="off">
+    <button class="btn acc" id="chat-send">Fragen</button>
+  </div>
 </div>
 <div id="toast"></div>
 <script>
@@ -2174,6 +2189,27 @@ function handyNachziehen() {
 }
 addEventListener('resize', () => handyNachziehen());
 
+/* ── der Fragen-Knopf tritt zur Seite ─────────────────────────────────────
+   Er liegt fix über der unteren rechten Ecke — dort, wo in einer Tabelle die
+   Zahlen stehen. Solange gerollt wird oder ein Feld den Fokus hat, ist er weg;
+   kurz nach dem Loslassen ist er wieder da. */
+let knopfTimer;
+function knopfSchlafen(ja) {
+  const k = document.getElementById('chatbtn');
+  if (k) k.classList.toggle('schlaeft', ja);
+}
+addEventListener('scroll', () => {
+  knopfSchlafen(true);
+  clearTimeout(knopfTimer);
+  knopfTimer = setTimeout(() => knopfSchlafen(false), 700);
+}, { passive: true });
+document.addEventListener('focusin', e => {
+  if (e.target.closest('#view input, #view textarea, #view select')) knopfSchlafen(true);
+});
+document.addEventListener('focusout', e => {
+  if (e.target.closest('#view input, #view textarea, #view select')) knopfSchlafen(false);
+});
+
 /* ── Rückmeldung ─────────────────────────────────────────────────────────── */
 let toastTimer;
 function toast(html, st) {
@@ -2224,6 +2260,7 @@ const HILFE = {
     'Die Kennzahlen gelten für den Mandanten links: Umsatz, offene und überfällige Rechnungen, offene Offerten, Erfolgsquote, Marge und Zeiten (DSH-01).',
     'Mit «Alle Mandanten» werden dieselben Kennzahlen summiert und verglichen. Diese Gesamtansicht ist an eine Rolle gebunden, nicht an einen Knopf (MAN-05, DSH-02).',
     'Jede Kachel und jede Zeile springt auf den Datensatz, aus dem die Zahl kommt. Eine Kennzahl ohne Weg zum Beleg ist ein Bild (DSH-03).',
+    'Unten rechts steht «fragen»: eine Frage in eigenen Worten, statt zu wissen, in welchem Modul die Antwort liegt. Der Assistent liest denselben Datenstand und hält sich an dieselben Rechte — was eine Rolle nicht sehen darf, sagt er nicht (SEA-01, IAM-02).',
     'Stornierte Belege und Gutschriften sind in jeder Zahl gleich behandelt: sie zählen nicht als Umsatz, verschwinden aber auch nicht aus der Geschichte (DSH-05).',
   ],
   kunden: [
@@ -3980,6 +4017,763 @@ VIEWS.archiv = () => {
 
   return belege + korrektur + audit + sicherung + exporte;
 };
+/* ── Fragen statt suchen ────────────────────────────────────────────────────
+   Eine Frage ist schneller als das Wissen, in welchem Modul die Antwort liegt.
+   Die Box unten rechts liest denselben Datenstand wie jeder Schirm — wird ein
+   Preis übernommen oder eine Zahlung gebucht, ändert sich die Antwort mit.
+
+   Wie eine Frage aufgelöst wird, und wo die Grenze liegt:
+     * die HAUPTWÖRTER kommen aus den Daten selbst — jeder Kunde, Standort,
+       Kontakt, jedes Projekt, jeder Beleg, Artikel, Hersteller, Servicefall,
+       Lagerartikel, Mandant und jede Rolle wird zur Fragezeit aus DB indexiert.
+       Ein neuer Beleg ist fragbar, sobald er existiert.
+     * die MODULNAMEN tragen den grössten Teil des Themenwortschatzes; BEGRIFFE
+       ergänzt nur die Feldsemantik, nach der kein Modul heisst — Marge, offen,
+       Prüfsumme, Stichtag. Das ist ein geschriebenes Lexikon und die ehrliche
+       Grenze eines Prototyps ohne Modell dahinter.
+     * DIE RECHTE GELTEN AUCH HIER. Was eine Rolle auf dem Schirm nicht sehen
+       darf, bekommt sie auch nicht als Antwort — sonst wäre der Assistent das
+       Loch im Berechtigungsmodell (IAM-02, SEA-03).
+     * es wird nie «nichts» geantwortet: eine unklare Frage fällt auf das
+       zurück, was gerade offen ist, mit Wegen dorthin.
+   ────────────────────────────────────────────────────────────────────────── */
+const CHAT = { offen: false, verlauf: [], denkt: false };
+
+const cnorm = s => String(s).toLowerCase()
+  .replace(/[äáà]/g, 'a').replace(/[öó]/g, 'o').replace(/[üú]/g, 'u')
+  .replace(/[éèê]/g, 'e').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, ' ').trim();
+
+/* jedes Hauptwort der Anwendung, aus DB gelesen — keine gepflegte Liste */
+function chatIndex() {
+  const ix = [], add = (kind, ref, ...l) =>
+    ix.push({ kind, ref, keys: [...new Set(l.filter(Boolean).map(cnorm))] });
+  DB.kunden.forEach(k => add('kunde', k, k.name, k.kurz, k.nr, k.name.split(' ')[0]));
+  DB.kunden.forEach(k => k.standorte.forEach(s => add('standort', { k, s }, s.name,
+    s.name.replace(/^(Filiale|Zentrale|Haupthaus|Dependance)\s*/i, ''))));
+  DB.kunden.forEach(k => k.kontakte.forEach(c => add('kontakt', { k, c }, c.name,
+    c.name.replace(/^[A-Z]\.\s*/, ''), c.mail)));
+  DB.projekte.forEach(p => add('projekt', p, p.nr, p.name, p.name.split(',')[0], p.kategorie));
+  DB.dokumente.forEach(d => add('beleg', d, d.nr, d.titel));
+  DB.artikel.forEach(a => add('artikel', a, a.nr, a.name, a.name.split(',')[0]));
+  [...new Set(DB.artikel.flatMap(a => [a.hersteller, a.lieferant]).filter(x => x && x !== '—'))]
+    .forEach(l => add('lieferant', l, l, l.split(' ')[0]));
+  DB.faelle.forEach(f => add('fall', f, f.nr, f.titel));
+  DB.lager.forEach(l => add('lagerartikel', l, l.name, l.nr, l.kat));
+  DB.mandanten.forEach(m => add('mandant', m, m.name, m.lang, m.name.split(' ')[0]));
+  DB.rollen.forEach(r => add('rolle', r, r.name, r.wer.split(' ')[0]));
+  [...new Set(DB.zeiten.map(t => t.wer))].forEach(w => add('person', w, w));
+  MODULES.forEach(m => add('modul', m, m.name, m.titel));
+  return ix;
+}
+
+/* die Wörter, nach denen kein Modul heisst */
+const BEGRIFFE = [
+  ['umsatz',     'umsatz ertrag rohertrag deckungsbeitrag ergebnis rendite verdient zahlen kennzahl kennzahlen'],
+  ['marge',      'marge margen aufschlag ek einkauf einkaufspreis kostensatz'],
+  ['zahlungen',  'fallig uberfallig debitor debitoren ausstehend mahnung mahnen mahnstufe zahlung zahlungen bezahlt guthaben zahlungsziel'],
+  ['produkte',   'preis preise kostet kosten liste listenpreis vk verkaufspreis rabatt teurer preisversion'],
+  ['import',     'import preisliste xlsx excel stichtag mapping analyse importlauf'],
+  ['zeiten',     'stunde stunden zeit zeiten timer verrechenbar fakturiert'],
+  ['archiv',     'prufsumme hash integritat revision gebuv unveranderbar storno stornieren gutschrift protokoll audit archivieren'],
+  ['export',     'export exportieren zip csv datenhoheit treuhander anbieterwechsel'],
+  ['backup',     'backup sicherung wiederherstellung restore rpo rto langzeit'],
+  ['adressfall', 'adresse adressen filiale rechnungsstelle rechnungsadresse debitor lieferadresse'],
+  ['rechte',     'rolle rollen recht rechte darf sichtbar gesperrt berechtigung berechtigungen wer sieht'],
+  ['kette',      'offerte auftrag auftragsbestatigung lieferschein rechnung umwandeln kette nummernkreis nummer'],
+  ['uebersicht', 'offen offene heute anstehen ansteht dringend tun entscheiden entscheidung wichtig anliegen'],
+  ['mandanten',  'mandant mandanten firma firmen einheit installation getrennt'],
+  ['konzept',    'konzept pflichtenheft anforderung anforderungen prototyp phase phasen version'],
+  ['hilfe',      'hallo hoi guten hilfe helfen kannst konnen bist du'],
+];
+
+/* Welche Art Ding ein Themenwort meint: «Preis Downlight» will den Artikel,
+   «Marge P-26-041» das Projekt. */
+const KIND_VON = { produkte:'artikel', import:'artikel', marge:'projekt', zeiten:'projekt',
+                   kette:'beleg', zahlungen:'beleg', archiv:'beleg', adressfall:'kunde',
+                   rechte:'rolle', mandanten:'mandant', service:'fall', lager:'lagerartikel' };
+
+function entName(kind, ref) {
+  if (kind === 'standort') return ref.s.name;
+  if (kind === 'kontakt')  return ref.c.name;
+  if (kind === 'projekt')  return ref.nr;
+  if (kind === 'beleg')    return ref.nr;
+  if (kind === 'artikel')  return ref.nr;
+  if (kind === 'fall')     return ref.nr;
+  if (kind === 'modul')    return ref.name;
+  return ref.name || String(ref);
+}
+
+function matchEnt(q, ix, bias) {
+  const qt = q.split(' ').filter(Boolean);
+  const hits = new Map();
+  const take = (e, s) => {
+    if (!s) return;
+    s += (bias && e.kind === bias) ? 6 : 0;
+    const key = e.kind + '|' + entName(e.kind, e.ref);
+    if (!hits.has(key) || hits.get(key).s < s) hits.set(key, { kind:e.kind, ref:e.ref, s });
+  };
+  ix.forEach(e => e.keys.forEach(k => {
+    const kw = k.split(' ');
+    if (k.length >= 4 && q.includes(k)) return take(e, k.length + 3);
+    if ((' ' + q + ' ').includes(' ' + k + ' ')) return take(e, k.length + 1);
+    qt.forEach(t => { if (t.length >= 5) kw.forEach(w => {
+      if (w.length >= 5 && (w.startsWith(t) || t.startsWith(w))) take(e, Math.min(t.length, w.length));
+    }); });
+  }));
+  const all = [...hits.values()].sort((a, b) => b.s - a.s);
+  if (!all.length) return null;
+  const gleich = all.filter(x => x.s === all[0].s && x.kind === all[0].kind);
+  return { ...all[0], ties: gleich.length > 1 ? gleich : [] };
+}
+
+function matchThema(q) {
+  let best = null;
+  BEGRIFFE.forEach(([id, words]) => words.split(' ').forEach(w => {
+    const s = (' ' + q + ' ').includes(' ' + w + ' ') ? w.length + 2
+            : (w.length >= 5 && q.includes(w)) ? w.length : 0;
+    if (s && (!best || s > best.s)) best = { id, s };
+  }));
+  return best;
+}
+
+/* ── Antwortform ─────────────────────────────────────────────────────────── */
+const cK = t => `<div class="qk">${t}</div>`;
+const cZ = t => `<div class="qz">${t}</div>`;
+const cC = arr => arr.length ? `<div class="chips" style="margin-top:9px">${arr.map(c => c.go
+    ? `<span class="chip" data-go="${c.go}" ${c.ref ? `data-ref="${c.ref}"` : ''}>${esc(c.t)} &rsaquo;</span>`
+    : `<span class="chip" data-ask="${esc(c.t)}">${esc(c.t)}</span>`).join('')}</div>` : '';
+const bau = (kopf, zeilen, chips = []) => cK(kopf) + zeilen.filter(Boolean).map(cZ).join('') + cC(chips);
+const mod = id => `<span class="mod">${esc(MODULES.find(m => m.id === id).name)}</span>`;
+
+/* Was eine Rolle nicht sehen darf, sagt der Assistent genauso wenig wie die
+   Liste — und sagt, dass er es nicht sagt. */
+const sperre = (was, ids) => `<span class="hl">${esc(was)} — für die Rolle «${esc(R().name)}» ` +
+  `gesperrt (${ids}), auch hier und nicht nur auf dem Schirm.</span>`;
+const modulSperre = id => bau('Dazu darf ich nichts sagen',
+  [sperre(MODULES.find(m => m.id === id).name, 'IAM-01, SEA-03'),
+   `Als «Admin» oder «Mitarbeiter» steht es offen. Die Rolle wechseln Sie oben rechts.`],
+  [{ t:'Was darf meine Rolle sehen?' }]);
+/* gehört das Ding in den Blick, in dem gerade gearbeitet wird? */
+function imBlickHinweis(mandant) {
+  if (!mandant || imBlick(mandant)) return '';
+  return `Gehört zum Mandanten <b>${esc(M(mandant).name)}</b>; im Blick steht gerade ` +
+    `${MANDANT === 'alle' ? 'die Gesamtsicht' : esc(M().name)}. ` +
+    (mandantenSicht().includes(mandant) ? 'Links umschalten, dann steht es in den Listen.'
+      : `Für «${esc(R().name)}» ist dieser Mandant nicht freigegeben.`);
+}
+
+/* ── Antworten zu einem Ding ─────────────────────────────────────────────── */
+function aKunde(k) {
+  if (!modulErlaubt('kunden')) return modulSperre('kunden');
+  const dok = DB.dokumente.filter(d => d.kunde === k.id);
+  const offen = dok.filter(d => d.typ === 'RG' && offenBetrag(d) > 0.005);
+  const of = dok.find(d => d.typ === 'OF'), rg = dok.find(d => d.typ === 'RG' && d.adresse !== (of || {}).adresse);
+  const proj = DB.projekte.filter(p => p.kunde === k.id && projektErlaubt(p.id));
+  return bau(`${esc(k.name)} · Kunde Nr. ${esc(k.nr)}`, [
+    `${k.standorte.length} Standorte, ${k.kontakte.length} Kontakte, Zahlungsziel ` +
+      `${k.zahlungsziel} Tage, ${esc(k.uid)}`,
+    `Rechnungen gehen an <b>${esc((DB.kunden.find(x => x.id === k.id).standorte
+      .find(s => s.adresse === k.rechnungsadresse) || { name:'die Standardadresse' }).name)}</b>, ` +
+      `${esc(k.rechnungsmail)}`,
+    of && rg ? `Der Adressfall: Offerte ${esc(of.nr)} an ${esc(of.adresseName)}, Rechnung ` +
+      `${esc(rg.nr)} an ${esc(rg.adresseName)} — ein Debitor, zwei Adressen, beide als Snapshot.` : '',
+    proj.length ? `Projekte: ${proj.map(p => `<b>${esc(p.nr)}</b> ${esc(p.status)}`).join(', ')}` : '',
+    offen.length ? `<span class="hl">Offen: ${offen.map(d => `${esc(d.nr)} ${chf(offenBetrag(d))}` +
+      (d.status === 'überfällig' ? ' (überfällig)' : '')).join(', ')}</span>`
+      : `Nichts offen — ${dok.filter(d => d.typ === 'RG').length} Rechnungen, alle bezahlt.`,
+    darf('notizen') ? `Notiz: ${esc(k.notiz)}` : sperre('Die interne Notiz', 'IAM-02'),
+    imBlickHinweis(kundeMandanten(k.id)[0]),
+  ], [{ t:'Kunden', go:'kunden', ref:k.id },
+      proj.length ? { t:proj[0].nr, go:'projekte', ref:proj[0].id } : null,
+      offen.length ? { t:'Zahlungen', go:'zahlungen' } : null].filter(Boolean));
+}
+
+function aProjekt(p) {
+  if (!modulErlaubt('projekte')) return modulSperre('projekte');
+  if (!projektErlaubt(p.id)) return bau('Dieses Projekt ist nicht freigegeben',
+    [sperre(p.nr, 'PRJ-05, SEA-03'),
+     `Freigegeben sind: ${mProjekte().map(x => esc(x.nr)).join(', ') || 'keines'}.`],
+    [{ t:'Was darf meine Rolle sehen?' }]);
+  const dok = DB.dokumente.filter(d => d.projekt === p.id);
+  const z = DB.zeiten.filter(t => t.projekt === p.id);
+  const m = marge(p.id);
+  const faelle = DB.faelle.filter(f => f.projekt === p.id);
+  const akt = DB.aktivitaeten.filter(a => a.projekt === p.id && a.status !== 'erledigt');
+  return bau(`${esc(p.nr)} · ${esc(p.name)}`, [
+    `${esc(K(p.kunde).name)}, ${esc(standort(p.kunde, p.standort).name)} · ${esc(p.status)} · ` +
+      `${esc(p.verantwortlich)} · Termin ${esc(p.termin)}`,
+    dok.length ? `Belege: ${dok.map(d => `${esc(d.nr)} (${esc(d.status)})`).join(', ')}` : 'Noch kein Beleg.',
+    `Zeiten: ${z.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h erfasst, davon ` +
+      `${z.filter(t => t.verrechenbar && !t.dok).reduce((s, t) => s + t.dauer, 0).toFixed(1)} h ` +
+      `verrechenbar und noch nicht fakturiert`,
+    darf('ek')
+      ? `Marge: Materialrohertrag <b>${chf(m.roh)}</b>, Deckungsbeitrag <b>${chf(m.db)}</b> ` +
+        `(nach ${chf(m.intern)} internen Zeitkosten)`
+      : sperre('Die Marge', 'IAM-02, MAR-04'),
+    faelle.length ? `<span class="hl">Servicefall: ${faelle.map(f =>
+      `${esc(f.nr)} ${esc(f.status)}, Frist ${esc(f.frist)}`).join(', ')}</span>` : '',
+    akt.length ? `Wiedervorlage: ${akt.map(a => `${esc(a.was)} (${esc(a.faellig)})`).join(', ')}` : '',
+    imBlickHinweis(p.mandant),
+  ], [{ t:'Projekt öffnen', go:'projekte', ref:p.id },
+      dok.length ? { t:'Belegkette', go:'verkauf', ref:dok[0].id } : null,
+      faelle.length ? { t:'Service', go:'service', ref:faelle[0].id } : null].filter(Boolean));
+}
+
+function aBeleg(d) {
+  if (!modulErlaubt('verkauf')) return modulSperre('verkauf');
+  const nach = DB.dokumente.filter(x => x.vorgaenger === d.id);
+  const vers = DB.versand.filter(v => v.dok === d.id && v.status !== 'nicht versendet');
+  const zahl = DB.zahlungen.filter(z => z.dok === d.id);
+  const snap = d.pos.filter(p => p.art && Math.abs(A(p.art).liste - p.preis) > 0.005);
+  return bau(`${esc(TYP[d.typ])} ${esc(d.nr)} · ${esc(d.datum)}`, [
+    `${esc(K(d.kunde).name)}, adressiert an <b>${esc(d.adresseName)}</b>` +
+      (d.projekt ? ` · Projekt ${esc(P(d.projekt).nr)}` : ''),
+    d.ohnePreise ? `${d.pos.length} Positionen, bewusst ohne Preise gedruckt (DOC-03).`
+      : `Netto ${chf(netto(d))}, MWST ${chf(mwstAuf(d))}, <b>Total ${chf(brutto(d))}</b>` +
+        (d.abzug ? ` — nach Abzug von ${chf(d.abzug.betrag)} (${esc(d.abzug.was)})` : ''),
+    d.typ === 'RG' && d.status !== 'storniert'
+      ? (offenBetrag(d) > 0.005
+          ? `<span class="hl">Offen ${chf(offenBetrag(d))}, fällig ${esc(d.faellig)}` +
+            (d.mahnstufe ? `, Mahnstufe ${d.mahnstufe} am ${esc(d.mahnungAm)}` : '') +
+            (bezahlt(d) ? `, ${chf(bezahlt(d))} davon bereits bezahlt` : '') + '</span>'
+          : `Bezahlt${zahl.length ? ` am ${esc(zahl[zahl.length - 1].datum)}` : ''}.`)
+      : '',
+    d.final
+      ? `Finalisiert am ${esc(d.finalAm)} von ${esc(d.finalVon)}, Nummer aus dem Kreis ${d.typ} ` +
+        `von ${esc(M(d.mandant).name)}. Prüfsumme ${esc((d.hash || '').slice(0, 16))}…`
+      : 'Noch Entwurf: keine Nummer aus dem Kreis, keine Prüfsumme, kein Versand.',
+    d.storniertAm ? `<span class="hl">Storniert am ${esc(d.storniertAm)} über ` +
+      `${esc(d.storniertDurch)} — das PDF bleibt unverändert, die Nummer wird nicht ` +
+      `wiederverwendet.</span>` : '',
+    snap.length ? `${snap.length} Position${snap.length > 1 ? 'en' : ''} ${snap.length > 1 ? 'tragen' : 'trägt'} ` +
+      `einen anderen Preis als die heutige Liste: ` +
+      snap.map(p => `${esc(p.text.split(',')[0])} ${chf(p.preis)} statt ${chf(A(p.art).liste)}`).join(', ') +
+      ` — der Beleg behält seinen Snapshot (IMP-07).` : '',
+    nach.length ? `Daraus entstanden: ${nach.map(x => `${esc(x.nr)} (${esc(TYPKURZ[x.typ])})`).join(', ')}` : '',
+    vers.length ? `Versendet ${esc(vers[0].datum)} an ${esc(vers[0].an.join(', '))}, ` +
+      `${vers.length} Eintrag${vers.length > 1 ? 'e' : ''} in der Historie.` : '',
+    imBlickHinweis(d.mandant),
+  ], [{ t:'Beleg öffnen', go:'verkauf', ref:d.id },
+      d.projekt ? { t:P(d.projekt).nr, go:'projekte', ref:d.projekt } : null,
+      d.typ === 'RG' && offenBetrag(d) > 0.005 ? { t:'Zahlungen', go:'zahlungen', ref:d.id } : null,
+      d.final && modulErlaubt('archiv') ? { t:'Archiv', go:'archiv' } : null].filter(Boolean));
+}
+
+function aArtikel(a) {
+  if (!modulErlaubt('produkte')) return modulSperre('produkte');
+  const benutzt = [];
+  DB.dokumente.forEach(d => d.pos.forEach(p => { if (p.art === a.id) benutzt.push({ d, p }); }));
+  const rab = DB.rabatte.find(r => (r.art === 'Hersteller' && r.ziel === a.hersteller)
+    || (r.art === 'Lieferant' && r.ziel === a.lieferant));
+  const imLager = DB.lager.find(l => cnorm(l.name).includes(cnorm(a.name.split(',')[0])));
+  const neuerPreis = DB.importlauf.proben.geaendert.find(r => r.nr === a.nr);
+  return bau(`${esc(a.nr)} · ${esc(a.name)}`, [
+    `${esc(a.hersteller)}${a.lieferant !== a.hersteller ? `, geliefert von ${esc(a.lieferant)}` : ''} · ` +
+      `${esc(a.einheit)} · MWST ${a.mwst} %`,
+    darf('ek')
+      ? `Liste <b>${chf(a.liste)}</b>, EK ${chf(a.ek)}, VK ${chf(a.vk)}` +
+        (rab ? ` · ${rab.wert} % ${rab.art}rabatt (${esc(rab.ab)}–${esc(rab.bis)})` : '')
+      : `Liste <b>${chf(a.liste)}</b> · ${sperre('EK und Rabattkonditionen', 'IAM-02')}`,
+    `${a.versionen.length} Preisversion${a.versionen.length > 1 ? 'en' : ''}: ` +
+      a.versionen.map(v => `ab ${esc(v.ab)} ${chf(v.liste)}`).join(', '),
+    neuerPreis && !IMPORT_ANGEWENDET
+      ? `<span class="hl">Der offene Importlauf würde ${chf(neuerPreis.neuListe)} bringen ` +
+        `(${pct((neuerPreis.neuListe / a.liste - 1) * 100)}), Stichtag ${esc(DB.importlauf.stichtag)} — ` +
+        `noch nicht bestätigt.</span>` : '',
+    benutzt.length ? `In ${benutzt.length} Belegposition${benutzt.length > 1 ? 'en' : ''}: ` +
+      benutzt.map(({ d, p }) => `${esc(d.nr)} ${p.menge} ${esc(p.einheit)} zu ${chf(p.preis)}`).join(', ') +
+      ` — jede mit ihrem eigenen, eingefrorenen Preis.` : 'Noch in keinem Beleg.',
+    imLager ? `Lager: ${imLager.bestand} ${esc(imLager.einheit)} als ${esc(imLager.kat)} in ${esc(imLager.ort)}.` : '',
+    imBlickHinweis(a.mandant),
+  ], [{ t:'Produkte', go:'produkte', ref:a.id },
+      benutzt.length ? { t:benutzt[0].d.nr, go:'verkauf', ref:benutzt[0].d.id } : null,
+      neuerPreis ? { t:'Preisimport', go:'import' } : null].filter(Boolean));
+}
+
+function aLieferant(name) {
+  const arts = DB.artikel.filter(a => a.hersteller === name || a.lieferant === name);
+  const faelle = DB.faelle.filter(f => f.lieferant === name);
+  const imp = DB.importlauf.hersteller === name ? DB.importlauf : null;
+  const rab = DB.rabatte.find(r => r.ziel === name);
+  return bau(esc(name), [
+    `${arts.length} Artikel im Stamm: ${arts.slice(0, 5).map(a => esc(a.name.split(',')[0])).join(', ')}`,
+    darf('ek') && rab ? `${rab.wert} % ${rab.art}rabatt, ${esc(rab.ab)}–${esc(rab.bis)}, Vorrang ${rab.prio}`
+      : rab ? sperre('Die Konditionen', 'IAM-02') : '',
+    imp ? `<span class="hl">Preisliste ${esc(imp.datei)} liegt analysiert vor: ${imp.analyse.neu} neu, ` +
+      `${imp.analyse.geaendert} geändert, ${imp.analyse.fehler} fehlerhaft — wartet auf Bestätigung.</span>` : '',
+    faelle.length ? `Garantie: ${faelle.map(f => `${esc(f.nr)} ${esc(f.titel)} (${esc(f.status)}, ` +
+      `Kosten ${esc(f.kosten)})`).join('; ')}` : 'Kein offener Garantiefall.',
+  ], [{ t:'Produkte', go:'produkte' }, imp ? { t:'Preisimport', go:'import' } : null,
+      faelle.length ? { t:'Service', go:'service', ref:faelle[0].id } : null].filter(Boolean));
+}
+
+function aFall(f) {
+  if (!modulErlaubt('service')) return modulSperre('service');
+  const d = f.bezugDok ? D(f.bezugDok) : null;
+  const p = d ? d.pos.find(x => x.nr === f.bezugPos) : null;
+  return bau(`${esc(f.nr)} · ${esc(f.titel)}`, [
+    `${esc(K(f.kunde).name)}, Projekt ${esc(P(f.projekt).nr)} · gemeldet ${esc(f.gemeldet)} · ` +
+      `<b>${esc(f.status)}</b> · Frist ${esc(f.frist)}`,
+    esc(f.fehler),
+    `Lieferant ${esc(f.lieferant)}, Kostenübernahme ${esc(f.kosten)}, verantwortlich ${esc(f.verantwortlich)}`,
+    d && p ? `Kommt aus ${esc(d.nr)}, Position ${p.nr} (${esc(p.text.split(',')[0])}), geliefert ` +
+      `${esc(f.geliefertAm)} — der Weg zurück auf Lieferung und Lieferdatum ist der Grund, warum das ` +
+      `auch in drei Jahren noch beantwortbar ist.` : '',
+    `Verlauf: ${f.verlauf.map(v => `${esc(v.datum)} ${esc(v.was)}`).join(' → ')}`,
+    imBlickHinweis(f.mandant),
+  ], [{ t:'Fall öffnen', go:'service', ref:f.id },
+      d ? { t:d.nr, go:'verkauf', ref:d.id } : null].filter(Boolean));
+}
+
+function aLagerartikel(l) {
+  if (!modulErlaubt('lager')) return modulSperre('lager');
+  return bau(`${esc(l.name)} · ${esc(l.nr)}`, [
+    `${esc(l.kat)} · Bestand <b>${l.bestand} ${esc(l.einheit)}</b>, Minimum ${l.min} ` +
+      `${esc(l.einheit)} · ${esc(l.ort)}`,
+    l.bestand < l.min ? `<span class="hl">Unter dem Mindestbestand.</span>` : 'Im Rahmen.',
+    l.ausgeliehen ? `Ausgeliehen: ${esc(l.ausgeliehen)}` : '',
+    l.bewegungen.length ? `Letzte Bewegungen: ${l.bewegungen.slice(0, 3).map(b =>
+      `${esc(b.datum)} ${b.menge > 0 ? '+' : '−'}${Math.abs(b.menge)} (${esc(b.grund)})`).join(', ')}`
+      : 'Noch keine Bewegung.',
+    imBlickHinweis(l.mandant),
+  ], [{ t:'Lager', go:'lager' }]);
+}
+
+function aMandant(m) {
+  const z = kennzahlen(m.id);
+  return bau(`${esc(m.lang)} · ${esc(m.ort)}`, [
+    `${esc(m.uid)} · ${esc(m.iban)} · Absender ${esc(m.absender)}`,
+    `Layout: ${esc(m.layout)} · Zahlungsziel ${m.zahlungsziel} Tage`,
+    `Nummernkreise: ${Object.entries(m.kreise).map(([t, n]) =>
+      `${t}-26-${String(n).padStart(4, '0')}`).join(', ')} — eigene Kreise, keine geteilten Nummern.`,
+    `Umsatz ${DB.jahr}: <b>${chf(z.umsatz)}</b>, offen ${chf(z.offen)}, davon ${chf(z.ueber)} überfällig`,
+    `${z.projekte} Projekte, ${z.faelle} offene Servicefälle, ${z.stunden.toFixed(1)} h erfasst`,
+    mandantenSicht().includes(m.id) ? '' :
+      `Für «${esc(R().name)}» ist dieser Mandant nicht freigegeben (MAN-04).`,
+  ], [{ t:'Übersicht', go:'uebersicht' }, { t:'Verkauf', go:'verkauf' }]);
+}
+
+function aRolle(r) {
+  return bau(`Rolle ${esc(r.name)} · ${esc(r.wer)}`, [
+    esc(r.was),
+    `Module: ${r.module === '*' ? 'alle zwölf' : r.module.length + ' von 12 — ' +
+      r.module.map(id => esc(MODULES.find(m => m.id === id).name)).join(', ')}`,
+    `Mandanten: ${r.mandanten === '*' ? 'alle' : r.mandanten.map(id => esc(M(id).name)).join(', ')}`,
+    `Projekte: ${r.projekte === '*' ? 'alle freigegebenen' : r.projekte.map(id => esc(P(id).nr)).join(', ')}`,
+    `EK, Marge, interne Kostensätze: <b>${r.ek ? 'sichtbar' : 'gesperrt'}</b> · ` +
+      `Kontakte und interne Notizen: <b>${r.notizen ? 'sichtbar' : 'gesperrt'}</b>`,
+    `Finalisieren ${r.finalisieren ? 'erlaubt' : 'nicht erlaubt'} · Versenden ` +
+      `${r.versenden ? 'erlaubt' : 'nicht erlaubt'} · Exportieren ${r.exportieren ? 'erlaubt' : 'nicht erlaubt'}`,
+    `Dieselbe Prüfung gilt in der Liste, in der Suche, im Export, im Download — und in dieser ` +
+      `Antwort. Verbergen in der Oberfläche allein wäre kein Recht (IAM-01…03).`,
+  ], [{ t:'Was darf meine Rolle sehen?' }, { t:'Übersicht', go:'uebersicht' }]);
+}
+
+function aPerson(name) {
+  const z = DB.zeiten.filter(t => t.wer === name);
+  const proj = [...new Set(z.map(t => t.projekt))].filter(projektErlaubt);
+  const r = DB.rollen.find(x => x.wer.startsWith(name));
+  return bau(esc(name), [
+    r ? `Rolle ${esc(r.name)}: ${esc(r.was)}` : '',
+    `${z.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h auf ${proj.length} Projekten erfasst`,
+    proj.map(p => `${esc(P(p).nr)}: ${z.filter(t => t.projekt === p)
+      .reduce((s, t) => s + t.dauer, 0).toFixed(1)} h`).join(' · '),
+    darf('ek') ? `Interne Zeitkosten: ${chf(z.reduce((s, t) => s + t.dauer * t.kosten, 0))}`
+      : sperre('Der interne Kostensatz', 'IAM-02, TIM-03'),
+    DB.projekte.filter(p => p.verantwortlich === name).length
+      ? `Verantwortlich für ${DB.projekte.filter(p => p.verantwortlich === name)
+          .map(p => esc(p.nr)).join(', ')}` : '',
+  ], [{ t:'Zeiten', go:'zeiten' }]);
+}
+
+function aStandort({ k, s }) {
+  if (!modulErlaubt('kunden')) return modulSperre('kunden');
+  const a = adr(k.id, s.adresse);
+  const proj = DB.projekte.filter(p => p.standort === s.id);
+  const dok = DB.dokumente.filter(d => d.adresse === s.adresse);
+  return bau(`${esc(s.name)} · ${esc(k.name)}`, [
+    `${esc(a.typ)}: ${esc(a.zeile)}, ${esc(a.plz)} ${esc(a.ort)}`,
+    darf('notizen') ? `Kontakte: ${s.kontakte.map(c => esc(kontakt(k.id, c).name) + ' (' +
+      esc(kontakt(k.id, c).funktion) + ')').join(', ')}` : sperre('Die Kontakte', 'IAM-02'),
+    proj.length ? `Projekte hier: ${proj.map(p => esc(p.nr)).join(', ')}` : 'Kein Projekt an diesem Standort.',
+    dok.length ? `${dok.length} Beleg${dok.length > 1 ? 'e' : ''} sind an diese Adresse gegangen: ` +
+      dok.map(d => esc(d.nr)).join(', ') : '',
+    `Der Standort hängt am Kunden, nicht daneben: ${esc(k.name)} bleibt der Debitor (CRM-02).`,
+  ], [{ t:'Kunde öffnen', go:'kunden', ref:k.id },
+      proj.length ? { t:proj[0].nr, go:'projekte', ref:proj[0].id } : null].filter(Boolean));
+}
+
+function aKontakt({ k, c }) {
+  if (!darf('notizen')) return bau('Kontaktdaten sind gesperrt',
+    [sperre('Kontakte und interne Notizen', 'IAM-02'),
+     'Auch die Suche gibt dazu keine Treffer und keine Vorschautexte aus (SEA-03).'],
+    [{ t:'Was darf meine Rolle sehen?' }]);
+  const kamp = DB.kampagnen.filter(x => c.verteiler.includes(x.verteiler));
+  return bau(`${esc(c.anrede)} ${esc(c.name)} · ${esc(k.name)}`, [
+    `${esc(c.funktion)} · ${esc(c.tel)}${c.mobil ? ' · ' + esc(c.mobil) : ''} · ${esc(c.mail)}`,
+    c.verteiler.length ? `Verteiler: ${c.verteiler.map(esc).join(', ')} · Einwilligung ${esc(c.einwilligung)}`
+      : 'In keinem Verteiler — kein Newsletter, keine Einwilligung nötig.',
+    kamp.length ? `Erhalten: ${kamp.map(x => `${esc(x.name)} (${esc(x.status)})`).join(', ')}` : '',
+    'Einwilligung, Quelle und Zeitpunkt hängen am Kontakt; eine Abmeldung wirkt dauerhaft (NWL-02).',
+  ], [{ t:'Kunde öffnen', go:'kunden', ref:k.id }, { t:'Versand', go:'versand' }]);
+}
+
+/* ── Antworten zu einem Thema ────────────────────────────────────────────── */
+const ANTWORT = {
+  uebersicht() {
+    const it = offeneSachen();
+    if (!it.length) return bau('Nichts offen',
+      ['Kein überfälliger Beleg, kein offener Fall, keine fällige Wiedervorlage in diesem Blick.'],
+      [{ t:'Zahlen dieses Mandanten' }]);
+    return bau(`${it.length} Sachen offen in ${MANDANT === 'alle' ? 'allen Mandanten' : esc(M().name)}`,
+      it.slice(0, 6).map(i => `${i.ernst === 3 ? '<span class="hl">' : ''}<b>${esc(i.was)}</b>` +
+        `${i.ernst === 3 ? '</span>' : ''} — ${esc(i.warum)} ${mod(i.wo)}`),
+      [...new Set(it.slice(0, 4).map(i => i.wo))].map(w => ({ t:MODULES.find(m => m.id === w).name, go:w })));
+  },
+  umsatz() {
+    const z = kennzahlen(MANDANT === 'alle' ? null : MANDANT);
+    return bau(`${MANDANT === 'alle' ? 'Alle Mandanten' : esc(M().lang)} in Zahlen`, [
+      `Umsatz ${DB.jahr}: <b>${chf(z.umsatz)}</b> — aus ${DB.dokumente.filter(d =>
+        imBlick(d.mandant) && d.typ === 'RG').length} Rechnungen, Gutschriften abgezogen, ` +
+        `stornierte nicht gezählt (DSH-05)`,
+      `Offen ${chf(z.offen)} in ${z.offenAnz} Rechnungen, davon <b>${chf(z.ueber)}</b> überfällig`,
+      `Offene Offerten ${chf(z.offerten)} in ${z.offertenAnz} Belegen · Erfolgsquote ` +
+        `${z.quote.toFixed(0)} % (${z.quoteText})`,
+      darf('ek') ? `Materialrohertrag ${chf(z.marge)} (${z.margeQuote.toFixed(1)} % vom Materialumsatz), ` +
+        `Deckungsbeitrag über alle Projekte ${chf(z.db)}` : sperre('Marge und Rohertrag', 'MAR-04'),
+      `${z.stunden.toFixed(1)} h erfasst, davon ${z.stundenOffen.toFixed(1)} h verrechenbar und offen`,
+      'Jede Zahl ist aus den Belegen gerechnet, keine ist hinterlegt.',
+    ], [{ t:'Übersicht', go:'uebersicht' }, { t:'Zahlungen', go:'zahlungen' },
+        { t:'Wo liegt Geld?' }]);
+  },
+  marge() {
+    if (!darf('ek')) return bau('Marge ist für diese Rolle gesperrt',
+      [sperre('EK, Marge und interne Kostensätze', 'IAM-02, MAR-04'),
+       'Das gilt in jedem Modul, in der Suche, im Export — und hier.'],
+      [{ t:'Was darf meine Rolle sehen?' }]);
+    const liste = mProjekte().map(p => ({ p, m:marge(p.id) }))
+      .sort((a, b) => b.m.db - a.m.db);
+    return bau('Marge je Projekt', liste.map(({ p, m }) =>
+      `<b>${esc(p.nr)}</b> ${esc(p.name.split(',')[0])}: Rohertrag ${chf(m.roh)}, ` +
+      `Deckungsbeitrag <b>${chf(m.db)}</b>${m.db < 0 ? ' <span class="hl">(negativ)</span>' : ''} · ` +
+      `${m.stunden.toFixed(1)} h, ${chf(m.intern)} interne Kosten`)
+      .concat(['Gerechnet mit dem EK, der in der Position eingefroren ist — nicht mit dem ' +
+        'heutigen. Darum bleibt die Zahl stabil, wenn eine neue Preisliste kommt (MAR-01, IMP-07).']),
+      [{ t:'Projekte', go:'projekte' }, { t:'Wo liegt Geld?' }]);
+  },
+  zahlungen() {
+    if (!modulErlaubt('zahlungen')) return modulSperre('zahlungen');
+    const offen = mDok().filter(d => d.typ === 'RG' && offenBetrag(d) > 0.005);
+    return bau(`${chf(offen.reduce((s, d) => s + offenBetrag(d), 0))} offen`, [
+      ...offen.map(d => `${esc(d.nr)} ${esc(K(d.kunde).kurz)}: <b>${chf(offenBetrag(d))}</b>, fällig ` +
+        `${esc(d.faellig)}${d.status === 'überfällig' ? ' <span class="hl">überfällig</span>' : ''}` +
+        (d.mahnstufe ? `, Mahnstufe ${d.mahnstufe}` : '') +
+        (bezahlt(d) ? `, ${chf(bezahlt(d))} bereits bezahlt` : '')),
+      `Mahnstufen: ${DB.mahnstufen.map(s => `${s.stufe} nach ${s.nach} Tagen` +
+        (s.gebuehr ? ` (${chf(s.gebuehr)})` : '')).join(', ')} — vorbereiten und freigeben, ` +
+        `nicht automatisch senden (PAY-04).`,
+      'Verbucht wird in der Buchhaltung; hier stehen Status, Alterung, Mahnwesen und Exporte.',
+    ], [{ t:'Zahlungen', go:'zahlungen' }, { t:'Versand', go:'versand' }]);
+  },
+  produkte() {
+    if (!modulErlaubt('produkte')) return modulSperre('produkte');
+    const arts = mArtikel();
+    return bau(`${arts.length} Artikel und Leistungen`, [
+      `Liste, EK und VK stehen getrennt, jeder mit Gültigkeit; Rabatt ist eine Regel, kein ` +
+        `überschriebener Preis (ART-02, ART-03).`,
+      darf('ek')
+        ? `Teuerste Position: ${(a => `${esc(a.name.split(',')[0])} ${chf(a.liste)} (EK ${chf(a.ek)})`)(
+            arts.reduce((x, a) => a.liste > x.liste ? a : x))}`
+        : sperre('EK und Rabattkonditionen', 'IAM-02'),
+      `${arts.reduce((s, a) => s + a.versionen.length, 0)} Preisversionen insgesamt — die Historie ` +
+        `erklärt, warum eine Offerte vom August einen anderen Preis trägt als die Liste von heute.`,
+      !IMPORT_ANGEWENDET ? `<span class="hl">Ein Importlauf liegt analysiert vor: ` +
+        `${DB.importlauf.analyse.geaendert} geänderte Preise warten auf Bestätigung.</span>` : '',
+    ], [{ t:'Produkte', go:'produkte' }, { t:'Preisimport', go:'import' }]);
+  },
+  import() {
+    if (!modulErlaubt('import')) return modulSperre('import');
+    const i = DB.importlauf;
+    return bau(`Preisliste ${esc(i.hersteller)} · ${esc(i.status)}`, [
+      `${esc(i.datei)}, ${i.zeilen} Zeilen, hochgeladen ${esc(i.hochgeladen)} von ${esc(i.wer)}, ` +
+        `Profil «${esc(i.profil)}»`,
+      `Analyse: <b>${i.analyse.neu} neu</b>, ${i.analyse.geaendert} geändert, ` +
+        `${i.analyse.unveraendert} unverändert, ${i.analyse.entfallen} nicht mehr enthalten, ` +
+        `<span class="hl">${i.analyse.fehler} fehlerhaft</span>`,
+      IMPORT_ANGEWENDET
+        ? `Angewendet mit Stichtag ${esc(i.stichtag)}: neue Preisversionen geschrieben, keine alte ` +
+          `überschrieben, kein Beleg verändert. Zurücknehmen ist möglich (IMP-08).`
+        : `Noch nicht angewendet — erst die Bestätigung mit Stichtag ${esc(i.stichtag)} schreibt ` +
+          `Preisversionen (IMP-05).`,
+      `Die ${i.analyse.fehler} fehlerhaften Zeilen: ${i.proben.fehler.map(f =>
+        `Zeile ${f.zeile} ${esc(f.problem)}`).join(', ')} — sie werden übersprungen, nicht geraten.`,
+      'Bestehende Offerten, Aufträge, Lieferscheine und Rechnungen behalten ihre Preise, EK und ' +
+        'Rabatte (IMP-07). Das ist prüfbar: fragen Sie nach einem Artikel.',
+    ], [{ t:'Preisimport', go:'import' }, { t:'Was kostet DL-940-12W?' }]);
+  },
+  zeiten() {
+    if (!modulErlaubt('zeiten')) return modulSperre('zeiten');
+    const z = mZeiten();
+    const offen = z.filter(t => t.verrechenbar && !t.dok);
+    return bau(`${z.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h erfasst`, [
+      `Verrechenbar und noch nicht fakturiert: <b>${offen.reduce((s, t) => s + t.dauer, 0).toFixed(1)} h</b> ` +
+        `= ${chf(offen.reduce((s, t) => s + t.dauer * t.satz, 0))} in ` +
+        `${[...new Set(offen.map(t => t.projekt))].length} Projekten`,
+      `Nicht verrechenbar: ${z.filter(t => !t.verrechenbar).reduce((s, t) => s + t.dauer, 0).toFixed(1)} h ` +
+        `— Akquisition, Garantie, Nacharbeit. Die Unterscheidung ist eine Eigenschaft der Buchung, ` +
+        `keine Nachbearbeitung.`,
+      darf('ek') ? `Interne Zeitkosten: ${chf(z.reduce((s, t) => s + t.dauer * t.kosten, 0))}`
+        : sperre('Der interne Kostensatz', 'IAM-02, TIM-03'),
+      'Ausgewählte Zeiten werden zu Rechnungspositionen und sind danach gegen doppelte ' +
+        'Fakturierung gesperrt (TIM-04, TIM-05).',
+    ], [{ t:'Zeiten', go:'zeiten' }]);
+  },
+  archiv() {
+    if (!modulErlaubt('archiv')) return modulSperre('archiv');
+    const final = mDok().filter(d => d.final);
+    const st = DB.dokumente.find(d => d.storniertAm);
+    return bau(`${final.length} finale Belege im Archiv`, [
+      `Jeder trägt Status FINAL, Erstellzeit, Benutzer, Mandant und Belegnummer (ARC-01).`,
+      DB.hashEcht
+        ? `Zu jedem gehört eine SHA-256-Prüfsumme über die eingefrorene Fassung, hier im Browser ` +
+          `gerechnet. «Alle Prüfsummen nachrechnen» rechnet sie erneut (ARC-02).`
+        : `Prüfsummen sind hinterlegt: ohne sicheren Kontext rechnet der Browser kein SHA-256.`,
+      st ? `Korrektur läuft über Storno und Gutschrift: ${esc(st.nr)} wurde am ${esc(st.storniertAm)} ` +
+        `über ${esc(st.storniertDurch)} storniert, das PDF bleibt unverändert, die Nummer wird nicht ` +
+        `wiederverwendet (ARC-04).` : '',
+      `Das Protokoll hält ${DB.audit.length} Ereignisse: Erstellung, Finalisierung, Versand, ` +
+        `Status- und Zahlungsänderung, Storno, Prüfung.`,
+      '«geBüV-tauglich» ist kein Feature-Etikett: dazu gehören Verfahrensdokumentation, ' +
+        'Verantwortlichkeiten, Rechte und betriebliche Kontrollen.',
+    ], [{ t:'Archiv', go:'archiv' }, { t:'Sicherung und Wiederherstellung' }]);
+  },
+  export() {
+    return bau('Exporte und Datenhoheit', [
+      'Kunden, Kontakte, Produkte, Preise, Projekte, Zeiten, Rechnungen als CSV oder XLSX (EXP-01).',
+      'Belege als PDF, Sammeldownload als ZIP (EXP-02).',
+      'Projektexport mit Ordnerstruktur, Originaldateien, Beleg-PDFs, Chronik und ' +
+        'maschinenlesbaren Metadaten — lesbar ohne diese Anwendung (EXP-03).',
+      'Mandanten-Komplettexport für Anbieterwechsel oder Archivierung (EXP-04) und ein ' +
+        'Treuhänderpaket (EXP-05).',
+      darf('exportieren')
+        ? `Ihre Rolle darf exportieren — und im Export gelten dieselben Feldrechte wie auf dem ` +
+          `Schirm: ${darf('ek') ? 'EK und Marge sind enthalten' : 'EK und Marge sind nicht enthalten'}.`
+        : sperre('Der Export', 'IAM-01'),
+    ], [{ t:'Archiv', go:'archiv' }, modulErlaubt('projekte') ? { t:'Projekte', go:'projekte' } : null]
+       .filter(Boolean));
+  },
+  backup() {
+    const b = DB.backup;
+    const fehler = b.letzte.find(l => !l.ok);
+    return bau('Sicherung und Wiederherstellung', [
+      `Täglich Datenbank und Dateien, zusätzlich eine Kopie auf getrenntem Speicher mit eigenen ` +
+        `Zugangsdaten — der Produktionszugang darf nicht alle Kopien löschen können (BKP-01, BKP-02).`,
+      `Letzter Lauf: ${esc(b.letzte[0].datum)}, ${esc(b.letzte[0].groesse)}, erfolgreich.`,
+      fehler ? `<span class="hl">${esc(fehler.datum)} ist ein Lauf fehlgeschlagen: ` +
+        `${esc(fehler.fehler)}</span> — ein Backup ohne Meldung gilt nicht als erfüllt (BKP-06).` : '',
+      `${esc(b.langzeit)}. ${esc(b.restore)}`,
+      'Aufbewahrung je Datenklasse: ' + b.fristen.map(f => `${esc(f.klasse)} ${esc(f.frist)}`).join(', ') +
+        ' (ARC-06).',
+    ], [{ t:'Archiv', go:'archiv' }]);
+  },
+  adressfall() {
+    const k = DB.kunden.find(x => x.standorte.length > 1);
+    const of = DB.dokumente.find(d => d.kunde === k.id && d.typ === 'OF');
+    const rg = DB.dokumente.find(d => d.kunde === k.id && d.typ === 'RG' && d.adresse !== of.adresse);
+    return bau('Ein Kunde, zwei Adressen', [
+      `Der Kunde ist der Debitor: <b>${esc(k.name)}</b>, Nr. ${esc(k.nr)}. Filialen und Projektorte ` +
+        `hängen darunter, nicht daneben (CRM-01, CRM-02).`,
+      `Offerte ${esc(of.nr)} ging an <b>${esc(of.adresseName)}</b>.`,
+      `Rechnung ${esc(rg.nr)} ging an <b>${esc(rg.adresseName)}</b>, mit dem Zahlungsziel des ` +
+        `Kunden (${k.zahlungsziel} Tage).`,
+      `Kein zweiter Kundenstamm, keine doppelte Pflege — und beide Belege haben ihre Adresse als ` +
+        `Snapshot gespeichert: ein Umzug ändert sie nicht mehr (CRM-04, CRM-06).`,
+    ], [{ t:'Kunde öffnen', go:'kunden', ref:k.id }, { t:of.nr, go:'verkauf', ref:of.id },
+        { t:rg.nr, go:'verkauf', ref:rg.id }]);
+  },
+  rechte() { return aRolle(R()); },
+  kette() {
+    if (!modulErlaubt('verkauf')) return modulSperre('verkauf');
+    const p = mProjekte().find(x => DB.dokumente.filter(d => d.projekt === x.id).length > 2);
+    const dok = p ? DB.dokumente.filter(d => d.projekt === p.id) : [];
+    return bau('Offerte → Auftrag → Lieferschein → Rechnung', [
+      'Ein Beleg wird nicht neu getippt, sondern umgewandelt, mit wählbaren Mengen und ' +
+        'Positionen (DOC-01).',
+      p ? `Am Beispiel ${esc(p.nr)}: ${dok.map(d => `${esc(d.nr)} (${esc(TYPKURZ[d.typ])}, ` +
+        `${esc(d.status)})`).join(' → ')}` : '',
+      'Der Lieferschein nimmt die offenen Mengen und darf ohne Preise gedruckt werden (DOC-03).',
+      'Akonto-, Teil- und Schlussrechnung verrechnen, was schon fakturiert ist; eine weitere ' +
+        'Rechnung auf einen vollständig fakturierten Auftrag lehnt das System ab (DOC-04).',
+      'Finalisieren vergibt die Nummer aus dem Kreis des Mandanten und friert den Beleg ein; ' +
+        'geändert wird danach nur über Storno und Gutschrift (DOC-05, ARC-04).',
+    ], [{ t:'Verkauf', go:'verkauf' }, p ? { t:p.nr, go:'projekte', ref:p.id } : null].filter(Boolean));
+  },
+  mandanten() {
+    return bau(`${DB.mandanten.length} Mandanten in einer Installation`, [
+      ...DB.mandanten.map(m => `<b>${esc(m.name)}</b>: ${esc(m.uid)}, Absender ${esc(m.absender)}, ` +
+        `eigene Nummernkreise, eigenes Layout` +
+        (mandantenSicht().includes(m.id) ? '' : ' — für Ihre Rolle nicht freigegeben')),
+      `Ihre Rolle «${esc(R().name)}» sieht ${mandantenSicht().length} davon` +
+        (gesamtsicht() ? ' und darf die Gesamtansicht öffnen (MAN-05).' : '.'),
+      'Jeder fachliche Datensatz trägt seine Mandantenzuordnung; ein Zugriff über die Grenze ist ' +
+        'ausdrücklich, nicht zufällig.',
+    ], [{ t:'Übersicht', go:'uebersicht' }]);
+  },
+  konzept() {
+    return bau('Was dieser Prototyp ist', [
+      'Ein klickbarer UX-Prototyp zum «Funktionalen Grobkonzept / Pflichtenheft: Mandantenfähige ' +
+        'Geschäftsanwendung», Version 1.0 vom 24. August 2026 — Schritt 3 der empfohlenen ' +
+        'nächsten Schritte.',
+      'Er zeigt die Abnahmekriterien aus Abschnitt 15: den Adressfall, die Belegkette ohne ' +
+        'Neueingabe, den Preisimport ohne Rückwirkung, die Rollenwirkung, das revisionsorientierte ' +
+        'Archiv und den Projektexport.',
+      'Der Schalter «IDs» oben rechts blendet zu jeder Funktion die Anforderungs-ID ein.',
+      'Alle Kunden, Kontakte, Projekte, Artikel und Beträge sind erfunden. Aus dem Konzept ' +
+        'stammen die drei Mandanten und die IDs.',
+      'Was hier nicht laufen kann, sagt es: PDF-Erzeugung, E-Mail-Versand und ZIP-Download ' +
+        'brauchen einen Server.',
+    ], [{ t:'Was ist offen?' }, { t:'Ein Kunde, zwei Adressen' }, { t:'Was darf meine Rolle sehen?' }]);
+  },
+  geld() {
+    const posten = [];
+    mDok().filter(d => d.typ === 'RG' && offenBetrag(d) > 0.005).forEach(d => posten.push({
+      t:`${d.nr} ${K(d.kunde).kurz}${d.status === 'überfällig' ? ' überfällig' : ' offen'}`,
+      v:offenBetrag(d), wo:'zahlungen' }));
+    const offZ = mZeiten().filter(t => t.verrechenbar && !t.dok);
+    if (offZ.length) posten.push({ t:`${offZ.length} Zeitbuchungen nicht fakturiert`,
+      v:offZ.reduce((s, t) => s + t.dauer * t.satz, 0), wo:'zeiten' });
+    mDok().filter(d => d.typ === 'OF' && (d.status === 'versendet' || d.status === 'Entwurf'))
+      .forEach(d => posten.push({ t:`${d.nr} noch nicht entschieden`, v:brutto(d), wo:'verkauf' }));
+    mFaelle().filter(f => f.status !== 'erledigt' && f.kosten !== 'Lieferant')
+      .forEach(f => posten.push({ t:`${f.nr} auf eigene Kosten`, v:0, wo:'service' }));
+    posten.sort((a, b) => b.v - a.v);
+    return bau(`${chf(posten.reduce((s, p) => s + p.v, 0))} liegen gerade in Reichweite`,
+      posten.map(p => `<b>${chf(p.v)}</b> — ${esc(p.t)} ${mod(p.wo)}`)
+        .concat(['Offene Offerten sind kein Umsatz, sondern eine Entscheidung des Kunden — sie ' +
+          'stehen hier, damit nachgefasst wird, nicht damit gerechnet wird.']),
+      [...new Set(posten.map(p => p.wo))].map(w => ({ t:MODULES.find(m => m.id === w).name, go:w })));
+  },
+  hilfe() {
+    return bau('Fragen Sie in Ihren eigenen Worten', [
+      'Ich lese denselben Datenstand wie die Module — Kunden, Standorte, Kontakte, Projekte, ' +
+        'Belegnummern, Artikel, Hersteller, Servicefälle, Lagerartikel, Mandanten und Rollen.',
+      'Zum Beispiel: «Was ist offen?», «Energie Musterkanton», «RG-26-0091», «P-26-041», ' +
+        '«Was kostet DL-940-12W?», «Ein Kunde, zwei Adressen», «Was darf meine Rolle sehen?»',
+      'Die Rechte gelten auch für mich: was Ihre Rolle nicht sehen darf, sage ich nicht — und ' +
+        'sage, dass ich es nicht sage.',
+      'Im Prototyp löse ich die Frage über den Datenstand auf. Im System steht dahinter ein ' +
+        'Modell; die Rechteprüfung bleibt dieselbe.',
+    ], [{ t:'Was ist offen?' }, { t:'Ein Kunde, zwei Adressen' }, { t:'Wo liegt Geld?' },
+        { t:'Was darf meine Rolle sehen?' }]);
+  },
+};
+/* Synonyme auf dieselbe Antwort */
+ANTWORT.verkauf = ANTWORT.kette;
+ANTWORT.service = () => { const f = mFaelle()[0];
+  return f ? aFall(f) : bau('Kein Servicefall in diesem Mandanten', ['Umschalten links.']); };
+ANTWORT.kunden = () => { const k = mKunden()[0]; return k ? aKunde(k) : modulSperre('kunden'); };
+ANTWORT.projekte = () => { const p = mProjekte()[0]; return p ? aProjekt(p) : modulSperre('projekte'); };
+ANTWORT.lager = () => { const l = mLager()[0]; return l ? aLagerartikel(l) : modulSperre('lager'); };
+ANTWORT.versand = () => bau('Versandzentrale', [
+  `${DB.versand.filter(v => v.status !== 'nicht versendet').length} Sendungen in der Historie, ` +
+    `mit Zeitpunkt, Empfänger, Betreff, Anhängen und Status (SND-05).`,
+  'Empfänger werden aus Kunde, Standort, Projekt und Rechnungsstelle vorgeschlagen; Vorlagen ' +
+    'gehören dem Mandanten und dem Belegtyp (SND-02, SND-03).',
+  'Erneut senden erzeugt einen neuen Eintrag und überschreibt den alten nicht (SND-06).',
+], [{ t:'Versand', go:'versand' }]);
+
+/* ── der Auflöser ────────────────────────────────────────────────────────── */
+function frage(text) {
+  const q = cnorm(text);
+  if (!q) return ANTWORT.hilfe();
+  if (/\b(wo|wieviel|wie viel)\b/.test(q) && /\bgeld\b/.test(q)) return ANTWORT.geld();
+  const t = matchThema(q);
+  const e = matchEnt(q, chatIndex(), t && KIND_VON[t.id]);
+  if (e && e.ties.length && (!t || e.s >= t.s))
+    return bau('Das gibt es mehrfach', ['Welches meinen Sie?'],
+      e.ties.map(x => ({ t:entName(x.kind, x.ref) })));
+
+  if (e && (!t || e.s >= t.s)) {
+    if (e.kind === 'kunde')        return aKunde(e.ref);
+    if (e.kind === 'standort')     return aStandort(e.ref);
+    if (e.kind === 'kontakt')      return aKontakt(e.ref);
+    if (e.kind === 'projekt')      return aProjekt(e.ref);
+    if (e.kind === 'beleg')        return aBeleg(e.ref);
+    if (e.kind === 'artikel')      return aArtikel(e.ref);
+    if (e.kind === 'lieferant')    return aLieferant(e.ref);
+    if (e.kind === 'fall')         return aFall(e.ref);
+    if (e.kind === 'lagerartikel') return aLagerartikel(e.ref);
+    if (e.kind === 'mandant')      return aMandant(e.ref);
+    if (e.kind === 'rolle')        return aRolle(e.ref);
+    if (e.kind === 'person')       return aPerson(e.ref);
+    if (e.kind === 'modul')        return ANTWORT[e.ref.id] ? ANTWORT[e.ref.id]() : ANTWORT.uebersicht();
+  }
+  if (t && ANTWORT[t.id]) return ANTWORT[t.id]();
+
+  const it = offeneSachen();
+  return bau('Dazu finde ich keine eindeutige Antwort', [
+    'Fragen Sie nach einem Kunden, einem Standort, einem Projekt, einer Belegnummer, einem ' +
+      'Artikel, einem Hersteller, einem Servicefall, einem Mandanten oder einer Rolle — oder ' +
+      'nach einem Modul.',
+    it.length ? `Offen ist gerade: ${it.slice(0, 3).map(i => '<b>' + esc(i.was) + '</b>').join(', ')}.` : '',
+  ], [{ t:'Was ist offen?' }, { t:'Ein Kunde, zwei Adressen' }, { t:'Was ist dieser Prototyp?' },
+      { t:'Was darf meine Rolle sehen?' }]);
+}
+
+/* ── das Fenster ─────────────────────────────────────────────────────────── */
+function chatRender() {
+  const log = $('#chat-log');
+  if (!log) return;
+  log.innerHTML = CHAT.verlauf.map(m => m.r === 'u'
+    ? `<div class="msg u">${esc(m.t)}</div>`
+    : `<div class="msg b">${m.t}</div>`).join('') +
+    (CHAT.denkt ? '<div class="msg b tipp"><i></i><i></i><i></i></div>' : '');
+  log.scrollTop = log.scrollHeight;
+}
+
+function chatOeffnen(auf) {
+  CHAT.offen = auf ?? !CHAT.offen;
+  $('#chat').classList.toggle('on', CHAT.offen);
+  $('#chatbtn').classList.toggle('weg', CHAT.offen);
+  document.body.classList.toggle('chatOffen', CHAT.offen);
+  if (CHAT.offen) {
+    if (!CHAT.verlauf.length) CHAT.verlauf.push({ r:'b', t:ANTWORT.hilfe() });
+    chatRender();
+    if (!matchMedia('(hover:none)').matches) setTimeout(() => $('#chat-in').focus(), 60);
+  }
+}
+
+let chatTimer;
+function chatFragen(text) {
+  const t = text.trim();
+  if (!t) return;
+  CHAT.verlauf.push({ r:'u', t });
+  CHAT.denkt = true; chatRender();
+  clearTimeout(chatTimer);
+  chatTimer = setTimeout(() => {
+    CHAT.denkt = false;
+    CHAT.verlauf.push({ r:'b', t:frage(t) });
+    chatRender();
+  }, 260);
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('#chatbtn')) return chatOeffnen(true);
+  if (e.target.closest('#chat-zu')) return chatOeffnen(false);
+  const ask = e.target.closest('#chat [data-ask]');
+  if (ask) { chatFragen(ask.dataset.ask); return; }
+  const send = e.target.closest('#chat-send');
+  if (send) { const i = $('#chat-in'); chatFragen(i.value); i.value = ''; i.focus(); return; }
+  /* ein Sprung aus dem Chat soll den Schirm zeigen, auf den er springt */
+  if (e.target.closest('#chat [data-go],#chat [data-dok],#chat [data-projekt],#chat [data-kunde]'))
+    chatOeffnen(false);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'chat-in') {
+    chatFragen(e.target.value); e.target.value = '';
+  }
+  if (e.key === 'Escape' && CHAT.offen) chatOeffnen(false);
+});
 /* ── Was auf einen Klick passiert ───────────────────────────────────────────
    Ein Zuhörer für alles, ein Ort, an dem der Datenstand geändert wird. Jede
    Aktion schreibt ins Protokoll, das das Modul Archiv zeigt — im Prototyp
