@@ -2065,9 +2065,9 @@ function suchen(q) {
       go:'kunden', ref:k.id });
   }));
   DB.projekte.forEach(p => {
-    if (!(hat(p.name) || hat(p.nr) || hat(p.kategorie))) return;
+    if (!(hat(p.name) || hat(p.kurz) || hat(p.kategorie))) return;
     if (!(imBlick(p.mandant) && projektErlaubt(p.id) && modulErlaubt('projekte'))) { gesperrt++; return; }
-    treffer.push({ art:'Projekt', z1:`${p.nr} · ${p.name}`,
+    treffer.push({ art:'Projekt', z1:`${p.kurz} · ${p.name}`,
       z2:`${K(p.kunde).name} · ${p.status} · ${M(p.mandant).name}`, go:'projekte', ref:p.id });
   });
   DB.dokumente.forEach(d => {
@@ -3747,8 +3747,9 @@ function zahlungDetail(d) {
           ${zeile('Bisherige Stufe', d.mahnstufe ? `Stufe ${d.mahnstufe} am ${esc(d.mahnungAm)}` : 'keine')}
           ${regel ? zeile(`Nächste Stufe ${regel.stufe}`,
             regel.gebuehr ? chf(regel.gebuehr) + ' Gebühr' : 'ohne Gebühr', esc(regel.text)) : ''}
-          ${zeile('Zu berücksichtigen', chf(bezahlt(d)) + ' bezahlt', 'Teilzahlung vom ' +
-            (DB.zahlungen.find(z => z.dok === d.id) || {}).datum)}
+          ${(() => { const z1 = DB.zahlungen.find(z => z.dok === d.id);
+            return zeile('Zu berücksichtigen', chf(bezahlt(d)) + ' bezahlt',
+              z1 ? `Teilzahlung vom ${esc(z1.datum)}` : 'noch keine Zahlung'); })()}
         </div>
         <div class="row" style="margin-top:12px">
           ${regel && darf('versenden')
@@ -4129,7 +4130,7 @@ function chatIndex() {
     s.name.replace(/^(Filiale|Zentrale|Haupthaus|Dependance)\s*/i, ''))));
   DB.kunden.forEach(k => k.kontakte.forEach(c => add('kontakt', { k, c }, c.name,
     c.name.replace(/^[A-Z]\.\s*/, ''), c.mail)));
-  DB.projekte.forEach(p => add('projekt', p, p.nr, p.name, p.name.split(',')[0], p.kategorie));
+  DB.projekte.forEach(p => add('projekt', p, p.kurz, p.name, p.name.split(',')[0], p.kategorie));
   DB.dokumente.forEach(d => add('beleg', d, d.nr, d.titel));
   DB.artikel.forEach(a => add('artikel', a, a.nr, a.name, a.name.split(',')[0]));
   [...new Set(DB.artikel.flatMap(a => [a.hersteller, a.lieferant]).filter(x => x && x !== '—'))]
@@ -4164,7 +4165,7 @@ const BEGRIFFE = [
 ];
 
 /* Welche Art Ding ein Themenwort meint: «Preis Downlight» will den Artikel,
-   «Marge P-26-041» das Projekt. */
+   «Marge Schalterhalle» das Projekt. */
 const KIND_VON = { produkte:'artikel', import:'artikel', marge:'projekt', zeiten:'projekt',
                    kette:'beleg', zahlungen:'beleg', archiv:'beleg', adressfall:'kunde',
                    rechte:'rolle', mandanten:'mandant', service:'fall', lager:'lagerartikel' };
@@ -4172,7 +4173,7 @@ const KIND_VON = { produkte:'artikel', import:'artikel', marge:'projekt', zeiten
 function entName(kind, ref) {
   if (kind === 'standort') return ref.s.name;
   if (kind === 'kontakt')  return ref.c.name;
-  if (kind === 'projekt')  return ref.nr;
+  if (kind === 'projekt')  return ref.kurz;
   if (kind === 'beleg')    return ref.nr;
   if (kind === 'artikel')  return ref.nr;
   if (kind === 'fall')     return ref.nr;
@@ -4261,7 +4262,7 @@ function aKunde(k) {
     darf('notizen') ? `Notiz: ${esc(k.notiz)}` : sperre('Die interne Notiz'),
     imBlickHinweis(kundeMandanten(k.id)[0]),
   ], [{ t:'Kunden', go:'kunden', ref:k.id },
-      proj.length ? { t:proj[0].nr, go:'projekte', ref:proj[0].id } : null,
+      proj.length ? { t:proj[0].kurz, go:'projekte', ref:proj[0].id } : null,
       offen.length ? { t:'Zahlungen', go:'zahlungen' } : null].filter(Boolean));
 }
 
@@ -4477,7 +4478,7 @@ function aStandort({ k, s }) {
       dok.map(d => esc(d.nr)).join(', ') : '',
     `Der Standort hängt am Kunden, nicht daneben: ${esc(k.name)} bleibt der Debitor.`,
   ], [{ t:'Kunde öffnen', go:'kunden', ref:k.id },
-      proj.length ? { t:proj[0].nr, go:'projekte', ref:proj[0].id } : null].filter(Boolean));
+      proj.length ? { t:proj[0].kurz, go:'projekte', ref:proj[0].id } : null].filter(Boolean));
 }
 
 function aKontakt({ k, c }) {
@@ -4734,7 +4735,7 @@ const ANTWORT = {
     return bau('Fragen Sie in Ihren eigenen Worten', [
       'Ich lese denselben Datenstand wie die Module — Kunden, Standorte, Kontakte, Projekte, ' +
         'Belegnummern, Artikel, Hersteller, Servicefälle, Lagerartikel, Mandanten und Rollen.',
-      'Zum Beispiel: «Was ist offen?», «Energie Musterkanton», «RG-26-0091», «P-26-041», ' +
+      'Zum Beispiel: «Was ist offen?», «Energie Musterkanton», «RG-26-0091», «Schalterhalle EMK», ' +
         '«Was kostet DL-940-12W?», «Ein Kunde, zwei Adressen», «Was darf meine Rolle sehen?»',
       'Die Rechte gelten auch für mich: was Ihre Rolle nicht sehen darf, sage ich nicht — und ' +
         'sage, dass ich es nicht sage.',
