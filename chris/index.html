@@ -559,6 +559,29 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
 .dec .why{font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.35}
 .dec.calm{background:rgba(0,178,160,.05);border-color:rgba(0,178,160,.24)}
 .dec.jetzt{background:var(--badbg);border-color:rgba(192,42,23,.30)}
+/* Die Aufgabenliste ist eine Liste, kein Stapel Kästchen: links das Datum,
+   rechts die Dringlichkeit, und eingefärbt ist nur, was sofort gilt. Zehn
+   beige Kästen untereinander sind eine Wand, kein Hinweis. */
+.tun{display:flex;align-items:flex-start;gap:10px;padding:8px 8px;background:none;
+     border:none;border-bottom:1px solid var(--soft);border-radius:0;margin:0}
+.tun:last-child{border-bottom:none}
+.tun:hover{background:var(--wash)}
+.tun .wann{flex:0 0 62px;font-size:11px;color:var(--dim);padding-top:1px;
+           font-variant-numeric:tabular-nums;line-height:1.25}
+.tun .wann .wl2{display:block;font-size:8.6px;text-transform:uppercase;letter-spacing:.05em;
+                font-weight:700;opacity:.62}
+.tun .wann.spaet{color:var(--warn);font-weight:650}
+.tun .mitte{flex:1;min-width:0}
+.tun .tag{flex:none;margin-top:1px}
+.tun.jetzt{background:var(--badbg);border-radius:7px;border-bottom-color:transparent}
+.mpunkt{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;
+        vertical-align:1px;flex:none}
+/* Der Anteilsbalken unter einer Kennzahl: woraus die Zahl besteht, in einer
+   Zeile — statt eines zweiten Moduls, das dasselbe nochmals erzählt. */
+.kbar{display:flex;height:5px;border-radius:99px;overflow:hidden;background:var(--soft);
+      margin-top:9px}
+.kbar i{display:block;height:100%}
+.kpi .kbar + .d{margin-top:5px}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chip{font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;
       background:rgba(0,0,0,.045);color:var(--dim);cursor:pointer;white-space:nowrap}
@@ -570,7 +593,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
    der Bandköpfe muss mitwandern, sonst legt der Browser sechs implizite
    Spalten dazu, sortiert sie nach Inhalt und die Kacheln stehen auf 80 px. */
 @media (max-width:1180px){ .dash{grid-template-columns:repeat(6,minmax(0,1fr))}
-  .w3,.w4,.w5{grid-column:span 3}.w6,.w7,.w8,.w12{grid-column:span 6} }
+  .w3,.w4{grid-column:span 3}.w5,.w6,.w7,.w8,.w12{grid-column:span 6} }
 @media (max-width:820px){ .dash{grid-template-columns:1fr}
   .w2,.w3,.w4,.w5,.w6,.w7,.w8,.w12{grid-column:span 1} }
 
@@ -748,8 +771,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--wash);border-col
   .dash .sp1{order:1}
   .dash .bandkopf{order:2}
   .dash .wkpi{order:3}
-  .dash .sp2{order:4}
-  .dash .sp3{order:5}
+  .dash .vgl{order:4}
+  .dash .sp2{order:5}
+  .dash .sp3{order:6}
+  .dash .fuss{order:7}
   /* drei farbige Kreise ohne Wort sind ein Rätsel: die Beschriftung bleibt,
      das Band darf dafür umbrechen */
   .lampe .txt{display:block;font-size:8.5px;letter-spacing:.04em}
@@ -1855,6 +1880,13 @@ const mArtikel = () => DB.artikel.filter(a => imBlick(a.mandant));
 const mLager = () => DB.lager.filter(l => imBlick(l.mandant));
 const mFaelle = () => DB.faelle.filter(f => imBlick(f.mandant));
 const mZeiten = () => DB.zeiten.filter(t => mProjekte().some(p => p.id === t.projekt));
+/* Eine Wiedervorlage hängt an einem Projekt oder an einem Beleg — daraus
+   kommt ihr Mandant. Ohne das erscheinen im Mandanten Lichtplaner auch die
+   Aufgaben der Hotelbetten, und der Filter ist eine Behauptung. */
+const aktMandant = a => (a.projekt && P(a.projekt) ? P(a.projekt).mandant : null)
+  || (a.bezug && D(a.bezug) ? D(a.bezug).mandant : null)
+  || (a.bezugArt === 'Importlauf' ? 'lp' : null);
+const mAktivitaeten = () => DB.aktivitaeten.filter(a => imBlick(aktMandant(a)));
 const kundeMandanten = k => [...new Set([
   ...DB.projekte.filter(p => p.kunde === k).map(p => p.mandant),
   ...DB.dokumente.filter(d => d.kunde === k).map(d => d.mandant)])];
@@ -1961,37 +1993,43 @@ function offeneSachen() {
   mDok().filter(d => d.typ === 'RG' && d.status === 'überfällig').forEach(d => {
     const tage = Math.round((dz(DB.heute) - dz(d.faellig)) / 1 % 100) || 0;
     items.push({ ernst:3, wo:'zahlungen', modul:'Zahlungen', ref:d.id, mand:d.mandant, art:'dok',
-      was:`${d.nr}: ${chf(offenBetrag(d))} überfällig`,
+      faellig:d.faellig, wann:'fällig war', was:`${d.nr}: ${chf(offenBetrag(d))} überfällig`,
       warum:`${K(d.kunde).name} · fällig war ${d.faellig}${d.mahnstufe
         ? ` · Mahnstufe ${d.mahnstufe} versendet` : ''} · Teilzahlung berücksichtigt` });
   });
   mFaelle().filter(f => f.status !== 'erledigt').forEach(f => {
     items.push({ ernst:2, wo:'service', modul:'Service', ref:f.id, mand:f.mandant, art:'fall',
-      was:`${f.nr}: ${f.titel}`,
+      faellig:f.frist, wann:'Frist', was:`${f.nr}: ${f.titel}`,
       warum:`${K(f.kunde).name} · ${f.status} · Frist ${f.frist} · Kosten ${f.kosten}` });
   });
   DB.aktivitaeten.filter(a => a.status === 'überfällig').forEach(a => {
-    items.push({ ernst:2, wo:'projekte', modul:'Projekte', ref:a.projekt, mand:(P(a.projekt)||{}).mandant, art:'projekt',
+    items.push({ ernst:2, wo:'projekte', modul:'Projekte', ref:a.projekt, mand:aktMandant(a), art:'projekt',
+      akt:a.id, faellig:a.faellig, wann:'fällig war',
       was:a.was, warum:`fällig war ${a.faellig} · ${a.wer} · ${a.notiz}` });
   });
   if (!IMPORT_ANGEWENDET && imBlick('lp')) {
     const i = DB.importlauf;
     items.push({ ernst:2, wo:'import', modul:'Preisimport', ref:null, mand:'lp',
+      akt:(DB.aktivitaeten.find(a => a.bezugArt === 'Importlauf') || {}).id,
+      faellig:i.stichtag, wann:'Stichtag',
       was:`Preisliste ${i.hersteller}: ${i.analyse.geaendert} geändert, ${i.analyse.fehler} fehlerhaft`,
       warum:`analysiert am ${i.hochgeladen} · wartet auf Bestätigung · Stichtag ${i.stichtag}` });
   }
   DB.aktivitaeten.filter(a => a.status === 'offen' && a.faellig === DB.heute).forEach(a => {
-    items.push({ ernst:2, wo:'verkauf', modul:'Verkauf', ref:a.bezug, mand:(D(a.bezug)||{}).mandant, art:'dok',
+    items.push({ ernst:2, wo:'verkauf', modul:'Verkauf', ref:a.bezug, mand:aktMandant(a), art:'dok',
+      akt:a.id, faellig:a.faellig, wann:'fällig',
       was:a.was, warum:`heute fällig · ${a.wer} · ${a.notiz}` });
   });
   mDok().filter(d => d.typ === 'OF' && d.status === 'versendet').forEach(d => {
     items.push({ ernst:1, wo:'verkauf', modul:'Verkauf', ref:d.id, mand:d.mandant, art:'dok',
+      faellig:d.nachfassAm || d.datum, wann:d.nachfassAm ? 'nachfassen' : 'versendet',
       was:`${d.nr} offen: ${chf(brutto(d))}`,
       warum:`${K(d.kunde).name} · versendet ${d.datum}${d.nachfassAm
         ? ` · nachfassen ${d.nachfassAm}` : ''}` });
   });
   mDok().filter(d => d.typ === 'OF' && d.status === 'Entwurf').forEach(d => {
     items.push({ ernst:1, wo:'verkauf', modul:'Verkauf', ref:d.id, mand:d.mandant, art:'dok',
+      faellig:d.datum, wann:'angelegt',
       was:`${d.nr} ist Entwurf`, warum:`${K(d.kunde).name} · ${d.titel} · noch nicht finalisiert` });
   });
   const unverrechnet = mZeiten().filter(t => t.verrechenbar && !t.dok);
@@ -2002,7 +2040,7 @@ function offeneSachen() {
           `${chf(unverrechnet.reduce((s, t) => s + t.dauer * t.satz, 0))} verrechenbar` });
   mLager().filter(l => l.bestand < l.min).forEach(l => {
     items.push({ ernst:1, wo:'lager', modul:'Lager', ref:l.id, mand:l.mandant, art:'lager',
-      was:`${l.name}: ${l.bestand} ${l.einheit} unter Mindestbestand`,
+      faellig:null, was:`${l.name}: ${l.bestand} ${l.einheit} unter Mindestbestand`,
       warum:`Mindestbestand ${l.min} ${l.einheit} · ${l.ort}` });
   });
   return items.filter(i => modulErlaubt(i.wo)).sort((a, b) => b.ernst - a.ernst);
@@ -2522,8 +2560,10 @@ function kennzahlen(mid) {
   const umsatz = rg.reduce((s, d) => s + netto(d), 0) - gs.reduce((s, d) => s + netto(d), 0);
   const offeneRg = rg.filter(d => d.status === 'offen' || d.status === 'überfällig');
   const of = dok.filter(d => d.typ === 'OF');
-  const versendet = of.filter(d => d.status === 'versendet' || d.status === 'angenommen'
-    || d.status === 'abgelehnt');
+  /* Erfolgsquote heisst: von den Offerten, über die entschieden wurde, wie
+     viele sind angenommen. Eine versendete Offerte ist noch nicht entschieden
+     und gehört darum nicht in den Nenner. */
+  const versendet = of.filter(d => d.status === 'angenommen' || d.status === 'abgelehnt');
   const angenommen = of.filter(d => d.status === 'angenommen');
   const projekte = DB.projekte.filter(p => (!mid || p.mandant === mid) && projektErlaubt(p.id));
   const zeiten = DB.zeiten.filter(t => projekte.some(p => p.id === t.projekt));
@@ -2538,7 +2578,10 @@ function kennzahlen(mid) {
       .reduce((s, d) => s + brutto(d), 0),
     offertenAnz: of.filter(d => d.status === 'versendet' || d.status === 'Entwurf').length,
     quote: versendet.length ? angenommen.length / versendet.length * 100 : 0,
-    quoteText: `${angenommen.length} von ${versendet.length} entschiedenen Offerten`,
+    quoteText: versendet.length
+      ? `${angenommen.length} von ${versendet.length} entschieden`
+      : 'noch keine entschieden',
+    entschieden: versendet.length,
     marge: m.roh, margeQuote: m.umsatz ? m.roh / m.umsatz * 100 : 0, db: m.db,
     stunden: zeiten.reduce((s, t) => s + t.dauer, 0),
     stundenOffen: zeiten.filter(t => t.verrechenbar && !t.dok).reduce((s, t) => s + t.dauer, 0),
@@ -2549,11 +2592,18 @@ function kennzahlen(mid) {
 
 /* ── Übersicht ───────────────────────────────────────────────────────────── */
 VIEWS.uebersicht = () => {
-  const items = offeneSachen();
-  const dring = items.filter(i => i.ernst >= 2);
-  const spaeter = items.filter(i => i.ernst < 2);
+  const roh = offeneSachen();
+  /* Steht zu einem Beleg schon eine Aufgabe in der Liste, braucht der Beleg
+     nicht nochmals als eigene Zeile zu erscheinen: «Offerte nachfassen» und
+     «Offerte offen» sind für den Lesenden dieselbe Sache. Die Ampel zählt
+     danach dasselbe wie die Liste — sonst widersprechen sie sich. */
+  const schonDa = new Set(roh.map(i => i.akt).filter(Boolean));
+  const belegMitAufgabe = new Set(DB.aktivitaeten
+    .filter(a => schonDa.has(a.id)).map(a => a.bezug).filter(Boolean));
+  const items = roh.filter(i => !(i.ernst === 1 && belegMitAufgabe.has(i.ref)));
   const z = kennzahlen(MANDANT === 'alle' ? null : MANDANT);
   const sicht = MANDANT === 'alle' ? 'alle Mandanten' : M().lang;
+  const viele = MANDANT === 'alle';
 
   /* ── die Ampel (DSH-04) ── */
   const ampel = (() => {
@@ -2580,82 +2630,131 @@ VIEWS.uebersicht = () => {
       </div></div>`;
   })();
 
-  const kpi = (l, n, d, go) => KARTE('w3 wkpi kpi', '',
-    `<div class="l">${l}</div><div class="n">${n}</div><div class="d">${d}</div>`, { go });
+  /* ── Vier Zahlen, und jede sagt, woraus sie besteht ──────────────────────
+     Eine nackte Zahl beantwortet keine Frage. «Offen CHF 19'734» heisst
+     etwas anderes, je nachdem ob davon nichts oder alles überfällig ist —
+     also steht der Anteil als Balken darunter, nicht in einem zweiten Modul. */
+  const balken = (teile, text) => `<div class="kbar">${teile.filter(t => t.p > 0)
+      .map(t => `<i style="width:${Math.max(1.5, t.p).toFixed(1)}%;background:${t.f}"></i>`).join('')
+    }</div><div class="d">${text}</div>`;
+  const kpi = (l, n, unten, go) => KARTE('w3 wkpi kpi', '',
+    `<div class="l">${l}</div><div class="n">${n}</div>${unten}`, { go });
+
+  const rgAlle = mDok().filter(d => d.typ === 'RG' && d.status !== 'storniert');
+  const fakt = rgAlle.reduce((s, d) => s + brutto(d), 0);
+  const bez = rgAlle.reduce((s, d) => s + bezahlt(d), 0);
+  const offeneRg = rgAlle.filter(d => d.status === 'offen' || d.status === 'überfällig');
+  const imZiel = offeneRg.filter(d => d.status !== 'überfällig')
+    .reduce((s, d) => s + offenBetrag(d), 0);
 
   const kpis =
     kpi('Umsatz ' + DB.jahr, chf0(z.umsatz),
-        `${DB.dokumente.filter(d => imBlick(d.mandant) && d.typ === 'RG').length} Rechnungen, ` +
-        `Gutschriften abgezogen`, 'verkauf') +
-    kpi('Offen', chf0(z.offen), `${z.offenAnz} Rechnungen · davon ${chf0(z.ueber)} überfällig`, 'zahlungen') +
+      balken([{ p:fakt ? bez / fakt * 100 : 0, f:'var(--acc)' },
+              { p:fakt ? (fakt - bez) / fakt * 100 : 0, f:'var(--soft)' }],
+        fakt ? `${chf0(bez)} von ${chf0(fakt)} eingegangen · ${rgAlle.length} ${
+                 rgAlle.length === 1 ? 'Rechnung' : 'Rechnungen'}`
+             : 'noch keine Rechnung'), 'verkauf') +
+    kpi('Offen', chf0(z.offen),
+      balken([{ p:z.offen ? imZiel / z.offen * 100 : 0, f:'var(--acc)' },
+              { p:z.offen ? z.ueber / z.offen * 100 : 0, f:'var(--warn)' }],
+        z.ueber ? `<b style="color:var(--warn)">${chf0(z.ueber)} überfällig</b> · ${z.offenAnz} ${
+                    z.offenAnz === 1 ? 'Rechnung' : 'Rechnungen'}`
+                : `nichts überfällig · ${z.offenAnz} ${
+                    z.offenAnz === 1 ? 'Rechnung' : 'Rechnungen'} im Ziel`), 'zahlungen') +
     kpi('Offene Offerten', chf0(z.offerten),
-        `${z.offertenAnz} Belege · Erfolgsquote ${z.quote.toFixed(0)} % (${z.quoteText})`, 'verkauf') +
-    kpi(darf('ek') ? 'Materialrohertrag' : 'Projekte',
-        darf('ek') ? chf0(z.marge) : String(z.projekte),
-        darf('ek') ? `${z.margeQuote.toFixed(1)} % vom Materialumsatz`
-                   : `in ${sicht} · Marge nur mit Berechtigung`,
-        darf('ek') ? 'projekte' : 'projekte');
+      balken([{ p:z.quote, f:'var(--acc)' }, { p:100 - z.quote, f:'var(--soft)' }],
+        z.entschieden ? `Erfolgsquote ${z.quote.toFixed(0)} % · ${esc(z.quoteText)}`
+                      : `${z.offertenAnz} unterwegs · noch keine entschieden`), 'verkauf') +
+    (darf('ek')
+      ? kpi('Materialrohertrag', chf0(z.marge),
+          balken([{ p:z.margeQuote, f:'var(--acc)' }, { p:100 - z.margeQuote, f:'var(--soft)' }],
+            `${z.margeQuote.toFixed(1)} % vom Materialumsatz · Deckungsbeitrag ${chf0(z.db)}`),
+          'projekte')
+      : modulErlaubt('projekte')
+      ? kpi('Projekte', String(z.projekte),
+          `<div class="d">in ${esc(sicht)}</div>
+           <div class="d" style="margin-top:3px">${gesperrt('Marge braucht ein Recht')}</div>`,
+          'projekte')
+      /* Ohne Recht auf Projekte wäre auch deren Anzahl eine Auskunft: dann
+         zählt die Kachel, was diese Rolle ohnehin sehen darf. */
+      : kpi('Belege', String(mDok().length),
+          `<div class="d">in ${esc(sicht)}</div>
+           <div class="d" style="margin-top:3px">${gesperrt('Marge braucht ein Recht')}</div>`,
+          'verkauf'));
 
-  /* ── Entscheidungen ── */
-  const zeigen = dring.slice(0, 4), rest = dring.slice(4);
-  const dec = KARTE('', '', (zeigen.length
-      ? zeigen.map(i => `<div class="dec ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}"
+  /* ── Eine Liste statt zweier ─────────────────────────────────────────────
+     Vorher standen dieselbe überfällige Wiedervorlage oben unter «Entscheiden»
+     und unten nochmals unter «Wiedervorlagen». Hier ist jede Sache genau
+     einmal da, mit ihrem Datum, und die Liste ist nach Dringlichkeit und
+     danach nach Datum sortiert. */
+  const wvZiel = a => a.bezugArt === 'Beleg' ? { wo:'verkauf', ref:a.bezug }
+    : a.bezugArt === 'Servicefall' ? { wo:'service', ref:a.bezug }
+    : a.bezugArt === 'Importlauf' ? { wo:'import', ref:null }
+    : { wo:'projekte', ref:a.projekt };
+  const geplant = mAktivitaeten()
+    .filter(a => a.status !== 'erledigt' && !schonDa.has(a.id) && dz(a.faellig) > dz(DB.heute))
+    .map(a => { const t = wvZiel(a); return {
+      ernst:0, wo:t.wo, ref:t.ref, mand:aktMandant(a), modul:'Wiedervorlage',
+      faellig:a.faellig, wann:'fällig',
+      was:a.was, warum:`${a.wer} · ${a.bezugArt}${a.notiz ? ' · ' + a.notiz : ''}` }; })
+    .filter(x => modulErlaubt(x.wo));
+
+  const spaet = f => dz(f) && dz(f) < dz(DB.heute);
+  const alles = items.concat(geplant).sort((a, b) =>
+    b.ernst - a.ernst || (dz(a.faellig) || 99999999) - (dz(b.faellig) || 99999999));
+  const marke = i => i.ernst === 3 ? ['jetzt', 't-bad']
+    : i.ernst === 2 ? ['heute', 't-warn']
+    : i.ernst === 1 ? ['kann warten', 't-mute'] : ['geplant', 't-mute'];
+
+  const tunliste = KARTE('', '', alles.length
+    ? alles.map(i => { const [w, t] = marke(i);
+        return `<div class="dec tun ${i.ernst === 3 ? 'jetzt' : ''}" data-go="${i.wo}"
           data-mand="${i.mand || ''}" data-ref="${i.ref || ''}">
-          <div class="row" style="justify-content:space-between;gap:6px">
-            <b>${esc(i.was)}</b>
-            <span class="tag ${i.ernst === 3 ? 't-bad' : 't-warn'}">${i.ernst === 3 ? 'jetzt' : 'heute'}</span></div>
-          <div class="why">${esc(i.warum)}</div></div>`).join('')
-      : `<div class="dec calm"><b>Nichts offen</b>
-          <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`)
-    + ((rest.length || spaeter.length) ? `<div class="chips" style="margin-top:7px">${
-        rest.concat(spaeter).map(i => `<span class="chip s${i.ernst}" data-go="${i.wo}"
-          data-mand="${i.mand || ''}" data-ref="${i.ref || ''}">${esc(i.was)}</span>`).join('')
-      }</div>` : ''));
+          <div class="wann ${spaet(i.faellig) ? 'spaet' : ''}">${i.faellig
+            ? `<span class="wl2">${esc(i.wann || 'fällig')}</span>${esc(i.faellig.slice(0, 6))}`
+            : '<span class="wl2">kein</span>Termin'}</div>
+          <div class="mitte">
+            <b>${viele && i.mand ? `<span class="mpunkt" style="background:${M(i.mand).farbe}"
+              title="${esc(M(i.mand).name)}"></span>` : ''}${esc(i.was)}</b>
+            <div class="why">${esc(i.warum)}</div></div>
+          <span class="tag ${t}">${w}</span></div>`; }).join('')
+    : `<div class="dec calm"><b>Nichts offen</b>
+        <div class="why">Alles, was entschieden werden musste, ist entschieden.</div></div>`);
 
-  /* ── Wiedervorlagen (ACT-02) ── */
-  const akt = KARTE('', 'Wiedervorlagen', DB.aktivitaeten.slice(0, 5).map(a => {
-    const spaet = a.status === 'überfällig';
-    return `<div class="mini" style="gap:10px;align-items:flex-start;padding:6px 0">
-      <div style="flex:0 0 62px;font-size:11px;color:${spaet ? 'var(--warn)' : 'var(--dim)'};
-        font-variant-numeric:tabular-nums">${esc(a.faellig.slice(0, 6))}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600">${esc(a.was)}</div>
-        <div style="font-size:11px;color:var(--dim)">${esc(a.wer)} · ${esc(a.bezugArt)}</div></div>
-      ${spaet ? '<span class="tag t-warn">spät</span>' : ''}</div>`;
-  }).join(''), { rechts:`${DB.aktivitaeten.filter(a => a.status === 'überfällig').length} überfällig` });
+  /* ── Projekte und Marge in einer Karte ───────────────────────────────────
+     Beides listete vorher dieselben Projekte, einmal links und einmal rechts.
+     Jetzt trägt jede Projektzeile ihren Deckungsbeitrag selbst. */
+  const pl = mProjekte();
+  const maxDb = Math.max(...pl.map(q => Math.abs(marge(q.id).db)), 1);
+  const proj = KARTE('', 'Projekte', pl.length ? pl.map(p => { const x = marge(p.id);
+      return `<div class="mini2 pz" data-projekt="${p.id}" style="cursor:pointer">
+        <div class="top"><span class="nm2">${viele
+            ? `<span class="mpunkt" style="background:${M(p.mandant).farbe}"></span>` : ''
+          }${esc(p.kurz)}</span>
+          <span class="vl2">${darf('ek') ? chf0(x.db) : esc(p.status)}</span></div>
+        ${darf('ek') ? `<div class="bar"><i style="width:${(Math.abs(x.db) / maxDb * 100).toFixed(0)}%;
+          background:${x.db < 0 ? 'var(--warn)' : 'var(--acc)'}"></i></div>` : ''}
+        <div class="sm2">${esc(K(p.kunde).name)} · ${esc(p.verantwortlich)} ·
+          ${esc(p.status)}</div></div>`; }).join('')
+    : '<div class="sm2">Keine Projekte im Blick.</div>',
+    { go:'projekte', rechts:darf('ek') ? `${pl.length} · Deckungsbeitrag` : `${pl.length} im Blick` });
 
-  /* ── Projekte ── */
-  const proj = KARTE('', 'Projekte', mProjekte().slice(0, 5).map(p => `
-    <div class="mini2" data-projekt="${p.id}" style="cursor:pointer">
-      <div class="top"><span class="nm2">${esc(p.kurz)}</span>
-        <span class="vl2">${esc(p.status)}</span></div>
-      <div style="font-size:11px;color:var(--dim);margin-top:2px">${esc(K(p.kunde).name)} ·
-        ${esc(M(p.mandant).name)} · ${esc(p.verantwortlich)}</div></div>`).join(''),
-    { go:'projekte', rechts:`${mProjekte().length} im Blick` });
-
-  /* ── Debitoren-Alterung (PAY-02) ── */
-  const offeneRg = mDok().filter(d => d.typ === 'RG' && (d.status === 'offen' || d.status === 'überfällig'));
-  const eimer = [
-    { l:'nicht fällig', f:d => dz(d.faellig) > dz(DB.heute) },
-    { l:'1–30 Tage', f:d => dz(d.faellig) <= dz(DB.heute) },
-  ].map(e => ({ l:e.l, b:offeneRg.filter(e.f).reduce((s, d) => s + offenBetrag(d), 0),
-                n:offeneRg.filter(e.f).length }));
-  const maxE = Math.max(...eimer.map(e => e.b), 1);
-  const deb = KARTE('', 'Debitoren', eimer.map(e => `
-    <div class="mini2"><div class="top"><span class="nm2">${e.l}</span>
-      <span class="vl2" ${e.l !== 'nicht fällig' && e.b ? 'style="color:var(--warn)"' : ''}>${chf0(e.b)}</span></div>
-      <div class="bar"><i style="width:${(e.b / maxE * 100).toFixed(0)}%;
-        background:${e.l === 'nicht fällig' ? 'var(--acc)' : 'var(--warn)'}"></i></div>
-      <div style="font-size:11px;color:var(--dim);margin-top:3px">${e.n} Rechnungen</div></div>`).join(''),
-    { go:'zahlungen', rechts:`Alterung` });
+  const margeSperre = darf('ek') ? '' : KARTE('', '', `<div class="rsperre" style="margin:0">
+    <b>Marge nicht für diese Rolle</b>
+    <div>EK, Rabattkonditionen, Margen und interne Kostensätze sind sensible Felder.
+      «${esc(R().name)}» sieht sie in keiner Liste, in keinem Export und in keinem
+      Suchtreffer.</div></div>`);
 
   /* ── Service ── */
-  const srv = KARTE('', 'Garantie und Service', mFaelle().length ? mFaelle().map(f => `
-    <div class="mini2"><div class="top"><span class="nm2">${esc(f.nr)} · ${esc(f.titel)}</span>
+  const offeneF = mFaelle().filter(f => f.status !== 'erledigt');
+  const srv = KARTE('', 'Garantie und Service', offeneF.length ? offeneF.map(f => `
+    <div class="mini2" data-fall="${f.id}" style="cursor:pointer">
+      <div class="top"><span class="nm2">${esc(f.nr)} · ${esc(f.titel)}</span>
       <span class="vl2" ${f.status !== 'erledigt' ? 'style="color:var(--warn)"' : ''}>${esc(f.status)}</span></div>
-      <div style="font-size:11px;color:var(--dim);margin-top:2px">${esc(K(f.kunde).name)} ·
-        Kosten ${esc(f.kosten)} · Frist ${esc(f.frist)}</div></div>`).join('')
-    : '<div class="sm2">Keine Fälle im Blick.</div>',
-    { go:'service', rechts:`${mFaelle().filter(f => f.status !== 'erledigt').length} offen` });
+      <div class="sm2">${esc(K(f.kunde).name)} · Kosten ${esc(f.kosten)} · Frist ${esc(f.frist)}</div></div>`).join('')
+    : `<div class="sm2">Kein offener Fall${mFaelle().length
+        ? ` · ${mFaelle().length} erledigt im Modul` : ''}.</div>`,
+    { go:'service', rechts:`${offeneF.length} offen` });
 
   /* ── Zeiten ── */
   const zt = KARTE('', 'Zeiten', `
@@ -2670,12 +2769,13 @@ VIEWS.uebersicht = () => {
     </div>`, { go:'zeiten' });
 
   /* ── Mandantenvergleich, nur in der Gesamtsicht (DSH-02) ── */
-  const vergleich = MANDANT !== 'alle' ? '' : KARTE('w12', 'Mandanten im Vergleich',
+  const vergleich = !viele ? '' : KARTE('w12 vgl', 'Mandanten im Vergleich',
     `<div class="scrollx"><table><thead><tr><th>Mandant</th><th class="r">Umsatz ${DB.jahr}</th>
       <th class="r">Offen</th><th class="r">Überfällig</th><th class="r">Offerten offen</th>
       <th class="r">Projekte</th><th class="r">Fälle</th></tr></thead><tbody>
       ${mandantenSicht().map(id => { const k = kennzahlen(id); return `<tr class="click" data-mandant="${id}">
-        <td><b>${esc(M(id).name)}</b><div class="small muted">${esc(M(id).lang)}</div></td>
+        <td><b><span class="mpunkt" style="background:${M(id).farbe}"></span>${esc(M(id).name)}</b>
+          <div class="small muted">${esc(M(id).lang)}</div></td>
         <td class="r num">${chf0(k.umsatz)}</td>
         <td class="r num">${chf0(k.offen)}</td>
         <td class="r num" ${k.ueber ? 'style="color:var(--warn);font-weight:650"' : ''}>${chf0(k.ueber)}</td>
@@ -2689,44 +2789,38 @@ VIEWS.uebersicht = () => {
         <td class="r num"><b>${mandantenSicht().reduce((s, id) => s + kennzahlen(id).faelle, 0)}</b></td></tr>
       </tbody></table></div>
     <div class="small muted" style="margin-top:10px">Diese Ansicht ist an die Rolle gebunden:
-      «${esc(R().name)}» darf ${mandantenSicht().length} Mandanten sehen.</div>`);
+      «${esc(R().name)}» darf ${mandantenSicht().length} Mandanten sehen. Eine Zeile springt in
+      ihren Mandanten.</div>`);
 
+  const jetztAnz = items.filter(i => i.ernst === 3).length;
   return `<div class="dash">${ampel}
-    ${kopfband(MANDANT === 'alle' ? 'Alle Mandanten in Zahlen' : M().lang + ' in Zahlen',
+    ${kopfband(viele ? 'Alle Mandanten in Zahlen' : M().lang + ' in Zahlen',
       'Aus den Belegen gerechnet, die im Prototyp liegen — nicht gesetzt.',
       esc(DB.stand))}
     ${kpis}
     ${vergleich}
-    <div class="col w4">
-      ${kopfspalte('Entscheiden', 'wartet auf Sie, das Dringendste oben',
-        items.length ? `${items.length} offen` : 'nichts offen',
-        items.some(i => i.ernst === 3) ? 'warn' : items.length ? '' : 'ok')}
-      ${dec}${akt}</div>
-    <div class="col w4">
-      ${kopfspalte('Läuft es', 'Projekte, Debitoren, Servicefälle',
+    <div class="col w7 sp1">
+      ${kopfspalte('Was zu tun ist', 'Entscheidungen und Wiedervorlagen in einer Liste — jede Sache einmal',
+        alles.length ? `${alles.length - geplant.length} offen${geplant.length
+          ? ` · ${geplant.length} geplant` : ''}` : 'nichts offen',
+        jetztAnz ? 'warn' : alles.length ? '' : 'ok')}
+      ${tunliste}</div>
+    <div class="col w5 sp2">
+      ${kopfspalte('Wie es steht', `${[modulErlaubt('projekte') && 'Projekte',
+          modulErlaubt('service') && 'Service', modulErlaubt('zeiten') && 'Zeiten']
+          .filter(Boolean).join(', ') || 'für diese Rolle gesperrt'}${viele
+        ? ' über alle Mandanten' : ' in ' + esc(M().name)}`,
         z.ueberAnz ? `${z.ueberAnz} überfällig` : 'nichts überfällig', z.ueberAnz ? 'warn' : 'ok')}
-      ${proj}${deb}${srv}</div>
-    <div class="col w4">
-      ${kopfspalte('Was es bringt', darf('ek') ? 'Marge, Zeiten, Auslastung' : 'Zeiten und Auslastung',
-        darf('ek') ? `${z.margeQuote.toFixed(0)} % Rohertrag` : 'Marge gesperrt',
-        darf('ek') ? '' : 'warn')}
-      ${darf('ek')
-        ? KARTE('', 'Marge je Projekt', mProjekte().map(p => { const x = marge(p.id);
-            const max = Math.max(...mProjekte().map(q => Math.abs(marge(q.id).db)), 1);
-            return `<div class="mini2" data-projekt="${p.id}" style="cursor:pointer">
-              <div class="top"><span class="nm2">${esc(p.kurz)}</span>
-                <span class="vl2">${chf0(x.db)}</span></div>
-              <div class="bar"><i style="width:${(Math.abs(x.db) / max * 100).toFixed(0)}%;
-                background:${x.db < 0 ? 'var(--warn)' : 'var(--acc)'}"></i></div></div>`;
-          }).join(''), { go:'projekte', rechts:`Deckungsbeitrag` })
-        : KARTE('', 'Marge je Projekt', `<div class="rsperre" style="margin:0">
-            <b>Nicht für diese Rolle</b>
-            <div>EK, Rabattkonditionen, Margen und interne Kostensätze sind sensible Felder.
-              «${esc(R().name)}» sieht sie in keiner Liste, in keinem Export und in keinem
-              Suchtreffer.</div></div>`)}
-      ${zt}</div>
+      ${modulErlaubt('projekte') ? proj + margeSperre : ''}
+      ${modulErlaubt('service') ? srv : ''}
+      ${modulErlaubt('zeiten') ? zt : ''}
+      ${!modulErlaubt('projekte') && !modulErlaubt('service') && !modulErlaubt('zeiten')
+        ? KARTE('', '', `<div class="rsperre" style="margin:0"><b>Nichts in dieser Spalte</b>
+            <div>Projekte, Service und Zeiten sind für die Rolle «${esc(R().name)}» gesperrt.
+              Was gesperrt ist, erscheint auch auf der Übersicht nicht — weder als Liste noch
+              als Zahl.</div></div>`) : ''}</div>
     </div>
-    <div class="small muted" style="margin-top:18px;line-height:1.6;max-width:92ch">
+    <div class="small muted fuss" style="margin-top:18px;line-height:1.6;max-width:92ch">
       <b>Datenumfang des Prototyps:</b> ${DB.kunden.length} Kunden,
       ${DB.kunden.reduce((s, k) => s + k.standorte.length, 0)} Standorte,
       ${DB.projekte.length} Projekte, ${DB.dokumente.length} Belege,
