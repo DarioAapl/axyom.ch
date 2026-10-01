@@ -3068,7 +3068,15 @@ VIEWS.projekte = () => {
       </div></div>`;
   }
   if (PROJ_TAB === 'dateien') {
-    inhalt = `<div class="scrollx"><table><thead><tr><th>Datei</th><th>Kategorie</th><th>Version</th>
+    /* FIL-01: hochladen. Im Prototyp gibt es keinen Server — der Knopf zeigt,
+       wo er sitzt, und sagt beim Drücken, was im System passieren würde. */
+    inhalt = `<div class="row" style="justify-content:space-between;align-items:center;
+        margin-bottom:10px;gap:10px">
+        <div class="sm2">${dateien.length} Datei${dateien.length === 1 ? '' : 'en'} in diesem
+          Projekt · Ordner, Versionen und Rechte wie im Konzept beschrieben</div>
+        <button class="btn acc" data-act="datei-hinzu" data-id="${p.id}">+ Datei hinzufügen</button>
+      </div>
+      <div class="scrollx"><table><thead><tr><th>Datei</th><th>Kategorie</th><th>Version</th>
       <th>Grösse</th><th>Hochgeladen</th><th>Von</th></tr></thead><tbody>
       ${dateien.map(f => `<tr><td><b>${esc(f.name)}</b>${f.notiz
         ? `<div class="small muted">${esc(f.notiz)}</div>` : ''}</td>
@@ -5130,6 +5138,15 @@ const ACTIONS = {
       protokoll('Archiv', 'Integrität geprüft', `${final.length} Belege, ${schlecht.length} Abweichungen`);
     });
     return true;
+  },
+  /* FIL-01/02: Upload. Der Prototyp hat keinen Server, also sagt der Knopf,
+     was das System täte — und nennt die Metadaten, die dabei entstehen. */
+  'datei-hinzu'(el) {
+    const p = P(el.dataset.id);
+    toast(`Hier öffnet sich im System die Dateiauswahl. Abgelegt wird im Projektordner
+      <b>${esc(p.kurz)}</b>, mit Titel, Kategorie, Projekt, Kunde, Uploader, Zeitstempel, Grösse
+      und Version. Eine gleichnamige Datei wird zur nächsten Version, die alte bleibt lesbar.
+      Hochladen braucht einen Server — im Prototyp bleibt die Liste, wie sie ist.`, 2);
   },
   'zip-export'(el) {
     const p = P(el.dataset.id);
