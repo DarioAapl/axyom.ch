@@ -235,13 +235,18 @@ tr.gewaehlt td{background:var(--wash)}
 .bm.ok{color:var(--dim);background:rgba(0,0,0,.05)}
 .bm.hoch{color:var(--warn);background:var(--warnbg)}
 .wf{border:1px solid var(--soft);border-radius:12px;overflow:hidden}
-.wf .z{display:flex;align-items:baseline;gap:14px;padding:10px 16px;border-top:1px solid var(--soft)}
+.wf .z{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:10px 16px;
+  border-top:1px solid var(--soft)}
 .wf .z:first-child{border-top:none}
-.wf .z .nm{flex:1;min-width:0;font-size:13px}
+/* Ein langer Wert — ein Dateiname, ein Profilname — lief bisher über das Label:
+   .wert hatte eine feste Breite und floss nach links darüber. Jetzt behält das
+   Label eine Mindestbreite, der Wert darf wachsen und umbrechen, der Hinweis
+   darf schrumpfen. */
+.wf .z .nm{flex:1 1 auto;min-width:84px;font-size:13px}
 .wf .z .wert{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;text-align:right;
-  flex:0 0 132px}
-.wf .z .hint{font-size:11.5px;color:var(--dim);flex:0 0 240px;text-align:right;
-  display:flex;gap:7px;justify-content:flex-end;align-items:center}
+  flex:0 0 auto;min-width:132px;max-width:100%;overflow-wrap:anywhere}
+.wf .z .hint{font-size:11.5px;color:var(--dim);flex:1 1 140px;min-width:120px;text-align:right;
+  overflow-wrap:anywhere;display:flex;gap:7px;justify-content:flex-end;align-items:center}
 .wf .z.sub{background:var(--surf)}
 .wf .z.sub .nm{padding-left:20px;font-size:12px;color:var(--dim)}
 .wf .z.sub .wert{font-weight:500;color:var(--dim)}
@@ -1158,7 +1163,7 @@ const DB = {
      Die Rolle entscheidet, was überhaupt gezeigt wird — in der Liste, in der
      Suche, im Export und im Download. Genau das lässt sich hier umschalten. */
   rollen: [
-    { id:'admin', name:'Admin', wer:'Chris (Inhaber)',
+    { id:'admin', name:'Admin', wer:'Christian (Inhaber)',
       was:'Konfiguration, Benutzer, Mandanten, alle Module, Audit',
       module:'*', mandanten:'*', ek:true, notizen:true, finalisieren:true, versenden:true,
       exportieren:true, admin:true, projekte:'*' },
@@ -1278,24 +1283,24 @@ const DB = {
       projektadresse:'a11', rechnungsempfaenger:'s12',
       beschreibung:'Ersatz der Schalterhallenbeleuchtung inklusive DALI-Steuerung und Notlicht. ' +
         'Montage durch EMK-Elektriker, Einregulierung durch uns.',
-      frei:['Lea','Marco','Chris'] },
+      frei:['Lea','Marco','Christian'] },
     { id:'p2', nr:'P-26-018', mandant:'hb', kunde:'k2', standort:'s21',
       name:'48 Zimmer Betten und Matratzen, Etappe 2',
       kurz:'Betten Seeblick',
       kategorie:'Möblierung', tags:['Hotel','Etappe 2'],
-      status:'geliefert', verantwortlich:'Chris', start:'02.06.2026', termin:'29.08.2026',
+      status:'geliefert', verantwortlich:'Christian', start:'02.06.2026', termin:'29.08.2026',
       projektadresse:'a22', rechnungsempfaenger:'s21',
       beschreibung:'48 Betten, 48 Matratzen H3, Lieferung in zwei Tranchen, Altmöbelentsorgung inklusive.',
-      frei:['Chris','Lea'] },
+      frei:['Christian','Lea'] },
     { id:'p3', nr:'P-26-009', mandant:'iw', kunde:'k4', standort:'s41',
       name:'Whirlpool Suite 3',
       kurz:'Whirlpool Suite 3',
       kategorie:'Neuanlage', tags:['Whirlpool','Garantie'],
-      status:'Garantiefall offen', verantwortlich:'Chris', start:'11.04.2026', termin:'30.05.2026',
+      status:'Garantiefall offen', verantwortlich:'Christian', start:'11.04.2026', termin:'30.05.2026',
       projektadresse:'a41', rechnungsempfaenger:'s41',
       beschreibung:'Infinity 5 mit Aussentreppe und Abdeckung. Pumpe läuft seit August laut, ' +
         'Garantiefall beim Lieferanten offen.',
-      frei:['Chris'] },
+      frei:['Christian'] },
     { id:'p4', nr:'P-26-052', mandant:'lp', kunde:'k5', standort:'s52',
       name:'Parkbeleuchtung Mustermatte, Etappe 2',
       kurz:'Parkbeleuchtung',
@@ -1308,10 +1313,10 @@ const DB = {
       name:'Musterleuchten Ausstellung Büro Muster & Partner',
       kurz:'Musterleuchten',
       kategorie:'Muster/Leihe', tags:['Muster','Kein Verkauf'],
-      status:'läuft', verantwortlich:'Chris', start:'01.09.2026', termin:'31.10.2026',
+      status:'läuft', verantwortlich:'Christian', start:'01.09.2026', termin:'31.10.2026',
       projektadresse:'a31', rechnungsempfaenger:'s31',
       beschreibung:'Drei Mustertypen für zwei Monate zur Ausstellung, Rückgabe vereinbart.',
-      frei:['Chris','Lea'] },
+      frei:['Christian','Lea'] },
   ],
 
   /* ── Artikel und Leistungen (ART-01…06) ─────────────────────────────────
@@ -1469,7 +1474,7 @@ const DB = {
       datum:'29.08.2026', status:'überfällig', art:'Schlussrechnung',
       adresse:'a21', adresseName:'Hotel Seeblick, Haupthaus', kontakt:'c21',
       zahlungsziel:30, faellig:'28.09.2026', titel:'48 Betten und Matratzen, Etappe 2',
-      final:true, finalAm:'29.08.2026 14:18', finalVon:'Chris',
+      final:true, finalAm:'29.08.2026 14:18', finalVon:'Christian',
       hash:'c41d80a5be2739ff6018c4a92d7be5301fa8624b93ce07d5148ba2f6390ec71b',
       mahnstufe:1, mahnungAm:'14.09.2026', pos:[
         { nr:1, art:'x10', text:'Hotelbett Komfort 90 × 200, Buche', menge:48, einheit:'Stk',
@@ -1483,7 +1488,7 @@ const DB = {
       datum:'02.06.2026', status:'storniert', art:'Schlussrechnung',
       adresse:'a41', adresseName:'Wellness Resort Musterberg', kontakt:'c41',
       zahlungsziel:20, faellig:'22.06.2026', titel:'Whirlpool Suite 3',
-      final:true, finalAm:'02.06.2026 16:44', finalVon:'Chris',
+      final:true, finalAm:'02.06.2026 16:44', finalVon:'Christian',
       hash:'7ad3e5c10b9248f7e63c0a4b8d15726fbb49c023ea7d6518f4c39b0a26de8145',
       storniertAm:'09.06.2026', storniertDurch:'GS-26-0003', pos:[
         { nr:1, art:'x8', text:'Whirlpool Infinity 5, 5 Sitze, 230 V', menge:1, einheit:'Stk',
@@ -1495,7 +1500,7 @@ const DB = {
       datum:'09.06.2026', status:'verbucht', adresse:'a41', adresseName:'Wellness Resort Musterberg',
       kontakt:'c41', bezug:'d8', titel:'Gutschrift zu RG-26-0084',
       grund:'Falscher Rabatt auf der Ursprungsrechnung, Korrektur über Gutschrift und neue Rechnung',
-      final:true, finalAm:'09.06.2026 08:50', finalVon:'Chris',
+      final:true, finalAm:'09.06.2026 08:50', finalVon:'Christian',
       hash:'52b0794fd3ae61c8402b5d9f7e13cc6a8804be25f19d7a3b60cf84e2179ad063', pos:[
         { nr:1, art:null, text:'Gutschrift Rabattdifferenz RG-26-0084', menge:1, einheit:'Psch',
           preis:1240.20, ekSnap:0, rabatt:0, mwst:8.1 } ] },
@@ -1503,7 +1508,7 @@ const DB = {
       datum:'09.06.2026', status:'bezahlt', art:'Schlussrechnung',
       adresse:'a41', adresseName:'Wellness Resort Musterberg', kontakt:'c41',
       zahlungsziel:20, faellig:'29.06.2026', titel:'Whirlpool Suite 3, korrigiert',
-      final:true, finalAm:'09.06.2026 08:52', finalVon:'Chris',
+      final:true, finalAm:'09.06.2026 08:52', finalVon:'Christian',
       hash:'e0847b1cad592f36074be8a1d2c35f9068ba47d1f3e29c50a6b7148de2035fc9',
       ersetzt:'d8', pos:[
         { nr:1, art:'x8', text:'Whirlpool Infinity 5, 5 Sitze, 230 V', menge:1, einheit:'Stk',
@@ -1562,11 +1567,11 @@ const DB = {
       dauer:3.0, verrechenbar:false, satz:0, kosten:78, dok:null, notiz:'Akquisition' },
     { id:'t8', projekt:'p4', datum:'10.09.2026', wer:'Lea', taetigkeit:'Offerte Etappe 2 erstellen',
       dauer:4.5, verrechenbar:false, satz:0, kosten:78, dok:null, notiz:'Akquisition' },
-    { id:'t9', projekt:'p2', datum:'26.08.2026', wer:'Chris', taetigkeit:'Lieferkoordination 2. Tranche',
+    { id:'t9', projekt:'p2', datum:'26.08.2026', wer:'Christian', taetigkeit:'Lieferkoordination 2. Tranche',
       dauer:3.5, verrechenbar:true, satz:145, kosten:78, dok:'d7' },
-    { id:'t10', projekt:'p3', datum:'14.08.2026', wer:'Chris', taetigkeit:'Pumpengeräusch aufnehmen, Video an Lieferant',
+    { id:'t10', projekt:'p3', datum:'14.08.2026', wer:'Christian', taetigkeit:'Pumpengeräusch aufnehmen, Video an Lieferant',
       dauer:1.5, verrechenbar:false, satz:0, kosten:78, dok:null, notiz:'Garantie' },
-    { id:'t11', projekt:'p5', datum:'01.09.2026', wer:'Chris', taetigkeit:'Muster liefern und aufbauen',
+    { id:'t11', projekt:'p5', datum:'01.09.2026', wer:'Christian', taetigkeit:'Muster liefern und aufbauen',
       dauer:2.5, verrechenbar:false, satz:0, kosten:78, dok:null, notiz:'Muster/Leihe' },
     { id:'t12', projekt:'p1', datum:'23.09.2026', wer:'Lea', taetigkeit:'Abnahmeprotokoll vorbereiten',
       dauer:1.0, verrechenbar:true, satz:145, kosten:78, dok:null },
@@ -1584,16 +1589,16 @@ const DB = {
     { id:'f3', projekt:'p1', name:'Datenblatt DL-940.pdf', kat:'Datenblatt', wer:'System',
       datum:'14.08.2026', groesse:'480 KB', version:1, sensibel:false },
     { id:'f4', projekt:'p1', name:'Lieferantenkonditionen Nordlicht 2026.pdf', kat:'Konditionen',
-      wer:'Chris', datum:'02.01.2026', groesse:'220 KB', version:1, sensibel:true,
+      wer:'Christian', datum:'02.01.2026', groesse:'220 KB', version:1, sensibel:true,
       notiz:'EK-Konditionen, nicht an Kunden und nicht an die Treuhand' },
     { id:'f5', projekt:'p1', name:'Fotos Montage 04.09.2026.zip', kat:'Foto', wer:'Marco',
       datum:'04.09.2026', groesse:'18.6 MB', version:1, sensibel:false },
-    { id:'f6', projekt:'p2', name:'Zimmerliste Etappe 2.xlsx', kat:'Liste', wer:'Chris',
+    { id:'f6', projekt:'p2', name:'Zimmerliste Etappe 2.xlsx', kat:'Liste', wer:'Christian',
       datum:'02.06.2026', groesse:'96 KB', version:3, sensibel:false,
       notiz:'v1/v2 im Papierkorb, 30 Tage aufbewahrt' },
-    { id:'f7', projekt:'p3', name:'Garantieanzeige Pumpe PP-2.pdf', kat:'Service', wer:'Chris',
+    { id:'f7', projekt:'p3', name:'Garantieanzeige Pumpe PP-2.pdf', kat:'Service', wer:'Christian',
       datum:'14.08.2026', groesse:'310 KB', version:1, sensibel:false },
-    { id:'f8', projekt:'p3', name:'Video Pumpengeräusch.mp4', kat:'Foto', wer:'Chris',
+    { id:'f8', projekt:'p3', name:'Video Pumpengeräusch.mp4', kat:'Foto', wer:'Christian',
       datum:'14.08.2026', groesse:'42.1 MB', version:1, sensibel:false },
     { id:'f9', projekt:'p4', name:'Ausschreibung Parkbeleuchtung.pdf', kat:'Ausschreibung',
       wer:'Lea', datum:'08.09.2026', groesse:'3.2 MB', version:1, sensibel:false },
@@ -1605,12 +1610,12 @@ const DB = {
       titel:'Poolpumpe PP-2 läuft laut', gemeldet:'14.08.2026',
       fehler:'Pumpe erzeugt ab 40 °C ein metallisches Schleifen, Lager vermutet.',
       lieferant:'Poolstar Muster AG', status:'Ersatz bestellt', kosten:'Lieferant',
-      frist:'30.09.2026', verantwortlich:'Chris', bezugDok:'d10', bezugPos:2,
+      frist:'30.09.2026', verantwortlich:'Christian', bezugDok:'d10', bezugPos:2,
       geliefertAm:'28.05.2026',
       verlauf:[
-        { datum:'14.08.2026', was:'gemeldet', wer:'Chris', notiz:'Video und Seriennummer an Lieferant' },
+        { datum:'14.08.2026', was:'gemeldet', wer:'Christian', notiz:'Video und Seriennummer an Lieferant' },
         { datum:'19.08.2026', was:'geprüft', wer:'Poolstar Muster AG', notiz:'Garantie anerkannt' },
-        { datum:'02.09.2026', was:'Ersatz bestellt', wer:'Chris', notiz:'Liefertermin 26.09.2026' },
+        { datum:'02.09.2026', was:'Ersatz bestellt', wer:'Christian', notiz:'Liefertermin 26.09.2026' },
       ] },
     { id:'sf3', nr:'SF-26-0014', mandant:'lp', kunde:'k1', projekt:'p1', artikel:'x5', menge:2,
       titel:'Zwei Notlichter fallen beim Funktionstest aus', gemeldet:'19.09.2026',
@@ -1627,11 +1632,11 @@ const DB = {
       titel:'Drei Matratzen mit Nahtfehler', gemeldet:'21.07.2026',
       fehler:'Naht an der Längsseite offen, drei Stück aus derselben Charge.',
       lieferant:'Betten Muster AG', status:'erledigt', kosten:'Lieferant',
-      frist:'—', verantwortlich:'Chris', bezugDok:'d7', bezugPos:2, geliefertAm:'14.07.2026',
+      frist:'—', verantwortlich:'Christian', bezugDok:'d7', bezugPos:2, geliefertAm:'14.07.2026',
       verlauf:[
-        { datum:'21.07.2026', was:'gemeldet', wer:'Chris', notiz:'Fotos der Charge' },
+        { datum:'21.07.2026', was:'gemeldet', wer:'Christian', notiz:'Fotos der Charge' },
         { datum:'24.07.2026', was:'geprüft', wer:'Betten Muster AG', notiz:'Produktionsfehler' },
-        { datum:'06.08.2026', was:'erledigt', wer:'Chris', notiz:'Ersatz geliefert und montiert' },
+        { datum:'06.08.2026', was:'erledigt', wer:'Christian', notiz:'Ersatz geliefert und montiert' },
       ] },
   ],
 
@@ -1639,8 +1644,8 @@ const DB = {
   lager: [
     { id:'l1', mandant:'lp', kat:'Muster', name:'Musterleuchte DL-940, weiss', einheit:'Stk',
       bestand:3, min:2, ort:'Regal M1', nr:'MU-0041',
-      bewegungen:[{ datum:'01.09.2026', menge:-3, grund:'Ausstellung', projekt:'p5', wer:'Chris' },
-                  { datum:'12.08.2026', menge:+6, grund:'Zugang Muster', projekt:null, wer:'Chris' }] },
+      bewegungen:[{ datum:'01.09.2026', menge:-3, grund:'Ausstellung', projekt:'p5', wer:'Christian' },
+                  { datum:'12.08.2026', menge:+6, grund:'Zugang Muster', projekt:null, wer:'Christian' }] },
     { id:'l2', mandant:'lp', kat:'Werkzeug', name:'Luxmeter LM-2', einheit:'Stk',
       bestand:1, min:1, ort:'ausgeliehen', nr:'WZ-0007', ausgeliehen:'Marco, Projekt Parkbeleuchtung',
       bewegungen:[{ datum:'08.09.2026', menge:-1, grund:'Ausleihe Parkbeleuchtung', projekt:'p4', wer:'Marco' }] },
@@ -1655,7 +1660,7 @@ const DB = {
       bestand:2, min:2, ort:'Lager Musterbad', nr:'PT-0011', bewegungen:[] },
     { id:'l6', mandant:'hb', kat:'Verbrauchsmaterial', name:'Bettfüsse Buche, Paar', einheit:'Paar',
       bestand:11, min:20, ort:'Palettenplatz 4', nr:'VM-0006',
-      bewegungen:[{ datum:'26.08.2026', menge:-48, grund:'Verbrauch Lieferung', projekt:'p2', wer:'Chris' }] },
+      bewegungen:[{ datum:'26.08.2026', menge:-48, grund:'Verbrauch Lieferung', projekt:'p2', wer:'Christian' }] },
   ],
 
   /* ── Aktivitäten und Wiedervorlagen (ACT-01…04) ──────────────────────── */
@@ -1667,16 +1672,16 @@ const DB = {
       kunde:'k1', projekt:'p1', faellig:'21.09.2026', wer:'Lea', status:'überfällig',
       notiz:'Termin mit R. Bergmann, Vorschlag 14.10. oder 16.10.' },
     { id:'ak3', was:'Garantiefall SF-26-0011: Ersatzpumpe avisieren', bezug:'sf1', bezugArt:'Servicefall',
-      kunde:'k4', projekt:'p3', faellig:'26.09.2026', wer:'Chris', status:'offen',
+      kunde:'k4', projekt:'p3', faellig:'26.09.2026', wer:'Christian', status:'offen',
       notiz:'Liefertermin Lieferant, Montage durch Hausdienst' },
     { id:'ak4', was:'Hotel Seeblick: Mahnstufe 2 freigeben', bezug:'d7', bezugArt:'Beleg',
       kunde:'k2', projekt:'p2', faellig:'25.09.2026', wer:'Sandra', status:'offen',
       notiz:'Teilzahlung CHF 5000 am 12.09. berücksichtigen' },
     { id:'ak5', was:'Preisliste Nordlicht 09/2026 freigeben', bezug:'imp1', bezugArt:'Importlauf',
-      kunde:null, projekt:null, faellig:'24.09.2026', wer:'Chris', status:'offen',
+      kunde:null, projekt:null, faellig:'24.09.2026', wer:'Christian', status:'offen',
       notiz:'3 fehlerhafte Zeilen klären, dann Stichtag setzen' },
     { id:'ak6', was:'Muster Muster & Partner zurückholen', bezug:'p5', bezugArt:'Projekt',
-      kunde:'k3', projekt:'p5', faellig:'31.10.2026', wer:'Chris', status:'offen',
+      kunde:'k3', projekt:'p5', faellig:'31.10.2026', wer:'Christian', status:'offen',
       notiz:'Drei Leuchten, Rückgabe vereinbart' },
   ],
 
@@ -1685,7 +1690,7 @@ const DB = {
      zeigt, dass zuerst analysiert und dann bestätigt wird. */
   importlauf: {
     id:'imp1', hersteller:'Nordlicht Muster', datei:'Nordlicht_Preisliste_2026-09.xlsx',
-    hochgeladen:'22.09.2026 16:42', wer:'Chris', profil:'Nordlicht Standard (Spalten A–H)',
+    hochgeladen:'22.09.2026 16:42', wer:'Christian', profil:'Nordlicht Standard (Spalten A–H)',
     zeichensatz:'UTF-8, Trennzeichen erkannt', stichtag:'01.10.2026', status:'analysiert',
     zeilen:148, mapping:[
       { quelle:'A · Artikel-Nr.', ziel:'Artikelnummer' },
@@ -1722,9 +1727,9 @@ const DB = {
       ],
     },
     frueher:[
-      { datum:'01.07.2026', datei:'Nordlicht_Preisliste_2026-07.xlsx', wer:'Chris',
+      { datum:'01.07.2026', datei:'Nordlicht_Preisliste_2026-07.xlsx', wer:'Christian',
         ergebnis:'139 Zeilen · 8 neu · 24 geändert · 107 unverändert', stichtag:'01.07.2026' },
-      { datum:'02.01.2026', datei:'Nordlicht_Preisliste_2026-01.xlsx', wer:'Chris',
+      { datum:'02.01.2026', datei:'Nordlicht_Preisliste_2026-01.xlsx', wer:'Christian',
         ergebnis:'131 Zeilen · 131 neu (Erstimport)', stichtag:'01.01.2026' },
     ],
   },
@@ -1777,7 +1782,7 @@ const DB = {
   audit: [
     { datum:'23.09.2026 08:04', wer:'Sandra', mandant:'hb', objekt:'RG-26-0079',
       aktion:'Zahlung erfasst', detail:'Teilzahlung CHF 5000.00 vom 12.09.2026' },
-    { datum:'22.09.2026 16:42', wer:'Chris', mandant:'lp', objekt:'Importlauf imp1',
+    { datum:'22.09.2026 16:42', wer:'Christian', mandant:'lp', objekt:'Importlauf imp1',
       aktion:'Datei hochgeladen', detail:'Nordlicht_Preisliste_2026-09.xlsx, 148 Zeilen' },
     { datum:'18.09.2026 15:33', wer:'Lea', mandant:'lp', objekt:'RG-26-0091',
       aktion:'versendet', detail:'an kreditoren@emk.example, 1 Anhang' },
@@ -1793,11 +1798,11 @@ const DB = {
       aktion:'finalisiert', detail:'Lieferschein ohne Preise, 3 von 4 Positionen geliefert' },
     { datum:'25.08.2026 09:02', wer:'Sandra', mandant:'lp', objekt:'RG-26-0087',
       aktion:'Status geändert', detail:'offen → bezahlt, Zahlung CHF 13405.27' },
-    { datum:'09.06.2026 08:52', wer:'Chris', mandant:'iw', objekt:'RG-26-0085',
+    { datum:'09.06.2026 08:52', wer:'Christian', mandant:'iw', objekt:'RG-26-0085',
       aktion:'finalisiert', detail:'Ersatzrechnung zu storniertem RG-26-0084' },
-    { datum:'09.06.2026 08:50', wer:'Chris', mandant:'iw', objekt:'RG-26-0084',
+    { datum:'09.06.2026 08:50', wer:'Christian', mandant:'iw', objekt:'RG-26-0084',
       aktion:'storniert', detail:'Storno über Gutschrift GS-26-0003, PDF unverändert erhalten' },
-    { datum:'02.06.2026 16:44', wer:'Chris', mandant:'iw', objekt:'RG-26-0084',
+    { datum:'02.06.2026 16:44', wer:'Christian', mandant:'iw', objekt:'RG-26-0084',
       aktion:'finalisiert', detail:'PDF erzeugt, SHA-256 gespeichert' },
   ],
 
@@ -2228,8 +2233,13 @@ function mandantMit(art, id) {
 function render() {
   if (!modulErlaubt(AKTIV)) AKTIV = MODULES.find(m => modulErlaubt(m.id)).id;
   const m = MODULES.find(x => x.id === AKTIV);
-  $('#h-title').textContent = m.titel;
-  $('#h-sub').textContent = m.sub;
+  /* Auf der Übersicht steht nicht «Übersicht», sondern der Name dessen, der
+     zusieht. Das ist eine Zeile Code und macht aus einer Demo seine Anwendung. */
+  const wer = (R().wer || '').split(' ')[0];
+  $('#h-title').textContent = (AKTIV === 'uebersicht' && wer) ? `Hallo ${wer}` : m.titel;
+  $('#h-sub').textContent = (AKTIV === 'uebersicht' && wer)
+    ? `${MANDANT === 'alle' ? `Alle ${mandantenSicht().length} Mandanten` : M().lang} · ${m.sub}`
+    : m.sub;
   const y = window.scrollY;
   const seitlich = [...$('#view').querySelectorAll('.scrollx')].map(e => e.scrollLeft);
   $('#view').innerHTML = (MANDANT === 'alle' && AKTIV !== gesamtNur)
