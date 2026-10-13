@@ -44,6 +44,10 @@
         <label for="captcha">Security check: <span id="captchaQuestion" style="font-family:ui-monospace,monospace;color:var(--accent,#00B2A0)">Loading…</span></label>
         <input id="captcha" type="text" inputmode="numeric" pattern="-?[0-9]+" placeholder="Your answer" autocomplete="off" required />
       </div>
+      <label for="accept" style="display:flex;gap:10px;align-items:flex-start;font-size:0.8rem;line-height:1.45;margin:4px 0 12px;cursor:pointer">
+        <input id="accept" type="checkbox" required style="width:auto;margin-top:2px;flex:none" />
+        <span>I am signing up for a business and accept the <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--accent,#00B2A0)">Terms of Service</a> and <a href="/dpa.html" target="_blank" rel="noopener" style="color:var(--accent,#00B2A0)">Data Processing Addendum</a>. I have read the <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--accent,#00B2A0)">Privacy Policy</a>.</span>
+      </label>
       <div class="error-msg" id="errMsg"></div>
       <button class="btn-primary full" type="submit" id="registerBtn">Create account</button>
     </form>
