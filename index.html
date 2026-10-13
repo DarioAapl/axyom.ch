@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" class="compact">
+<html lang="de" class="compact" data-i18n-title="meta.title">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +8,7 @@
 <link rel="icon" href="media/brand/favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="media/brand/favicon.ico">
 <link rel="apple-touch-icon" href="media/brand/apple-touch-icon.png">
-<meta name="description" content="Massgeschneiderte Software und KI für Ihren Betrieb. Entwickelt in Liechtenstein und der Schweiz.">
+<meta name="description" data-i18n-attr="content:meta.desc" content="Massgeschneiderte Software und KI für Ihren Betrieb. Entwickelt in Liechtenstein und der Schweiz.">
 <link rel="stylesheet" href="polish.css">
 <link rel="stylesheet" href="mobile.css">
 
@@ -94,6 +94,14 @@ body {
 #logo .x { color: var(--accent); }
 #nav { position: absolute; right: 0; top: 0; display: flex; gap: calc(34px * var(--s)); }
 #nav a { color: var(--white); text-decoration: none; }
+.lang-switch { display: flex; align-items: center; gap: calc(4px * var(--s)); margin-top: calc(-2px * var(--s)); }
+.lang-switch button { font: inherit; letter-spacing: .06em; background: none; border: 0; cursor: pointer;
+  color: var(--white); opacity: .5; padding: calc(6px * var(--s)) calc(6px * var(--s)); min-width: 32px; min-height: 32px; transition: opacity .2s; }
+.lang-switch button:hover, .lang-switch button[aria-pressed="true"] { opacity: 1; }
+.lang-switch button[aria-pressed="true"] { color: var(--accent); }
+.lang-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.brand-on-light .lang-switch button { color: var(--black); }
+.brand-on-light .lang-switch button[aria-pressed="true"] { color: #00796d; }
 #nav a.btn { color: var(--black); padding: calc(12px * var(--s)) calc(24px * var(--s)); font-size: calc(15px * var(--s)); letter-spacing: .04em; margin-top: calc(-8px * var(--s)); }
 #scroll-indicator { position: fixed; right: 0; top: 0; bottom: 0; z-index: 20; width: calc(4px * var(--s)); }
 #scroll-indicator__bar { position: absolute; right: calc(8px * var(--s)); top: 0;
@@ -164,7 +172,10 @@ body {
   font-size: calc(210px * var(--s)); white-space: nowrap; }
 #hero-wordmark .x { color: var(--accent); }
 #hero-copy { position: absolute; left: calc(1236px * var(--s)); top: calc(468px * var(--s)); width: calc(615px * var(--s)); }
-#hero-copy2 { position: absolute; left: calc(1236px * var(--s)); top: calc(600px * var(--s)); width: calc(615px * var(--s)); }
+/* Titel und Folgesatz stehen untereinander im selben Block, damit sie sich bei längeren
+   Übersetzungen nie überlappen; jede gemessene Zeile bleibt eine eigene Zeile. */
+#hero-copy2 { margin-top: .35em; }
+#hero-copy .sp-line { display: block; }
 #hero-video { position: absolute; left: calc(1656px * var(--s)); top: calc(933px * var(--s));
   width: calc(204px * var(--s)); height: calc(115px * var(--s)); border-radius: calc(8px * var(--s));
   overflow: hidden; cursor: pointer; }
@@ -376,14 +387,15 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
 <canvas id="gl" aria-hidden="true"></canvas>
 
 <header id="site-header">
-  <a id="logo" href="#hero" aria-label="Axyom – Start"><span id="logo-inner"><img class="brand-light" src="media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"><img class="brand-dark" src="media/brand/logo-dark.svg" alt="" aria-hidden="true" width="1664" height="749"></span></a>
+  <a id="logo" href="#hero" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><span id="logo-inner"><img class="brand-light" src="media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"><img class="brand-dark" src="media/brand/logo-dark.svg" alt="" aria-hidden="true" width="1664" height="749"></span></a>
   <nav id="nav" class="sub2">
-    <a href="#ab" class="btn is-solid is-3d flip" id="nav-cta">Erstgespräch</a>
+    <div class="lang-switch" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button></div>
+    <a href="#ab" class="btn is-solid is-3d flip" id="nav-cta" data-i18n="nav.cta">Erstgespräch</a>
   </nav>
 </header>
 <div id="scroll-indicator"><div id="scroll-indicator__bar"></div></div>
 
-<p id="scroll-hint" class="sub2">⌄ Scrollen</p>
+<p id="scroll-hint" class="sub2" data-i18n="scroll">⌄ Scrollen</p>
 
 <main id="site-content">
 
@@ -393,15 +405,17 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
       <div id="hero-top">
         <div id="hero-wordmark"><img src="media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"></div>
       </div>
-      <div id="hero-copy" class="body1">Gestalten Sie Ihren Betrieb effizient.</div>
-      <div id="hero-copy2" class="body1">Axyom erledigt, was Sie heute von Hand machen.</div>
+      <div id="hero-copy" class="body1">
+        <div id="hero-copy1" data-i18n="hero.copy">Gestalten Sie Ihren Betrieb effizient.</div>
+        <div id="hero-copy2" data-i18n="hero.copy2">Axyom erledigt, was Sie heute von Hand machen.</div>
+      </div>
     </div>
   </div>
 
   <!-- 2 · CLAIM (2.2 vh) — ein Scroll vom Hero bis zur fertigen Aussage -->
   <div id="claim" class="section" style="height:220vh">
     <div class="section__inner">
-      <h1 id="claim-title" class="h1">Ein System statt mehrerer Tools<span class="star">.</span></h1>
+      <h1 id="claim-title" class="h1" data-i18n-html="claim.title">Ein System statt mehrerer Tools<span class="star">.</span></h1>
       <div id="claim-brand" class="h4"></div>
     </div>
   </div>
@@ -410,24 +424,24 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
   <div id="ft" class="section" style="height:1000vh">
     <div class="section__inner">
       <div class="ft-item" data-i="0">
-        <div class="ft-tag sub1">Kennenlernen</div>
-        <h3 class="ft-title h3">Wir lernen Ihren Betrieb kennen</h3>
-        <div class="ft-desc body2">Wir lernen Ihre heutige Arbeitsweise und Ihre Abläufe mit den bestehenden Tools kennen.</div>
+        <div class="ft-tag sub1" data-i18n="ft.0.tag">Kennenlernen</div>
+        <h3 class="ft-title h3" data-i18n="ft.0.title">Wir lernen Ihren Betrieb kennen</h3>
+        <div class="ft-desc body2" data-i18n="ft.0.desc">Wir lernen Ihre heutige Arbeitsweise und Ihre Abläufe mit den bestehenden Tools kennen.</div>
       </div>
       <div class="ft-item" data-i="1">
-        <div class="ft-tag sub1">Passgenau</div>
-        <h3 class="ft-title h3">Keine neuen Tools. Keine Umstrukturierung.</h3>
-        <div class="ft-desc body2">Wir bauen Ihr Tool so, dass es sich ohne grossen Aufwand in Ihren Betrieb integrieren lässt.</div>
+        <div class="ft-tag sub1" data-i18n="ft.1.tag">Passgenau</div>
+        <h3 class="ft-title h3" data-i18n="ft.1.title">Keine neuen Tools. Keine Umstrukturierung.</h3>
+        <div class="ft-desc body2" data-i18n="ft.1.desc">Wir bauen Ihr Tool so, dass es sich ohne grossen Aufwand in Ihren Betrieb integrieren lässt.</div>
       </div>
       <div class="ft-item" data-i="2">
-        <div class="ft-tag sub1">Erweiterbar</div>
-        <h3 class="ft-title h3">Ihr eigenes System – nach Belieben anpassbar</h3>
-        <div class="ft-desc body2">Ihr hauseigenes Tool lässt sich jederzeit weiterentwickeln und wächst mit Ihrem Betrieb.</div>
+        <div class="ft-tag sub1" data-i18n="ft.2.tag">Erweiterbar</div>
+        <h3 class="ft-title h3" data-i18n="ft.2.title">Ihr eigenes System – nach Belieben anpassbar</h3>
+        <div class="ft-desc body2" data-i18n="ft.2.desc">Ihr hauseigenes Tool lässt sich jederzeit weiterentwickeln und wächst mit Ihrem Betrieb.</div>
       </div>
       <div id="ft-rail">
-        <div class="sub2" style="top: calc(270px * var(--s))">Kennenlernen</div>
-        <div class="sub2" style="top: calc(523px * var(--s))">Passgenau</div>
-        <div class="sub2" style="top: calc(775px * var(--s))">Erweiterbar</div>
+        <div class="sub2" style="top: calc(270px * var(--s))" data-i18n="ft.0.tag">Kennenlernen</div>
+        <div class="sub2" style="top: calc(523px * var(--s))" data-i18n="ft.1.tag">Passgenau</div>
+        <div class="sub2" style="top: calc(775px * var(--s))" data-i18n="ft.2.tag">Erweiterbar</div>
       </div>
       <div id="ft-vdash"></div>
       <div id="ft-foot"></div>
@@ -437,16 +451,16 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
   <!-- 3 · BETRIEBE (13.25 vh) -->
   <div id="bt" class="section" style="height:1325vh">
     <div class="section__inner">
-      <div id="bt-mega" class="mega">Für jeden Betrieb.</div>
+      <div id="bt-mega" class="mega" data-i18n="bt.mega">Für jeden Betrieb.</div>
       <div id="bt-strip"></div>
       <div id="bt-big">
         <video src="media/media/vid-fromheaven.mp4" muted loop playsinline preload="none"></video>
         <div id="bt-big-shade"></div>
         <div id="bt-report">
           <img id="bt-report-logo" src="media/media/fromheaven-logo.png" alt="From Heaven" width="480" height="480">
-          <div id="bt-stars" role="img" aria-label="5 von 5 Sternen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg></div>
-          <div id="bt-quote">«Durch Axyom habe ich die Fleissarbeit abgegeben - ohne jemanden dafür einzustellen und ohne meine Abende dafür herzugeben.»</div>
-          <div class="sub2" style="opacity:.75">From Heaven · Café-Tapas-Bar, Bad Ragaz</div>
+          <div id="bt-stars" role="img" aria-label="5 von 5 Sternen" data-i18n-attr="aria-label:bt.stars"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg></div>
+          <div id="bt-quote" data-i18n="bt.quote">«Durch Axyom habe ich die Fleissarbeit abgegeben - ohne jemanden dafür einzustellen und ohne meine Abende dafür herzugeben.»</div>
+          <div class="sub2" style="opacity:.75" data-i18n="bt.source">From Heaven · Café-Tapas-Bar, Bad Ragaz</div>
         </div>
       </div>
     </div>
@@ -455,16 +469,16 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
   <!-- 7 · HALTUNG (5.73 vh, helle Umkehr) -->
   <div id="ha" class="section" style="height:573vh">
     <div class="section__inner">
-      <div id="ha-top" class="sub2"><div class="dash dark"></div><span>Unser Versprechen</span><div class="dash dark"></div></div>
-      <div id="ha-label" class="h4">Worauf Sie sich verlassen können</div>
-      <div id="ha-mega" class="mega">ehrlich<span class="dot">.</span></div>
-      <div id="ha-body" class="body2"><div>Klare Aussagen statt grosser Versprechen. Sie erfahren von Anfang an, was Ihr System leistet und wo seine Grenzen liegen.</div></div>
-      <div id="ha-grid-head">Was Sie von uns erwarten dürfen.</div>
+      <div id="ha-top" class="sub2"><div class="dash dark"></div><span data-i18n="ha.top">Unser Versprechen</span><div class="dash dark"></div></div>
+      <div id="ha-label" class="h4" data-i18n="ha.label">Worauf Sie sich verlassen können</div>
+      <div id="ha-mega" class="mega" data-i18n-html="ha.mega">ehrlich<span class="dot">.</span></div>
+      <div id="ha-body" class="body2"><div data-i18n="ha.body">Klare Aussagen statt grosser Versprechen. Sie erfahren von Anfang an, was Ihr System leistet und wo seine Grenzen liegen.</div></div>
+      <div id="ha-grid-head" data-i18n="ha.head">Was Sie von uns erwarten dürfen.</div>
       <div id="ha-grid">
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><div class="ha-card-text"><h5 class="h5">Persönliche Betreuung</h5><div class="body2">Sie haben eine feste Ansprechperson, die Ihren Betrieb kennt. Direkt erreichbar, ohne Ticketsystem und ohne Warteschleife.</div></div></div>
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m8.5 13 2.5 2.5 4.5-4.5"/></svg><div class="ha-card-text"><h5 class="h5">Ehrliche Einschätzung</h5><div class="body2">Wir sagen Ihnen vor dem Projekt, was Automatisierung in Ihrem Betrieb leisten kann und was nicht. Klare Erwartungen, keine Überraschungen.</div></div></div>
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><div class="ha-card-text"><h5 class="h5">Aus der Region</h5><div class="body2">Entwickelt in Liechtenstein und der Schweiz. Kurze Wege, persönliche Termine vor Ort und Betreuung in Ihrer Sprache.</div></div></div>
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></svg><div class="ha-card-text"><h5 class="h5">Volle Kontrolle</h5><div class="body2">Jedes System arbeitet Ihnen zu. Die Entscheidungen bleiben bei Ihnen, und nichts verlässt den Betrieb ohne Ihre Freigabe.</div></div></div>
+        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.1.t">Persönliche Betreuung</h5><div class="body2" data-i18n="ha.1.d">Sie haben eine feste Ansprechperson, die Ihren Betrieb kennt. Direkt erreichbar, ohne Ticketsystem und ohne Warteschleife.</div></div></div>
+        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m8.5 13 2.5 2.5 4.5-4.5"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.2.t">Ehrliche Einschätzung</h5><div class="body2" data-i18n="ha.2.d">Wir sagen Ihnen vor dem Projekt, was Automatisierung in Ihrem Betrieb leisten kann und was nicht. Klare Erwartungen, keine Überraschungen.</div></div></div>
+        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.3.t">Aus der Region</h5><div class="body2" data-i18n="ha.3.d">Entwickelt in Liechtenstein und der Schweiz. Kurze Wege, persönliche Termine vor Ort und Betreuung in Ihrer Sprache.</div></div></div>
+        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.4.t">Volle Kontrolle</h5><div class="body2" data-i18n="ha.4.d">Jedes System arbeitet Ihnen zu. Die Entscheidungen bleiben bei Ihnen, und nichts verlässt den Betrieb ohne Ihre Freigabe.</div></div></div>
       </div>
     </div>
   </div>
@@ -472,23 +486,23 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
   <!-- 12 · ABBINDER (1.21 vh) -->
   <div id="ab" class="section" style="height:121vh">
     <div class="section__inner">
-      <h2 id="ab-title">Erzählen Sie uns von Ihrem Betrieb.</h2>
-      <div id="ab-note">Unverbindlich. Wir besprechen Ihre Abläufe und geben Ihnen eine ehrliche Einschätzung.</div>
+      <h2 id="ab-title" data-i18n="ab.title">Erzählen Sie uns von Ihrem Betrieb.</h2>
+      <div id="ab-note" data-i18n="ab.note">Unverbindlich. Wir besprechen Ihre Abläufe und geben Ihnen eine ehrliche Einschätzung.</div>
       <a id="ab-mail" class="flip" href="mailto:Kontakt@axyom.ch">Kontakt@axyom.ch</a>
       <form id="ab-form" novalidate>
         <div class="ab-row">
-          <label class="ab-field"><span>Name</span><input name="name" type="text" autocomplete="name" required></label>
-          <label class="ab-field"><span>Betrieb</span><input name="betrieb" type="text" autocomplete="organization"></label>
+          <label class="ab-field"><span data-i18n="ab.name">Name</span><input name="name" type="text" autocomplete="name" required></label>
+          <label class="ab-field"><span data-i18n="ab.biz">Betrieb</span><input name="betrieb" type="text" autocomplete="organization"></label>
         </div>
-        <label class="ab-field"><span>E-Mail</span><input name="email" type="email" autocomplete="email" required></label>
-        <label class="ab-field"><span>Worum geht es?</span><textarea name="nachricht" rows="4" placeholder="Was Sie heute von Hand erledigen und was Sie sich wünschen."></textarea></label>
+        <label class="ab-field"><span data-i18n="ab.email">E-Mail</span><input name="email" type="email" autocomplete="email" required></label>
+        <label class="ab-field"><span data-i18n="ab.msg">Worum geht es?</span><textarea name="nachricht" rows="4" data-i18n-attr="placeholder:ab.msg.ph" placeholder="Was Sie heute von Hand erledigen und was Sie sich wünschen."></textarea></label>
         <div class="ab-actions">
-          <button type="submit" class="btn is-solid is-3d flip">Erstgespräch anfragen</button>
-          <div id="ab-form-hint">Öffnet Ihr Mailprogramm mit den Angaben. Wir antworten persönlich.</div>
+          <button type="submit" class="btn is-solid is-3d flip" data-i18n="ab.send">Erstgespräch anfragen</button>
+          <div id="ab-form-hint" data-i18n="ab.hint">Öffnet Ihr Mailprogramm mit den Angaben. Wir antworten persönlich.</div>
         </div>
       </form>
-      <div id="ab-links"><a class="flip" href="/privacy.html">Datenschutz</a><a class="flip" href="/terms.html">AGB &amp; AVV</a><a class="flip" href="credits.html">Bildnachweise</a></div>
-      <div id="ab-legal" class="sub2">© 2026 Axyom<br>Liechtenstein &amp; Schweiz</div>
+      <div id="ab-links"><a class="flip" href="/privacy.html" data-i18n-html="ab.privacy">Datenschutz</a><a class="flip" href="/terms.html" data-i18n-html="ab.terms">AGB &amp; AVV</a><a class="flip" href="credits.html" data-i18n-html="ab.credits">Bildnachweise</a></div>
+      <div id="ab-legal" class="sub2" data-i18n-html="ab.legal">© 2026 Axyom<br>Liechtenstein &amp; Schweiz</div>
     </div>
   </div>
 
@@ -498,6 +512,7 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
 <div id="tint"></div>
 <canvas id="grain"></canvas>
 
+<script src="i18n.js"></script>
 <script src="three-bundle.js"></script>
 <script type="module">
 
@@ -642,8 +657,9 @@ document.getElementById('ab-form').addEventListener('submit', e => {
     if (!ok && !firstBad) firstBad = i;
   });
   if (firstBad) { firstBad.focus(); return; }
-  const subject = 'Erstgespräch' + (data.betrieb ? ': ' + data.betrieb : '');
-  const body = ['Name: ' + data.name, 'Betrieb: ' + (data.betrieb || '–'), 'E-Mail: ' + data.email, '', data.nachricht || ''].join('\n');
+  const T = window.axyomT || ((k, de) => de);
+  const subject = T('mail.subject', 'Erstgespräch') + (data.betrieb ? ': ' + data.betrieb : '');
+  const body = [T('mail.name', 'Name') + ': ' + data.name, T('mail.biz', 'Betrieb') + ': ' + (data.betrieb || '–'), T('mail.email', 'E-Mail') + ': ' + data.email, '', data.nachricht || ''].join('\n');
   const href = 'mailto:Kontakt@axyom.ch?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
   form.dataset.mailto = href;
   location.href = href;
@@ -808,7 +824,7 @@ function init() {
   // Measure only after switching to the animated desktop layout.
   document.querySelectorAll('.section__inner').forEach(e => e.style.visibility = 'visible');
   // Titel und Folgesatz laufen als eine Zeilenfolge ein.
-  sp_copyLines = [...splitLines($('#hero-copy'), false), ...splitLines($('#hero-copy2'), false)]
+  sp_copyLines = [...splitLines($('#hero-copy1'), false), ...splitLines($('#hero-copy2'), false)]
     .map(l => ({ line: l, chars: splitChars(l) }));
   cl_titleChars = [...$('#claim-title').textContent].map(()=>0); // ersetzt unten
   cl_titleChars = splitChars($('#claim-title'));
@@ -842,7 +858,7 @@ GAL.forEach(([n, alt]) => {
   const v = document.createElement('video');
   v.src = `media/media/${n}.mp4`; v.poster = `media/media/${n}-poster.jpg`;
   v.muted = true; v.loop = true; v.autoplay = false; v.preload = "none"; v.playsInline = true;
-  v.setAttribute('aria-label', alt);
+  v.setAttribute('aria-label', window.axyomT ? window.axyomT('gal.' + n, alt) : alt);
   strip.appendChild(v);
 });
 

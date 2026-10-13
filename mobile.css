@@ -87,15 +87,13 @@ html.mobile #ab-form button { font-size: calc(12px * var(--s)); }
 html.mobile #ab-form-hint { font-size: calc(12px * var(--s)); }
 html.mobile #ab-links { left: calc(20px * var(--s)); bottom: calc(18px * var(--s)); }
 html.mobile #ab-links a { font-size: calc(11px * var(--s)); }
-html.mobile #ab-legal { right: calc(20px * var(--s)); bottom: calc(18px * var(--s)); width: calc(200px * var(--s)); font-size: calc(10px * var(--s)); line-height: 1.5; }
+html.mobile #ab-legal { right: calc(20px * var(--s)); bottom: calc(46px * var(--s)); width: calc(200px * var(--s)); font-size: calc(10px * var(--s)); line-height: 1.5; }
 
 /* ---------- Überschreibungen der Desktop-Regeln aus polish.css (html:not(.compact)) ---------- */
 html.mobile #hero-wordmark { width: calc(300px * var(--s)); }
 html.mobile #hero-copy { left: calc(20px * var(--s)); top: calc(590px * var(--s)); width: calc(390px * var(--s));
   font-size: calc(34px * var(--s)); line-height: 1.1; letter-spacing: -.03em; }
-html.mobile #hero-copy { width: calc(300px * var(--s)); }   /* bricht nach «Aufwand.» um */
-html.mobile #hero-copy2 { left: calc(20px * var(--s)); top: calc(680px * var(--s)); width: calc(330px * var(--s));
-  font-size: calc(34px * var(--s)); line-height: 1.1; letter-spacing: -.03em; }
+html.mobile #hero-copy { width: calc(340px * var(--s)); }
 
 /* ---------- Safari-Adressleiste ----------
    Unten verankerte Elemente hängen an der kleinen Viewport-Höhe (100svh = Höhe bei
@@ -104,6 +102,7 @@ html.mobile #hero-copy2 { left: calc(20px * var(--s)); top: calc(680px * var(--s
 @supports (height: 100svh) {
   html.mobile #scroll-hint { bottom: auto; top: calc(100svh - 18px * var(--s)); transform: translate(-50%, -100%); }
   html.mobile #ft-foot     { bottom: auto; top: calc(100svh - 18px * var(--s)); transform: translateY(-100%); }
-  html.mobile #ab-links,
-  html.mobile #ab-legal    { bottom: auto; top: calc(100svh - 18px * var(--s)); transform: translateY(-100%); }
+  html.mobile #ab-links    { bottom: auto; top: calc(100svh - 18px * var(--s)); transform: translateY(-100%); }
+  /* Copyright über der Linkzeile: nebeneinander überlappen sie bei 390px. */
+  html.mobile #ab-legal    { bottom: auto; top: calc(100svh - 46px * var(--s)); transform: translateY(-100%); }
 }

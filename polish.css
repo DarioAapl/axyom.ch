@@ -190,8 +190,6 @@ html .fl-char > span { height:1.4em;line-height:1.4; }
 html .fl-char .dup { top:1.4em;height:1.4em;line-height:1.4; }
 html:not(.compact) #hero-top { left:calc(100px * var(--s));top:calc(95px * var(--s));width:calc(620px * var(--s)); }
 html:not(.compact) #hero-copy { left:calc(100px * var(--s));top:calc(555px * var(--s));width:calc(650px * var(--s));font-size:calc(64px * var(--s));line-height:1.1;letter-spacing:-.035em; }
-html:not(.compact) #hero-copy2 { left:calc(100px * var(--s));top:calc(732px * var(--s));width:calc(650px * var(--s));font-size:calc(64px * var(--s));line-height:1.1;letter-spacing:-.035em; }
-.compact #hero-copy2 { margin-top:18px; }
 #hero-video { display:none!important; }
 #bg-amber { background:#fff; }
 .quality-light #ft { color:#10201d; }
