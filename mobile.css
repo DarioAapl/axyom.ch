@@ -29,19 +29,12 @@ html.mobile #scroll-hint { bottom: calc(18px * var(--s)); }
 
 /* ---------- Hero ---------- */
 html.mobile #hero-top { left: calc(20px * var(--s)); top: calc(88px * var(--s)); width: calc(390px * var(--s)); }
-html.mobile #hero-tagline { text-align: left; font-size: calc(11px * var(--s)); letter-spacing: .08em; margin-bottom: calc(6px * var(--s)); }
 html.mobile #hero-wordmark { font-size: calc(96px * var(--s)); }
 html.mobile #hero-copy { left: calc(20px * var(--s)); top: calc(600px * var(--s)); width: calc(390px * var(--s)); }
-html.mobile #hero-card { left: calc(20px * var(--s)); top: calc(722px * var(--s)); width: calc(390px * var(--s)); height: calc(150px * var(--s)); }
-html.mobile #hero-card::before { inset: calc(-8px * var(--s)); filter: blur(calc(18px * var(--s))); }
-html.mobile #hero-card-header { left: calc(16px * var(--s)); top: calc(14px * var(--s)); width: calc(358px * var(--s)); }
-html.mobile #hero-card .dash { left: calc(16px * var(--s)); right: calc(16px * var(--s)); top: calc(76px * var(--s)); }
-html.mobile #hero-card-desc { left: calc(16px * var(--s)); top: calc(90px * var(--s)); width: calc(358px * var(--s)); text-align: left; font-size: calc(13px * var(--s)); line-height: 1.4; }
 
 /* ---------- Claim ---------- */
 html.mobile #claim-title { top: calc(120px * var(--s)); left: calc(16px * var(--s)); right: calc(16px * var(--s)); white-space: normal; text-wrap: balance; }
 html.mobile #claim-brand { top: calc(258px * var(--s)); left: calc(16px * var(--s)); right: calc(16px * var(--s)); }
-html.mobile #claim-desc { right: calc(20px * var(--s)); left: auto; top: calc(760px * var(--s)); width: calc(300px * var(--s)); font-size: calc(13px * var(--s)); }
 
 /* ---------- Drei Gründe ---------- */
 html.mobile .ft-item { left: calc(24px * var(--s)); width: calc(382px * var(--s)); }
@@ -100,8 +93,9 @@ html.mobile #ab-legal { right: calc(20px * var(--s)); bottom: calc(18px * var(--
 html.mobile #hero-wordmark { width: calc(300px * var(--s)); }
 html.mobile #hero-copy { left: calc(20px * var(--s)); top: calc(590px * var(--s)); width: calc(390px * var(--s));
   font-size: calc(34px * var(--s)); line-height: 1.1; letter-spacing: -.03em; }
-html.mobile #hero-card-header { font-size: calc(17px * var(--s)); line-height: 1.35; }
 html.mobile #hero-copy { width: calc(300px * var(--s)); }   /* bricht nach «Aufwand.» um */
+html.mobile #hero-copy2 { left: calc(20px * var(--s)); top: calc(680px * var(--s)); width: calc(330px * var(--s));
+  font-size: calc(34px * var(--s)); line-height: 1.1; letter-spacing: -.03em; }
 
 /* ---------- Safari-Adressleiste ----------
    Unten verankerte Elemente hängen an der kleinen Viewport-Höhe (100svh = Höhe bei

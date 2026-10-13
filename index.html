@@ -160,19 +160,11 @@ body {
 
 /* ============ HERO ============ */
 #hero-top { position: absolute; left: calc(60px * var(--s)); top: calc(32px * var(--s)); width: calc(843px * var(--s)); }
-#hero-tagline { text-align: right; margin-bottom: calc(10px * var(--s)); opacity: .9; }
 #hero-wordmark { font-weight: 800; letter-spacing: -0.02em; line-height: 1;
   font-size: calc(210px * var(--s)); white-space: nowrap; }
 #hero-wordmark .x { color: var(--accent); }
 #hero-copy { position: absolute; left: calc(1236px * var(--s)); top: calc(468px * var(--s)); width: calc(615px * var(--s)); }
-#hero-card { position: absolute; left: calc(60px * var(--s)); top: calc(635px * var(--s));
-  width: calc(356px * var(--s)); height: calc(413px * var(--s)); }
-#hero-card::before { content: ''; position: absolute; inset: calc(-12px * var(--s));
-  background: rgba(0,178,160,.14); filter: blur(calc(34px * var(--s))); border-radius: calc(8px * var(--s)); }
-#hero-card-header { position: absolute; left: calc(24px * var(--s)); top: calc(24px * var(--s)); width: calc(318px * var(--s)); }
-#hero-card .dash { position: absolute; left: calc(24px * var(--s)); right: calc(24px * var(--s)); top: calc(258px * var(--s)); width: auto; }
-#hero-card-desc { position: absolute; left: calc(38px * var(--s)); top: calc(293px * var(--s));
-  width: calc(308px * var(--s)); text-align: right; opacity: .92; }
+#hero-copy2 { position: absolute; left: calc(1236px * var(--s)); top: calc(600px * var(--s)); width: calc(615px * var(--s)); }
 #hero-video { position: absolute; left: calc(1656px * var(--s)); top: calc(933px * var(--s));
   width: calc(204px * var(--s)); height: calc(115px * var(--s)); border-radius: calc(8px * var(--s));
   overflow: hidden; cursor: pointer; }
@@ -185,8 +177,6 @@ body {
 html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
 #claim-title .star { color: var(--accent); }
 #claim-brand { position: absolute; left: 0; right: 0; top: calc(271px * var(--s)); text-align: center; color: var(--accent); }
-#claim-desc { position: absolute; right: calc(492px * var(--s)); top: calc(825px * var(--s));
-  width: calc(342px * var(--s)); text-align: right; }
 
 /* ============ BETRIEBE ============ */
 #bt-mega { position: absolute; left: 0; right: 0; top: calc(400px * var(--s)); text-align: center; transform-origin: 50% 0;
@@ -401,15 +391,10 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
   <div id="hero" class="section" style="height:100vh">
     <div class="section__inner">
       <div id="hero-top">
-        <div id="hero-tagline" class="sub1">Holen Sie sich den Überblick mit Axyom.</div>
         <div id="hero-wordmark"><img src="media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"></div>
       </div>
       <div id="hero-copy" class="body1">Gestalten Sie Ihren Betrieb effizient.</div>
-      <div id="hero-card">
-        <div id="hero-card-header" class="h4">Axyom erledigt, was Sie heute von Hand machen.</div>
-        <div class="dash"></div>
-        <div id="hero-card-desc" class="body2">Termine, Offerten, Rechnungen, Bestellungen und interne KI: massgeschneidert für Ihren Betrieb. Entwickelt in Liechtenstein und der Schweiz.</div>
-      </div>
+      <div id="hero-copy2" class="body1">Axyom erledigt, was Sie heute von Hand machen.</div>
     </div>
   </div>
 
@@ -418,7 +403,6 @@ html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
     <div class="section__inner">
       <h1 id="claim-title" class="h1">Ein System statt mehrerer Tools<span class="star">.</span></h1>
       <div id="claim-brand" class="h4"></div>
-      <div id="claim-desc" class="sub1">Ihre Abläufe bleiben. Die Handarbeit verschwindet. Sie geben frei.</div>
     </div>
   </div>
 
@@ -811,8 +795,8 @@ Promise.race([
   init();
 });
 let inited = false;
-let sp_tag, sp_word, sp_copyLines, sp_cardH, sp_cardD;
-let cl_titleChars, cl_brandChars, cl_descChars;
+let sp_word, sp_copyLines;
+let cl_titleChars, cl_brandChars;
 let ha_megaChars, as_h2chars, sp_h2chars, ab_titleLines;
 let ftSplits, as_bodyLines, sp_bodyLines, ha_bodyLines;
 let vg_quoteLines, nw_blocks, re_titleChars, es_titleChars;
@@ -823,14 +807,12 @@ function init() {
   document.documentElement.classList.remove('compact');
   // Measure only after switching to the animated desktop layout.
   document.querySelectorAll('.section__inner').forEach(e => e.style.visibility = 'visible');
-  sp_tag  = splitChars($('#hero-tagline'));
-  sp_copyLines = splitLines($('#hero-copy'), false).map(l => ({ line: l, chars: splitChars(l) }));
-  sp_cardH = splitLines($('#hero-card-header'), true);
-  sp_cardD = splitLines($('#hero-card-desc'), true);
+  // Titel und Folgesatz laufen als eine Zeilenfolge ein.
+  sp_copyLines = [...splitLines($('#hero-copy'), false), ...splitLines($('#hero-copy2'), false)]
+    .map(l => ({ line: l, chars: splitChars(l) }));
   cl_titleChars = [...$('#claim-title').textContent].map(()=>0); // ersetzt unten
   cl_titleChars = splitChars($('#claim-title'));
   cl_brandChars = splitChars($('#claim-brand'));
-  cl_descChars  = splitChars($('#claim-desc'));
   ha_megaChars  = splitChars($('#ha-mega'));
   ab_titleLines = splitLines($('#ab-title'), true);
   ftSplits = $$('.ft-item').map(item => ({
@@ -1065,13 +1047,7 @@ function uHero() {
   const on = l > 0;
   setOn(secs.hero, on);
   const _ = state.startTime;
-  if (on && sp_tag) {
-    const n = sp_tag.length;
-    sp_tag.forEach((w, i) => {
-      const I = 1 - i/(n-1), E = 1 - I;
-      w.style.transform = `translate3d(0, ${(-fit(l, I*0.3, I*0.3+0.67, 1, 0, ease.cubicOut)).toFixed(3)}em, 0)`;
-      w.style.opacity = fit(_, 0.5+E*0.2, 1.5+E*0.2, 0, 1).toFixed(3);
-    });
+  if (on && sp_copyLines) {
     // Copy: Zeilen x-shift beim Verlassen + Zeichen-Intro
     sp_copyLines.forEach((L, li) => {
       const I = 1 - li/Math.max(1, sp_copyLines.length-1);
@@ -1084,12 +1060,6 @@ function uHero() {
         ch.style.filter = `blur(${fit(k, 0.25, 0.75, 0, 0.3).toFixed(2)}em)`;
       });
     });
-    linesIn(sp_cardH, fit(_, 0.5, 1.5, 0, 1) * l);
-    linesIn(sp_cardD, fit(_, 0.7, 1.7, 0, 1) * l);
-    const cardX = fit(_, 0.5, 1, -60*S(), 0, ease.cubicOut) + fit(l, 0, 0.5, -30*S(), 0, ease.cubicOut);
-    $('#hero-card').style.transform = `translate3d(${cardX}px, 0, 0)`;
-    $('#hero-card').style.opacity = fit(_, 0.5, 1, 0, 1) * fit(l, 0, 0.4, 0, 1);
-    $('#hero-card .dash').style.width = fit(l * fit(_, 0.5, 1, 0, 1), 0, 1, 0, 100, ease.cubicOut) + '%';
   }
   // Logo-Morph: Hero-Wortmarke IST das Header-Logo.
   // WICHTIG: offsetWidth (Layoutmass) statt getBoundingClientRect —
@@ -1120,9 +1090,6 @@ function uClaim() {
   $('#claim-title').style.visibility = $('#claim-brand').style.visibility = hdrOn ? 'visible' : 'hidden';
   h1In(cl_titleChars, c, cOut);
   charsYIn(cl_brandChars, c, cOut);
-  const A = fit(r, 1.65, 2.25, 0, 1), M = fit(r, 2.3, 2.65, 0, 1);
-  $('#claim-desc').style.visibility = A > 0 && M < 1 ? 'visible' : 'hidden';
-  charsYIn(cl_descChars, A, M);
   return { r, animationRatio: fit(r, 0, 1.85, 0, 1), highlight: 0 };
 }
 
