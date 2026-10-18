@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Seite nicht gefunden · Axyom</title>
+<link rel="icon" href="/media/brand/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/media/brand/apple-touch-icon.png">
+<!-- GitHub Pages serves this file for every unknown path, at that path — so
+     every URL in here is absolute, or it breaks one folder deep. -->
+<style>
+:root{
+  --ink:#f5f5f7; --dim:rgba(245,245,247,.62); --bg:#0b0d12;
+  --acc:#00b2a0; --deep:#004c44;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden;position:relative}
+/* the brand gradient as light: two soft glows behind the number */
+body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+body::before{width:min(760px,120vw);height:min(760px,120vw);left:50%;top:44%;transform:translate(-50%,-50%);
+  background:radial-gradient(closest-side,rgba(0,178,160,.30),rgba(0,76,68,.18) 55%,transparent)}
+body::after{width:420px;height:420px;right:-120px;bottom:-160px;background:radial-gradient(closest-side,rgba(0,76,68,.45),transparent)}
+/* a fine grain over everything: dark radial gradients band into visible rings
+   on 8-bit screens, and a little noise dithers the steps away */
+main::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+header,main,footer{position:relative;z-index:1}
+header{padding:28px clamp(16px,5vw,48px)}
+header a{display:inline-block}
+header img{height:30px;width:auto;display:block}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 16px 48px}
+.code{font-size:clamp(120px,30vw,260px);font-weight:800;line-height:.9;letter-spacing:-.06em;
+  background:linear-gradient(180deg,#5ff0de 0%,var(--acc) 38%,var(--deep) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 18px 50px rgba(0,178,160,.28));animation:schweben 6s ease-in-out infinite;user-select:none}
+@keyframes schweben{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+h1{font-size:clamp(24px,4.4vw,38px);font-weight:700;letter-spacing:-.02em;margin-top:18px}
+p{font-size:clamp(15px,2.2vw,17px);color:var(--dim);max-width:30em;margin-top:12px;line-height:1.55}
+.pfad{display:inline-block;margin-top:14px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+  color:rgba(245,245,247,.5);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:5px 10px;
+  max-width:min(520px,calc(100vw - 32px));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.knoepfe{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:30px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:12px 22px;border-radius:999px;
+  font-size:15px;font-weight:600;text-decoration:none;transition:transform .15s,background .15s,border-color .15s}
+.btn:active{transform:translateY(1px)}
+.btn.primaer{color:#03201c;background:linear-gradient(180deg,#27d6c2,var(--acc));box-shadow:0 8px 28px rgba(0,178,160,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.primaer:hover{background:linear-gradient(180deg,#3fe2cf,#00c2ae)}
+.btn.zweit{color:var(--ink);border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04)}
+.btn.zweit:hover{border-color:rgba(0,178,160,.6);background:rgba(0,178,160,.08)}
+.btn:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+footer{padding:22px 16px 28px;text-align:center;font-size:13px;color:rgba(245,245,247,.42)}
+footer a{color:rgba(245,245,247,.62);text-decoration:none}
+footer a:hover{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.code{animation:none}}
+</style>
+</head>
+<body>
+<header><a href="/" aria-label="Axyom — Startseite"><img src="/media/brand/logo-light.svg" alt="Axyom" width="67" height="30"></a></header>
+<main>
+  <div class="code" aria-hidden="true">404</div>
+  <h1 data-t="h">Diese Seite gibt es nicht.</h1>
+  <p data-t="p">Vielleicht hat sich ein Tippfehler eingeschlichen, oder die Seite ist umgezogen. Hier geht es weiter:</p>
+  <span class="pfad" id="pfad"></span>
+  <div class="knoepfe">
+    <a class="btn primaer" href="/" data-t="home">Zur Startseite</a>
+    <a class="btn zweit" href="/shopify/" data-t="shop">Axyom AI für Shopify</a>
+    <a class="btn zweit" href="mailto:kontakt@axyom.ch?subject=Seite%20nicht%20gefunden" data-t="mail">Schreiben Sie uns</a>
+  </div>
+</main>
+<footer><a href="/impressum.html" data-t="imp">Impressum</a> · <a href="/privacy.html" data-t="priv">Datenschutz</a></footer>
+<script>
+// Same language as the rest of the site: ?lang=, then the visitor's saved
+// choice (i18n.js stores it under «axyom-lang»), then the browser.
+(function () {
+  var T = {
+    en: { title: 'Page not found · Axyom', h: 'This page doesn’t exist.',
+      p: 'Maybe there’s a typo in the address, or the page has moved. Here’s where to go next:',
+      home: 'Back to the homepage', shop: 'Axyom AI for Shopify', mail: 'Write to us', imp: 'Legal notice', priv: 'Privacy' }
+  };
+  var lang = 'de';
+  var q = /[?&]lang=(en|de)\b/.exec(location.search);
+  if (q) lang = q[1];
+  else {
+    try { var s = localStorage.getItem('axyom-lang'); if (s === 'en' || s === 'de') lang = s; else throw 0; }
+    catch (e) { lang = /^de\b/i.test(navigator.language || '') ? 'de' : 'en'; }
+  }
+  if (lang === 'en') {
+    document.documentElement.lang = 'en'; document.title = T.en.title;
+    [].forEach.call(document.querySelectorAll('[data-t]'), function (el) { el.textContent = T.en[el.getAttribute('data-t')]; });
+    document.querySelector('header a').setAttribute('aria-label', 'Axyom — homepage');
+  }
+  // show the address that was asked for, so a typo is easy to spot
+  document.getElementById('pfad').textContent = decodeURIComponent(location.pathname);
+})();
+</script>
+</body>
+</html>
