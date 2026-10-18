@@ -40,15 +40,15 @@ a{color:var(--acci)}
 #rail .firm b{display:block;color:rgba(255,255,255,.82);font-weight:600;font-size:12.5px}
 #rail nav{display:flex;flex-direction:column;gap:2px;overflow:auto}
 #rail .grp{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.32);padding:12px 10px 4px}
-#rail a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;min-height:36px;
+#rail nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;min-height:36px;
   color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;cursor:pointer}
-#rail a .ic{width:16px;height:16px;flex:none;opacity:.65}
-#rail a:hover,#rail a:active{color:#fff;background:rgba(255,255,255,.06)}
-#rail a.on{background:rgba(0,178,160,.17);color:#fff;font-weight:650}
-#rail a.on .ic{opacity:1;color:var(--acc)}
-#rail a .badge{margin-left:auto;font-size:10.5px;font-weight:700;border-radius:99px;padding:1px 7px;background:var(--warn);color:#fff}
-#rail a .badge.s3{background:var(--bad)}
-#rail a .badge.s1{background:rgba(255,255,255,.16)}
+#rail nav a .ic{width:16px;height:16px;flex:none;opacity:.65}
+#rail nav a:hover,#rail nav a:active{color:#fff;background:rgba(255,255,255,.06)}
+#rail nav a.on{background:rgba(0,178,160,.17);color:#fff;font-weight:650}
+#rail nav a.on .ic{opacity:1;color:var(--acc)}
+#rail nav a .badge{margin-left:auto;font-size:10.5px;font-weight:700;border-radius:99px;padding:1px 7px;background:var(--warn);color:#fff}
+#rail nav a .badge.s3{background:var(--bad)}
+#rail nav a .badge.s1{background:rgba(255,255,255,.16)}
 #rail .foot{margin-top:auto;padding:12px 8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.4);line-height:1.6}
 #rail .foot button{background:none;border:0;color:rgba(255,255,255,.55);text-decoration:underline;cursor:pointer;font-size:11px;padding:0}
 #rail .foot button:hover{color:#fff}
@@ -229,7 +229,7 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 .todo .d{font-size:12px;color:var(--dim)}
 .todo .n{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
 
-.drop{border:2px dashed var(--line);border-radius:var(--r);padding:26px;text-align:center;color:var(--dim);background:#fff;cursor:pointer;transition:.15s}
+.drop{display:block;border:2px dashed var(--line);border-radius:var(--r);padding:26px;text-align:center;color:var(--dim);background:#fff;cursor:pointer;transition:.15s}
 .drop:hover,.drop.over{border-color:var(--acc);background:var(--wash);color:var(--acci)}
 .drop b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}
 
@@ -251,6 +251,121 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 .tab .n{font-size:11px;background:rgba(0,0,0,.07);border-radius:99px;padding:1px 6px;margin-left:5px}
 .mtabs{display:none}
 
+/* ── Ansicht: four ways to get around, chosen per device in Einstellungen.
+   html[data-nav] is set by renderRail(); «menue» is the Seitenleiste on a
+   phone, folded away behind a button. ── */
+#rail{z-index:30}
+#rail .brand{text-decoration:none}
+#rail .brand .mark{display:none;width:34px;height:auto}
+#rail .lade{display:flex;flex-direction:column;flex:1;min-height:0}
+#rail .menu,#schatten{display:none}
+#rail nav a .lbl{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+/* schmal — symbols only, the name appears beside it on hover or focus */
+[data-nav=schmal] #rail{width:68px;padding:16px 10px}
+[data-nav=schmal] #rail .brand{justify-content:center;padding:2px 0 16px}
+[data-nav=schmal] #rail .brand .logo{display:none}
+[data-nav=schmal] #rail .brand .mark{display:block}
+[data-nav=schmal] #rail .firm,[data-nav=schmal] #rail .foot{display:none}
+[data-nav=schmal] #rail nav{overflow:visible;gap:4px}
+[data-nav=schmal] #rail .grp{font-size:0;padding:0;height:1px;background:rgba(255,255,255,.12);margin:8px 8px}
+[data-nav=schmal] #rail .grp:first-child{display:none}
+[data-nav=schmal] #rail nav a{justify-content:center;padding:0;height:44px;position:relative}
+[data-nav=schmal] #rail nav a .ic{width:19px;height:19px}
+[data-nav=schmal] #rail nav a .lbl{position:absolute;left:calc(100% + 12px);top:50%;transform:translate(-4px,-50%);background:var(--dark);color:#fff;
+  font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:7px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.22);
+  opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;z-index:50;overflow:visible}
+[data-nav=schmal] #rail nav a:hover .lbl,[data-nav=schmal] #rail nav a:focus-visible .lbl{opacity:1;transform:translate(0,-50%)}
+[data-nav=schmal] #rail nav a .badge{position:absolute;top:3px;right:1px;margin:0;font-size:9.5px;padding:0 5px;line-height:15px;min-width:15px;text-align:center}
+
+/* oben, kacheln, menue — the dark bar runs across the top */
+[data-nav=oben] #app,[data-nav=kacheln] #app,[data-nav=menue] #app{flex-direction:column}
+[data-nav=oben] #rail,[data-nav=kacheln] #rail,[data-nav=menue] #rail{width:auto;height:auto;flex-direction:row;align-items:center;gap:10px;padding:9px 16px;min-height:56px}
+[data-nav=oben] #rail .brand,[data-nav=kacheln] #rail .brand,[data-nav=menue] #rail .brand{padding:0 8px 0 0;flex:none}
+[data-nav=oben] #rail .brand .logo,[data-nav=kacheln] #rail .brand .logo,[data-nav=menue] #rail .brand .logo{width:78px}
+[data-nav=oben] #rail .lade,[data-nav=kacheln] #rail .lade{flex-direction:row;align-items:center;min-width:0}
+[data-nav=oben] #rail .firm,[data-nav=oben] #rail .foot,[data-nav=kacheln] #rail .firm,[data-nav=kacheln] #rail .foot{display:none}
+[data-nav=oben] header,[data-nav=kacheln] header,[data-nav=menue] header{position:static}
+[data-nav=oben] #rail nav{flex-direction:row;align-items:center;overflow-x:auto;scrollbar-width:none;gap:2px}
+[data-nav=oben] #rail nav::-webkit-scrollbar{display:none}
+[data-nav=oben] #rail .grp{font-size:0;padding:0;width:1px;height:20px;background:rgba(255,255,255,.14);margin:0 7px;flex:none}
+[data-nav=oben] #rail .grp:first-child{display:none}
+[data-nav=oben] #rail nav a{white-space:nowrap;padding:7px 11px;flex:none}
+[data-nav=oben] #rail nav a .lbl{overflow:visible}
+
+[data-nav=kacheln] #rail nav{flex-direction:row;align-items:center}
+[data-nav=kacheln] #rail nav a.alle{color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:6px 12px;white-space:nowrap}
+[data-nav=kacheln] #rail nav a.alle:hover{background:rgba(0,178,160,.2);border-color:rgba(0,178,160,.5)}
+[data-nav=kacheln] #rail nav a.alle .ic{opacity:1;color:var(--acc)}
+[data-nav=kacheln] #rail nav .wo{font-size:12.5px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+[data-nav=menue] #rail{justify-content:space-between;padding:9px 12px 9px 16px}
+[data-nav=menue] #rail .menu{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;
+  border-radius:9px;padding:7px 12px;font-size:13.5px;font-weight:600;cursor:pointer;min-height:40px}
+[data-nav=menue] #rail .menu svg{width:17px;height:17px}
+[data-nav=menue] #rail .menu .badge{font-size:10.5px;font-weight:700;border-radius:99px;padding:1px 7px;background:var(--warn);color:#fff}
+[data-nav=menue] #rail .menu .badge.s3{background:var(--bad)}
+[data-nav=menue] #rail .lade{position:fixed;top:0;bottom:0;left:0;width:min(300px,84vw);background:var(--dark);padding:20px 12px calc(16px + env(safe-area-inset-bottom));
+  transform:translateX(-102%);transition:transform .22s ease;z-index:70;overflow-y:auto;box-shadow:12px 0 40px rgba(0,0,0,.3)}
+[data-nav=menue] #schatten{display:block;position:fixed;inset:0;background:rgba(10,12,16,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:65}
+.nav-offen[data-nav=menue] #rail .lade{transform:none}
+.nav-offen[data-nav=menue] #schatten{opacity:1;pointer-events:auto}
+.nav-offen[data-nav=menue] body{overflow:hidden}
+@media (prefers-reduced-motion:reduce){#rail .lade,#schatten{transition:none}}
+
+/* the start page of «Kacheln» — one card per area, with what is open there */
+.kgrp{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);font-weight:650;margin:22px 2px 10px}
+.kgrp:first-child{margin-top:2px}
+.kacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.kachel{display:flex;flex-direction:column;gap:12px;background:var(--card);border:1px solid var(--soft);border-radius:16px;padding:16px;
+  text-decoration:none;color:var(--ink);min-height:136px;position:relative;transition:transform .15s,box-shadow .15s,border-color .15s}
+.kachel:hover{border-color:rgba(0,178,160,.45);box-shadow:0 10px 30px rgba(0,0,0,.07);transform:translateY(-1px)}
+.kachel:active{transform:translateY(0)}
+.kachel:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.kachel .kic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(155deg,#12302c,var(--dark) 70%);color:var(--acc)}
+.kachel .kic .ic{width:20px;height:20px}
+.kachel .kn{font-size:15px;font-weight:650;letter-spacing:-.01em;margin-top:2px}
+.kachel .ks{font-size:12.5px;color:var(--dim);line-height:1.4;margin-top:-8px}
+.kachel .ks .rot{color:var(--bad);font-weight:650}
+.kachel .ks .ok{color:var(--ok);font-weight:600}
+.kachel .badge{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px;background:var(--warn);color:#fff}
+.kachel .badge.s3{background:var(--bad)}
+@media (max-width:760px){
+  .kacheln{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .kachel{padding:13px;min-height:128px;border-radius:14px;gap:10px}
+  .kachel .kn{font-size:14px}.kachel .ks{font-size:12px}
+}
+
+/* Einstellungen › Darstellung */
+.ansicht{display:grid;gap:18px}
+.ansicht .zeile{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;align-items:start}
+.ansicht .zeile+.zeile{border-top:1px solid var(--soft);padding-top:18px}
+.ansicht .geraet{font-weight:650;font-size:14px;padding-top:4px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ansicht .geraet small{flex-basis:100%;color:var(--dim);font-weight:400;font-size:12px}
+.wahl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.opt{display:flex;flex-direction:column;gap:4px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 10px 11px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.opt:hover{border-color:rgba(0,178,160,.55)}
+.opt.on{border-color:var(--acc);box-shadow:0 0 0 3px var(--wash)}
+.opt:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.opt b{font-size:13px;display:flex;align-items:center;gap:6px;margin-top:6px}
+.opt.on b::after{content:"";width:16px;height:16px;border-radius:50%;margin-left:auto;flex:none;
+  background:var(--acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 8.2 2.3 2.3 4.7-4.9'/%3E%3C/svg%3E") center/12px no-repeat}
+.opt span{font-size:11.5px;color:var(--dim);line-height:1.35}
+/* the little pictures: drawn, not screenshots, so they never go stale */
+.vs{height:74px;border-radius:7px;background:var(--surf);border:1px solid var(--soft);position:relative;overflow:hidden}
+.vs.hoch{width:46px;height:82px;margin:0 auto;border-radius:9px;border:2px solid #d2d2d7}
+.vs i{position:absolute;display:block;border-radius:2px}
+.vs .d{background:var(--dark);border-radius:0}
+.vs .l{height:3px;background:rgba(255,255,255,.35)}
+.vs .la{height:3px;background:var(--acc)}
+.vs .c{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:3px}
+.vs .t{background:var(--wash);border:1px solid rgba(0,178,160,.35);border-radius:3px}
+.vs .g{height:3px;background:rgba(0,0,0,.14)}
+@media (max-width:760px){
+  .ansicht .zeile{grid-template-columns:minmax(0,1fr);gap:10px}
+  .wahl{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 /* ── narrower screens ── */
 @media (max-width:1280px){
   .split,.split.deb{grid-template-columns:minmax(240px,300px) minmax(0,1fr)}
@@ -264,13 +379,6 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 }
 @media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px){
-  #app{flex-direction:column}
-  #rail{width:auto;height:auto;position:sticky;top:0;z-index:30;flex-direction:row;align-items:center;padding:8px 10px;gap:6px}
-  #rail .brand{padding:0 6px 0 2px}#rail .brand .logo{width:70px}
-  #rail .firm,#rail .grp,#rail .foot{display:none}
-  #rail nav{flex-direction:row;overflow-x:auto;scrollbar-width:none}
-  #rail nav::-webkit-scrollbar{display:none}
-  #rail a{white-space:nowrap;padding:7px 10px}
   header{position:static;padding:14px 16px 12px;flex-wrap:wrap}
   header .tools{width:100%}#suche{width:100%}
   #view{padding:16px 16px 60px}
@@ -292,13 +400,17 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="axyomLogo" viewBox="0 0 1664 749"> <path d="M105.327 748.253C106.039 746.723 106.527 745.043 107.494 743.693C159.109 671.595 210.777 599.543 262.399 527.453C293.037 484.68 323.614 441.862 354.214 399.06C355.114 397.807 355.962 396.51 356.952 395.07C355.812 393.435 354.769 391.898 353.689 390.39C288.567 299.348 223.437 208.305 158.307 117.263C157.669 116.378 157.062 115.47 156.499 114.128C156.559 113.685 156.897 113.362 156.897 113.362C158.044 114.135 159.259 114.825 160.332 115.695C247.947 186.465 335.547 257.243 423.154 328.02C424.482 329.093 425.832 330.15 427.662 331.598C552.574 221.048 677.457 110.52 802.339 0C802.534 0.1575 802.722 0.307496 802.917 0.464996C705.934 131.985 608.959 263.497 511.894 395.137C513.282 397.125 514.519 398.918 515.772 400.695C579.687 491.505 643.602 582.307 707.517 673.117C708.147 674.01 708.754 674.918 709.294 676.275C709.099 676.838 708.979 676.943 708.859 677.055C707.577 676.2 706.227 675.428 705.019 674.483C615.274 604.395 525.544 534.293 435.814 464.19C434.584 463.23 433.332 462.308 431.847 461.183C430.759 462.045 429.649 462.84 428.629 463.74C323.569 556.223 218.517 648.713 113.464 741.203C110.899 743.46 108.312 745.703 105.507 748.117C105.252 748.268 105.327 748.253 105.327 748.253Z" fill="url(#axyomLogoGrad)"/> <path d="M296.427 390.03C296.427 414.398 296.427 438.3 296.427 462.825C285.709 476.918 274.429 491.093 263.884 505.793C253.422 520.365 243.694 535.463 233.832 550.058C228.709 550.058 224.352 550.058 219.702 550.058C214.137 537.938 212.929 524.76 211.429 510.93C209.712 512.603 208.617 513.66 207.537 514.733C192.574 529.613 176.014 542.265 156.499 550.62C136.264 559.283 115.069 561.833 93.2291 560.07C79.7291 558.983 66.6791 556.103 54.3866 550.35C23.0216 535.658 4.94658 511.26 1.00908 476.655C-0.918424 459.728 -0.228429 442.935 4.33157 426.48C12.0716 398.543 29.7866 378.99 55.7291 366.683C70.7816 359.543 86.7791 355.245 103.144 352.62C121.324 349.703 139.647 347.723 157.857 344.948C167.089 343.538 176.299 341.693 185.299 339.233C190.002 337.95 194.532 335.378 198.597 332.595C205.324 327.99 208.722 321.27 208.602 312.998C208.557 310.035 208.512 307.035 208.002 304.125C206.134 293.43 200.164 286.043 189.964 282.03C183.072 279.315 175.932 277.763 168.604 277.103C156.282 275.985 143.982 275.678 131.772 278.363C116.374 281.745 105.657 290.535 100.324 305.468C98.3891 310.883 96.9941 316.5 95.2691 322.328C67.5716 322.328 39.4991 322.328 10.8116 322.328C11.3591 317.318 11.7341 312.413 12.4391 307.56C15.0491 289.598 20.5391 272.633 30.4166 257.273C43.1741 237.428 61.3991 224.633 83.2466 216.57C99.4841 210.578 116.367 207.69 133.549 206.348C150.574 205.013 167.577 205.245 184.549 207.218C194.629 208.388 204.612 210.075 214.692 212.903C241.864 250.905 266.487 290.88 296.427 326.655C296.427 348.015 296.427 368.79 296.427 390.03ZM157.714 492.803C165.177 490.418 172.182 487.095 178.954 483.135C190.684 476.273 198.409 466.298 202.849 453.585C206.757 442.41 208.264 430.845 208.369 419.078C208.452 409.71 208.392 400.335 208.392 390.96C208.392 389.775 208.392 388.59 208.392 387.57C207.822 387.36 207.627 387.218 207.529 387.263C206.427 387.818 205.317 388.38 204.244 388.988C196.594 393.315 188.524 396.653 179.922 398.445C167.254 401.078 154.519 403.433 141.829 405.975C132.034 407.94 122.314 410.243 113.187 414.443C101.179 419.97 92.8241 428.775 89.7341 441.878C87.3941 451.793 87.8141 461.708 90.7841 471.48C93.0566 478.943 97.5266 484.77 104.059 489.023C109.909 492.825 116.277 495.15 123.199 496.11C134.712 497.7 145.909 495.983 157.714 492.803Z" fill="white"/> <path d="M1572.49 364.717C1572.49 354.562 1572.8 344.865 1572.37 335.19C1572.07 328.207 1571.41 321.12 1569.78 314.347C1565.19 295.312 1551.85 283.77 1532.35 281.467C1523.94 280.477 1515.48 280.605 1507.18 282.532C1490.43 286.425 1478.97 296.602 1472.24 312.277C1468.25 321.57 1466.49 331.372 1465.87 341.392C1465.62 345.442 1465.67 349.515 1465.66 353.572C1465.66 417.007 1465.66 480.435 1465.66 543.87C1465.66 545.737 1465.66 547.597 1465.66 549.405C1462.03 550.38 1388.17 550.777 1376.91 549.87C1376.91 548.137 1376.91 546.33 1376.91 544.53C1376.91 480.157 1376.9 415.792 1376.91 351.42C1376.91 341.107 1376.8 330.795 1374.88 320.61C1374.27 317.4 1373.66 314.152 1372.64 311.055C1367.03 293.962 1354.78 284.752 1337.32 282.487C1326.42 281.077 1315.48 281.595 1304.79 284.58C1286.02 289.822 1275.25 302.25 1271.72 321.27C1270.06 330.225 1269.63 339.247 1269.64 348.315C1269.65 385.027 1269.64 421.747 1269.64 458.46C1269.64 487.05 1269.64 515.64 1269.64 544.23C1269.64 545.94 1269.64 547.657 1269.64 549.315C1265.9 550.477 1199.51 550.95 1181.17 549.99C1180.15 546.78 1179.68 223.95 1180.73 214.47C1208.88 214.47 1237.06 214.47 1265.81 214.47C1265.81 230.092 1265.81 245.722 1265.81 261.345C1266.13 261.442 1266.44 261.547 1266.76 261.645C1267.4 260.707 1268.02 259.747 1268.7 258.825C1273.09 252.757 1277.3 246.54 1281.94 240.667C1295.59 223.387 1313.59 213.21 1335.04 208.927C1355.06 204.93 1375.03 205.23 1395 209.655C1418.21 214.8 1435.27 228.082 1447.03 248.467C1449.67 253.027 1451.94 257.79 1454.6 262.89C1455.31 261.892 1455.9 261.09 1456.46 260.265C1458.66 257.04 1460.75 253.74 1463.05 250.59C1477.18 231.285 1495.56 218.032 1518.73 211.59C1543.67 204.652 1568.68 203.55 1593.44 211.897C1628.1 223.575 1650.01 247.5 1658.77 282.967C1661.04 292.14 1661.81 301.762 1662.46 311.235C1663.17 321.66 1663.11 332.152 1663.09 342.622C1662.98 409.807 1662.79 476.985 1662.61 544.17C1662.61 546.007 1662.61 547.845 1662.61 549.915C1632.42 549.915 1602.67 549.915 1572.5 549.915C1572.49 488.22 1572.49 426.705 1572.49 364.717Z" fill="white"/> <path d="M963.289 559.522C950.209 557.475 937.789 554.55 925.759 550.042C897.102 539.31 875.007 520.56 858.267 495.142C842.652 471.435 832.789 445.575 828.686 417.51C823.624 382.845 825.492 348.69 836.479 315.255C844.122 291.99 855.964 271.02 871.849 252.412C891.964 228.855 917.831 214.942 947.734 208.14C972.949 202.402 998.434 201.525 1024.11 204.165C1045.09 206.325 1065.24 211.372 1084.14 220.972C1101.26 229.665 1115.76 241.552 1127.67 256.597C1149.38 284.017 1162.72 315.022 1167.59 349.672C1172.33 383.415 1170.29 416.64 1159.93 449.205C1152.9 471.322 1141.87 491.302 1127.26 509.318C1107.4 533.798 1081.52 548.513 1051.21 555.915C1026.86 561.863 1002.12 562.875 977.217 560.955C972.702 560.587 968.209 560.032 963.289 559.522ZM963.544 284.04C951.409 289.612 942.034 298.297 934.834 309.45C925.579 323.79 921.154 339.787 919.024 356.505C916.819 373.785 916.849 391.087 919.009 408.375C920.742 422.242 924.124 435.667 930.544 448.17C939.559 465.727 952.879 478.47 972.026 484.425C983.051 487.852 994.376 488.572 1005.85 487.672C1029.33 485.827 1047.78 475.455 1060.5 455.415C1070.25 440.033 1074.56 422.887 1076.47 405.022C1078.09 389.91 1078.05 374.775 1076.46 359.662C1075 345.937 1072.01 332.587 1066.19 319.98C1057.86 301.912 1045.22 288.09 1025.99 281.737C1005.28 274.897 984.544 275.347 963.544 284.04Z" fill="white"/> <path d="M618.739 618.097C639.086 633.915 659.171 649.53 679.646 665.437C677.756 667.095 676.121 668.73 674.291 670.102C665.479 676.68 655.324 680.122 644.741 682.477C634.496 684.757 624.079 686.002 613.624 686.047C597.859 686.115 582.094 685.537 566.329 685.215C565.586 685.2 564.851 685.02 563.959 684.892C563.959 661.462 563.959 638.28 563.959 614.79C579.761 615.262 595.391 616.552 610.841 611.752C613.391 613.8 615.934 615.84 618.739 618.097Z" fill="white"/> <path d="M522.041 231.915C519.904 225.877 517.901 220.17 515.899 214.447C519.296 213.487 540.019 213.217 547.736 214.102C539.494 221.415 531.679 228.337 523.601 235.507C523.024 234.172 522.604 233.205 522.041 231.915Z" fill="white"/> <path d="M773.164 433.628C753.897 487.905 736.257 542.378 715.497 595.733C710.412 608.805 704.434 621.525 698.839 634.395C698.179 635.91 697.332 637.335 696.387 639.158C695.322 637.793 694.512 636.863 693.814 635.858C674.449 608.228 655.069 580.598 635.772 552.923C634.369 550.905 633.312 548.573 632.487 546.24C609.229 480.195 586.024 414.135 562.819 348.068C562.414 346.905 562.099 345.713 561.717 344.475C583.032 315.48 604.287 286.56 626.187 256.778C646.557 325.17 666.409 392.79 687.334 460.328C710.307 378.248 733.272 296.168 756.297 213.893C787.294 213.893 818.187 213.893 849.807 213.893C824.262 287.16 798.792 360.225 773.164 433.628Z" fill="white"/> <defs> <linearGradient id="axyomLogoGrad" x1="454" y1="251.5" x2="454.117" y2="748.253" gradientUnits="userSpaceOnUse"> <stop stop-color="#00B2A0"/> <stop offset="1" stop-color="#004C44"/> </linearGradient> </defs> </symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="axyomLogo" viewBox="0 0 1664 749"> <path d="M105.327 748.253C106.039 746.723 106.527 745.043 107.494 743.693C159.109 671.595 210.777 599.543 262.399 527.453C293.037 484.68 323.614 441.862 354.214 399.06C355.114 397.807 355.962 396.51 356.952 395.07C355.812 393.435 354.769 391.898 353.689 390.39C288.567 299.348 223.437 208.305 158.307 117.263C157.669 116.378 157.062 115.47 156.499 114.128C156.559 113.685 156.897 113.362 156.897 113.362C158.044 114.135 159.259 114.825 160.332 115.695C247.947 186.465 335.547 257.243 423.154 328.02C424.482 329.093 425.832 330.15 427.662 331.598C552.574 221.048 677.457 110.52 802.339 0C802.534 0.1575 802.722 0.307496 802.917 0.464996C705.934 131.985 608.959 263.497 511.894 395.137C513.282 397.125 514.519 398.918 515.772 400.695C579.687 491.505 643.602 582.307 707.517 673.117C708.147 674.01 708.754 674.918 709.294 676.275C709.099 676.838 708.979 676.943 708.859 677.055C707.577 676.2 706.227 675.428 705.019 674.483C615.274 604.395 525.544 534.293 435.814 464.19C434.584 463.23 433.332 462.308 431.847 461.183C430.759 462.045 429.649 462.84 428.629 463.74C323.569 556.223 218.517 648.713 113.464 741.203C110.899 743.46 108.312 745.703 105.507 748.117C105.252 748.268 105.327 748.253 105.327 748.253Z" fill="url(#axyomLogoGrad)"/> <path d="M296.427 390.03C296.427 414.398 296.427 438.3 296.427 462.825C285.709 476.918 274.429 491.093 263.884 505.793C253.422 520.365 243.694 535.463 233.832 550.058C228.709 550.058 224.352 550.058 219.702 550.058C214.137 537.938 212.929 524.76 211.429 510.93C209.712 512.603 208.617 513.66 207.537 514.733C192.574 529.613 176.014 542.265 156.499 550.62C136.264 559.283 115.069 561.833 93.2291 560.07C79.7291 558.983 66.6791 556.103 54.3866 550.35C23.0216 535.658 4.94658 511.26 1.00908 476.655C-0.918424 459.728 -0.228429 442.935 4.33157 426.48C12.0716 398.543 29.7866 378.99 55.7291 366.683C70.7816 359.543 86.7791 355.245 103.144 352.62C121.324 349.703 139.647 347.723 157.857 344.948C167.089 343.538 176.299 341.693 185.299 339.233C190.002 337.95 194.532 335.378 198.597 332.595C205.324 327.99 208.722 321.27 208.602 312.998C208.557 310.035 208.512 307.035 208.002 304.125C206.134 293.43 200.164 286.043 189.964 282.03C183.072 279.315 175.932 277.763 168.604 277.103C156.282 275.985 143.982 275.678 131.772 278.363C116.374 281.745 105.657 290.535 100.324 305.468C98.3891 310.883 96.9941 316.5 95.2691 322.328C67.5716 322.328 39.4991 322.328 10.8116 322.328C11.3591 317.318 11.7341 312.413 12.4391 307.56C15.0491 289.598 20.5391 272.633 30.4166 257.273C43.1741 237.428 61.3991 224.633 83.2466 216.57C99.4841 210.578 116.367 207.69 133.549 206.348C150.574 205.013 167.577 205.245 184.549 207.218C194.629 208.388 204.612 210.075 214.692 212.903C241.864 250.905 266.487 290.88 296.427 326.655C296.427 348.015 296.427 368.79 296.427 390.03ZM157.714 492.803C165.177 490.418 172.182 487.095 178.954 483.135C190.684 476.273 198.409 466.298 202.849 453.585C206.757 442.41 208.264 430.845 208.369 419.078C208.452 409.71 208.392 400.335 208.392 390.96C208.392 389.775 208.392 388.59 208.392 387.57C207.822 387.36 207.627 387.218 207.529 387.263C206.427 387.818 205.317 388.38 204.244 388.988C196.594 393.315 188.524 396.653 179.922 398.445C167.254 401.078 154.519 403.433 141.829 405.975C132.034 407.94 122.314 410.243 113.187 414.443C101.179 419.97 92.8241 428.775 89.7341 441.878C87.3941 451.793 87.8141 461.708 90.7841 471.48C93.0566 478.943 97.5266 484.77 104.059 489.023C109.909 492.825 116.277 495.15 123.199 496.11C134.712 497.7 145.909 495.983 157.714 492.803Z" fill="white"/> <path d="M1572.49 364.717C1572.49 354.562 1572.8 344.865 1572.37 335.19C1572.07 328.207 1571.41 321.12 1569.78 314.347C1565.19 295.312 1551.85 283.77 1532.35 281.467C1523.94 280.477 1515.48 280.605 1507.18 282.532C1490.43 286.425 1478.97 296.602 1472.24 312.277C1468.25 321.57 1466.49 331.372 1465.87 341.392C1465.62 345.442 1465.67 349.515 1465.66 353.572C1465.66 417.007 1465.66 480.435 1465.66 543.87C1465.66 545.737 1465.66 547.597 1465.66 549.405C1462.03 550.38 1388.17 550.777 1376.91 549.87C1376.91 548.137 1376.91 546.33 1376.91 544.53C1376.91 480.157 1376.9 415.792 1376.91 351.42C1376.91 341.107 1376.8 330.795 1374.88 320.61C1374.27 317.4 1373.66 314.152 1372.64 311.055C1367.03 293.962 1354.78 284.752 1337.32 282.487C1326.42 281.077 1315.48 281.595 1304.79 284.58C1286.02 289.822 1275.25 302.25 1271.72 321.27C1270.06 330.225 1269.63 339.247 1269.64 348.315C1269.65 385.027 1269.64 421.747 1269.64 458.46C1269.64 487.05 1269.64 515.64 1269.64 544.23C1269.64 545.94 1269.64 547.657 1269.64 549.315C1265.9 550.477 1199.51 550.95 1181.17 549.99C1180.15 546.78 1179.68 223.95 1180.73 214.47C1208.88 214.47 1237.06 214.47 1265.81 214.47C1265.81 230.092 1265.81 245.722 1265.81 261.345C1266.13 261.442 1266.44 261.547 1266.76 261.645C1267.4 260.707 1268.02 259.747 1268.7 258.825C1273.09 252.757 1277.3 246.54 1281.94 240.667C1295.59 223.387 1313.59 213.21 1335.04 208.927C1355.06 204.93 1375.03 205.23 1395 209.655C1418.21 214.8 1435.27 228.082 1447.03 248.467C1449.67 253.027 1451.94 257.79 1454.6 262.89C1455.31 261.892 1455.9 261.09 1456.46 260.265C1458.66 257.04 1460.75 253.74 1463.05 250.59C1477.18 231.285 1495.56 218.032 1518.73 211.59C1543.67 204.652 1568.68 203.55 1593.44 211.897C1628.1 223.575 1650.01 247.5 1658.77 282.967C1661.04 292.14 1661.81 301.762 1662.46 311.235C1663.17 321.66 1663.11 332.152 1663.09 342.622C1662.98 409.807 1662.79 476.985 1662.61 544.17C1662.61 546.007 1662.61 547.845 1662.61 549.915C1632.42 549.915 1602.67 549.915 1572.5 549.915C1572.49 488.22 1572.49 426.705 1572.49 364.717Z" fill="white"/> <path d="M963.289 559.522C950.209 557.475 937.789 554.55 925.759 550.042C897.102 539.31 875.007 520.56 858.267 495.142C842.652 471.435 832.789 445.575 828.686 417.51C823.624 382.845 825.492 348.69 836.479 315.255C844.122 291.99 855.964 271.02 871.849 252.412C891.964 228.855 917.831 214.942 947.734 208.14C972.949 202.402 998.434 201.525 1024.11 204.165C1045.09 206.325 1065.24 211.372 1084.14 220.972C1101.26 229.665 1115.76 241.552 1127.67 256.597C1149.38 284.017 1162.72 315.022 1167.59 349.672C1172.33 383.415 1170.29 416.64 1159.93 449.205C1152.9 471.322 1141.87 491.302 1127.26 509.318C1107.4 533.798 1081.52 548.513 1051.21 555.915C1026.86 561.863 1002.12 562.875 977.217 560.955C972.702 560.587 968.209 560.032 963.289 559.522ZM963.544 284.04C951.409 289.612 942.034 298.297 934.834 309.45C925.579 323.79 921.154 339.787 919.024 356.505C916.819 373.785 916.849 391.087 919.009 408.375C920.742 422.242 924.124 435.667 930.544 448.17C939.559 465.727 952.879 478.47 972.026 484.425C983.051 487.852 994.376 488.572 1005.85 487.672C1029.33 485.827 1047.78 475.455 1060.5 455.415C1070.25 440.033 1074.56 422.887 1076.47 405.022C1078.09 389.91 1078.05 374.775 1076.46 359.662C1075 345.937 1072.01 332.587 1066.19 319.98C1057.86 301.912 1045.22 288.09 1025.99 281.737C1005.28 274.897 984.544 275.347 963.544 284.04Z" fill="white"/> <path d="M618.739 618.097C639.086 633.915 659.171 649.53 679.646 665.437C677.756 667.095 676.121 668.73 674.291 670.102C665.479 676.68 655.324 680.122 644.741 682.477C634.496 684.757 624.079 686.002 613.624 686.047C597.859 686.115 582.094 685.537 566.329 685.215C565.586 685.2 564.851 685.02 563.959 684.892C563.959 661.462 563.959 638.28 563.959 614.79C579.761 615.262 595.391 616.552 610.841 611.752C613.391 613.8 615.934 615.84 618.739 618.097Z" fill="white"/> <path d="M522.041 231.915C519.904 225.877 517.901 220.17 515.899 214.447C519.296 213.487 540.019 213.217 547.736 214.102C539.494 221.415 531.679 228.337 523.601 235.507C523.024 234.172 522.604 233.205 522.041 231.915Z" fill="white"/> <path d="M773.164 433.628C753.897 487.905 736.257 542.378 715.497 595.733C710.412 608.805 704.434 621.525 698.839 634.395C698.179 635.91 697.332 637.335 696.387 639.158C695.322 637.793 694.512 636.863 693.814 635.858C674.449 608.228 655.069 580.598 635.772 552.923C634.369 550.905 633.312 548.573 632.487 546.24C609.229 480.195 586.024 414.135 562.819 348.068C562.414 346.905 562.099 345.713 561.717 344.475C583.032 315.48 604.287 286.56 626.187 256.778C646.557 325.17 666.409 392.79 687.334 460.328C710.307 378.248 733.272 296.168 756.297 213.893C787.294 213.893 818.187 213.893 849.807 213.893C824.262 287.16 798.792 360.225 773.164 433.628Z" fill="white"/> <defs> <linearGradient id="axyomLogoGrad" x1="454" y1="251.5" x2="454.117" y2="748.253" gradientUnits="userSpaceOnUse"> <stop stop-color="#00B2A0"/> <stop offset="1" stop-color="#004C44"/> </linearGradient> </defs> </symbol><symbol id="axyomMark" viewBox="100 0 710 749"><path d="M105.327 748.253C106.039 746.723 106.527 745.043 107.494 743.693C159.109 671.595 210.777 599.543 262.399 527.453C293.037 484.68 323.614 441.862 354.214 399.06C355.114 397.807 355.962 396.51 356.952 395.07C355.812 393.435 354.769 391.898 353.689 390.39C288.567 299.348 223.437 208.305 158.307 117.263C157.669 116.378 157.062 115.47 156.499 114.128C156.559 113.685 156.897 113.362 156.897 113.362C158.044 114.135 159.259 114.825 160.332 115.695C247.947 186.465 335.547 257.243 423.154 328.02C424.482 329.093 425.832 330.15 427.662 331.598C552.574 221.048 677.457 110.52 802.339 0C802.534 0.1575 802.722 0.307496 802.917 0.464996C705.934 131.985 608.959 263.497 511.894 395.137C513.282 397.125 514.519 398.918 515.772 400.695C579.687 491.505 643.602 582.307 707.517 673.117C708.147 674.01 708.754 674.918 709.294 676.275C709.099 676.838 708.979 676.943 708.859 677.055C707.577 676.2 706.227 675.428 705.019 674.483C615.274 604.395 525.544 534.293 435.814 464.19C434.584 463.23 433.332 462.308 431.847 461.183C430.759 462.045 429.649 462.84 428.629 463.74C323.569 556.223 218.517 648.713 113.464 741.203C110.899 743.46 108.312 745.703 105.507 748.117C105.252 748.268 105.327 748.253 105.327 748.253Z" fill="url(#axyomMarkGrad)"/><defs><linearGradient id="axyomMarkGrad" x1="454" y1="0" x2="454" y2="748" gradientUnits="userSpaceOnUse"><stop stop-color="#2fe0cc"/><stop offset=".45" stop-color="#00B2A0"/><stop offset="1" stop-color="#00695e"/></linearGradient></defs></symbol></svg>
 <div id="app">
   <aside id="rail">
-    <div class="brand"><svg class="logo" viewBox="0 0 1664 749" aria-label="Axyom"><use href="#axyomLogo"/></svg></div>
-    <div class="firm"><b>Restaurant Talblick</b>Rechnungswesen</div>
-    <nav id="nav"></nav>
-    <div class="foot">Demo mit erfundenen Daten.<br>Änderungen bleiben in diesem Browser.<br><button id="reset">Demo zurücksetzen</button></div>
+    <a class="brand" href="#" aria-label="Axyom — Start"><svg class="logo" viewBox="0 0 1664 749" aria-hidden="true"><use href="#axyomLogo"/></svg><svg class="mark" viewBox="100 0 710 749" aria-hidden="true"><use href="#axyomMark"/></svg></a>
+    <button class="menu" data-menu aria-expanded="false" aria-controls="lade"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></svg>Menü<span class="badge" hidden></span></button>
+    <div id="schatten"></div>
+    <div class="lade" id="lade">
+      <div class="firm"><b>Restaurant Talblick</b>Rechnungswesen</div>
+      <nav id="nav" aria-label="Bereiche"></nav>
+      <div class="foot">Demo mit erfundenen Daten.<br>Änderungen bleiben in diesem Browser.<br><button id="reset">Demo zurücksetzen</button> · <button data-go="einstellungen">Ansicht ändern</button></div>
+    </div>
   </aside>
   <main>
     <header>
@@ -909,7 +1021,9 @@ const MODULES = [
   { id: 'mwst', name: 'MWST', titel: 'MWST', sub: 'Abrechnung nach der effektiven Methode, Quartal für Quartal' },
   { grp: 'Daten' },
   { id: 'austausch', name: 'Belege & Export', titel: 'Belege & Export', sub: 'Hochladen, was ankommt — herunterladen, was der Treuhänder braucht' },
-  { id: 'einstellungen', name: 'Einstellungen', titel: 'Einstellungen', sub: 'Firmendaten, Zahlteil und Textvorlagen' },
+  { id: 'einstellungen', name: 'Einstellungen', titel: 'Einstellungen', sub: 'Darstellung, Firmendaten, Zahlteil und Textvorlagen' },
+  // the start page of the «Kacheln» view; never listed as an area itself
+  { id: 'start', name: 'Alle Bereiche', titel: 'Alle Bereiche', sub: 'Die Zahl auf einer Karte sagt, was dort noch offen ist', versteckt: true },
 ];
 const ICON = {
   uebersicht: '<rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/>',
@@ -957,6 +1071,47 @@ function kasseStand() {
   return { bar, ein, aus, bestand, einzahlen: Math.max(0, r2(bestand - KASSE_ANFANG)) };
 }
 
+/* ── Ansicht ──────────────────────────────────────────────────────────
+   How one gets around, chosen per kind of device in Einstellungen. Kept
+   apart from the demo data, so «Demo zurücksetzen» leaves it alone. */
+const ANSICHT_SPEICHER = 'axyom-rechnungswesen-ansicht';
+const ANSICHTEN = {
+  seite: ['Seitenleiste', 'Alle Bereiche links, immer sichtbar'],
+  schmal: ['Schmale Leiste', 'Nur Symbole — mehr Platz für die Arbeit'],
+  oben: ['Kopfleiste', 'Die Bereiche oben in einer Zeile'],
+  kacheln: ['Kacheln', 'Eine Startseite mit einer Karte je Bereich'],
+};
+const GERAETE = [
+  { id: 'computer', name: 'Computer', d: 'ab 1200 px Breite', wahl: ['seite', 'schmal', 'oben', 'kacheln'] },
+  { id: 'tablet', name: 'Tablet', d: '761 bis 1199 px', wahl: ['seite', 'schmal', 'oben', 'kacheln'] },
+  // no narrow rail on a phone: 68 px of 390 is too much to give up
+  { id: 'handy', name: 'Handy', d: 'bis 760 px', wahl: ['seite', 'oben', 'kacheln'], namen: { seite: ['Menü', 'Die Seitenleiste zum Aufklappen'] } },
+];
+const ANSICHT_STANDARD = { computer: 'seite', tablet: 'kacheln', handy: 'kacheln' };
+let ANSICHT = { ...ANSICHT_STANDARD };
+try {
+  const s = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || 'null');
+  if (s) for (const g of GERAETE) if (g.wahl.includes(s[g.id])) ANSICHT[g.id] = s[g.id];
+} catch (e) { }
+const MQ_HANDY = matchMedia('(max-width:760px)'), MQ_TABLET = matchMedia('(max-width:1199px)');
+const geraet = () => MQ_HANDY.matches ? 'handy' : MQ_TABLET.matches ? 'tablet' : 'computer';
+// what is drawn right now; the Seitenleiste on a phone folds into a menu
+function nav() { const g = geraet(), a = ANSICHT[g]; return g === 'handy' && a === 'seite' ? 'menue' : a; }
+function ansichtName(g, a) { const x = GERAETE.find(y => y.id === g); return (x.namen && x.namen[a]) || ANSICHTEN[a]; }
+function ansichtSetzen(werte) {
+  ANSICHT = { ...ANSICHT, ...werte };
+  try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ANSICHT)); } catch (e) { }
+}
+const heim = () => nav() === 'kacheln' ? 'start' : 'uebersicht';
+function menu(auf) {
+  document.documentElement.classList.toggle('nav-offen', auf);
+  $('#rail .menu').setAttribute('aria-expanded', auf);
+  $('#rail .menu').setAttribute('aria-label', auf ? 'Menü schliessen' : 'Menü öffnen');
+  // a folded-away menu must not be reachable with Tab either
+  $('#lade').inert = nav() === 'menue' && !auf;
+  if (auf) { const a = $('#nav a.on') || $('#nav a'); if (a) a.focus(); }
+}
+
 /* ── routing ──────────────────────────────────────────────────────────── */
 let AKTIV = 'uebersicht', PARAM = '';
 function go(id, param) {
@@ -965,19 +1120,37 @@ function go(id, param) {
 }
 function lesen() {
   const [id, p] = location.hash.replace(/^#/, '').split('/');
-  AKTIV = MODULES.some(m => m.id === id) ? id : 'uebersicht';
+  AKTIV = MODULES.some(m => m.id === id) && !(id === 'start' && nav() !== 'kacheln') ? id : heim();
   PARAM = decodeURIComponent(p || '');
 }
 function renderRail() {
-  const o = offen();
-  $('#nav').innerHTML = MODULES.map(m => {
-    if (m.grp) return `<div class="grp">${m.grp}</div>`;
-    const [n, s] = badge(m.id, o);
-    return `<a href="#${m.id}" class="${m.id === AKTIV ? 'on' : ''}" ${m.id === AKTIV ? 'aria-current="page"' : ''}>${ic(m.id)}${esc(m.name)}${n ? `<span class="badge s${s}">${n}</span>` : ''}</a>`;
-  }).join('');
+  const o = offen(), n = nav();
+  document.documentElement.dataset.nav = n;
+  const alle = MODULES.filter(m => m.id && !m.versteckt).map(m => badge(m.id, o));
+  const summe = alle.reduce((s, [x]) => s + x, 0), schwer = alle.some(([x, st]) => x && st === 3) ? 3 : 2;
+  if (n === 'kacheln') {
+    const m = MODULES.find(x => x.id === AKTIV);
+    $('#nav').innerHTML = AKTIV === 'start' ? '<span class="wo">Restaurant Talblick · Rechnungswesen</span>'
+      : `<a href="#start" class="alle">${ic('uebersicht')}<span class="lbl">Alle Bereiche</span>${summe ? `<span class="badge s${schwer}">${summe}</span>` : ''}</a><span class="wo">${esc(m.name)}</span>`;
+  } else {
+    $('#nav').innerHTML = MODULES.map(m => {
+      if (m.versteckt) return '';
+      if (m.grp) return `<div class="grp">${m.grp}</div>`;
+      const [z, s] = badge(m.id, o);
+      return `<a href="#${m.id}" class="${m.id === AKTIV ? 'on' : ''}" ${m.id === AKTIV ? 'aria-current="page"' : ''}>${ic(m.id)}<span class="lbl">${esc(m.name)}</span>${z ? `<span class="badge s${s}" aria-label="${z} offen">${z}</span>` : ''}</a>`;
+    }).join('');
+  }
+  const mb = $('#rail .menu .badge'); mb.hidden = !summe; mb.textContent = summe; mb.className = 'badge s' + schwer;
+  $('#lade').inert = n === 'menue' && !document.documentElement.classList.contains('nav-offen');
+  // in the top bar, keep the open area in view instead of scrolled off
+  if (n === 'oben') {
+    const nv = $('#nav'), a = nv.querySelector('a.on');
+    if (a) { const r = a.getBoundingClientRect(), b = nv.getBoundingClientRect(); if (r.left < b.left || r.right > b.right) nv.scrollLeft += r.left - b.left - 24; }
+  }
 }
 const VIEWS = {};
 function render() {
+  if (document.documentElement.classList.contains('nav-offen')) menu(false);
   lesen();
   const m = MODULES.find(x => x.id === AKTIV);
   $('#titel').textContent = m.titel;
@@ -1667,13 +1840,71 @@ VIEWS.austausch = () => `
   </div>`;
 
 /* ══════════════════════════════════════════════════════════════════════
+   ALLE BEREICHE — the start page of the «Kacheln» view
+   ══════════════════════════════════════════════════════════════════════ */
+VIEWS.start = () => {
+  const o = offen(), k = kasseStand();
+  const teile = (...x) => x.filter(Boolean).join(' · ');
+  const rot = t => `<span class="rot">${t}</span>`, ok = t => `<span class="ok">${t}</span>`;
+  const STAND = {
+    uebersicht: 'Was heute zu tun ist — und wie der Monat läuft',
+    rechnungen: teile(o.pruefen && `${o.pruefen} zu prüfen`, o.zahlen && `${o.zahlen} zu zahlen`, o.ueberfaellig && rot(`${o.ueberfaellig} überfällig`)) || ok('Alles erledigt'),
+    bank: teile(o.bankOffen && `${o.bankOffen} ohne Beleg`, o.bankAbschluss && `${o.bankAbschluss} abzuschliessen`) || ok('Alles abgeglichen'),
+    kasse: teile(`Bestand ${chf(k.bestand, 0)}`, k.einzahlen > 0 && `${chf(k.einzahlen, 0)} auf die Bank`),
+    kunden: teile(o.debFreigabe && `${o.debFreigabe} zur Freigabe`, o.debEntwurf && `${o.debEntwurf} zu schreiben`, o.debUeber && rot(`${o.debUeber} überfällig`)) || ok('Alles bezahlt'),
+    kosten: 'Wohin das Geld fliesst, gemessen an Ihren Zielen',
+    konten: 'Saldo, Soll und Haben aus den Belegen',
+    mwst: 'Abrechnung Quartal für Quartal',
+    austausch: 'Belege hochladen, Exporte für den Treuhänder',
+    einstellungen: 'Darstellung, Firmendaten und Vorlagen',
+  };
+  let html = '', offenGrp = false;
+  for (const m of MODULES) {
+    if (m.versteckt) continue;
+    if (m.grp) { html += `${offenGrp ? '</div>' : ''}<h2 class="kgrp">${m.grp}</h2><div class="kacheln">`; offenGrp = true; continue; }
+    const [z, st] = badge(m.id, o);
+    html += `<a class="kachel" href="#${m.id}"><span class="kic">${ic(m.id)}</span>${z ? `<span class="badge s${st}" aria-label="${z} offen">${z}</span>` : ''}<span class="kn">${esc(m.name)}</span><span class="ks">${STAND[m.id] || ''}</span></a>`;
+  }
+  return html + (offenGrp ? '</div>' : '');
+};
+
+/* the small pictures on the Darstellung choices — drawn with boxes */
+function vorschau(a, hoch) {
+  const i = (c, l, t, w, h) => `<i class="${c}" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%"></i>`;
+  const inhalt = (l, t) => i('g', l + 6, t + 8, 34, 4) + i('c', l + 6, t + 22, 88 - l, 30) + i('c', l + 6, t + 58, (88 - l) / 2 - 2, 26 - t / 2) + i('c', l + 6 + (88 - l) / 2 + 2, t + 58, (88 - l) / 2 - 2, 26 - t / 2);
+  const B = {
+    seite: () => i('d', 0, 0, 26, 100) + i('la', 5, 14, 14, 3) + i('l', 5, 26, 16, 3) + i('l', 5, 36, 12, 3) + i('l', 5, 46, 15, 3) + i('l', 5, 56, 11, 3) + inhalt(26, 0),
+    schmal: () => i('d', 0, 0, 10, 100) + [14, 28, 40, 52, 64].map((t, n) => `<i class="${n ? 'l' : 'la'}" style="left:3%;top:${t}%;width:4%;height:6%;border-radius:50%"></i>`).join('') + inhalt(10, 0),
+    oben: () => i('d', 0, 0, 100, 17) + i('la', 4, 7, 9, 3) + i('l', 17, 7, 10, 3) + i('l', 31, 7, 8, 3) + i('l', 43, 7, 10, 3) + i('l', 57, 7, 7, 3) + inhalt(0, 14),
+    kacheln: () => i('d', 0, 0, 100, 17) + i('la', 4, 7, 12, 3) + [0, 1, 2].map(x => [0, 1].map(y => i('c', 6 + x * 30, 27 + y * 36, 27, 31) + i('t', 9 + x * 30, 31 + y * 36, 7, 9)).join('')).join(''),
+  };
+  const H = {
+    menue: () => i('d', 0, 0, 100, 13) + i('l', 66, 5, 22, 3) + i('g', 10, 22, 50, 4) + i('c', 10, 32, 80, 20) + i('c', 10, 56, 80, 20) + `<i style="left:0;top:0;width:100%;height:100%;background:rgba(10,12,16,.35)"></i>` + i('d', 0, 0, 62, 100) + i('la', 10, 10, 30, 3) + i('l', 10, 20, 40, 3) + i('l', 10, 28, 34, 3) + i('l', 10, 36, 40, 3),
+    oben: () => i('d', 0, 0, 100, 13) + i('la', 8, 5, 18, 3) + i('l', 32, 5, 18, 3) + i('l', 56, 5, 18, 3) + i('l', 80, 5, 18, 3) + i('g', 10, 22, 50, 4) + i('c', 10, 32, 80, 22) + i('c', 10, 58, 80, 30),
+    kacheln: () => i('d', 0, 0, 100, 13) + [0, 1].map(x => [0, 1, 2].map(y => i('c', 9 + x * 43, 21 + y * 26, 39, 22) + i('t', 15 + x * 43, 25 + y * 26, 12, 7)).join('')).join(''),
+  };
+  return `<span class="vs${hoch ? ' hoch' : ''}" aria-hidden="true">${(hoch ? H : B)[a]()}</span>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    EINSTELLUNGEN
    ══════════════════════════════════════════════════════════════════════ */
 VIEWS.einstellungen = () => {
   const f = DB.firma;
   const fld = (k, t, w) => `<label class="fld"${w ? ' style="grid-column:1/-1"' : ''}><span>${t}</span><input data-firma="${k}" value="${esc(f[k])}"></label>`;
   const tx = (k, t) => `<label class="fld"><span>${t}</span><textarea data-text="${k}">${esc(DB.texte[k])}</textarea></label>`;
-  return `<div class="grid g2" style="align-items:start">
+  const hier = geraet();
+  const std = GERAETE.map(g => g.name + ': ' + ansichtName(g.id, ANSICHT_STANDARD[g.id])[0]).join(' · ');
+  const darstellung = `<div class="card" id="darstellung" style="margin-bottom:16px"><h2>Darstellung <small>wie Sie sich durch die Bereiche bewegen</small></h2>
+    <p class="lead">Für jede Bildschirmgrösse eine eigene Wahl. Sie gilt sofort und nur in diesem Browser — «Demo zurücksetzen» lässt sie stehen.</p>
+    <div class="ansicht">${GERAETE.map(g => `<div class="zeile">
+      <div class="geraet">${g.name}${g.id === hier ? '<span class="pill s1">dieses Gerät</span>' : ''}<small>${g.d}</small></div>
+      <div class="wahl" role="radiogroup" aria-label="Darstellung auf ${g.name}">${g.wahl.map(a => {
+        const [n, d] = ansichtName(g.id, a), on = ANSICHT[g.id] === a;
+        return `<button class="opt${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-ansicht="${g.id}:${a}">${vorschau(g.id === 'handy' && a === 'seite' ? 'menue' : a, g.id === 'handy')}<b>${n}</b><span>${d}</span></button>`;
+      }).join('')}</div></div>`).join('')}</div>
+    <div class="row" style="margin-top:16px"><button class="btn sm" data-ansichtstd>Standard wiederherstellen</button><span class="dim" style="font-size:12px">${std}</span></div></div>`;
+  return darstellung + `<div class="grid g2" style="align-items:start">
     <div class="card"><h2>Firmendaten & Zahlteil</h2><p class="lead">Erscheinen auf jeder Kundenrechnung und im QR-Zahlteil.</p>
       <div class="grid g2" style="gap:10px">${fld('name', 'Rechtlicher Name')}${fld('marke', 'Marke')}${fld('strasse', 'Strasse', 1)}${fld('plz', 'PLZ')}${fld('ort', 'Ort')}${fld('iban', 'IBAN', 1)}${fld('mwst', 'MWST-Nummer', 1)}${fld('email', 'E-Mail auf der Rechnung')}${fld('inhaber', 'Freigabe durch')}</div>
       <div class="row" style="margin-top:14px"><button class="btn acc" data-firmaspeichern>Speichern</button></div></div>
@@ -1684,7 +1915,9 @@ VIEWS.einstellungen = () => {
   <div class="card" style="margin-top:16px"><h2>Lieferanten <small>Standard für Konto, MWST und Zahlungsziel</small></h2><p class="lead">Daraus kommen die Vorschläge beim Prüfen.</p>
     <div class="tw"><table class="t"><thead><tr><th>Lieferant</th><th>Ort</th><th>Konto</th><th class="r">MWST</th><th class="r">Ziel</th><th>Zahlung</th></tr></thead><tbody>
     ${LIEFERANTEN.map(l => `<tr><td><b>${esc(l.name)}</b></td><td>${esc(l.ort)}</td><td>${esc(kname(l.konto))}</td><td class="r">${l.satz} %</td><td class="r">${l.ziel ? l.ziel + ' T.' : 'sofort'}</td><td>${l.auto ? '<span class="pill g">' + esc(l.auto) + '</span>' : l.waehrung ? '<span class="pill i">' + l.waehrung + '</span>' : 'E-Banking'}</td></tr>`).join('')}
-    </tbody></table></div></div>`;
+    </tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><h2>Demo</h2><p class="lead">Alle erfundenen Daten wieder wie am Anfang. Die Darstellung bleibt, wie Sie sie gewählt haben.</p>
+    <button class="btn" data-reset>Demo zurücksetzen</button></div>`;
 };
 /* ══════════════════════════════════════════════════════════════════════
    EVENTS — one delegated listener for every view. Views are plain HTML
@@ -1767,13 +2000,25 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-menu],[data-reset],#schatten,#reset,#toast');
+  // a tap on the area already open still closes the menu
+  if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
   const d = t.dataset;
   if (t.id === 'toast') { t.classList.remove('show'); return; }
-  if (t.id === 'reset') {
+  if ('menu' in d) { menu(!document.documentElement.classList.contains('nav-offen')); return; }
+  if (t.id === 'schatten') { menu(false); $('#rail .menu').focus(); return; }
+  if (d.ansicht) {
+    const [g, a] = d.ansicht.split(':'), vorher = nav();
+    ansichtSetzen({ [g]: a }); neu();
+    if (nav() !== vorher) window.scrollTo(0, 0);
+    toast(`${GERAETE.find(x => x.id === g).name}: <b>${ansichtName(g, a)[0]}</b>${g === geraet() ? '' : ' — gilt, sobald die App auf einem ' + GERAETE.find(x => x.id === g).name + ' offen ist'}`, 1);
+    return;
+  }
+  if ('ansichtstd' in d) { ansichtSetzen(ANSICHT_STANDARD); neu(); toast('Darstellung auf Standard zurückgesetzt.', 1); return; }
+  if (t.id === 'reset' || 'reset' in d) {
     modal(`<h3>Demo zurücksetzen?</h3><p class="dim">Alle Änderungen in diesem Browser gehen verloren — die Demo startet wieder wie am Anfang.</p><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Zurücksetzen</button></div>`,
-      () => { zuruecksetzen(); RFILTER = 'pruefen'; modalZu(); go('uebersicht'); toast('Demo zurückgesetzt.', 1); });
+      () => { zuruecksetzen(); RFILTER = 'pruefen'; modalZu(); go(heim()); toast('Demo zurückgesetzt.', 1); });
     return;
   }
   if ('zu' in d) { modalZu(); return; }
@@ -1996,7 +2241,7 @@ function camtHoch(file) {
   if (ev === 'drop' && e.dataTransfer.files.length) { if (z.id === 'drop-camt') camtHoch(e.dataTransfer.files[0]); else belegeHoch(e.dataTransfer.files); }
 }));
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if ($('#modal').classList.contains('on')) modalZu(); const b = $('#treffer'); if (b) b.remove(); }
+  if (e.key === 'Escape') { if (document.documentElement.classList.contains('nav-offen')) { menu(false); $('#rail .menu').focus(); } if ($('#modal').classList.contains('on')) modalZu(); const b = $('#treffer'); if (b) b.remove(); }
   if (e.key === 'Enter' && e.target.matches('[role="button"][data-go],[role="button"][data-kgruppe],[role="button"][data-export]')) { e.preventDefault(); e.target.click(); }
   if (e.key === 'Enter' && e.target.closest('#modal') && e.target.tagName === 'INPUT' && MODAL_OK) { e.preventDefault(); MODAL_OK(); }
   // ← → leaf through invoices while reviewing, unless typing
@@ -2005,6 +2250,8 @@ document.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('hashchange', render);
+// turning a tablet or resizing a window can cross into another Ansicht
+[MQ_HANDY, MQ_TABLET].forEach(q => q.addEventListener('change', render));
 laden();
 render();
 </script>
