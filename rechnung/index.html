@@ -1,0 +1,2012 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Public but unlisted, like the other demos: noindex keeps it out of search
+     results; robots.txt deliberately does not block it, or the tag is unread. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Axyom — Rechnungswesen</title>
+<style>
+:root{
+  --ink:#1d1d1f; --dim:#6e6e73; --soft:rgba(0,0,0,.07); --line:rgba(0,0,0,.12);
+  --acc:#00b2a0; --acci:#007a6e; --wash:rgba(0,178,160,.09);
+  --dark:#0b0d12; --surf:#f5f5f7; --card:#fff;
+  /* three levels and nothing else: rot = jetzt, gelb = heute, grün = erledigt */
+  --bad:#c02a17; --badbg:rgba(192,42,23,.09);
+  --warn:#a85600; --warnbg:rgba(178,94,0,.10);
+  --ok:#007a6e; --okbg:rgba(0,178,160,.12);
+  --info:#2f6db3; --infobg:rgba(47,109,179,.09);
+  --r:12px;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--surf);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--acci)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.dim{color:var(--dim)}
+.mono{font-family:var(--mono);font-size:.92em}
+#app{display:flex;min-height:100vh}
+
+/* ── rail ── */
+#rail{width:216px;flex:none;background:var(--dark);color:#fff;display:flex;flex-direction:column;
+  padding:18px 12px;position:sticky;top:0;height:100vh}
+#rail .brand{display:flex;align-items:flex-end;gap:8px;padding:2px 8px 6px}
+#rail .brand .logo{width:100px;height:auto;flex:none;display:block}
+#rail .firm{padding:6px 8px 14px;font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.35}
+#rail .firm b{display:block;color:rgba(255,255,255,.82);font-weight:600;font-size:12.5px}
+#rail nav{display:flex;flex-direction:column;gap:2px;overflow:auto}
+#rail .grp{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.32);padding:12px 10px 4px}
+#rail a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;min-height:36px;
+  color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;cursor:pointer}
+#rail a .ic{width:16px;height:16px;flex:none;opacity:.65}
+#rail a:hover,#rail a:active{color:#fff;background:rgba(255,255,255,.06)}
+#rail a.on{background:rgba(0,178,160,.17);color:#fff;font-weight:650}
+#rail a.on .ic{opacity:1;color:var(--acc)}
+#rail a .badge{margin-left:auto;font-size:10.5px;font-weight:700;border-radius:99px;padding:1px 7px;background:var(--warn);color:#fff}
+#rail a .badge.s3{background:var(--bad)}
+#rail a .badge.s1{background:rgba(255,255,255,.16)}
+#rail .foot{margin-top:auto;padding:12px 8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.4);line-height:1.6}
+#rail .foot button{background:none;border:0;color:rgba(255,255,255,.55);text-decoration:underline;cursor:pointer;font-size:11px;padding:0}
+#rail .foot button:hover{color:#fff}
+
+/* ── main ── */
+main{flex:1;min-width:0;display:flex;flex-direction:column}
+header{padding:18px 28px 14px;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.6) blur(12px);
+  -webkit-backdrop-filter:saturate(1.6) blur(12px);border-bottom:1px solid var(--soft);
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;position:sticky;top:0;z-index:20}
+header h1{font-size:21px;font-weight:700;letter-spacing:-.015em}
+header .sub{font-size:12.5px;color:var(--dim);margin-top:2px}
+header .tools{display:flex;gap:8px;align-items:center}
+#suche{width:240px;padding:8px 12px 8px 32px;border-radius:9px;border:1px solid var(--line);background:#fff
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236e6e73' stroke-width='1.6'%3E%3Ccircle cx='7' cy='7' r='4.6'/%3E%3Cpath d='m10.5 10.5 3.3 3.3'/%3E%3C/svg%3E") 10px 50%/14px no-repeat;font-size:16px}
+@media (min-width:761px){#suche{font-size:13.5px}}
+#suche:focus{outline:2px solid var(--acc);outline-offset:0;border-color:transparent}
+#view{padding:22px 28px 60px;max-width:1500px;width:100%}
+
+header .tools{position:relative}
+#treffer{position:absolute;right:0;top:calc(100% + 6px);width:min(440px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.16);overflow:hidden;z-index:40;max-height:60vh;overflow-y:auto}
+#treffer .tr{display:flex;flex-direction:column;gap:1px;width:100%;text-align:left;border:0;background:none;padding:10px 14px;border-bottom:1px solid var(--soft);cursor:pointer;font-size:13px}
+#treffer .tr:hover,#treffer .tr:focus{background:var(--wash);outline:0}
+#treffer .tr span{font-size:12px;color:var(--dim)}
+
+/* ── building blocks ── */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--soft);padding:18px 20px}
+.card>h2,.h2{font-size:15px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.card>h2 small,.h2 small{font-size:12px;font-weight:500;color:var(--dim)}
+.card .lead{font-size:12.5px;color:var(--dim);margin:3px 0 12px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack>*+*{margin-top:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+
+.kpi{background:#fff;border:1px solid var(--soft);border-radius:var(--r);padding:16px 18px;cursor:default;text-align:left;width:100%}
+button.kpi{cursor:pointer}
+button.kpi:hover{border-color:var(--line);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.kpi .k{font-size:12.5px;color:var(--dim);font-weight:500}
+.kpi .v{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--dim);margin-top:2px}
+.kpi.s3 .v{color:var(--bad)} .kpi.s2 .v{color:var(--warn)} .kpi.s1 .v{color:var(--ok)}
+.kpi .go{font-size:12px;color:var(--acci);font-weight:600;margin-top:8px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:9px;border:1px solid var(--line);
+  background:#fff;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;min-height:36px;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--surf)} .btn:active{transform:translateY(1px)}
+.btn.acc{background:var(--acc);border-color:var(--acc);color:#04211e}
+.btn.acc:hover{background:#00a393}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.dark:hover{background:#000}
+.btn.bad{color:var(--bad);border-color:rgba(192,42,23,.35)}
+.btn.bad:hover{background:var(--badbg)}
+.btn.sm{padding:5px 10px;min-height:30px;font-size:12.5px}
+.btn.link{border:0;background:none;color:var(--acci);padding:4px 2px;min-height:0}
+.btn.link:hover{text-decoration:underline;background:none}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);min-height:32px;display:inline-flex;align-items:center;gap:6px}
+.chip:hover{background:var(--surf)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip .n{font-size:11px;font-weight:700;opacity:.6}
+.chip.on .n{opacity:.8}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:650;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.pill.s3{background:var(--badbg);color:var(--bad)}
+.pill.s2{background:var(--warnbg);color:var(--warn)}
+.pill.s1{background:var(--okbg);color:var(--ok)}
+.pill.i{background:var(--infobg);color:var(--info)}
+.pill.g{background:rgba(0,0,0,.06);color:var(--dim)}
+
+/* the workflow: the same five steps on every document */
+.stufen{display:flex;gap:4px;align-items:stretch;margin:2px 0}
+.stufen .st{flex:1 1 auto;position:relative;padding:7px 6px;text-align:center;font-size:11px;font-weight:600;color:var(--dim);background:rgba(0,0,0,.04);border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stufen .st.done{background:var(--okbg);color:var(--ok)}
+.stufen .st.now{background:var(--ink);color:#fff}
+.stufen .st.hold{background:var(--warnbg);color:var(--warn)}
+.stufen.mini{gap:3px}
+.stufen.mini .st{padding:0;height:5px;border-radius:3px;font-size:0}
+
+/* tables */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-size:11.5px;font-weight:600;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t td{padding:10px;border-bottom:1px solid var(--soft);vertical-align:top}
+table.t tr.click{cursor:pointer}
+table.t tr.click:hover td{background:rgba(0,178,160,.04)}
+table.t tr.sel td{background:var(--wash)}
+table.t td.r,table.t th.r{text-align:right}
+table.t tfoot td{font-weight:700;border-bottom:0;border-top:1px solid var(--line)}
+table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
+
+/* forms */
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld>span{font-size:11.5px;font-weight:600;color:var(--dim);letter-spacing:.01em}
+.fld input,.fld select,.fld textarea,input.in,select.in{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;font-size:16px;min-height:38px;width:100%}
+@media (min-width:761px){.fld input,.fld select,.fld textarea,input.in,select.in{font-size:13.5px}}
+.fld textarea{min-height:76px;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus,input.in:focus,select.in:focus{outline:2px solid var(--acc);border-color:transparent}
+.fld.err input,.fld.err select{border-color:var(--bad);background:var(--badbg)}
+.fld .hint{font-size:11.5px;color:var(--dim)}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:1px;accent-color:var(--acc);flex:none}
+
+/* ── the work screen: list | document | decision ── */
+.split{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr) minmax(320px,400px);gap:16px;align-items:start}
+.split>.col{min-width:0}
+.split.deb{grid-template-columns:minmax(240px,320px) minmax(0,1fr) minmax(300px,380px)}
+.liste{background:#fff;border:1px solid var(--soft);border-radius:var(--r);overflow:hidden;position:sticky;top:86px;max-height:calc(100vh - 110px);display:flex;flex-direction:column}
+.liste .lh{padding:12px 12px 10px;border-bottom:1px solid var(--soft)}
+.liste .items{overflow:auto}
+.li{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--soft);padding:11px 14px;cursor:pointer;border-left:3px solid transparent}
+.li:hover{background:var(--surf)}
+.li.on{background:var(--wash);border-left-color:var(--acc)}
+.li .a{display:flex;justify-content:space-between;gap:10px;font-weight:650;font-size:13.5px}
+.li .b{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--dim);margin-top:2px}
+.li .c{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.leer{padding:28px 18px;text-align:center;color:var(--dim);font-size:13px}
+
+/* the invoice as paper */
+.paper{background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.07);padding:34px 38px;font-size:12.5px;color:#222;max-width:680px;margin:0 auto}
+.paper .ph{display:flex;justify-content:space-between;gap:20px;margin-bottom:26px}
+.paper .lg{font-weight:800;font-size:17px;letter-spacing:-.01em}
+.paper .adr{margin:20px 0 22px;line-height:1.5}
+.paper h3{font-size:16px;margin-bottom:4px}
+.paper table{width:100%;border-collapse:collapse;margin-top:14px}
+.paper th{text-align:left;font-size:11px;color:#666;border-bottom:1px solid #ccc;padding:5px 4px;font-weight:600}
+.paper td{padding:5px 4px;border-bottom:1px solid #eee}
+.paper .tot td{border:0;padding:3px 4px}
+.paper .tot tr:last-child td{font-weight:800;border-top:1.5px solid #222;padding-top:6px}
+.paper .qr{margin-top:26px;border-top:1px dashed #999;padding-top:14px;display:flex;gap:18px;font-size:11px;color:#444}
+.paper .qr .code{width:92px;height:92px;flex:none;background:#fff}
+.stamp{display:inline-block;border:2px solid var(--bad);color:var(--bad);font-weight:800;padding:2px 10px;border-radius:4px;transform:rotate(-4deg);font-size:13px;letter-spacing:.05em}
+
+/* decision panel */
+.panel{position:sticky;top:86px}
+.step{display:flex;gap:10px;align-items:center;font-size:13.5px;font-weight:700;margin:16px 0 10px}
+.step i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.step.done i{background:var(--acc);color:#04211e}
+.vatrow{display:grid;grid-template-columns:96px 1fr 1fr 1fr 30px;gap:6px;align-items:center;margin-bottom:6px}
+.vatrow .x{border:0;background:none;color:var(--dim);cursor:pointer;font-size:18px;min-height:32px}
+.box{border-radius:10px;padding:12px 14px;font-size:13px}
+.box.s2{background:var(--warnbg);color:#5c3300}
+.box.s3{background:var(--badbg);color:#6a1509}
+.box.s1{background:var(--okbg);color:#00433c}
+.box.i{background:var(--infobg);color:#173a62}
+.box b{font-weight:700}
+.box .btn{margin-top:8px}
+.sum{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+.sum.big{font-size:15px;font-weight:700;border-top:1px solid var(--line);margin-top:4px;padding-top:8px}
+.log{font-size:12.5px}
+.log div{padding:7px 0;border-bottom:1px solid var(--soft);display:grid;grid-template-columns:118px 1fr;gap:8px}
+.log div:last-child{border:0}
+
+/* charts */
+.bars{display:flex;align-items:flex-end;gap:10px;height:170px;padding-top:6px}
+.bars .bc{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
+.bars .stk{width:100%;max-width:46px;display:flex;flex-direction:column-reverse;border-radius:6px 6px 2px 2px;overflow:hidden}
+.bars .stk div{width:100%}
+.bars .lbl{font-size:11.5px;color:var(--dim)}
+.bars .bc.live .lbl{color:var(--ink);font-weight:700}
+.bars .bc.live .stk{outline:2px dashed rgba(0,0,0,.25);outline-offset:2px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin-top:10px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hbar{height:8px;background:rgba(0,0,0,.06);border-radius:4px;overflow:hidden;position:relative}
+.hbar div{height:100%;border-radius:4px}
+.hbar .ziel{position:absolute;top:-3px;width:2px;height:14px;background:var(--ink);opacity:.55}
+
+.todo{display:flex;gap:12px;align-items:center;padding:12px 2px;border-bottom:1px solid var(--soft);cursor:pointer}
+.todo:last-child{border:0}
+.todo:hover .t{color:var(--acci)}
+.todo .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.todo .dot.s3{background:var(--bad)} .todo .dot.s2{background:#e08a00} .todo .dot.s1{background:var(--acc)}
+.todo .t{font-weight:600;font-size:13.5px}
+.todo .d{font-size:12px;color:var(--dim)}
+.todo .n{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:26px;text-align:center;color:var(--dim);background:#fff;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--acc);background:var(--wash);color:var(--acci)}
+.drop b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(10,12,16,.42);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+#modal.on{display:flex}
+#modal .m{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+#modal .m h3{font-size:17px;margin-bottom:4px}
+#modal .m .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px);background:var(--ink);color:#fff;border-radius:12px;
+  padding:12px 18px;font-size:13.5px;max-width:min(560px,calc(100vw - 32px));opacity:0;pointer-events:none;transition:.22s;z-index:70;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}
+#toast.s1{background:#00433c} #toast.s2{background:#5c3300} #toast.s3{background:#6a1509}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tab{border:0;background:none;padding:9px 14px;font-size:13.5px;font-weight:600;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.on{color:var(--ink);border-bottom-color:var(--acc)}
+.tab .n{font-size:11px;background:rgba(0,0,0,.07);border-radius:99px;padding:1px 6px;margin-left:5px}
+.mtabs{display:none}
+
+/* ── narrower screens ── */
+@media (max-width:1280px){
+  .split,.split.deb{grid-template-columns:minmax(240px,300px) minmax(0,1fr)}
+  /* list on the left over both rows; on the right the decision, the
+     original right under it — what is checked stays next to what it is
+     checked against */
+  .split>.col:first-child{grid-column:1;grid-row:1/span 2}
+  .split>.col:last-child{grid-column:2;grid-row:1}
+  .split>.doc{grid-column:2;grid-row:2}
+  .panel{position:static}
+}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){
+  #app{flex-direction:column}
+  #rail{width:auto;height:auto;position:sticky;top:0;z-index:30;flex-direction:row;align-items:center;padding:8px 10px;gap:6px}
+  #rail .brand{padding:0 6px 0 2px}#rail .brand .logo{width:70px}
+  #rail .firm,#rail .grp,#rail .foot{display:none}
+  #rail nav{flex-direction:row;overflow-x:auto;scrollbar-width:none}
+  #rail nav::-webkit-scrollbar{display:none}
+  #rail a{white-space:nowrap;padding:7px 10px}
+  header{position:static;padding:14px 16px 12px;flex-wrap:wrap}
+  header .tools{width:100%}#suche{width:100%}
+  #view{padding:16px 16px 60px}
+  .split,.split.deb{grid-template-columns:minmax(0,1fr)}
+  .split>.col:first-child,.split>.col:last-child,.split>.doc{grid-column:1;grid-row:auto}
+  .split>.col:first-child{order:1}.split>.col:last-child{order:2}.split>.doc{order:3}
+  .liste{position:static;max-height:none}
+  .g2{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{padding:13px 14px}.kpi .v{font-size:21px}
+  .paper{padding:20px 16px;font-size:11.5px}
+  .vatrow{grid-template-columns:82px 1fr 1fr 28px}.vatrow .mw{display:none}
+  .stufen .st{font-size:10.5px;padding:6px 5px}
+  .log div{grid-template-columns:1fr}
+}
+@media print{#rail,header .tools,#toast,.noprint{display:none!important}body{background:#fff}#view{padding:0}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="axyomLogo" viewBox="0 0 1664 749"> <path d="M105.327 748.253C106.039 746.723 106.527 745.043 107.494 743.693C159.109 671.595 210.777 599.543 262.399 527.453C293.037 484.68 323.614 441.862 354.214 399.06C355.114 397.807 355.962 396.51 356.952 395.07C355.812 393.435 354.769 391.898 353.689 390.39C288.567 299.348 223.437 208.305 158.307 117.263C157.669 116.378 157.062 115.47 156.499 114.128C156.559 113.685 156.897 113.362 156.897 113.362C158.044 114.135 159.259 114.825 160.332 115.695C247.947 186.465 335.547 257.243 423.154 328.02C424.482 329.093 425.832 330.15 427.662 331.598C552.574 221.048 677.457 110.52 802.339 0C802.534 0.1575 802.722 0.307496 802.917 0.464996C705.934 131.985 608.959 263.497 511.894 395.137C513.282 397.125 514.519 398.918 515.772 400.695C579.687 491.505 643.602 582.307 707.517 673.117C708.147 674.01 708.754 674.918 709.294 676.275C709.099 676.838 708.979 676.943 708.859 677.055C707.577 676.2 706.227 675.428 705.019 674.483C615.274 604.395 525.544 534.293 435.814 464.19C434.584 463.23 433.332 462.308 431.847 461.183C430.759 462.045 429.649 462.84 428.629 463.74C323.569 556.223 218.517 648.713 113.464 741.203C110.899 743.46 108.312 745.703 105.507 748.117C105.252 748.268 105.327 748.253 105.327 748.253Z" fill="url(#axyomLogoGrad)"/> <path d="M296.427 390.03C296.427 414.398 296.427 438.3 296.427 462.825C285.709 476.918 274.429 491.093 263.884 505.793C253.422 520.365 243.694 535.463 233.832 550.058C228.709 550.058 224.352 550.058 219.702 550.058C214.137 537.938 212.929 524.76 211.429 510.93C209.712 512.603 208.617 513.66 207.537 514.733C192.574 529.613 176.014 542.265 156.499 550.62C136.264 559.283 115.069 561.833 93.2291 560.07C79.7291 558.983 66.6791 556.103 54.3866 550.35C23.0216 535.658 4.94658 511.26 1.00908 476.655C-0.918424 459.728 -0.228429 442.935 4.33157 426.48C12.0716 398.543 29.7866 378.99 55.7291 366.683C70.7816 359.543 86.7791 355.245 103.144 352.62C121.324 349.703 139.647 347.723 157.857 344.948C167.089 343.538 176.299 341.693 185.299 339.233C190.002 337.95 194.532 335.378 198.597 332.595C205.324 327.99 208.722 321.27 208.602 312.998C208.557 310.035 208.512 307.035 208.002 304.125C206.134 293.43 200.164 286.043 189.964 282.03C183.072 279.315 175.932 277.763 168.604 277.103C156.282 275.985 143.982 275.678 131.772 278.363C116.374 281.745 105.657 290.535 100.324 305.468C98.3891 310.883 96.9941 316.5 95.2691 322.328C67.5716 322.328 39.4991 322.328 10.8116 322.328C11.3591 317.318 11.7341 312.413 12.4391 307.56C15.0491 289.598 20.5391 272.633 30.4166 257.273C43.1741 237.428 61.3991 224.633 83.2466 216.57C99.4841 210.578 116.367 207.69 133.549 206.348C150.574 205.013 167.577 205.245 184.549 207.218C194.629 208.388 204.612 210.075 214.692 212.903C241.864 250.905 266.487 290.88 296.427 326.655C296.427 348.015 296.427 368.79 296.427 390.03ZM157.714 492.803C165.177 490.418 172.182 487.095 178.954 483.135C190.684 476.273 198.409 466.298 202.849 453.585C206.757 442.41 208.264 430.845 208.369 419.078C208.452 409.71 208.392 400.335 208.392 390.96C208.392 389.775 208.392 388.59 208.392 387.57C207.822 387.36 207.627 387.218 207.529 387.263C206.427 387.818 205.317 388.38 204.244 388.988C196.594 393.315 188.524 396.653 179.922 398.445C167.254 401.078 154.519 403.433 141.829 405.975C132.034 407.94 122.314 410.243 113.187 414.443C101.179 419.97 92.8241 428.775 89.7341 441.878C87.3941 451.793 87.8141 461.708 90.7841 471.48C93.0566 478.943 97.5266 484.77 104.059 489.023C109.909 492.825 116.277 495.15 123.199 496.11C134.712 497.7 145.909 495.983 157.714 492.803Z" fill="white"/> <path d="M1572.49 364.717C1572.49 354.562 1572.8 344.865 1572.37 335.19C1572.07 328.207 1571.41 321.12 1569.78 314.347C1565.19 295.312 1551.85 283.77 1532.35 281.467C1523.94 280.477 1515.48 280.605 1507.18 282.532C1490.43 286.425 1478.97 296.602 1472.24 312.277C1468.25 321.57 1466.49 331.372 1465.87 341.392C1465.62 345.442 1465.67 349.515 1465.66 353.572C1465.66 417.007 1465.66 480.435 1465.66 543.87C1465.66 545.737 1465.66 547.597 1465.66 549.405C1462.03 550.38 1388.17 550.777 1376.91 549.87C1376.91 548.137 1376.91 546.33 1376.91 544.53C1376.91 480.157 1376.9 415.792 1376.91 351.42C1376.91 341.107 1376.8 330.795 1374.88 320.61C1374.27 317.4 1373.66 314.152 1372.64 311.055C1367.03 293.962 1354.78 284.752 1337.32 282.487C1326.42 281.077 1315.48 281.595 1304.79 284.58C1286.02 289.822 1275.25 302.25 1271.72 321.27C1270.06 330.225 1269.63 339.247 1269.64 348.315C1269.65 385.027 1269.64 421.747 1269.64 458.46C1269.64 487.05 1269.64 515.64 1269.64 544.23C1269.64 545.94 1269.64 547.657 1269.64 549.315C1265.9 550.477 1199.51 550.95 1181.17 549.99C1180.15 546.78 1179.68 223.95 1180.73 214.47C1208.88 214.47 1237.06 214.47 1265.81 214.47C1265.81 230.092 1265.81 245.722 1265.81 261.345C1266.13 261.442 1266.44 261.547 1266.76 261.645C1267.4 260.707 1268.02 259.747 1268.7 258.825C1273.09 252.757 1277.3 246.54 1281.94 240.667C1295.59 223.387 1313.59 213.21 1335.04 208.927C1355.06 204.93 1375.03 205.23 1395 209.655C1418.21 214.8 1435.27 228.082 1447.03 248.467C1449.67 253.027 1451.94 257.79 1454.6 262.89C1455.31 261.892 1455.9 261.09 1456.46 260.265C1458.66 257.04 1460.75 253.74 1463.05 250.59C1477.18 231.285 1495.56 218.032 1518.73 211.59C1543.67 204.652 1568.68 203.55 1593.44 211.897C1628.1 223.575 1650.01 247.5 1658.77 282.967C1661.04 292.14 1661.81 301.762 1662.46 311.235C1663.17 321.66 1663.11 332.152 1663.09 342.622C1662.98 409.807 1662.79 476.985 1662.61 544.17C1662.61 546.007 1662.61 547.845 1662.61 549.915C1632.42 549.915 1602.67 549.915 1572.5 549.915C1572.49 488.22 1572.49 426.705 1572.49 364.717Z" fill="white"/> <path d="M963.289 559.522C950.209 557.475 937.789 554.55 925.759 550.042C897.102 539.31 875.007 520.56 858.267 495.142C842.652 471.435 832.789 445.575 828.686 417.51C823.624 382.845 825.492 348.69 836.479 315.255C844.122 291.99 855.964 271.02 871.849 252.412C891.964 228.855 917.831 214.942 947.734 208.14C972.949 202.402 998.434 201.525 1024.11 204.165C1045.09 206.325 1065.24 211.372 1084.14 220.972C1101.26 229.665 1115.76 241.552 1127.67 256.597C1149.38 284.017 1162.72 315.022 1167.59 349.672C1172.33 383.415 1170.29 416.64 1159.93 449.205C1152.9 471.322 1141.87 491.302 1127.26 509.318C1107.4 533.798 1081.52 548.513 1051.21 555.915C1026.86 561.863 1002.12 562.875 977.217 560.955C972.702 560.587 968.209 560.032 963.289 559.522ZM963.544 284.04C951.409 289.612 942.034 298.297 934.834 309.45C925.579 323.79 921.154 339.787 919.024 356.505C916.819 373.785 916.849 391.087 919.009 408.375C920.742 422.242 924.124 435.667 930.544 448.17C939.559 465.727 952.879 478.47 972.026 484.425C983.051 487.852 994.376 488.572 1005.85 487.672C1029.33 485.827 1047.78 475.455 1060.5 455.415C1070.25 440.033 1074.56 422.887 1076.47 405.022C1078.09 389.91 1078.05 374.775 1076.46 359.662C1075 345.937 1072.01 332.587 1066.19 319.98C1057.86 301.912 1045.22 288.09 1025.99 281.737C1005.28 274.897 984.544 275.347 963.544 284.04Z" fill="white"/> <path d="M618.739 618.097C639.086 633.915 659.171 649.53 679.646 665.437C677.756 667.095 676.121 668.73 674.291 670.102C665.479 676.68 655.324 680.122 644.741 682.477C634.496 684.757 624.079 686.002 613.624 686.047C597.859 686.115 582.094 685.537 566.329 685.215C565.586 685.2 564.851 685.02 563.959 684.892C563.959 661.462 563.959 638.28 563.959 614.79C579.761 615.262 595.391 616.552 610.841 611.752C613.391 613.8 615.934 615.84 618.739 618.097Z" fill="white"/> <path d="M522.041 231.915C519.904 225.877 517.901 220.17 515.899 214.447C519.296 213.487 540.019 213.217 547.736 214.102C539.494 221.415 531.679 228.337 523.601 235.507C523.024 234.172 522.604 233.205 522.041 231.915Z" fill="white"/> <path d="M773.164 433.628C753.897 487.905 736.257 542.378 715.497 595.733C710.412 608.805 704.434 621.525 698.839 634.395C698.179 635.91 697.332 637.335 696.387 639.158C695.322 637.793 694.512 636.863 693.814 635.858C674.449 608.228 655.069 580.598 635.772 552.923C634.369 550.905 633.312 548.573 632.487 546.24C609.229 480.195 586.024 414.135 562.819 348.068C562.414 346.905 562.099 345.713 561.717 344.475C583.032 315.48 604.287 286.56 626.187 256.778C646.557 325.17 666.409 392.79 687.334 460.328C710.307 378.248 733.272 296.168 756.297 213.893C787.294 213.893 818.187 213.893 849.807 213.893C824.262 287.16 798.792 360.225 773.164 433.628Z" fill="white"/> <defs> <linearGradient id="axyomLogoGrad" x1="454" y1="251.5" x2="454.117" y2="748.253" gradientUnits="userSpaceOnUse"> <stop stop-color="#00B2A0"/> <stop offset="1" stop-color="#004C44"/> </linearGradient> </defs> </symbol></svg>
+<div id="app">
+  <aside id="rail">
+    <div class="brand"><svg class="logo" viewBox="0 0 1664 749" aria-label="Axyom"><use href="#axyomLogo"/></svg></div>
+    <div class="firm"><b>Restaurant Talblick</b>Rechnungswesen</div>
+    <nav id="nav"></nav>
+    <div class="foot">Demo mit erfundenen Daten.<br>Änderungen bleiben in diesem Browser.<br><button id="reset">Demo zurücksetzen</button></div>
+  </aside>
+  <main>
+    <header>
+      <div><h1 id="titel"></h1><div class="sub" id="untertitel"></div></div>
+      <div class="tools"><input id="suche" type="search" placeholder="Suchen: Lieferant, Kunde, Nummer, Betrag" autocomplete="off" aria-label="Suchen"></div>
+    </header>
+    <div id="view"></div>
+  </main>
+</div>
+<div id="modal" role="dialog" aria-modal="true"><div class="m" id="modal-in"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+/* ──────────────────────────────────────────────────────────────────────────
+   ONE dataset. Every screen reads DB and writes back to it: an invoice that
+   is booked here is a line in Konten, a share in Kosten and an input-tax
+   amount in MWST — nobody carries it across. Every business, person, amount
+   and number in here is invented. «7999 Talwies» does not exist on purpose.
+
+   Today is fixed — Friday 16 October 2026 — because a demo you cannot
+   rehearse is a demo that surprises you in front of a customer.
+   ────────────────────────────────────────────────────────────────────────── */
+const HEUTE = '2026-10-16';
+
+const FIRMA = {
+  name: 'Talblick Gastro GmbH', marke: 'Restaurant Talblick',
+  strasse: 'Seestrasse 12', plz: '7999', ort: 'Talwies', land: 'Schweiz',
+  iban: 'CH93 0076 2011 6238 5295 7', mwst: 'CHE-000.000.000 MWST',
+  email: 'rechnungen@talblick.example', web: 'talblick.example',
+  zahlungsziel: 30, nummerAb: 2026100,
+  inhaber: 'Lea Brunner', treuhand: 'Treuhand Vogel & Partner',
+};
+
+/* Kontenplan — a slice of the Swiss KMU-Kontenrahmen, the accounts a
+   restaurant actually books to. «typ» decides the side and where it shows up:
+   A asset, P liability, E revenue, K cost. «gruppe» is the Kosten view's
+   category, so the analysis and the books can never disagree. */
+const KONTEN = [
+  { nr: '1000', name: 'Kasse',                      typ: 'A' },
+  { nr: '1020', name: 'Bank',                       typ: 'A' },
+  { nr: '1091', name: 'Geldtransfer Karten/Twint',  typ: 'A' },
+  { nr: '1100', name: 'Forderungen Kunden',         typ: 'A' },
+  { nr: '1170', name: 'Vorsteuer',                  typ: 'A' },
+  { nr: '2000', name: 'Verbindlichkeiten Lieferanten', typ: 'P' },
+  { nr: '2200', name: 'Geschuldete MWST',           typ: 'P' },
+  { nr: '2270', name: 'Sozialversicherungen',       typ: 'P' },
+  { nr: '3200', name: 'Ertrag Speisen',             typ: 'E' },
+  { nr: '3210', name: 'Ertrag Getränke',            typ: 'E' },
+  { nr: '3280', name: 'Ertrag Bankette & Firmen',   typ: 'E' },
+  { nr: '4200', name: 'Wareneinkauf Küche',         typ: 'K', gruppe: 'waren' },
+  { nr: '4210', name: 'Wareneinkauf Getränke',      typ: 'K', gruppe: 'waren' },
+  { nr: '4400', name: 'Verbrauchsmaterial',         typ: 'K', gruppe: 'waren' },
+  { nr: '5000', name: 'Löhne',                      typ: 'K', gruppe: 'personal' },
+  { nr: '5700', name: 'Sozialversicherungen AG',    typ: 'K', gruppe: 'personal' },
+  { nr: '6000', name: 'Miete',                      typ: 'K', gruppe: 'raum' },
+  { nr: '6040', name: 'Reinigung & Wäsche',         typ: 'K', gruppe: 'raum' },
+  { nr: '6100', name: 'Unterhalt & Reparaturen',    typ: 'K', gruppe: 'betrieb' },
+  { nr: '6300', name: 'Versicherungen',             typ: 'K', gruppe: 'verwaltung' },
+  { nr: '6400', name: 'Energie',                    typ: 'K', gruppe: 'betrieb' },
+  { nr: '6500', name: 'Büro & Verwaltung',          typ: 'K', gruppe: 'verwaltung' },
+  { nr: '6570', name: 'Informatik & Abos',          typ: 'K', gruppe: 'verwaltung' },
+  { nr: '6600', name: 'Werbung',                    typ: 'K', gruppe: 'werbung' },
+  { nr: '6800', name: 'Kartengebühren & Bankspesen', typ: 'K', gruppe: 'verwaltung' },
+];
+const GRUPPEN = {
+  personal:   { name: 'Personal',              farbe: '#5b4bb7' },
+  waren:      { name: 'Warenaufwand',          farbe: '#00b2a0' },
+  raum:       { name: 'Miete & Raum',          farbe: '#2f6db3' },
+  betrieb:    { name: 'Betrieb & Energie',     farbe: '#b25e00' },
+  verwaltung: { name: 'Verwaltung & Abos',     farbe: '#6e6e73' },
+  werbung:    { name: 'Werbung',               farbe: '#c02a17' },
+};
+
+/* Swiss VAT rates in force since 1 January 2024. */
+const SAETZE = [
+  { satz: 8.1, name: 'Normalsatz 8.1 %' },
+  { satz: 2.6, name: 'Reduziert 2.6 %' },
+  { satz: 3.8, name: 'Beherbergung 3.8 %' },
+  { satz: 0,   name: 'Ohne MWST 0 %' },
+];
+
+const LIEFERANTEN = [
+  { id: 'L1',  name: 'Frischwerk Gemüse AG',       ort: 'Landquart',   konto: '4200', satz: 2.6, ziel: 30 },
+  { id: 'L2',  name: 'Metzgerei Brunold',          ort: 'Talwies',     konto: '4200', satz: 2.6, ziel: 20 },
+  { id: 'L3',  name: 'Molkerei Säntisblick',       ort: 'Gossau',      konto: '4200', satz: 2.6, ziel: 30 },
+  { id: 'L4',  name: 'Weinhandlung Rebgarten',     ort: 'Maienfeld',   konto: '4210', satz: 8.1, ziel: 30 },
+  { id: 'L5',  name: 'Getränke Rhyner AG',         ort: 'Sargans',     konto: '4210', satz: 2.6, ziel: 30 },
+  { id: 'L6',  name: 'Alpina Grosshandel',         ort: 'Chur',        konto: '4200', satz: 2.6, ziel: 10 },
+  { id: 'L7',  name: 'Kaffeerösterei Bohnenwerk',  ort: 'Buchs',       konto: '4210', satz: 2.6, ziel: 30 },
+  { id: 'L8',  name: 'Wäscherei Weissfluh',        ort: 'Talwies',     konto: '6040', satz: 8.1, ziel: 30 },
+  { id: 'L9',  name: 'Elektro Caduff GmbH',        ort: 'Talwies',     konto: '6100', satz: 8.1, ziel: 30 },
+  { id: 'L10', name: 'Immobilien Rheinpark AG',    ort: 'Chur',        konto: '6000', satz: 0,   ziel: 0, auto: 'Dauerauftrag' },
+  { id: 'L11', name: 'Energiewerk Talwies',        ort: 'Talwies',     konto: '6400', satz: 8.1, ziel: 30, auto: 'LSV' },
+  { id: 'L12', name: 'KassaPlus AG',               ort: 'Zürich',      konto: '6570', satz: 8.1, ziel: 30, auto: 'LSV' },
+  { id: 'L13', name: 'Druckerei Rheinbogen',       ort: 'Sargans',     konto: '6600', satz: 8.1, ziel: 30 },
+  { id: 'L14', name: 'Alpenschutz Versicherungen', ort: 'Chur',        konto: '6300', satz: 0,   ziel: 30 },
+  { id: 'L15', name: 'Tischwerk GmbH',             ort: 'Konstanz (DE)', konto: '6100', satz: 8.1, ziel: 14, waehrung: 'EUR' },
+  { id: 'L16', name: 'Online-Bürobedarf',          ort: 'online',      konto: '6500', satz: 8.1, ziel: 0 },
+];
+
+/* Kreditoren — the open workload. Stages, in order:
+     eingang     read, not yet checked
+     kontiert    checked: account and VAT confirmed, waiting to be paid
+     bezahlt     paid in e-banking, waiting for the bank line
+     abgeglichen the bank line is matched — done
+   «klaerung» is not a stage: it is a question that holds a document where it
+   is, with the question written down. «pos» are the article lines as printed
+   on the original: [text, quantity, unit price net, rate]. The rate defaults
+   to the supplier's usual one; the VAT lines are computed from these. */
+const RECHNUNGEN = [
+  { id: 'K301', lief: 'L1', nr: 'FW-88412', datum: '2026-10-02', eingang: '2026-10-03', stufe: 'abgeglichen', konto: '4200', pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Salatmix Saison, 5 kg', 12, 21.9], ['Karotten, 10 kg', 6, 16.4], ['Kräuter frisch, Bund', 40, 2.95], ['Zwiebeln, 25 kg', 3, 29.5], ['Tomaten Rispe, 6 kg', 10, 24.6], ['Zucchetti, 5 kg', 6, 19.8]] },
+  { id: 'K302', lief: 'L2', nr: '2026-1544', datum: '2026-10-03', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '4200', pos: [['Kalbsschnitzel, kg', 14, 52.5], ['Rindsentrecôte, kg', 12, 61.8], ['Bratwürste, Stk.', 80, 2.4], ['Hackfleisch Rind, kg', 15, 16.9]] },
+  { id: 'K303', lief: 'L4', nr: 'RG-26-0912', datum: '2026-10-05', eingang: '2026-10-06', stufe: 'bezahlt', konto: '4210', bezahltAm: '2026-10-14', pos: [['Maienfelder Pinot Noir 75 cl', 36, 24.5], ['Riesling-Silvaner 75 cl', 24, 17.0], ['Prosecco DOC 75 cl', 30, 15.0], ['Rotwein Hauswein 1 l', 24, 14.5]] },
+  { id: 'K304', lief: 'L6', nr: 'A-7720931', datum: '2026-10-06', eingang: '2026-10-06', stufe: 'kontiert', konto: '4200',
+    pos: [['Olivenöl extra vergine 5 l', 4, 48.9], ['Reis Carnaroli 5 kg', 3, 22.8], ['Mehl Typ 400, 25 kg', 2, 31.5], ['Pasta Penne 6 kg', 5, 19.9], ['Gewürze Sortiment', 1, 128.4], ['Reinigungsmittel Küche', 4, 29.6, 8.1]] },
+  { id: 'K305', lief: 'L3', nr: 'MS-55190', datum: '2026-10-07', eingang: '2026-10-08', stufe: 'kontiert', konto: '4200', pos: [['Vollrahm 35 %, 5 l', 18, 23.5], ['Butter, 10 kg', 2, 78.4], ['Milch UHT, 12 l', 10, 15.6], ['Gruyère AOP, kg', 4.5, 29.0]] },
+  { id: 'K306', lief: 'L8', nr: 'W-10/26-114', datum: '2026-10-08', eingang: '2026-10-09', stufe: 'kontiert', konto: '6040', pos: [['Tischwäsche, Stk.', 320, 0.9], ['Servietten Stoff, Stk.', 450, 0.32], ['Kochbekleidung Satz', 12, 4.5]] },
+  { id: 'K307', lief: 'L9', nr: 'EC-4471', datum: '2026-10-08', eingang: '2026-10-09', stufe: 'eingang', konto: '6100',
+    vorschlag: { konto: '6100', sicher: 'hoch', grund: 'Wie die letzten 4 Rechnungen dieses Lieferanten' }, pos: [['Service Kühlzelle, Arbeitsstunden', 4, 118.0], ['Thermostat Ersatzteil', 1, 214.0], ['Anfahrt', 1, 56.0]] },
+  { id: 'K308', lief: 'L2', nr: '2026-1588', datum: '2026-10-10', eingang: '2026-10-12', stufe: 'eingang', konto: '4200',
+    vorschlag: { konto: '4200', sicher: 'hoch', grund: 'Fleisch, wie alle Rechnungen von Metzgerei Brunold' }, pos: [['Kalbsschnitzel, kg', 10, 52.5], ['Lammrücken, kg', 8, 64.9], ['Bratwürste, Stk.', 100, 2.4], ['Speck geräuchert, kg', 6, 24.7]] },
+  { id: 'K309', lief: 'L1', nr: 'FW-88690', datum: '2026-10-12', eingang: '2026-10-13', stufe: 'eingang', konto: '4200',
+    vorschlag: { konto: '4200', sicher: 'hoch', grund: 'Gemüse, wie alle Rechnungen von Frischwerk' }, pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Kürbis Butternut, kg', 30, 3.9], ['Salatmix Saison, 5 kg', 10, 21.9], ['Pilze Saison, kg', 8, 26.5], ['Kräuter frisch, Bund', 36, 2.95]] },
+  { id: 'K310', lief: 'L6', nr: 'A-7721488', datum: '2026-10-13', eingang: '2026-10-13', stufe: 'eingang', konto: '4200',
+    vorschlag: { konto: '4200', sicher: 'mittel', grund: 'Gemischte Rechnung: Lebensmittel 2.6 % und Reinigungsmittel 8.1 % — zweite Zeile prüfen' },
+    pos: [['Zucker 10 kg', 2, 18.9], ['Mehl Typ 400, 25 kg', 3, 31.5], ['Konserven Tomaten 2.5 kg', 12, 6.9], ['Frittieröl 10 l', 4, 34.9], ['Spülmittel Profi 10 l', 2, 48.1, 8.1]] },
+  { id: 'K311', lief: 'L13', nr: 'DR-3381', datum: '2026-10-13', eingang: '2026-10-14', stufe: 'eingang', konto: '6600',
+    vorschlag: { konto: '6600', sicher: 'hoch', grund: 'Druck von Speisekarten — Werbung' }, pos: [['Speisekarten Herbst, A4 gefalzt', 120, 3.5], ['Tischaufsteller Wildwochen', 60, 3.67]] },
+  { id: 'K312', lief: 'L15', nr: 'TW-2026-0418', datum: '2026-10-09', eingang: '2026-10-14', stufe: 'eingang', konto: '6100',
+    waehrung: 'EUR', kurs: 0.9381, bezug: true,
+    vorschlag: { konto: '6100', sicher: 'tief', grund: 'Ausländischer Lieferant in EUR: Bezugsteuer prüfen, Kurs vom Rechnungsdatum' }, pos: [['Tischplatten Eiche geölt 80×80', 4, 290.0], ['Montagematerial', 1, 120.0]] },
+  { id: 'K313', lief: 'L7', nr: 'BW-26-772', datum: '2026-10-14', eingang: '2026-10-15', stufe: 'eingang', konto: '4210',
+    vorschlag: { konto: '4210', sicher: 'hoch', grund: 'Kaffee — Wareneinkauf Getränke' }, pos: [['Espresso Bohnen Hausmischung, kg', 16, 29.4], ['Entkalker', 2, 24.0]] },
+  { id: 'K314', lief: 'L1', nr: 'FW-88690', datum: '2026-10-12', eingang: '2026-10-15', stufe: 'eingang', konto: '4200',
+    duplikatVon: 'K309', vorschlag: { konto: '4200', sicher: 'tief', grund: 'Gleiche Nummer und gleicher Betrag wie K309 — vermutlich doppelt per Mail und Post' }, pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Kürbis Butternut, kg', 30, 3.9], ['Salatmix Saison, 5 kg', 10, 21.9], ['Pilze Saison, kg', 8, 26.5], ['Kräuter frisch, Bund', 36, 2.95]] },
+  { id: 'K315', lief: 'L5', nr: 'GR-418820', datum: '2026-10-15', eingang: '2026-10-16', stufe: 'eingang', konto: '4210',
+    klaerung: 'Lieferschein sagt 12 Harassen Mineral, Rechnung verrechnet 14. Bei Getränke Rhyner nachfragen.',
+    vorschlag: { konto: '4210', sicher: 'hoch', grund: 'Getränke, wie alle Rechnungen von Rhyner' },
+    pos: [['Mineral mit Kohlensäure 12×1 l (Harasse)', 14, 14.5], ['Süssgetränke 24×33 cl', 12, 23.5], ['Apfelschorle 24×33 cl', 10, 19.9], ['Bier Lager 20×50 cl', 15, 27.5, 8.1]] },
+  { id: 'K316', lief: 'L14', nr: 'POL-55-881', datum: '2026-10-01', eingang: '2026-10-02', stufe: 'kontiert', konto: '6300',
+    raten: { anzahl: 2, bezahlt: 1 }, pos: [['Betriebshaftpflicht 2026/27', 1, 1890.0], ['Sachversicherung Inventar 2026/27', 1, 1350.0]] },
+  // automatic: standing order and direct debits — nothing to do but match
+  { id: 'K317', lief: 'L10', nr: 'Miete 10/2026', datum: '2026-10-01', eingang: '2026-10-01', stufe: 'abgeglichen', konto: '6000', auto: true, pos: [['Mietzins Oktober 2026, Restaurantfläche', 1, 9600.0], ['Nebenkosten akonto', 1, 800.0]] },
+  { id: 'K318', lief: 'L11', nr: 'EW-0926-3318', datum: '2026-10-05', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '6400', auto: true, pos: [['Strom September 2026', 1, 1288.4], ['Netznutzung', 1, 324.0]] },
+  { id: 'K319', lief: 'L12', nr: 'KP-26-10-0071', datum: '2026-10-01', eingang: '2026-10-01', stufe: 'bezahlt', konto: '6570', auto: true, bezahltAm: '2026-10-15', pos: [['Kassensystem Abo Oktober', 1, 149.0], ['Zusatzterminal', 1, 40.0]] },
+];
+
+/* Bank lines, October to date. Negative = money out. A line is matched when
+   «zu» points at what explains it; «abgeschlossen» marks it as done for the
+   Treuhänder. Lines without «zu» are the open work: a receipt is missing or a
+   match has to be confirmed. */
+const BANK = [
+  { id: 'B5101', datum: '2026-10-01', text: 'Dauerauftrag Immobilien Rheinpark AG Miete 10/2026', betrag: -10400.00, zu: { typ: 'kreditor', ref: 'K317' }, abgeschlossen: true },
+  { id: 'B5102', datum: '2026-10-01', text: 'Gutschrift Kartenterminal Abrechnung 30.09.', betrag: 3984.20, zu: { typ: 'karten' }, abgeschlossen: true },
+  { id: 'B5103', datum: '2026-10-02', text: 'Gutschrift Kartenterminal Abrechnung 01.10.', betrag: 2210.65, zu: { typ: 'karten' }, abgeschlossen: true },
+  { id: 'B5104', datum: '2026-10-02', text: 'Online Einkauf Online-Bürobedarf Debit Mastercard', betrag: -64.90, zu: null },
+  { id: 'B5105', datum: '2026-10-05', text: 'LSV Energiewerk Talwies EW-0926-3318', betrag: null, zu: { typ: 'kreditor', ref: 'K318' }, abgeschlossen: true },
+  { id: 'B5106', datum: '2026-10-05', text: 'Zahlung Frischwerk Gemüse AG FW-88412', betrag: null, zu: { typ: 'kreditor', ref: 'K301' }, abgeschlossen: true },
+  { id: 'B5107', datum: '2026-10-06', text: 'Bareinzahlung Bancomat Talwies', betrag: 9000.00, zu: { typ: 'kasse', ref: 'E-1006' }, abgeschlossen: true },
+  { id: 'B5108', datum: '2026-10-06', text: 'Online Einkauf Streaming-Musik Business Debit Mastercard', betrag: -29.90, zu: null },
+  { id: 'B5109', datum: '2026-10-07', text: 'Zahlung Metzgerei Brunold 2026-1544', betrag: null, zu: { typ: 'kreditor', ref: 'K302' }, abgeschlossen: true },
+  { id: 'B5110', datum: '2026-10-08', text: 'Gutschrift Kartenterminal Abrechnung 07.10.', betrag: 3412.80, zu: { typ: 'karten' }, abgeschlossen: true },
+  { id: 'B5111', datum: '2026-10-08', text: 'Gutschrift Kundenzahlung Bauunternehmung Gantenbein AG Rg 2026091', betrag: null, zu: { typ: 'debitor', ref: 'D2026091' }, abgeschlossen: false },
+  { id: 'B5112', datum: '2026-10-09', text: 'Online Einkauf Tankstelle Talwies Debit Mastercard', betrag: -82.40, zu: null },
+  { id: 'B5113', datum: '2026-10-12', text: 'Gutschrift Kartenterminal Abrechnung 09.–11.10.', betrag: 9874.35, zu: { typ: 'karten' }, abgeschlossen: false },
+  { id: 'B5114', datum: '2026-10-12', text: 'Twint Abrechnung 05.–11.10.', betrag: 1288.60, zu: { typ: 'karten' }, abgeschlossen: false },
+  { id: 'B5115', datum: '2026-10-13', text: 'Bankspesen Kontoführung 09/2026', betrag: -18.00, zu: { typ: 'spesen' }, abgeschlossen: false },
+  { id: 'B5116', datum: '2026-10-13', text: 'Bareinzahlung Bancomat Talwies', betrag: 12000.00, zu: { typ: 'kasse', ref: 'E-1013' }, abgeschlossen: false },
+  { id: 'B5117', datum: '2026-10-14', text: 'Zahlung Weinhandlung Rebgarten RG-26-0912', betrag: null, zu: null },
+  { id: 'B5118', datum: '2026-10-14', text: 'Online Einkauf Online-Bürobedarf Debit Mastercard', betrag: -132.45, zu: null },
+  { id: 'B5119', datum: '2026-10-15', text: 'LSV KassaPlus AG KP-26-10-0071', betrag: null, zu: null },
+  { id: 'B5120', datum: '2026-10-15', text: 'Gutschrift Kundenzahlung Gemeinde Talwies Rg 2026097 Teilzahlung', betrag: 500.00, zu: null },
+  { id: 'B5121', datum: '2026-10-15', text: 'Lohnzahlungen September 2026 Sammelauftrag', betrag: -31840.25, zu: { typ: 'lohn' }, abgeschlossen: false },
+  { id: 'B5122', datum: '2026-10-16', text: 'Online Einkauf Werbeanzeige Social Media Debit Mastercard', betrag: -45.00, zu: null },
+];
+/* «betrag: null» = the amount is the document's own gross, filled in at start
+   (03-core.js), so a bank line and the invoice it pays can never drift apart. */
+
+/* What an unmatched bank line could be, offered in its row. Card purchases
+   without a receipt are the classic gap: the bank knows the amount, only the
+   receipt can prove the VAT. */
+const BANK_HINWEIS = {
+  B5104: { art: 'beleg', text: 'Beleg fehlt noch — Quittung aus dem Online-Konto hochladen', konto: '6500' },
+  B5108: { art: 'beleg', text: 'Beleg fehlt noch — Abo-Rechnung herunterladen', konto: '6570' },
+  B5112: { art: 'beleg', text: 'Beleg fehlt noch — Tankquittung', konto: '6100' },
+  B5117: { art: 'vorschlag', text: 'Passt zu Rechnung RG-26-0912 von Weinhandlung Rebgarten', ref: 'K303' },
+  B5118: { art: 'beleg', text: 'Beleg fehlt noch — Bestellbestätigung', konto: '6500' },
+  B5119: { art: 'vorschlag', text: 'Passt zu Rechnung KP-26-10-0071 von KassaPlus AG', ref: 'K319' },
+  B5120: { art: 'vorschlag', text: 'Teilzahlung zu Kundenrechnung 2026097 der Gemeinde Talwies', ref: 'D2026097', typ: 'debitor' },
+  B5122: { art: 'beleg', text: 'Beleg fehlt noch — Rechnung der Werbeplattform', konto: '6600' },
+};
+
+/* Kasse — every service day of October so far. Monday is Ruhetag. Cash is
+   gross takings in cash; tips belong to the team and are paid out, so the
+   amount that has to reach the bank is cash minus tips minus cash expenses. */
+const KASSE_TAGE = [
+  ['2026-10-01', 1840.50, 96.00], ['2026-10-02', 2215.00, 121.50], ['2026-10-03', 2980.40, 168.00],
+  ['2026-10-04', 2410.80, 140.00], ['2026-10-06', 1388.20, 72.00], ['2026-10-07', 1505.90, 80.50],
+  ['2026-10-08', 1620.40, 88.00], ['2026-10-09', 2190.70, 118.00], ['2026-10-10', 3120.60, 176.50],
+  ['2026-10-11', 2580.30, 150.00], ['2026-10-13', 1420.10, 70.00], ['2026-10-14', 1612.80, 84.00],
+  ['2026-10-15', 1710.40, 95.50],
+].map(([datum, bar, tip]) => ({ datum, bar, tip }));
+const KASSE_BEWEGUNGEN = [
+  { id: 'E-1006', datum: '2026-10-06', art: 'bancomat', betrag: 9000.00, notiz: 'Einzahlung Woche 40', bank: 'B5107' },
+  { id: 'E-1009', datum: '2026-10-09', art: 'auszahlung', betrag: 86.40, notiz: 'Blumen Tischdeko, Markt', beleg: true },
+  { id: 'E-1013', datum: '2026-10-13', art: 'bancomat', betrag: 12000.00, notiz: 'Einzahlung Woche 41', bank: 'B5116' },
+];
+const KASSE_ANFANG = 1200.00;   // Wechselgeld-Bestand am 1. Oktober
+
+const KUNDEN = [
+  { id: 'C1',  name: 'Bauunternehmung Gantenbein AG', kontakt: 'Herr R. Gantenbein', strasse: 'Industriestrasse 4', ort: '7999 Talwies', anrede: 'sie', mail: 'buchhaltung@gantenbein.example', ziel: 30 },
+  { id: 'C2',  name: 'Gemeinde Talwies',              kontakt: 'Gemeindekanzlei',     strasse: 'Dorfplatz 1',        ort: '7999 Talwies', anrede: 'sie', mail: 'kanzlei@talwies.example', ziel: 30 },
+  { id: 'C3',  name: 'Turnverein Talwies',            kontakt: 'Sandro Meli',         strasse: 'Turnhallenweg 2',    ort: '7999 Talwies', anrede: 'du',  mail: 'kasse@tv-talwies.example', ziel: 20 },
+  { id: 'C4',  name: 'Praxis Dr. Albertin',           kontakt: 'Frau Dr. M. Albertin', strasse: 'Bahnhofweg 9',      ort: '7999 Talwies', anrede: 'sie', mail: 'praxis@albertin.example', ziel: 30 },
+  { id: 'C5',  name: 'Hochzeit Casutt-Derungs',       kontakt: 'Nina Casutt',         strasse: 'Rebweg 17',          ort: '7998 Obertal', anrede: 'du',  mail: 'nina.casutt@mail.example', ziel: 14 },
+  { id: 'C6',  name: 'Garage Bergün AG',              kontakt: 'Herr P. Bergün',      strasse: 'Kantonsstrasse 40',  ort: '7998 Obertal', anrede: 'sie', mail: 'admin@garage-berguen.example', ziel: 30 },
+  { id: 'C7',  name: 'Schreinerei Flütsch',           kontakt: 'Marco Flütsch',       strasse: 'Werkstrasse 3',      ort: '7999 Talwies', anrede: 'du',  mail: 'marco@fluetsch.example', ziel: 30 },
+  { id: 'C8',  name: 'Weingut Sonnenrain',            kontakt: 'Frau A. Hunger',      strasse: 'Sonnenrain 1',       ort: '7997 Rebstal', anrede: 'sie', mail: 'office@sonnenrain.example', ziel: 30 },
+  { id: 'C9',  name: 'Skiclub Piz Talwies',           kontakt: 'Jon Caviezel',        strasse: 'Postfach 12',        ort: '7999 Talwies', anrede: 'du',  mail: 'kasse@skiclub.example', ziel: 30 },
+  { id: 'C10', name: 'Raiffeisen-Gruppe Talwies',     kontakt: 'Frau S. Item',        strasse: 'Bahnhofstrasse 2',   ort: '7999 Talwies', anrede: 'sie', mail: 'events@rg-talwies.example', ziel: 30 },
+];
+
+/* Register receipts the guest asked to have invoiced. «tisch», «gedecke» and
+   the lines come from the till; the invoice is built from them, so nobody
+   retypes thirty positions. */
+const KASSENBELEGE = [
+  { id: 'Q-55120', datum: '2026-10-14', tisch: 'Saal', gedecke: 22, kunde: 'C10', notiz: 'Apéro riche nach Generalversammlung',
+    pos: [['Apéro riche pro Person', 22, 32.0], ['Prosecco 75 cl', 8, 54.0], ['Mineral 1 l', 10, 7.5], ['Kaffee', 18, 4.8]] },
+  { id: 'Q-55138', datum: '2026-10-15', tisch: '12', gedecke: 6, kunde: null, notiz: 'Gast bittet um Rechnung an Firma — Adresse fehlt noch',
+    pos: [['Tagesmenü', 6, 26.5], ['Mineral 0.5 l', 6, 5.2], ['Kaffee', 6, 4.8]] },
+];
+
+/* Kundenrechnungen. Stages, in order:
+     entwurf    built from the receipt, not yet released
+     freigabe   waiting for the owner's release before it goes out
+     versendet  sent — open until paid; «mahnstufe» counts reminders
+     bezahlt    fully paid
+   «zahlungen» are partial payments; a correction keeps the number and writes
+   a line in «protokoll», a cancellation needs a reason. */
+const DEBITOREN = [
+  { id: 'D2026091', kunde: 'C1', datum: '2026-09-18', faellig: '2026-10-18', stufe: 'bezahlt', satz: 8.1,
+    pos: [['Firmenessen Menü «Herbst»', 18, 68.0], ['Wein Maienfelder 75 cl', 6, 58.0], ['Mineral 1 l', 8, 7.5]],
+    zahlungen: [{ datum: '2026-10-08', betrag: null, weg: 'Bank', bank: 'B5111' }],
+    protokoll: [['2026-09-18 16:40', 'Erstellt aus Kassenbeleg Q-54810'], ['2026-09-18 17:02', 'Von Lea Brunner freigegeben und per Mail versendet'], ['2026-10-08 09:12', 'Zahlung über Bank zugeordnet — bezahlt']] },
+  { id: 'D2026094', kunde: 'C3', datum: '2026-09-21', faellig: '2026-10-11', stufe: 'versendet', satz: 8.1, mahnstufe: 0,
+    pos: [['Vereinsessen Pasta-Buffet', 34, 24.0], ['Bier vom Fass 3 dl', 52, 5.5], ['Mineral 1 l', 12, 7.5]],
+    zahlungen: [], protokoll: [['2026-09-21 22:15', 'Erstellt aus Kassenbeleg Q-54872'], ['2026-09-22 08:30', 'Freigegeben und per Mail versendet']] },
+  { id: 'D2026097', kunde: 'C2', datum: '2026-09-30', faellig: '2026-10-30', stufe: 'versendet', satz: 8.1, mahnstufe: 0,
+    pos: [['Seniorenmittag Menü', 42, 22.0], ['Kaffee & Dessert', 42, 8.5], ['Mineral 1 l', 14, 7.5]],
+    zahlungen: [], protokoll: [['2026-09-30 15:10', 'Erstellt aus Kassenbeleg Q-55011'], ['2026-09-30 16:00', 'Freigegeben und per Mail versendet']] },
+  { id: 'D2026098', kunde: 'C5', datum: '2026-10-04', faellig: '2026-10-18', stufe: 'versendet', satz: 8.1, mahnstufe: 0,
+    pos: [['Hochzeitsmenü 4 Gänge', 64, 89.0], ['Weinbegleitung pauschal', 64, 28.0], ['Apéro', 70, 18.0], ['Mitternachtssnack', 50, 9.0]],
+    zahlungen: [{ datum: '2026-09-15', betrag: 2000.00, weg: 'Bank', notiz: 'Anzahlung' }],
+    protokoll: [['2026-10-04 23:50', 'Erstellt aus Kassenbeleg Q-55062'], ['2026-10-05 10:20', 'Anzahlung CHF 2’000 vom 15.09. angerechnet'], ['2026-10-05 10:24', 'Freigegeben und per Mail versendet']] },
+  { id: 'D2026086', kunde: 'C6', datum: '2026-08-28', faellig: '2026-09-27', stufe: 'versendet', satz: 8.1, mahnstufe: 1,
+    pos: [['Geschäftsessen à la carte', 1, 412.0], ['Wein', 1, 96.0]],
+    zahlungen: [], protokoll: [['2026-08-28 21:30', 'Erstellt aus Kassenbeleg Q-54620'], ['2026-08-29 09:00', 'Freigegeben und per Mail versendet'], ['2026-10-02 08:00', 'Zahlungserinnerung versendet']] },
+  { id: 'D2026099', kunde: 'C8', datum: '2026-10-10', faellig: '2026-11-09', stufe: 'freigabe', satz: 8.1,
+    pos: [['Weindegustation mit Menü', 28, 74.0], ['Raummiete Saal', 1, 250.0]],
+    zahlungen: [], protokoll: [['2026-10-10 23:10', 'Erstellt aus Kassenbeleg Q-55101'], ['2026-10-11 09:00', 'Zur Freigabe an Lea Brunner vorgelegt']] },
+  { id: 'D2026100', kunde: 'C4', datum: '2026-10-15', faellig: '2026-11-14', stufe: 'entwurf', satz: 8.1,
+    pos: [['Praxisessen Mittag', 8, 34.0], ['Mineral 0.5 l', 8, 5.2]],
+    zahlungen: [], protokoll: [['2026-10-15 14:05', 'Erstellt aus Kassenbeleg Q-55131']] },
+];
+
+/* Six closed months, the history the charts and Kosten read. Each month is
+   the sum of what was booked to each account — the October column is NOT in
+   here; it is computed live from the documents above. */
+const VERLAUF = [
+  { monat: '2026-04', umsatz: { '3200': 52400, '3210': 21800, '3280': 4100 }, kosten: { '4200': 16120, '4210': 6240, '4400': 980, '5000': 33100, '5700': 4630, '6000': 10400, '6040': 1180, '6100': 980, '6300': 540, '6400': 1720, '6500': 410, '6570': 690, '6600': 380, '6800': 1210 } },
+  { monat: '2026-05', umsatz: { '3200': 61200, '3210': 26100, '3280': 7900 }, kosten: { '4200': 19310, '4210': 7420, '4400': 1120, '5000': 35800, '5700': 5010, '6000': 10400, '6040': 1310, '6100': 2340, '6300': 540, '6400': 1610, '6500': 380, '6570': 690, '6600': 920, '6800': 1430 } },
+  { monat: '2026-06', umsatz: { '3200': 66800, '3210': 31400, '3280': 9200 }, kosten: { '4200': 20870, '4210': 8930, '4400': 1240, '5000': 37200, '5700': 5210, '6000': 10400, '6040': 1420, '6100': 760, '6300': 540, '6400': 1490, '6500': 520, '6570': 690, '6600': 410, '6800': 1610 } },
+  { monat: '2026-07', umsatz: { '3200': 72300, '3210': 35900, '3280': 6400 }, kosten: { '4200': 22410, '4210': 10180, '4400': 1310, '5000': 38900, '5700': 5450, '6000': 10400, '6040': 1530, '6100': 1180, '6300': 540, '6400': 1420, '6500': 360, '6570': 690, '6600': 380, '6800': 1740 } },
+  { monat: '2026-08', umsatz: { '3200': 70100, '3210': 34200, '3280': 5100 }, kosten: { '4200': 21980, '4210': 9840, '4400': 1260, '5000': 38600, '5700': 5400, '6000': 10400, '6040': 1490, '6100': 3420, '6300': 540, '6400': 1450, '6500': 440, '6570': 690, '6600': 380, '6800': 1690 } },
+  { monat: '2026-09', umsatz: { '3200': 58900, '3210': 24600, '3280': 8800 }, kosten: { '4200': 18210, '4210': 7210, '4400': 1080, '5000': 35900, '5700': 5020, '6000': 10400, '6040': 1270, '6100': 640, '6300': 3780, '6400': 1560, '6500': 390, '6570': 690, '6600': 1240, '6800': 1450 } },
+];
+/* The share of revenue each cost group should stay under — the targets the
+   owner set with the Treuhänder. Kosten measures against these. */
+const ZIELE = { waren: 30, personal: 44, raum: 13, betrieb: 5, verwaltung: 5, werbung: 1.5 };
+
+/* What the October revenue is so far (register Z-reports, net of VAT),
+   needed for the live month column. Bank and cash only show what moved, not
+   what was earned. */
+const OKTOBER_UMSATZ = { '3200': 31240, '3210': 13980, '3280': 3260 };
+const OKTOBER_PERSONAL = { '5000': 18900, '5700': 2650 };   // pro rata, from the payroll draft
+/* ── helpers ───────────────────────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+// Swiss format: 1’234.50 — the apostrophe a Treuhänder expects, not a space
+const fmt = (n, d = 2) => {
+  const s = Math.abs(n).toFixed(d).split('.');
+  return (n < -0.004 ? '−' : '') + s[0].replace(/\B(?=(\d{3})+(?!\d))/g, '’') + (d ? '.' + s[1] : '');
+};
+const chf = (n, d = 2) => 'CHF ' + fmt(n, d);
+const pct = (n, d = 1) => n.toFixed(d) + ' %';
+const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+const MON3 = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+const dt = iso => { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; };
+const dtk = iso => { const [, m, d] = iso.split('-'); return `${d}.${m}.`; };
+const plusTage = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const tageBis = iso => Math.round((new Date(iso + 'T12:00:00') - new Date(HEUTE + 'T12:00:00')) / 86400000);
+const monatName = ym => MONATE[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
+const monatKurz = ym => MON3[+ym.slice(5, 7) - 1];
+const quartal = iso => Math.ceil(+iso.slice(5, 7) / 3);
+// «38,5» on a Swiss keyboard and «38.5» elsewhere mean the same thing
+function zahl(v, alt = 0) {
+  const n = parseFloat(String(v).replace(/[’' ]/g, '').replace(',', '.'));
+  return Number.isFinite(n) ? n : alt;
+}
+const konto = nr => KONTEN.find(k => k.nr === nr) || { nr, name: '?' };
+const kname = nr => nr + ' ' + konto(nr).name;
+const lief = id => LIEFERANTEN.find(l => l.id === id);
+const kunde = id => DB.kunden.find(k => k.id === id);
+const jetzt = () => {
+  const d = new Date();
+  return HEUTE + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+};
+
+/* ── state ──────────────────────────────────────────────────────────────────
+   The seed is copied, never edited, so «Demo zurücksetzen» is exact. What the
+   visitor changes is kept in localStorage — and a browser that refuses
+   storage (private window, blocked site data) simply starts fresh each time.
+   ────────────────────────────────────────────────────────────────────────── */
+const SPEICHER = 'axyom-rechnungswesen-v1';
+const SEED = () => JSON.parse(JSON.stringify({
+  rechnungen: RECHNUNGEN, bank: BANK, kasseTage: KASSE_TAGE, kasse: KASSE_BEWEGUNGEN,
+  kunden: KUNDEN, kassenbelege: KASSENBELEGE, debitoren: DEBITOREN, firma: FIRMA,
+  papierkorb: [], abgerechnet: ['2026-Q2'], log: [],
+  texte: {
+    einleitung_sie: 'Vielen Dank für Ihren Besuch. Gerne stellen wir Ihnen Folgendes in Rechnung:',
+    einleitung_du: 'Merci für euren Besuch! Hier die Rechnung dazu:',
+    erinnerung_sie: 'Gerne erinnern wir Sie an unsere untenstehende Rechnung. Falls sich Ihre Zahlung mit diesem Schreiben gekreuzt hat, betrachten Sie es bitte als gegenstandslos.',
+    erinnerung_du: 'Kleine Erinnerung an die Rechnung unten — falls schon bezahlt, vergiss diese Nachricht einfach.',
+    mahnung_sie: 'Leider ist unsere Rechnung trotz Erinnerung noch offen. Wir bitten Sie, den Betrag innert 10 Tagen zu überweisen.',
+    mahnung_du: 'Die Rechnung unten ist leider immer noch offen. Bitte überweise sie in den nächsten 10 Tagen.',
+  },
+}));
+let DB;
+function laden() {
+  DB = SEED();
+  try {
+    const s = localStorage.getItem(SPEICHER);
+    if (s) { const g = JSON.parse(s); if (g && g.v === 1) Object.assign(DB, g.db); }
+  } catch (e) { /* storage blocked: the demo still runs, it just forgets */ }
+  vorbereiten();
+}
+function speichern() {
+  try { localStorage.setItem(SPEICHER, JSON.stringify({ v: 1, db: DB })); } catch (e) { }
+}
+function zuruecksetzen() {
+  try { localStorage.removeItem(SPEICHER); } catch (e) { }
+  laden();
+}
+function logge(text) { DB.log.unshift({ zeit: jetzt(), text }); if (DB.log.length > 200) DB.log.length = 200; }
+
+/* ── documents: everything that can be computed is computed ──────────────
+   A Kreditor carries its article lines; the VAT lines, totals, due date and
+   CHF amount follow from them. Storing any of these by hand is how a total
+   ends up disagreeing with its own lines.
+   ────────────────────────────────────────────────────────────────────────── */
+function zeilenVon(r) {
+  if (r.zeilenManuell) return r.zeilenManuell;
+  const l = lief(r.lief) || {};
+  const m = {};
+  (r.pos || []).forEach(p => {
+    const satz = p[3] != null ? p[3] : (r.bezug ? 0 : l.satz || 0);
+    m[satz] = r2((m[satz] || 0) + p[1] * p[2]);
+  });
+  return Object.keys(m).map(Number).sort((a, b) => b - a).map(s => ({ satz: s, netto: m[s] }));
+}
+function summen(r) {
+  const zeilen = zeilenVon(r).map(z => ({ ...z, mwst: r2(z.netto * z.satz / 100) }));
+  const netto = r2(zeilen.reduce((s, z) => s + z.netto, 0));
+  const mwst = r2(zeilen.reduce((s, z) => s + z.mwst, 0));
+  const brutto = r2(netto + mwst);
+  const kurs = r.waehrung && r.waehrung !== 'CHF' ? (r.kurs || 1) : 1;
+  // Bezugsteuer: a foreign service is taxed by the buyer, at the normal rate,
+  // on the CHF value — and is reclaimable as input tax in the same return
+  const bezugsteuer = r.bezug ? r2(netto * kurs * 0.081) : 0;
+  return { zeilen, netto, mwst, brutto, kurs, chf: r2(brutto * kurs), bezugsteuer };
+}
+const faellig = r => r.faellig || plusTage(r.datum, (lief(r.lief) || {}).ziel || 30);
+function debSummen(d) {
+  const brutto = r2((d.pos || []).reduce((s, p) => s + p[1] * p[2], 0));
+  const mwst = r2(brutto * d.satz / (100 + d.satz));      // prices include VAT
+  const bezahlt = r2((d.zahlungen || []).reduce((s, z) => s + (z.betrag || 0), 0));
+  return { brutto, mwst, netto: r2(brutto - mwst), bezahlt, offen: r2(brutto - bezahlt) };
+}
+function vorbereiten() {
+  // bank lines that pay a document take the document's own amount
+  DB.bank.forEach(b => {
+    if (b.betrag != null) return;
+    const ref = b.zu && b.zu.ref || (BANK_HINWEIS[b.id] || {}).ref;
+    const r = DB.rechnungen.find(x => x.id === ref);
+    if (r) { b.betrag = -summen(r).chf; return; }
+    const d = DB.debitoren.find(x => x.id === ref);
+    if (d) b.betrag = debSummen({ ...d, zahlungen: [] }).brutto;
+  });
+  DB.debitoren.forEach(d => (d.zahlungen || []).forEach(z => {
+    if (z.betrag == null) { const b = DB.bank.find(x => x.id === z.bank); z.betrag = b ? b.betrag : 0; }
+  }));
+}
+
+/* ── the workflow ─────────────────────────────────────────────────────────
+   One sequence for every supplier invoice, shown the same way everywhere:
+   in the list, on the document and in the overview. A question («Klärung»)
+   is not a step — it holds the document where it is, with the question
+   written down, so nothing hides in a separate pile.
+   ────────────────────────────────────────────────────────────────────────── */
+const STUFEN = [
+  { id: 'eingang',      name: 'Eingang',      tun: 'Prüfen & kontieren' },
+  { id: 'kontiert',     name: 'Geprüft',      tun: 'Bezahlen' },
+  { id: 'bezahlt',      name: 'Bezahlt',      tun: 'Auf Bankbuchung warten' },
+  { id: 'abgeglichen',  name: 'Abgeglichen',  tun: 'Abschliessen' },
+  { id: 'abgeschlossen', name: 'Abschluss', tun: '' },
+];
+function bankZu(typ, ref) { return DB.bank.find(b => b.zu && b.zu.typ === typ && b.zu.ref === ref); }
+function stufeVon(r) {
+  if (r.stufe === 'abgeglichen') { const b = bankZu('kreditor', r.id); return b && b.abgeschlossen ? 'abgeschlossen' : 'abgeglichen'; }
+  return r.stufe;
+}
+const stufeIdx = id => STUFEN.findIndex(s => s.id === id);
+function stufenBalken(r, mini) {
+  const i = stufeIdx(stufeVon(r));
+  return `<div class="stufen${mini ? ' mini' : ''}" aria-label="Stand: ${esc(STUFEN[i].name)}">` + STUFEN.map((s, j) =>
+    `<div class="st ${j < i ? 'done' : j === i ? (r.klaerung ? 'hold' : 'now') : ''}" title="${esc(s.name)}">${esc(s.name)}</div>`).join('') + '</div>';
+}
+function statusPill(r) {
+  if (r.duplikatVon) return '<span class="pill s3">Doppelt?</span>';
+  if (r.klaerung) return '<span class="pill s2">Klärung</span>';
+  const s = stufeVon(r);
+  if (s === 'eingang') return '<span class="pill i">Zu prüfen</span>';
+  if (s === 'kontiert') {
+    const t = tageBis(faellig(r));
+    if (r.auto) return '<span class="pill g">läuft automatisch</span>';
+    return t < 0 ? `<span class="pill s3">${-t} T. überfällig</span>` : t <= 5 ? `<span class="pill s2">fällig in ${t} T.</span>` : `<span class="pill g">fällig ${dtk(faellig(r))}</span>`;
+  }
+  if (s === 'bezahlt') return '<span class="pill g">wartet auf Bank</span>';
+  return '<span class="pill s1">' + (s === 'abgeschlossen' ? 'abgeschlossen' : 'abgeglichen') + '</span>';
+}
+
+/* ── the books ────────────────────────────────────────────────────────────
+   Every posting is DERIVED from a document, a bank line or a cash movement —
+   there is no separate journal to keep in step. Konten, MWST and Kosten all
+   read buchungen(), so the three can never disagree with each other or with
+   the documents. History (April–September) is one collective posting per
+   account and month; October is posted document by document.
+   ────────────────────────────────────────────────────────────────────────── */
+const BARANTEIL = 0.3;   // historical share of cash in takings
+function buchungen() {
+  const B = [];
+  const b = (datum, soll, haben, betrag, text, beleg, mwst) => { if (Math.abs(betrag) >= 0.005) B.push({ datum, soll, haben, betrag: r2(betrag), text, beleg: beleg || '', mwst }); };
+  b('2026-04-01', '1020', '2800', 22000, 'Saldovortrag Bank', 'Eröffnung');
+  b('2026-04-01', '1000', '2800', KASSE_ANFANG, 'Saldovortrag Kasse', 'Eröffnung');
+  b('2026-04-01', '1500', '2400', 160000, 'Saldovortrag Einrichtung (Bankdarlehen)', 'Eröffnung');
+  VERLAUF.forEach(m => {
+    const d = m.monat + '-28';
+    Object.entries(m.umsatz).forEach(([k, netto]) => {
+      const steuer = r2(netto * 0.081);
+      b(d, '1000', k, r2(netto * BARANTEIL), 'Umsatz bar ' + monatName(m.monat), 'Z-Bons', null);
+      b(d, '1091', k, r2(netto * (1 - BARANTEIL)), 'Umsatz Karten/Twint ' + monatName(m.monat), 'Z-Bons', null);
+      b(d, '1091', '2200', steuer, 'MWST 8.1 % auf Umsatz ' + monatName(m.monat), 'Z-Bons', { art: 'umsatz', satz: 8.1, basis: netto });
+    });
+    b(d, '1020', '1091', r2(Object.values(m.umsatz).reduce((s, v) => s + v * (1 - BARANTEIL) + v * 0.081, 0)), 'Kartengutschriften ' + monatName(m.monat), 'Bank');
+    b(d, '1020', '1000', r2(Object.values(m.umsatz).reduce((s, v) => s + v * BARANTEIL, 0)), 'Bareinzahlungen ' + monatName(m.monat), 'Bank');
+    b(d, '2400', '1020', 6000, 'Amortisation Bankdarlehen ' + monatName(m.monat), 'Bank');
+    Object.entries(m.kosten).forEach(([k, netto]) => {
+      const satz = { '4200': 2.6, '4210': 4.8, '4400': 8.1, '6040': 8.1, '6100': 8.1, '6400': 8.1, '6500': 8.1, '6570': 8.1, '6600': 8.1 }[k] || 0;
+      const vst = r2(netto * satz / 100);
+      // September wages are paid in October (bank line B5121), so they are owed at month end
+      const lohnOffen = m.monat === '2026-09' && konto(k).gruppe === 'personal';
+      b(d, k, lohnOffen ? '2270' : '1020', netto, konto(k).name + ' ' + monatName(m.monat), lohnOffen ? 'Lohnlauf' : 'Sammelbuchung');
+      if (vst) b(d, '1170', '1020', vst, 'Vorsteuer ' + konto(k).name + ' ' + monatName(m.monat), 'Sammelbuchung', { art: konto(k).gruppe === 'waren' ? 'vst-material' : 'vst-betrieb', basis: netto });
+    });
+  });
+
+  // the Q2 return, filed and paid within the 60 days: input tax is cleared
+  // against output tax, the difference leaves the bank
+  { const q2 = mwstQuartal(2, 2026, B.slice());
+    b('2026-08-27', '2200', '1170', q2.vorsteuer, 'MWST Q2 2026: Vorsteuer verrechnet', 'MWST Q2');
+    b('2026-08-27', '2200', '1020', q2.zahllast, 'MWST Q2 2026: Zahlung an die ESTV', 'MWST Q2'); }
+
+  // October, document by document
+  DB.rechnungen.forEach(r => {
+    if (r.geloescht || stufeIdx(r.stufe) < 1) return;
+    const s = summen(r), l = lief(r.lief);
+    s.zeilen.forEach(z => {
+      b(r.datum, r.konto, '2000', r2(z.netto * s.kurs), l.name + ' ' + r.nr + (s.zeilen.length > 1 ? ' (' + z.satz + ' %)' : ''), r.id);
+      if (z.mwst) b(r.datum, '1170', '2000', r2(z.mwst * s.kurs), 'Vorsteuer ' + z.satz + ' % ' + l.name, r.id, { art: konto(r.konto).gruppe === 'waren' ? 'vst-material' : 'vst-betrieb', satz: z.satz, basis: r2(z.netto * s.kurs) });
+    });
+    if (s.bezugsteuer) {
+      b(r.datum, '1170', '2200', s.bezugsteuer, 'Bezugsteuer 8.1 % ' + l.name, r.id, { art: 'bezug', satz: 8.1, basis: r2(s.netto * s.kurs) });
+    }
+  });
+  const okt = '2026-10-15';
+  Object.entries(OKTOBER_UMSATZ).forEach(([k, netto]) => {
+    b(okt, '1091', k, netto, 'Umsatz Oktober bis heute (Z-Bons)', 'Z-Bons');
+    b(okt, '1091', '2200', r2(netto * 0.081), 'MWST 8.1 % auf Umsatz Oktober', 'Z-Bons', { art: 'umsatz', satz: 8.1, basis: netto });
+  });
+  // the cash part of the takings sits in the till, not on the card account
+  const bar = r2(DB.kasseTage.reduce((s, t) => s + t.bar, 0));
+  b(okt, '1000', '1091', bar, 'Davon bar eingenommen (Kassenabschlüsse)', 'Kasse');
+  Object.entries(OKTOBER_PERSONAL).forEach(([k, v]) => b(okt, k, '2270', v, konto(k).name + ' Oktober (Lohnlauf-Entwurf)', 'Lohn'));
+  DB.kasse.forEach(e => {
+    if (e.art === 'auszahlung') b(e.datum, e.konto || '6100', '1000', e.betrag, 'Barauslage: ' + e.notiz, e.id);
+    else b(e.datum, '1020', '1000', e.betrag, (e.art === 'bancomat' ? 'Bareinzahlung Bancomat' : 'Bareinzahlung Überweisung') + (e.notiz ? ' · ' + e.notiz : ''), e.id);
+  });
+  DB.debitoren.forEach(d => {
+    if (stufeIdx2(d.stufe) < 2 || d.storniert) return;
+    const s = debSummen(d), k = kunde(d.kunde);
+    b(d.datum, '1100', '3280', s.netto, 'Rechnung ' + d.id + ' ' + (k ? k.name : ''), d.id);
+    b(d.datum, '1100', '2200', s.mwst, 'MWST 8.1 % Rechnung ' + d.id, d.id, { art: 'umsatz', satz: d.satz, basis: s.netto });
+    (d.zahlungen || []).forEach(z => b(z.datum, z.weg === 'Bar' ? '1000' : '1020', '1100', z.betrag, 'Zahlung ' + d.id + (z.notiz ? ' · ' + z.notiz : ''), d.id));
+  });
+  DB.bank.forEach(x => {
+    if (!x.zu) return;
+    const t = x.zu.typ;
+    if (t === 'kreditor') b(x.datum, '2000', '1020', -x.betrag, 'Zahlung ' + (DB.rechnungen.find(r => r.id === x.zu.ref) || {}).nr, x.id);
+    else if (t === 'karten') b(x.datum, '1020', '1091', x.betrag, x.text, x.id);
+    else if (t === 'spesen') b(x.datum, '6800', '1020', -x.betrag, x.text, x.id);
+    else if (t === 'lohn') b(x.datum, '2270', '1020', -x.betrag, x.text, x.id);
+    else if (t === 'beleg') {
+      const n = r2(-x.betrag / 1.081), satz = x.zu.satz != null ? x.zu.satz : 8.1;
+      const netto = satz ? r2(-x.betrag / (1 + satz / 100)) : -x.betrag;
+      b(x.datum, x.zu.konto, '1020', netto, x.text, x.id);
+      if (satz) b(x.datum, '1170', '1020', r2(-x.betrag - netto), 'Vorsteuer ' + satz + ' % · ' + x.text, x.id, { art: konto(x.zu.konto).gruppe === 'waren' ? 'vst-material' : 'vst-betrieb', satz, basis: netto });
+    }
+    // «kasse» and «debitor» are already posted from the cash book and the invoice
+  });
+  return B.sort((a, b) => a.datum < b.datum ? -1 : a.datum > b.datum ? 1 : 0);
+}
+const DSTUFEN = [
+  { id: 'entwurf', name: 'Entwurf' }, { id: 'freigabe', name: 'Freigabe' },
+  { id: 'versendet', name: 'Versendet' }, { id: 'bezahlt', name: 'Bezahlt' },
+];
+const stufeIdx2 = id => DSTUFEN.findIndex(s => s.id === id);
+KONTEN.push({ nr: '1500', name: 'Mobiliar & Einrichtung', typ: 'A' }, { nr: '2400', name: 'Bankdarlehen', typ: 'P' }, { nr: '2800', name: 'Eigenkapital', typ: 'P' });
+KONTEN.find(k => k.nr === '2270').name = 'Löhne & Sozialversicherungen (offen)';
+
+// balances and movements for one account in a period [von, bis] (YYYY-MM)
+function kontoStand(nr, von, bis, B) {
+  B = B || buchungen();
+  let vortrag = 0, soll = 0, haben = 0; const zeilen = [];
+  B.forEach(x => {
+    if (x.soll !== nr && x.haben !== nr) return;
+    const ym = x.datum.slice(0, 7);
+    const s = x.soll === nr ? x.betrag : 0, h = x.haben === nr ? x.betrag : 0;
+    if (von && ym < von) { vortrag += s - h; return; }
+    if (bis && ym > bis) return;
+    soll += s; haben += h; zeilen.push(x);
+  });
+  const typ = konto(nr).typ;
+  const saldoRoh = vortrag + soll - haben;
+  // assets and costs are shown debit-positive; liabilities and revenue credit-positive
+  const saldo = (typ === 'A' || typ === 'K') ? saldoRoh : -saldoRoh;
+  return { vortrag: (typ === 'A' || typ === 'K') ? vortrag : -vortrag, soll: r2(soll), haben: r2(haben), saldo: r2(saldo), zeilen };
+}
+
+/* Month figures for Übersicht and Kosten — from the books, so a booked
+   invoice moves the chart the moment it is confirmed. */
+function monatsZahlen(ym, B) {
+  B = B || buchungen();
+  const z = { umsatz: 0, gruppen: {}, kosten: 0 };
+  Object.keys(GRUPPEN).forEach(g => z.gruppen[g] = 0);
+  B.forEach(x => {
+    if (x.datum.slice(0, 7) !== ym) return;
+    const ks = konto(x.soll), kh = konto(x.haben);
+    if (kh.typ === 'E') z.umsatz += x.betrag;
+    if (ks.typ === 'E') z.umsatz -= x.betrag;
+    if (ks.typ === 'K') { z.gruppen[ks.gruppe] += x.betrag; z.kosten += x.betrag; }
+    if (kh.typ === 'K') { z.gruppen[kh.gruppe] -= x.betrag; z.kosten -= x.betrag; }
+  });
+  z.ergebnis = z.umsatz - z.kosten;
+  return z;
+}
+const MONATSLISTE = ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'];
+
+/* ── MWST ─────────────────────────────────────────────────────────────── */
+function mwstQuartal(q, jahr = 2026, B) {
+  B = B || buchungen();
+  const r = { umsatz: 0, steuerUmsatz: 0, bezug: 0, bezugBasis: 0, vstMaterial: 0, vstBetrieb: 0, basisMaterial: 0, basisBetrieb: 0, zeilen: [] };
+  B.forEach(x => {
+    if (!x.mwst || +x.datum.slice(0, 4) !== jahr || quartal(x.datum) !== q) return;
+    const m = x.mwst;
+    if (m.art === 'umsatz') { r.umsatz += m.basis; r.steuerUmsatz += x.betrag; }
+    else if (m.art === 'bezug') { r.bezug += x.betrag; r.bezugBasis += m.basis; }
+    else if (m.art === 'vst-material') { r.vstMaterial += x.betrag; r.basisMaterial += m.basis; }
+    else if (m.art === 'vst-betrieb') { r.vstBetrieb += x.betrag; r.basisBetrieb += m.basis; }
+  });
+  // Bezugsteuer is owed AND reclaimable: it raises both sides
+  r.geschuldet = r2(r.steuerUmsatz + r.bezug);
+  r.vorsteuer = r2(r.vstMaterial + r.vstBetrieb + r.bezug);
+  r.zahllast = r2(r.geschuldet - r.vorsteuer);
+  return r;
+}
+
+/* ── modules ──────────────────────────────────────────────────────────── */
+const MODULES = [
+  { grp: 'Arbeit' },
+  { id: 'uebersicht', name: 'Übersicht', titel: 'Übersicht', sub: 'Was heute zu tun ist — und wie der Monat läuft' },
+  { id: 'rechnungen', name: 'Rechnungen', titel: 'Lieferantenrechnungen', sub: 'Prüfen, kontieren, bezahlen — eine Rechnung nach der anderen' },
+  { id: 'bank', name: 'Bank', titel: 'Bankabgleich', sub: 'Jede Bankbuchung braucht einen Beleg — hier fehlt noch etwas' },
+  { id: 'kasse', name: 'Kasse', titel: 'Kasse & Bareinzahlung', sub: 'Bargeld aus der Kasse, das auf die Bank gehört' },
+  { id: 'kunden', name: 'Kundenrechnungen', titel: 'Kundenrechnungen', sub: 'Vom Kassenbeleg zur QR-Rechnung — und bis sie bezahlt ist' },
+  { grp: 'Auswertung' },
+  { id: 'kosten', name: 'Kosten', titel: 'Kosten & Ergebnis', sub: 'Wohin das Geld fliesst, gemessen an Ihren Zielen' },
+  { id: 'konten', name: 'Konten', titel: 'Konten', sub: 'Saldo, Soll und Haben — direkt aus den Belegen gebucht' },
+  { id: 'mwst', name: 'MWST', titel: 'MWST', sub: 'Abrechnung nach der effektiven Methode, Quartal für Quartal' },
+  { grp: 'Daten' },
+  { id: 'austausch', name: 'Belege & Export', titel: 'Belege & Export', sub: 'Hochladen, was ankommt — herunterladen, was der Treuhänder braucht' },
+  { id: 'einstellungen', name: 'Einstellungen', titel: 'Einstellungen', sub: 'Firmendaten, Zahlteil und Textvorlagen' },
+];
+const ICON = {
+  uebersicht: '<rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/>',
+  rechnungen: '<path d="M4 1.9h5.4l2.7 2.7v9.5H4z"/><path d="M9.2 1.9v2.8h2.9"/><path d="M6.2 8.1h3.8M6.2 10.6h3.8"/>',
+  bank: '<path d="M2 6.2 8 2.4l6 3.8"/><path d="M3.4 6.8v5.4M6.4 6.8v5.4M9.6 6.8v5.4M12.6 6.8v5.4"/><path d="M2 13.6h12"/>',
+  kasse: '<rect x="2" y="4.2" width="12" height="8" rx="1.4"/><circle cx="8" cy="8.2" r="1.8"/><path d="M4.4 6.4v.01M11.6 10v.01"/>',
+  kunden: '<path d="M3.5 1.9h9v12.2l-1.8-1.1-1.5 1.1-1.2-1.1-1.2 1.1-1.5-1.1-1.8 1.1z"/><path d="M6 5.8h4M6 8.3h4"/>',
+  kosten: '<path d="M8 2v6l4.6 3.2"/><circle cx="8" cy="8" r="6"/>',
+  konten: '<path d="M2.5 3.2h11M2.5 6.4h11M2.5 9.6h11M2.5 12.8h11"/><path d="M8 3.2v9.6"/>',
+  mwst: '<circle cx="5" cy="5" r="1.6"/><circle cx="11" cy="11" r="1.6"/><path d="M12.5 3.5l-9 9"/>',
+  austausch: '<path d="M5 6.2 8 3.2l3 3M8 3.2v7"/><path d="M2.6 10.4v2.4c0 .7.5 1.2 1.2 1.2h8.4c.7 0 1.2-.5 1.2-1.2v-2.4"/>',
+  einstellungen: '<circle cx="8" cy="8" r="2.1"/><path d="M8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1"/>',
+};
+const ic = id => `<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICON[id] || ''}</svg>`;
+
+/* How much is open per module — the same counts the Übersicht lists, so a
+   badge and its line on the dashboard always say the same number. */
+function offen() {
+  const R = DB.rechnungen.filter(r => !r.geloescht);
+  const pruefen = R.filter(r => r.stufe === 'eingang').length;
+  const zahlen = R.filter(r => r.stufe === 'kontiert' && !r.auto && !r.klaerung).length;
+  const ueberfaellig = R.filter(r => r.stufe === 'kontiert' && !r.auto && tageBis(faellig(r)) < 0).length;
+  const bankOffen = DB.bank.filter(b => !b.zu).length;
+  const bankAbschluss = DB.bank.filter(b => b.zu && !b.abgeschlossen).length;
+  const debFreigabe = DB.debitoren.filter(d => d.stufe === 'freigabe').length;
+  const debEntwurf = DB.debitoren.filter(d => d.stufe === 'entwurf').length + DB.kassenbelege.length;
+  const debUeber = DB.debitoren.filter(d => d.stufe === 'versendet' && tageBis(d.faellig) < 0 && debSummen(d).offen > 0).length;
+  return { pruefen, zahlen, ueberfaellig, bankOffen, bankAbschluss, debFreigabe, debEntwurf, debUeber, einzahlen: kasseStand().einzahlen };
+}
+function badge(id, o) {
+  if (id === 'rechnungen') return [o.pruefen + o.zahlen, o.ueberfaellig ? 3 : 2];
+  if (id === 'bank') return [o.bankOffen, 2];
+  if (id === 'kunden') return [o.debFreigabe + o.debUeber + o.debEntwurf, o.debUeber ? 3 : 2];
+  if (id === 'kasse') return [o.einzahlen > 3000 ? 1 : 0, 2];
+  return [0, 1];
+}
+
+/* Kasse: what is in the till, and what should go to the bank. */
+function kasseStand() {
+  const bar = r2(DB.kasseTage.reduce((s, t) => s + t.bar, 0));
+  const ein = r2(DB.kasse.filter(e => e.art !== 'auszahlung').reduce((s, e) => s + e.betrag, 0));
+  const aus = r2(DB.kasse.filter(e => e.art === 'auszahlung').reduce((s, e) => s + e.betrag, 0));
+  const bestand = r2(KASSE_ANFANG + bar - ein - aus);
+  // the float stays in the till; everything above it belongs on the bank
+  return { bar, ein, aus, bestand, einzahlen: Math.max(0, r2(bestand - KASSE_ANFANG)) };
+}
+
+/* ── routing ──────────────────────────────────────────────────────────── */
+let AKTIV = 'uebersicht', PARAM = '';
+function go(id, param) {
+  const h = '#' + id + (param ? '/' + param : '');
+  if (location.hash !== h) location.hash = h; else render();
+}
+function lesen() {
+  const [id, p] = location.hash.replace(/^#/, '').split('/');
+  AKTIV = MODULES.some(m => m.id === id) ? id : 'uebersicht';
+  PARAM = decodeURIComponent(p || '');
+}
+function renderRail() {
+  const o = offen();
+  $('#nav').innerHTML = MODULES.map(m => {
+    if (m.grp) return `<div class="grp">${m.grp}</div>`;
+    const [n, s] = badge(m.id, o);
+    return `<a href="#${m.id}" class="${m.id === AKTIV ? 'on' : ''}" ${m.id === AKTIV ? 'aria-current="page"' : ''}>${ic(m.id)}${esc(m.name)}${n ? `<span class="badge s${s}">${n}</span>` : ''}</a>`;
+  }).join('');
+}
+const VIEWS = {};
+function render() {
+  lesen();
+  const m = MODULES.find(x => x.id === AKTIV);
+  $('#titel').textContent = m.titel;
+  $('#untertitel').textContent = m.sub;
+  document.title = m.titel + ' · Rechnungswesen · Axyom';
+  renderRail();
+  $('#view').innerHTML = VIEWS[AKTIV]();
+  if (VIEWS[AKTIV + '_nach']) VIEWS[AKTIV + '_nach']();
+}
+// after a change: save, redraw, keep the reader where they were
+function neu() {
+  speichern();
+  const y = window.scrollY;
+  render();
+  window.scrollTo(0, y);
+}
+
+/* ── toast & modal ────────────────────────────────────────────────────── */
+let toastT;
+function toast(html, s) {
+  const t = $('#toast'); t.innerHTML = html;
+  t.className = 'show' + (s ? ' s' + s : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), Math.min(9000, 2600 + t.textContent.length * 45));
+}
+let MODAL_OK = null;
+function modal(html, ok) {
+  $('#modal-in').innerHTML = html; $('#modal').classList.add('on'); MODAL_OK = ok || null;
+  const f = $('#modal-in').querySelector('input,select,textarea,button.acc,button.dark'); if (f) setTimeout(() => f.focus(), 30);
+}
+function modalZu() { $('#modal').classList.remove('on'); MODAL_OK = null; }
+
+/* ── charts ───────────────────────────────────────────────────────────── */
+// stacked bars; the live month is dashed because it is not closed yet
+function balken(reihen, serien, opt = {}) {
+  const max = Math.max(1, ...reihen.map(r => serien.reduce((s, x) => s + Math.max(0, r.werte[x.key] || 0), 0)));
+  return `<div class="bars" style="height:${opt.h || 170}px">` + reihen.map(r => {
+    const tot = serien.reduce((s, x) => s + Math.max(0, r.werte[x.key] || 0), 0);
+    return `<div class="bc${r.live ? ' live' : ''}" title="${esc(r.titel || '')}: ${fmt(tot, 0)}">
+      <div class="stk" style="height:${Math.max(2, tot / max * 100)}%">${serien.map(x =>
+        `<div style="height:${tot ? Math.max(0, r.werte[x.key] || 0) / tot * 100 : 0}%;background:${x.farbe}"></div>`).join('')}</div>
+      <div class="lbl">${esc(r.label)}</div></div>`;
+  }).join('') + '</div>' + (serien.length > 1 || opt.legende ? `<div class="legend">${serien.map(x => `<span><i style="background:${x.farbe}"></i>${esc(x.name)}</span>`).join('')}${opt.legendeExtra || ''}</div>` : '');
+}
+
+/* A Swiss QR code needs a real encoder; the demo draws a deterministic
+   pattern with the three finder squares and the Swiss cross so the bill looks
+   right on screen, and says plainly that it is not scannable. */
+function qrBild(seed) {
+  let h = 0; for (const c of String(seed)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const n = 25, z = 92 / n; let s = '';
+  const rnd = () => (h = (h * 1103515245 + 12345) >>> 0) / 4294967296;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const finder = (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+    if (finder) continue;
+    if (rnd() > .52) s += `<rect x="${(x * z).toFixed(2)}" y="${(y * z).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"/>`;
+  }
+  const f = (x, y) => `<rect x="${x * z}" y="${y * z}" width="${7 * z}" height="${7 * z}" fill="none" stroke="#000" stroke-width="${z}" transform="translate(${z / 2} ${z / 2})" style="transform:translate(0,0)"/><rect x="${(x + 2) * z}" y="${(y + 2) * z}" width="${3 * z}" height="${3 * z}"/>`;
+  return `<svg class="code" viewBox="0 0 92 92" fill="#000" aria-label="QR-Code (Demo, nicht scannbar)"><rect width="92" height="92" fill="#fff"/>${s}${f(0, 0)}${f(n - 7, 0)}${f(0, n - 7)}<rect x="38" y="38" width="16" height="16" fill="#000"/><path d="M44 41h4v4h4v3h-4v4h-4v-4h-4v-3h4z" fill="#fff"/></svg>`;
+}
+/* ══════════════════════════════════════════════════════════════════════
+   ÜBERSICHT — what to do today, then how the month is going. The to-do list
+   is built from the same counts as the rail badges (offen()), so the two can
+   never disagree.
+   ══════════════════════════════════════════════════════════════════════ */
+VIEWS.uebersicht = () => {
+  const o = offen(), B = buchungen();
+  const R = DB.rechnungen.filter(r => !r.geloescht);
+  const zuZahlen = R.filter(r => r.stufe === 'kontiert' && !r.auto);
+  const summeZahlen = zuZahlen.reduce((s, r) => s + summen(r).chf, 0);
+  const okt = monatsZahlen('2026-10', B), sep = monatsZahlen('2026-09', B);
+  const bank = kontoStand('1020', null, null, B).saldo;
+  const debOffen = DB.debitoren.filter(d => d.stufe === 'versendet').reduce((s, d) => s + debSummen(d).offen, 0);
+  const naechste = zuZahlen.filter(r => !r.klaerung).sort((a, b) => faellig(a) < faellig(b) ? -1 : 1);
+
+  const todo = [];
+  if (o.ueberfaellig) todo.push([3, `${o.ueberfaellig} Rechnung${o.ueberfaellig > 1 ? 'en' : ''} überfällig`, 'Jetzt bezahlen oder mit dem Lieferanten klären', 'rechnungen', 'zahlen']);
+  if (o.debUeber) todo.push([3, `${o.debUeber} Kundenrechnung${o.debUeber > 1 ? 'en' : ''} überfällig`, 'Erinnerung senden', 'kunden', 'offen']);
+  if (o.pruefen) todo.push([2, `${o.pruefen} Rechnung${o.pruefen > 1 ? 'en' : ''} prüfen & kontieren`, 'Konto und MWST bestätigen — Vorschläge stehen bereit', 'rechnungen', 'pruefen']);
+  if (o.bankOffen) todo.push([2, `${o.bankOffen} Bankbuchung${o.bankOffen > 1 ? 'en' : ''} ohne Beleg`, 'Beleg hochladen oder Vorschlag bestätigen', 'bank', '']);
+  if (o.debFreigabe) todo.push([2, `${o.debFreigabe} Kundenrechnung zur Freigabe`, 'Kurz ansehen und versenden', 'kunden', 'freigabe']);
+  if (o.debEntwurf) todo.push([1, `${o.debEntwurf} Kassenbeleg${o.debEntwurf > 1 ? 'e' : ''} zu verrechnen`, 'Rechnung aus dem Kassenbeleg erstellen', 'kunden', 'entwurf']);
+  if (o.einzahlen > 3000) todo.push([2, `${chf(o.einzahlen, 0)} Bargeld einzahlen`, 'Über dem Wechselgeld-Bestand — gehört auf die Bank', 'kasse', '']);
+  if (o.zahlen) todo.push([1, `${o.zahlen} Rechnung${o.zahlen > 1 ? 'en' : ''} zum Bezahlen bereit`, `${chf(summeZahlen, 0)} — nach Fälligkeit sortiert`, 'rechnungen', 'zahlen']);
+  if (o.bankAbschluss) todo.push([1, `${o.bankAbschluss} Bankbuchungen abschliessen`, 'Vollständig — für den Treuhänder freigeben', 'bank', 'abschluss']);
+
+  const serien = Object.entries(GRUPPEN).map(([key, g]) => ({ key, name: g.name, farbe: g.farbe }));
+  const reihen = MONATSLISTE.map(ym => { const z = monatsZahlen(ym, B); return { label: monatKurz(ym), titel: monatName(ym), werte: z.gruppen, live: ym === '2026-10' }; });
+  const ergReihen = MONATSLISTE.map(ym => { const z = monatsZahlen(ym, B); return { ym, z }; });
+  const maxU = Math.max(...ergReihen.map(x => x.z.umsatz));
+
+  return `
+  <div class="grid g4">
+    <button class="kpi ${o.pruefen ? 's2' : 's1'}" data-go="rechnungen" data-p="pruefen"><div class="k">Rechnungen zu prüfen</div><div class="v">${o.pruefen}</div><div class="s">${R.filter(r => r.klaerung).length} davon mit offener Frage</div><div class="go">Prüfen →</div></button>
+    <button class="kpi ${o.ueberfaellig ? 's3' : ''}" data-go="rechnungen" data-p="zahlen"><div class="k">Zu bezahlen</div><div class="v">${chf(summeZahlen, 0)}</div><div class="s">${zuZahlen.length} Rechnungen · ${o.ueberfaellig ? o.ueberfaellig + ' überfällig' : 'nichts überfällig'}</div><div class="go">Zahlungen →</div></button>
+    <button class="kpi ${o.bankOffen ? 's2' : 's1'}" data-go="bank"><div class="k">Bankbuchungen ohne Beleg</div><div class="v">${o.bankOffen}</div><div class="s">von ${DB.bank.length} im Oktober</div><div class="go">Abgleichen →</div></button>
+    <button class="kpi" data-go="kosten"><div class="k">Ergebnis September</div><div class="v" style="color:${sep.ergebnis < 0 ? 'var(--bad)' : 'var(--ok)'}">${chf(sep.ergebnis, 0)}</div><div class="s">${pct(sep.ergebnis / sep.umsatz * 100)} vom Umsatz · Oktober läuft noch</div><div class="go">Kosten →</div></button>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px;align-items:start">
+    <div class="card"><h2>Heute zu tun <small>${todo.length ? 'wichtigstes zuerst' : ''}</small></h2>
+      <div class="lead">Alles, was gerade auf eine Entscheidung wartet.</div>
+      ${todo.length ? todo.sort((a, b) => b[0] - a[0]).map(t => `<div class="todo" data-go="${t[3]}" data-p="${t[4]}" role="button" tabindex="0"><span class="dot s${t[0]}"></span><div><div class="t">${esc(t[1])}</div><div class="d">${esc(t[2])}</div></div><span class="n">›</span></div>`).join('')
+        : '<div class="leer">Alles erledigt. 🎉</div>'}
+    </div>
+    <div class="stack">
+      <div class="card"><h2>Geld <small>Stand heute</small></h2>
+        <div class="grid g3" style="margin-top:10px;gap:10px">
+          <div><div class="dim" style="font-size:12px">Bank laut Buchhaltung</div><div class="num" style="font-size:19px;font-weight:700">${chf(bank, 0)}</div></div>
+          <div><div class="dim" style="font-size:12px">Bargeld in der Kasse</div><div class="num" style="font-size:19px;font-weight:700">${chf(kasseStand().bestand, 0)}</div></div>
+          <div><div class="dim" style="font-size:12px">Kunden schulden</div><div class="num" style="font-size:19px;font-weight:700">${chf(debOffen, 0)}</div></div>
+        </div>
+        <div style="margin-top:14px;font-size:12.5px;font-weight:650">Nächste Zahlungen</div>
+        ${naechste.slice(0, 4).map(r => `<div class="sum" style="cursor:pointer" data-go="rechnungen" data-p="${r.id}"><span>${esc(lief(r.lief).name)} <span class="dim">· ${tageBis(faellig(r)) < 0 ? 'überfällig' : 'fällig ' + dtk(faellig(r))}</span></span><span class="num">${chf(summen(r).chf)}</span></div>`).join('') || '<div class="dim" style="font-size:12.5px">Keine.</div>'}
+      </div>
+      <div class="card"><h2>Umsatz und Ergebnis <small>netto, je Monat</small></h2>
+        <div class="bars" style="height:150px;margin-top:8px">${ergReihen.map(({ ym, z }) => `<div class="bc${ym === '2026-10' ? ' live' : ''}" title="${monatName(ym)}: Umsatz ${fmt(z.umsatz, 0)}, Ergebnis ${fmt(z.ergebnis, 0)}">
+          <div class="stk" style="height:${z.umsatz / maxU * 100}%"><div style="height:100%;background:rgba(0,178,160,.28);position:relative"><div style="position:absolute;left:0;right:0;bottom:0;height:${Math.max(0, z.ergebnis) / z.umsatz * 100}%;background:var(--acc)"></div></div></div>
+          <div class="lbl">${monatKurz(ym)}</div></div>`).join('')}</div>
+        <div class="legend"><span><i style="background:rgba(0,178,160,.28)"></i>Umsatz</span><span><i style="background:var(--acc)"></i>davon Gewinn</span><span>Oktober gestrichelt: läuft noch</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px"><h2>Kosten je Monat <small>aus den gebuchten Belegen</small></h2>
+    <div class="lead">Jede geprüfte Rechnung landet sofort hier. Oktober ist noch nicht vollständig.</div>
+    ${balken(reihen, serien)}
+  </div>`;
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   RECHNUNGEN — list | document | decision. One question per stage: in
+   Eingang «stimmt das Konto und die MWST?», in Geprüft «bezahlen?», in
+   Bezahlt «welche Bankbuchung war es?». Nothing else competes for the eye.
+   ══════════════════════════════════════════════════════════════════════ */
+let RFILTER = 'pruefen', RSUCHE = '';
+const RFILTER_DEF = {
+  pruefen: { name: 'Zu prüfen', f: r => r.stufe === 'eingang' },
+  zahlen: { name: 'Zu bezahlen', f: r => r.stufe === 'kontiert' },
+  bank: { name: 'Wartet auf Bank', f: r => r.stufe === 'bezahlt' },
+  fertig: { name: 'Erledigt', f: r => r.stufe === 'abgeglichen' },
+  alle: { name: 'Alle', f: () => true },
+};
+function rechnungsListe() {
+  const q = RSUCHE.trim().toLowerCase();
+  return DB.rechnungen.filter(r => !r.geloescht && RFILTER_DEF[RFILTER].f(r) && (!q ||
+    (lief(r.lief).name + ' ' + r.nr + ' ' + r.id + ' ' + fmt(summen(r).brutto)).toLowerCase().includes(q)))
+    .sort((a, b) => RFILTER === 'zahlen' ? (faellig(a) < faellig(b) ? -1 : 1) : (a.eingang < b.eingang ? 1 : -1));
+}
+VIEWS.rechnungen = () => {
+  if (RFILTER_DEF[PARAM]) { RFILTER = PARAM; PARAM = ''; }
+  let liste = rechnungsListe();
+  let r = DB.rechnungen.find(x => x.id === PARAM && !x.geloescht);
+  if (r && !liste.includes(r)) { RFILTER = Object.keys(RFILTER_DEF).find(k => k !== 'alle' && RFILTER_DEF[k].f(r)) || 'alle'; liste = rechnungsListe(); }
+  if (!r) r = liste[0];
+  const n = k => DB.rechnungen.filter(x => !x.geloescht && RFILTER_DEF[k].f(x)).length;
+  return `<div class="split">
+    <div class="col"><div class="liste">
+      <div class="lh"><div class="chips">${Object.entries(RFILTER_DEF).map(([k, d]) => `<button class="chip${k === RFILTER ? ' on' : ''}" data-rfilter="${k}">${d.name}<span class="n">${n(k)}</span></button>`).join('')}</div>
+        <input class="in" id="rsuche" type="search" placeholder="Lieferant, Nummer, Betrag" value="${esc(RSUCHE)}" style="margin-top:10px"></div>
+      <div class="items">${liste.length ? liste.map(x => {
+        const s = summen(x);
+        return `<button class="li${r && x.id === r.id ? ' on' : ''}" data-go="rechnungen" data-p="${x.id}">
+          <div class="a"><span>${esc(lief(x.lief).name)}</span><span class="num">${x.waehrung && x.waehrung !== 'CHF' ? x.waehrung + ' ' + fmt(s.brutto) : fmt(s.brutto)}</span></div>
+          <div class="b"><span>${dt(x.datum)} · ${esc(x.nr)}</span></div>
+          <div class="c">${statusPill(x)}${x.auto ? '' : ''}</div>
+          <div style="margin-top:7px">${stufenBalken(x, true)}</div></button>`;
+      }).join('') : `<div class="leer">${RSUCHE ? 'Nichts gefunden.' : RFILTER === 'pruefen' ? 'Alles geprüft. Neue Rechnungen erscheinen hier, sobald sie per Mail oder Upload ankommen.' : 'Keine Rechnungen in dieser Ansicht.'}</div>`}</div>
+      <div class="lh" style="border-top:1px solid var(--soft);border-bottom:0;font-size:12px"><button class="btn link" data-papierkorb>Papierkorb (${DB.papierkorb.length})</button></div>
+    </div></div>
+    ${r ? `<div class="col doc">${belegPapier(r)}</div><div class="col"><div class="panel">${entscheidung(r, liste)}</div></div>`
+      : `<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links eine Rechnung.</div></div>`}
+  </div>`;
+};
+VIEWS.rechnungen_nach = () => {
+  if (PARAM && innerWidth <= 900) { const p = document.querySelector('.split>.col:last-child'); if (p) setTimeout(() => p.scrollIntoView({ block: 'start' }), 0); }
+  const s = $('#rsuche'); if (s) s.addEventListener('input', () => { RSUCHE = s.value; const p = s.selectionStart; render(); const n = $('#rsuche'); n.focus(); n.setSelectionRange(p, p); });
+  vatLive();
+};
+
+function belegPapier(r) {
+  const l = lief(r.lief), s = summen(r), w = r.waehrung || 'CHF';
+  const dup = r.duplikatVon && DB.rechnungen.find(x => x.id === r.duplikatVon);
+  return `${dup ? `<div class="box s3" style="margin-bottom:12px"><b>Vermutlich doppelt.</b> Gleiche Rechnungsnummer ${esc(r.nr)} und gleicher Betrag wie die Rechnung vom ${dt(dup.eingang)} (${esc(dup.id)}). Wahrscheinlich einmal per Mail, einmal per Post.</div>` : ''}
+  <div class="paper" aria-label="Originalbeleg">
+    <div class="ph"><div><div class="lg">${esc(l.name)}</div><div class="dim">${esc(l.ort)}</div></div>
+      <div style="text-align:right" class="dim">${r.auto ? `<span class="pill g">${esc(l.auto)}</span><br>` : ''}Eingang ${dt(r.eingang)}<br>${r.eingang === r.datum ? 'per E-Mail' : 'per Post, gescannt'}</div></div>
+    <div class="adr">${esc(DB.firma.name)}<br>${esc(DB.firma.marke)}<br>${esc(DB.firma.strasse)}<br>${esc(DB.firma.plz)} ${esc(DB.firma.ort)}</div>
+    <h3>Rechnung ${esc(r.nr)}</h3>
+    <div class="dim">Datum ${dt(r.datum)} · zahlbar ${l.ziel ? 'innert ' + l.ziel + ' Tagen' : 'sofort'}${r.bezug ? ' · Leistung aus dem Ausland, ohne Schweizer MWST' : ''}</div>
+    <table><thead><tr><th>Artikel</th><th style="text-align:right">Menge</th><th style="text-align:right">Preis</th><th style="text-align:right">MWST</th><th style="text-align:right">Betrag ${w}</th></tr></thead>
+    <tbody>${r.pos.map(p => { const satz = p[3] != null ? p[3] : (r.bezug ? 0 : l.satz); return `<tr><td>${esc(p[0])}</td><td style="text-align:right">${p[1]}</td><td style="text-align:right">${fmt(p[2])}</td><td style="text-align:right">${satz} %</td><td style="text-align:right">${fmt(p[1] * p[2])}</td></tr>`; }).join('')}</tbody></table>
+    <table class="tot" style="width:auto;margin-left:auto;margin-top:12px"><tbody>
+      <tr><td>Total netto</td><td style="text-align:right;padding-left:30px">${w} ${fmt(s.netto)}</td></tr>
+      ${s.zeilen.filter(z => z.satz).map(z => `<tr><td>MWST ${z.satz} % auf ${fmt(z.netto)}</td><td style="text-align:right">${w} ${fmt(z.mwst)}</td></tr>`).join('')}
+      <tr><td>Total</td><td style="text-align:right">${w} ${fmt(s.brutto)}</td></tr></tbody></table>
+    ${r.waehrung && r.waehrung !== 'CHF' ? '' : `<div class="qr">${qrBild(r.id)}<div><b>Zahlteil</b><br>Konto ${esc(l.name)}<br>Referenz ${esc(r.nr)}<br>Betrag CHF ${fmt(s.brutto)}<br><span class="dim">Demo — QR-Code nicht scannbar</span></div></div>`}
+  </div>`;
+}
+
+/* the right-hand panel: one stage, one question */
+function entscheidung(r, liste) {
+  const l = lief(r.lief), s = summen(r), st = stufeVon(r);
+  const i = liste.indexOf(r);
+  const blaettern = `<div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <span class="dim" style="font-size:12px">${i >= 0 ? (i + 1) + ' von ' + liste.length : ''}</span>
+      <span class="row" style="gap:6px"><button class="btn sm" ${i > 0 ? `data-go="rechnungen" data-p="${liste[i - 1].id}"` : 'disabled'} aria-label="Vorherige">←</button><button class="btn sm" ${i >= 0 && i < liste.length - 1 ? `data-go="rechnungen" data-p="${liste[i + 1].id}"` : 'disabled'} aria-label="Nächste">→</button></span></div>`;
+  const kopf = `<div class="card">${blaettern}
+    <div class="row" style="justify-content:space-between;align-items:flex-start"><div><div style="font-size:17px;font-weight:700">${esc(l.name)}</div><div class="dim" style="font-size:12.5px">${esc(r.nr)} · ${dt(r.datum)} · ${esc(r.id)}</div></div>
+      <div style="text-align:right"><div class="num" style="font-size:17px;font-weight:700">${chf(s.chf)}</div>${s.kurs !== 1 ? `<div class="dim num" style="font-size:12px">${r.waehrung} ${fmt(s.brutto)} × ${s.kurs}</div>` : ''}</div></div>
+    <div style="margin-top:12px">${stufenBalken(r)}</div>
+    ${r.klaerung ? `<div class="box s2" style="margin-top:12px"><b>Offene Frage:</b> ${esc(r.klaerung)}<div class="row" style="margin-top:8px"><button class="btn sm" data-geklaert="${r.id}">Geklärt</button></div></div>` : ''}`;
+
+  let body = '';
+  if (r.duplikatVon) {
+    body = `<div class="step"><i>!</i>Doppelt eingegangen?</div>
+      <p style="font-size:13px">Diese Rechnung hat dieselbe Nummer und denselben Betrag wie ${esc(r.duplikatVon)}. Bezahlt werden darf sie nur einmal.</p>
+      <div class="row" style="margin-top:12px"><button class="btn dark" data-doppelt="${r.id}">Ist doppelt — in den Papierkorb</button><button class="btn" data-keindoppel="${r.id}">Ist eine eigene Rechnung</button></div>`;
+  } else if (st === 'eingang') {
+    body = kontierFormular(r);
+  } else if (st === 'kontiert') {
+    const t = tageBis(faellig(r));
+    body = r.auto
+      ? `<div class="step done"><i>✓</i>Geprüft</div><div class="box i">Läuft per <b>${esc(l.auto)}</b>. Die Bank belastet den Betrag selbst — die Buchung wird zugeordnet, sobald sie kommt.</div>`
+      : `<div class="step"><i>2</i>Bezahlen</div>
+      <div class="sum"><span>Fällig</span><span class="num" style="${t < 0 ? 'color:var(--bad);font-weight:700' : ''}">${dt(faellig(r))}${t < 0 ? ' · ' + (-t) + ' Tage überfällig' : t === 0 ? ' · heute' : ' · in ' + t + ' Tagen'}</span></div>
+      <div class="sum"><span>Betrag</span><span class="num">${chf(s.chf)}</span></div>
+      <div class="sum"><span>Gebucht auf</span><span>${esc(kname(r.konto))}</span></div>
+      ${r.raten ? `<div class="box i" style="margin-top:8px">In ${r.raten.anzahl} Raten: ${r.raten.bezahlt} von ${r.raten.anzahl} bezahlt · nächste Rate ${chf(r2(s.chf / r.raten.anzahl))}</div>` : ''}
+      <div class="fld" style="margin-top:12px"><span>Im E-Banking bezahlt am</span><input type="date" id="bezahltam" value="${HEUTE}"></div>
+      <div class="row" style="margin-top:12px"><button class="btn acc" data-bezahlt="${r.id}">✓ Als bezahlt markieren</button>${r.raten ? '' : `<button class="btn" data-raten="${r.id}">In Raten zahlen</button>`}</div>
+      <p class="dim" style="font-size:12px;margin-top:10px">«Bezahlt» hält nur fest, dass die Zahlung ausgelöst ist. Erledigt ist die Rechnung, wenn die Bankbuchung zugeordnet ist.</p>`;
+  } else if (st === 'bezahlt') {
+    const kand = DB.bank.filter(b => !b.zu && Math.abs(-b.betrag - s.chf) < 0.01);
+    body = `<div class="step"><i>3</i>Bankbuchung zuordnen</div>
+      <p style="font-size:13px">Bezahlt am ${dt(r.bezahltAm || HEUTE)}. Sobald die Belastung auf dem Konto ist, gehört sie hierher.</p>
+      ${kand.length ? kand.map(b => `<div class="box s1" style="margin-top:10px"><b>Passende Bankbuchung gefunden</b><br><span class="num">${dt(b.datum)} · ${chf(-b.betrag)}</span><br><span style="font-size:12.5px">${esc(b.text)}</span><br><button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${r.id}">Zuordnen</button></div>`).join('')
+        : '<div class="box i" style="margin-top:10px">Noch keine Bankbuchung mit genau diesem Betrag. Laden Sie den Kontoauszug hoch, oder warten Sie auf die nächste Bankmeldung.</div>'}`;
+  } else {
+    const b = bankZu('kreditor', r.id);
+    body = `<div class="step done"><i>✓</i>${st === 'abgeschlossen' ? 'Abgeschlossen' : 'Abgeglichen'}</div>
+      ${b ? `<div class="sum"><span>Bankbuchung</span><span class="num">${dt(b.datum)} · ${chf(-b.betrag)}</span></div><div class="dim" style="font-size:12px">${esc(b.text)}</div>` : ''}
+      <div class="sum"><span>Gebucht auf</span><span>${esc(kname(r.konto))}</span></div>
+      ${st === 'abgeglichen' ? '<p class="dim" style="font-size:12px;margin-top:8px">Wird beim Monatsabschluss im Bankabgleich abgeschlossen.</p>' : ''}`;
+  }
+  const prot = (r.protokoll || []).slice().reverse();
+  return kopf + body + `</div>
+    ${prot.length ? `<div class="card" style="margin-top:12px"><h2>Protokoll</h2><div class="log" style="margin-top:6px">${prot.map(p => `<div><span class="dim">${esc(p[0])}</span><span>${esc(p[1])}</span></div>`).join('')}</div></div>` : ''}
+    <div class="row noprint" style="margin-top:10px;justify-content:flex-end">${st === 'eingang' && !r.klaerung ? `<button class="btn sm" data-frage="${r.id}">Frage notieren</button>` : ''}<button class="btn sm bad" data-loeschen="${r.id}">Löschen</button></div>`;
+}
+
+/* Kontierung: the account (with the suggestion and WHY), the tax treatment,
+   the VAT lines — and a live check that they add up to the original. */
+function kontierFormular(r) {
+  const l = lief(r.lief), s = summen(r), v = r.vorschlag;
+  const zeilen = r.entwurf || s.zeilen.map(z => ({ satz: z.satz, netto: z.netto }));
+  const steuerart = r.bezug ? 'bezug' : (zeilen.every(z => !z.satz) ? 'ohne' : 'inland');
+  const sicher = { hoch: ['s1', 'sicher'], mittel: ['s2', 'bitte prüfen'], tief: ['s3', 'unsicher'] };
+  return `
+    <div class="step"><i>1</i>Konto</div>
+    ${v ? `<div class="box ${sicher[v.sicher][0]}" style="margin-bottom:10px">Vorschlag <b>${esc(kname(v.konto))}</b> · ${sicher[v.sicher][1]}<br><span style="font-size:12.5px">${esc(v.grund)}</span></div>` : ''}
+    <div class="grid g2" style="gap:10px">
+      <label class="fld"><span>Konto</span><select id="kt-konto">${KONTEN.filter(k => k.typ === 'K').map(k => `<option value="${k.nr}"${k.nr === r.konto ? ' selected' : ''}>${k.nr} ${esc(k.name)}</option>`).join('')}</select></label>
+      <label class="fld"><span>Steuer</span><select id="kt-steuer">
+        <option value="inland"${steuerart === 'inland' ? ' selected' : ''}>Schweizer MWST auf dem Beleg</option>
+        <option value="bezug"${steuerart === 'bezug' ? ' selected' : ''}>Ausland — Bezugsteuer</option>
+        <option value="ohne"${steuerart === 'ohne' ? ' selected' : ''}>Ohne MWST</option></select></label>
+    </div>
+    ${r.waehrung && r.waehrung !== 'CHF' ? `<label class="fld" style="margin-top:10px"><span>Kurs ${r.waehrung} → CHF am ${dt(r.datum)}</span><input id="kt-kurs" inputmode="decimal" value="${r.kurs}"></label>` : ''}
+    <div class="step"><i>2</i>MWST-Zeilen <small class="dim" style="font-weight:500;font-size:12px;margin-left:auto">wie auf dem Beleg</small></div>
+    <div class="vatrow dim" style="font-size:11px;font-weight:600"><span>Satz</span><span>Netto ${r.waehrung || 'CHF'}</span><span class="mw">MWST</span><span>Brutto</span><span></span></div>
+    <div id="kt-zeilen">${zeilen.map((z, i) => vatZeile(z, i)).join('')}</div>
+    <button class="btn sm" data-zeileplus style="margin-top:2px">+ Zeile</button>
+    <div id="kt-check" style="margin-top:10px"></div>
+    <div class="step"><i>3</i>Bestätigen</div>
+    <label class="check"><input type="checkbox" id="kt-ok"> Konto und MWST-Zeilen mit dem Beleg verglichen</label>
+    <div class="row" style="margin-top:12px"><button class="btn acc" data-kontieren="${r.id}">Geprüft — weiter zur nächsten</button></div>`;
+}
+const vatZeile = (z, i) => `<div class="vatrow" data-i="${i}">
+  <select class="in kt-satz">${SAETZE.map(x => `<option value="${x.satz}"${x.satz === z.satz ? ' selected' : ''}>${x.satz} %</option>`).join('')}</select>
+  <input class="in kt-netto num" inputmode="decimal" value="${z.netto.toFixed(2)}" aria-label="Netto">
+  <input class="in mw num" readonly tabindex="-1" value="${fmt(z.netto * z.satz / 100)}" aria-label="MWST">
+  <input class="in num" readonly tabindex="-1" value="${fmt(z.netto * (1 + z.satz / 100))}" aria-label="Brutto">
+  <button class="x" data-zeileweg="${i}" aria-label="Zeile entfernen">×</button></div>`;
+function vatLesen() {
+  return [...document.querySelectorAll('#kt-zeilen .vatrow')].map(row => ({
+    satz: zahl(row.querySelector('.kt-satz').value), netto: r2(zahl(row.querySelector('.kt-netto').value)) }));
+}
+// recompute MWST/Brutto per line and compare the total with the original
+function vatLive() {
+  const box = $('#kt-check'); if (!box) return;
+  const r = DB.rechnungen.find(x => x.id === PARAM) || rechnungsListe()[0]; if (!r) return;
+  const zeilen = vatLesen();
+  document.querySelectorAll('#kt-zeilen .vatrow').forEach((row, i) => {
+    const z = zeilen[i], f = row.querySelectorAll('input[readonly]');
+    f[0].value = fmt(z.netto * z.satz / 100); f[1].value = fmt(z.netto * (1 + z.satz / 100));
+  });
+  const soll = summen(r).brutto;
+  const ist = r2(zeilen.reduce((s, z) => s + r2(z.netto) + r2(z.netto * z.satz / 100), 0));
+  const diff = r2(ist - soll);
+  box.innerHTML = Math.abs(diff) < 0.06
+    ? `<div class="box s1">✓ Summe stimmt mit dem Beleg überein: <b class="num">${r.waehrung || 'CHF'} ${fmt(soll)}</b>${Math.abs(diff) >= 0.01 ? ` <span class="dim">(Rundung ${fmt(diff)})</span>` : ''}</div>`
+    : `<div class="box s3">Abweichung <b class="num">${fmt(diff)}</b>: Ihre Zeilen ergeben ${fmt(ist)}, der Beleg ${fmt(soll)}.</div>`;
+  box.dataset.ok = Math.abs(diff) < 0.06 ? '1' : '';
+}
+/* ══════════════════════════════════════════════════════════════════════
+   BANK — every bank line needs something that explains it. The list shows
+   what is missing in plain words and offers the one action that fixes it:
+   confirm a match, upload a receipt, or book it without one (with a reason).
+   ══════════════════════════════════════════════════════════════════════ */
+let BFILTER = 'offen';
+function zuText(b) {
+  const z = b.zu; if (!z) return '';
+  if (z.typ === 'kreditor') { const r = DB.rechnungen.find(x => x.id === z.ref); return r ? `Rechnung ${esc(r.nr)} · ${esc(lief(r.lief).name)}` : 'Lieferantenrechnung'; }
+  if (z.typ === 'debitor') return `Kundenrechnung ${esc(z.ref)}`;
+  if (z.typ === 'kasse') return `Bareinzahlung ${esc(z.ref)}`;
+  if (z.typ === 'karten') return 'Kartenabrechnung · Umsatz';
+  if (z.typ === 'lohn') return 'Lohnlauf';
+  if (z.typ === 'spesen') return 'Bankspesen · 6800';
+  if (z.typ === 'beleg') return `${z.datei ? 'Beleg ' + esc(z.datei) : 'Ohne Beleg: ' + esc(z.grund || '')} · ${esc(z.konto)}`;
+  return '';
+}
+VIEWS.bank = () => {
+  if (PARAM === 'abschluss') { BFILTER = 'abschluss'; PARAM = ''; }
+  const alle = DB.bank.slice().sort((a, b) => a.datum < b.datum ? 1 : -1);
+  const offenL = alle.filter(b => !b.zu), abschl = alle.filter(b => b.zu && !b.abgeschlossen);
+  const liste = BFILTER === 'offen' ? offenL : BFILTER === 'abschluss' ? abschl : alle;
+  const ein = alle.filter(b => b.betrag > 0).reduce((s, b) => s + b.betrag, 0);
+  const aus = alle.filter(b => b.betrag < 0).reduce((s, b) => s - b.betrag, 0);
+  return `
+  <div class="grid g4">
+    <div class="kpi ${offenL.length ? 's2' : 's1'}"><div class="k">Ohne Beleg oder Zuordnung</div><div class="v">${offenL.length}</div><div class="s">${chf(offenL.reduce((s, b) => s + Math.abs(b.betrag), 0))} betroffen</div></div>
+    <div class="kpi"><div class="k">Bereit zum Abschliessen</div><div class="v">${abschl.length}</div><div class="s">vollständig zugeordnet</div></div>
+    <div class="kpi"><div class="k">Eingänge Oktober</div><div class="v num">${chf(ein, 0)}</div><div class="s">${alle.filter(b => b.betrag > 0).length} Buchungen</div></div>
+    <div class="kpi"><div class="k">Ausgänge Oktober</div><div class="v num">${chf(aus, 0)}</div><div class="s">${alle.filter(b => b.betrag < 0).length} Buchungen</div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="row" style="justify-content:space-between">
+      <div class="chips">
+        <button class="chip${BFILTER === 'offen' ? ' on' : ''}" data-bfilter="offen">Offen<span class="n">${offenL.length}</span></button>
+        <button class="chip${BFILTER === 'abschluss' ? ' on' : ''}" data-bfilter="abschluss">Zum Abschliessen<span class="n">${abschl.length}</span></button>
+        <button class="chip${BFILTER === 'alle' ? ' on' : ''}" data-bfilter="alle">Alle<span class="n">${alle.length}</span></button></div>
+      ${abschl.length ? `<button class="btn dark" data-abschliessen>Alle ${abschl.length} vollständigen abschliessen</button>` : ''}
+    </div>
+    <p class="dim" style="font-size:12.5px;margin:10px 0 4px">Buchungen kommen aus dem Kontoauszug (camt.053) — massgebend sind Bankdatum und Betrag. Abgeschlossene Buchungen sind für den Treuhänder freigegeben.</p>
+    ${liste.length ? `<div class="tw"><table class="t"><thead><tr><th>Datum</th><th>Bankbuchung</th><th class="r">Betrag</th><th>Was dazugehört</th><th></th></tr></thead><tbody>
+    ${liste.map(b => {
+      const h = !b.zu && BANK_HINWEIS[b.id];
+      let was, akt = '';
+      if (b.zu) { was = `<span style="color:var(--ok)">✓</span> ${zuText(b)}`; akt = b.abgeschlossen ? '<span class="pill g">abgeschlossen</span>' : '<span class="pill s1">vollständig</span>'; }
+      else if (h && h.art === 'vorschlag') { was = `<span class="pill i">Vorschlag</span> <span style="font-size:12.5px">${esc(h.text)}</span>`; akt = `<button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${h.ref}">Zuordnen</button>`; }
+      else { was = `<span class="pill s2">Beleg fehlt</span> <span class="dim" style="font-size:12.5px">${esc(h ? h.text.replace(/^Beleg fehlt noch — /, '') : 'Unbekannt — bitte zuordnen')}</span>`; akt = `<span class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn acc sm" data-belegfuer="${b.id}">Beleg hochladen</button><button class="btn sm" data-ohnebeleg="${b.id}">Ohne Beleg…</button></span>`; }
+      return `<tr><td class="num">${dt(b.datum)}</td><td>${esc(b.text)}<div class="sub mono">${b.id}</div></td>
+        <td class="r num" style="font-weight:650;${b.betrag > 0 ? 'color:var(--ok)' : ''}">${b.betrag > 0 ? '+' : ''}${fmt(b.betrag)}</td><td>${was}</td><td class="r">${akt}</td></tr>`;
+    }).join('')}</tbody></table></div>` : `<div class="leer">${BFILTER === 'offen' ? 'Jede Bankbuchung hat ihren Beleg. ✓' : 'Nichts in dieser Ansicht.'}</div>`}
+  </div>
+  <input type="file" id="belegdatei" accept=".pdf,image/*" hidden>`;
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   KASSE — the till's cash. What came in, what tips went to the team, what
+   was paid out in cash, and what is left over the float that belongs on the
+   bank. A deposit is matched to its bank line like everything else.
+   ══════════════════════════════════════════════════════════════════════ */
+VIEWS.kasse = () => {
+  const k = kasseStand();
+  const tip = DB.kasseTage.reduce((s, t) => s + t.tip, 0);
+  return `
+  <div class="grid g4">
+    <div class="kpi ${k.einzahlen > 3000 ? 's2' : ''}"><div class="k">Jetzt einzuzahlen</div><div class="v num">${chf(k.einzahlen, 0)}</div><div class="s">Bargeld über dem Wechselgeld</div></div>
+    <div class="kpi"><div class="k">Bargeld in der Kasse</div><div class="v num">${chf(k.bestand, 0)}</div><div class="s">davon ${chf(KASSE_ANFANG, 0)} Wechselgeld</div></div>
+    <div class="kpi"><div class="k">Bar-Umsatz Oktober</div><div class="v num">${chf(k.bar, 0)}</div><div class="s">${DB.kasseTage.length} Kassenabschlüsse</div></div>
+    <div class="kpi"><div class="k">Trinkgeld ans Team</div><div class="v num">${chf(tip, 0)}</div><div class="s">bar ausbezahlt, kein Umsatz</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px;align-items:start">
+    <div class="card"><h2>Kassenbewegung erfassen</h2><div class="lead">Was aus der Kasse genommen wurde — auf die Bank oder für eine Barauslage.</div>
+      <div class="chips" id="ks-art" role="radiogroup">
+        <button class="chip on" data-ksart="bancomat" role="radio" aria-checked="true">Bancomat-Einzahlung</button>
+        <button class="chip" data-ksart="ueberweisung" role="radio" aria-checked="false">Bankschalter</button>
+        <button class="chip" data-ksart="auszahlung" role="radio" aria-checked="false">Barauslage</button></div>
+      <div class="grid g2" style="gap:10px;margin-top:12px">
+        <label class="fld"><span>Datum</span><input type="date" id="ks-datum" value="${HEUTE}"></label>
+        <label class="fld"><span>Betrag CHF</span><input id="ks-betrag" inputmode="decimal" value="${k.einzahlen ? k.einzahlen.toFixed(2) : ''}"></label>
+      </div>
+      <label class="fld" id="ks-kontofld" style="margin-top:10px;display:none"><span>Konto der Barauslage</span><select id="ks-konto">${KONTEN.filter(x => x.typ === 'K' && !['5000', '5700', '6000'].includes(x.nr)).map(x => `<option value="${x.nr}">${x.nr} ${esc(x.name)}</option>`).join('')}</select></label>
+      <label class="fld" style="margin-top:10px"><span>Notiz</span><input id="ks-notiz" placeholder="z.B. Einzahlung Woche 42"></label>
+      <div class="row" style="margin-top:14px"><button class="btn acc" data-kasseerfassen>Erfassen</button></div>
+    </div>
+    <div class="card"><h2>Bewegungen <small>Oktober</small></h2>
+      <div class="tw"><table class="t" style="margin-top:6px"><thead><tr><th>Datum</th><th>Art</th><th class="r">Betrag</th><th>Bank</th><th></th></tr></thead><tbody>
+      ${DB.kasse.slice().sort((a, b) => a.datum < b.datum ? 1 : -1).map(e => {
+        const b = DB.bank.find(x => x.zu && x.zu.typ === 'kasse' && x.zu.ref === e.id);
+        return `<tr><td class="num">${dt(e.datum)}</td><td>${{ bancomat: 'Bancomat-Einzahlung', ueberweisung: 'Bankschalter', auszahlung: 'Barauslage' }[e.art]}<div class="sub">${esc(e.notiz || '')}</div></td>
+        <td class="r num">${e.art === 'auszahlung' ? '−' : ''}${fmt(e.betrag)}</td>
+        <td>${e.art === 'auszahlung' ? '<span class="dim">—</span>' : b ? `<span class="pill s1">✓ ${b.id}</span>` : '<span class="pill g">wartet auf Bank</span>'}</td>
+        <td class="r">${e.eigen ? `<button class="btn sm link" data-kasseweg="${e.id}">entfernen</button>` : ''}</td></tr>`;
+      }).join('')}</tbody></table></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Kassenabschlüsse <small>Montag Ruhetag</small></h2>
+    <div class="tw"><table class="t" style="margin-top:6px"><thead><tr><th>Tag</th><th class="r">Bar-Umsatz</th><th class="r">Trinkgeld</th><th class="r">Bleibt in der Kasse</th></tr></thead><tbody>
+    ${DB.kasseTage.slice().reverse().map(t => `<tr><td>${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(t.datum + 'T12:00').getDay()]} ${dt(t.datum)}</td><td class="r num">${fmt(t.bar)}</td><td class="r num dim">${fmt(t.tip)}</td><td class="r num">${fmt(t.bar)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="r num">${fmt(k.bar)}</td><td class="r num">${fmt(tip)}</td><td class="r num">${fmt(k.bar)}</td></tr></tfoot></table></div>
+    <p class="dim" style="font-size:12px;margin-top:8px">Trinkgeld wird separat gezählt und ans Team ausbezahlt — es ist kein Umsatz und taucht in der Buchhaltung nicht auf.</p>
+  </div>`;
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   KUNDENRECHNUNGEN — a till receipt becomes an invoice without retyping;
+   the owner releases it; it goes out with a QR bill; payments and reminders
+   are recorded on it. A correction keeps the number and leaves a log line;
+   a cancellation needs a reason.
+   ══════════════════════════════════════════════════════════════════════ */
+let DTAB = 'entwurf', DSUCHE = '';
+const DTABS = {
+  entwurf: { name: 'Zu verrechnen', f: d => d.stufe === 'entwurf' },
+  freigabe: { name: 'Zur Freigabe', f: d => d.stufe === 'freigabe' },
+  offen: { name: 'Offen', f: d => d.stufe === 'versendet' },
+  erledigt: { name: 'Erledigt', f: d => d.stufe === 'bezahlt' },
+  kunden: { name: 'Kunden' },
+};
+const naechsteNr = () => 'D' + (Math.max(FIRMA.nummerAb, ...DB.debitoren.map(d => +d.id.slice(1))) + 1);
+VIEWS.kunden = () => {
+  if (DTABS[PARAM]) { DTAB = PARAM; PARAM = ''; }
+  let d = DB.debitoren.find(x => x.id === PARAM);
+  let q = DB.kassenbelege.find(x => x.id === PARAM);
+  if (d) DTAB = Object.keys(DTABS).find(k => DTABS[k].f && DTABS[k].f(d)) || DTAB;
+  if (q) DTAB = 'entwurf';
+  const n = k => k === 'entwurf' ? DB.debitoren.filter(DTABS.entwurf.f).length + DB.kassenbelege.length : k === 'kunden' ? DB.kunden.length : DB.debitoren.filter(DTABS[k].f).length;
+  const tabs = `<div class="tabs" role="tablist">${Object.entries(DTABS).map(([k, t]) => `<button class="tab${k === DTAB ? ' on' : ''}" data-dtab="${k}" role="tab" aria-selected="${k === DTAB}">${t.name}<span class="n">${n(k)}</span></button>`).join('')}</div>`;
+  if (DTAB === 'kunden') return tabs + kundenListe();
+  const liste = DB.debitoren.filter(DTABS[DTAB].f).sort((a, b) => a.datum < b.datum ? 1 : -1);
+  const belege = DTAB === 'entwurf' ? DB.kassenbelege : [];
+  if (!d && !q) { d = liste[0]; if (!d) q = belege[0]; }
+  const item = x => {
+    const s = debSummen(x), k = kunde(x.kunde), t = tageBis(x.faellig);
+    const pill = x.storniert ? '<span class="pill g">storniert</span>' : x.stufe === 'versendet' ? (t < 0 ? `<span class="pill s3">${-t} T. überfällig${x.mahnstufe ? ' · ' + x.mahnstufe + '. Erinnerung' : ''}</span>` : `<span class="pill g">fällig ${dtk(x.faellig)}</span>`) : x.stufe === 'bezahlt' ? '<span class="pill s1">bezahlt</span>' : x.stufe === 'freigabe' ? '<span class="pill s2">wartet auf Freigabe</span>' : '<span class="pill i">Entwurf</span>';
+    return `<button class="li${d && x.id === d.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>${esc(k ? k.name : '—')}</span><span class="num">${fmt(x.stufe === 'versendet' ? s.offen : s.brutto)}</span></div><div class="b"><span>${esc(x.id)} · ${dt(x.datum)}</span>${s.bezahlt && x.stufe === 'versendet' ? '<span>Rest</span>' : ''}</div><div class="c">${pill}</div></button>`;
+  };
+  return tabs + `<div class="split deb">
+    <div class="col"><div class="liste"><div class="items">
+      ${belege.map(x => `<button class="li${q && x.id === q.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>Kassenbeleg ${esc(x.id)}</span><span class="num">${fmt(x.pos.reduce((s, p) => s + p[1] * p[2], 0))}</span></div><div class="b"><span>${dt(x.datum)} · Tisch ${esc(x.tisch)} · ${x.gedecke} Gedecke</span></div><div class="c"><span class="pill i">Rechnung erstellen</span></div></button>`).join('')}
+      ${liste.map(item).join('')}
+      ${!belege.length && !liste.length ? '<div class="leer">Nichts in dieser Ansicht.</div>' : ''}
+    </div></div></div>
+    ${q ? kassenbelegDetail(q) : d ? `<div class="col doc">${debPapier(d)}</div><div class="col"><div class="panel">${debAktionen(d)}</div></div>` : '<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links einen Eintrag.</div></div>'}
+  </div>`;
+};
+function kassenbelegDetail(q) {
+  const tot = q.pos.reduce((s, p) => s + p[1] * p[2], 0);
+  return `<div class="col doc"><div class="paper" style="max-width:380px;font-family:var(--mono);font-size:12px">
+    <div style="text-align:center"><b>${esc(DB.firma.marke)}</b><br>${esc(DB.firma.strasse)} · ${esc(DB.firma.plz)} ${esc(DB.firma.ort)}</div>
+    <div style="margin:12px 0;border-top:1px dashed #999;padding-top:8px">Beleg ${esc(q.id)}<br>${dt(q.datum)} · Tisch ${esc(q.tisch)} · ${q.gedecke} Gedecke</div>
+    ${q.pos.map(p => `<div style="display:flex;justify-content:space-between;gap:10px"><span>${p[1]}× ${esc(p[0])}</span><span>${fmt(p[1] * p[2])}</span></div>`).join('')}
+    <div style="display:flex;justify-content:space-between;border-top:1px dashed #999;margin-top:8px;padding-top:6px;font-weight:700"><span>TOTAL CHF</span><span>${fmt(tot)}</span></div>
+    <div style="margin-top:8px">inkl. MWST 8.1 %: ${fmt(tot * 8.1 / 108.1)}</div>
+    <div style="margin-top:8px;border-top:1px dashed #999;padding-top:8px">Zahlungsart: AUF RECHNUNG</div></div></div>
+  <div class="col"><div class="panel"><div class="card">
+    <div style="font-size:16px;font-weight:700">Rechnung aus Kassenbeleg</div>
+    <p class="dim" style="font-size:12.5px;margin:4px 0 10px">${esc(q.notiz || '')}</p>
+    <label class="fld"><span>Rechnung an</span><select id="kb-kunde"><option value="">— Kunde wählen —</option>${DB.kunden.map(k => `<option value="${k.id}"${k.id === q.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
+    <p class="dim" style="font-size:12px;margin-top:8px">Alle ${q.pos.length} Positionen werden übernommen — nichts muss abgetippt werden. Die Nummer wird beim Erstellen vergeben.</p>
+    <div class="row" style="margin-top:12px"><button class="btn acc" data-ausbeleg="${q.id}">Rechnung erstellen</button></div>
+  </div></div></div>`;
+}
+function debPapier(d) {
+  const k = kunde(d.kunde) || {}, s = debSummen(d), f = DB.firma;
+  const intro = DB.texte['einleitung_' + (k.anrede || 'sie')];
+  return `<div class="paper" aria-label="Kundenrechnung">
+    ${d.storniert ? '<div style="text-align:right"><span class="stamp">STORNIERT</span></div>' : ''}
+    <div class="ph"><div><div class="lg">${esc(f.marke)}</div><div class="dim">${esc(f.strasse)} · ${esc(f.plz)} ${esc(f.ort)}<br>${esc(f.email)} · ${esc(f.mwst)}</div></div><div style="text-align:right" class="dim">${esc(f.name)}</div></div>
+    <div class="adr">${esc(k.name || '')}<br>${esc(k.kontakt || '')}<br>${esc(k.strasse || '')}<br>${esc(k.ort || '')}</div>
+    <h3>Rechnung ${esc(d.id.slice(1))}</h3>
+    <div class="dim">Datum ${dt(d.datum)} · zahlbar bis ${dt(d.faellig)}</div>
+    <p style="margin-top:12px">${k.anrede === 'du' ? 'Hallo ' + esc((k.kontakt || '').split(' ')[0]) : 'Guten Tag ' + esc(k.kontakt || '')}${k.anrede === 'du' ? '' : ''}<br>${esc(intro)}</p>
+    <table><thead><tr><th>Position</th><th style="text-align:right">Menge</th><th style="text-align:right">Preis</th><th style="text-align:right">CHF</th></tr></thead>
+    <tbody>${d.pos.map(p => `<tr><td>${esc(p[0])}</td><td style="text-align:right">${p[1]}</td><td style="text-align:right">${fmt(p[2])}</td><td style="text-align:right">${fmt(p[1] * p[2])}</td></tr>`).join('')}</tbody></table>
+    <table class="tot" style="width:auto;margin-left:auto;margin-top:12px"><tbody>
+      <tr><td>Total inkl. MWST</td><td style="text-align:right;padding-left:30px">CHF ${fmt(s.brutto)}</td></tr>
+      <tr><td class="dim">enthält MWST 8.1 % auf ${fmt(s.netto)}</td><td style="text-align:right" class="dim">${fmt(s.mwst)}</td></tr>
+      ${(d.zahlungen || []).map(z => `<tr><td>${esc(z.notiz || 'Zahlung')} ${dt(z.datum)}</td><td style="text-align:right">− ${fmt(z.betrag)}</td></tr>`).join('')}
+      <tr><td>${s.bezahlt ? 'Noch offen' : 'Zu bezahlen'}</td><td style="text-align:right">CHF ${fmt(s.offen)}</td></tr></tbody></table>
+    <div class="qr">${qrBild(d.id)}<div><b>Zahlteil</b><br>Konto ${esc(f.iban)}<br>${esc(f.name)}, ${esc(f.plz)} ${esc(f.ort)}<br>Referenz ${esc(d.id.slice(1))}<br>Betrag CHF ${fmt(s.offen)}<br><span class="dim">Demo — QR-Code nicht scannbar</span></div></div>
+  </div>`;
+}
+function debAktionen(d) {
+  const k = kunde(d.kunde) || {}, s = debSummen(d), i = stufeIdx2(d.stufe);
+  const balkenD = `<div class="stufen" style="margin-top:12px">${DSTUFEN.map((x, j) => `<div class="st ${j < i || (d.stufe === 'bezahlt' && j === i) ? 'done' : j === i ? 'now' : ''}">${x.name}</div>`).join('')}</div>`;
+  let body = '';
+  if (d.storniert) body = `<div class="box i" style="margin-top:12px">Storniert: ${esc(d.storniert)}</div>`;
+  else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">Die Rechnung ist aus dem Kassenbeleg gebaut. Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
+  else if (d.stufe === 'freigabe') body = `<div class="step"><i>2</i>Freigeben und senden</div>
+    <label class="fld"><span>An</span><input id="mail-an" value="${esc(k.mail || '')}"></label>
+    <label class="fld" style="margin-top:8px"><span>Begleittext</span><textarea id="mail-text">${esc((k.anrede === 'du' ? 'Hallo ' + (k.kontakt || '').split(' ')[0] : 'Guten Tag ' + (k.kontakt || '')) + '\n\n' + DB.texte['einleitung_' + (k.anrede || 'sie')] + '\n\nDie Rechnung mit QR-Zahlteil ist angehängt.\n\nFreundliche Grüsse\n' + DB.firma.marke)}</textarea></label>
+    <div class="row" style="margin-top:12px"><button class="btn acc" data-freigeben="${d.id}">Freigeben & per Mail senden</button><button class="btn" data-zurueck="${d.id}">Zurück zum Entwurf</button></div>`;
+  else if (d.stufe === 'versendet') {
+    const t = tageBis(d.faellig);
+    body = `<div class="sum"><span>Fällig</span><span class="num" style="${t < 0 ? 'color:var(--bad);font-weight:700' : ''}">${dt(d.faellig)}${t < 0 ? ' · ' + (-t) + ' T. überfällig' : ''}</span></div>
+    <div class="sum big"><span>Offen</span><span class="num">${chf(s.offen)}</span></div>
+    <div class="step"><i>3</i>Zahlung erfassen</div>
+    <div class="grid g2" style="gap:8px"><label class="fld"><span>Betrag</span><input id="z-betrag" inputmode="decimal" value="${s.offen.toFixed(2)}"></label><label class="fld"><span>Datum</span><input type="date" id="z-datum" value="${HEUTE}"></label></div>
+    <label class="fld" style="margin-top:8px"><span>Weg</span><select id="z-weg"><option>Bank</option><option>Bar</option><option>Twint</option></select></label>
+    <div class="row" style="margin-top:10px"><button class="btn acc" data-zahlung="${d.id}">Zahlung erfassen</button></div>
+    <div class="step"><i>!</i>Erinnern</div>
+    <p style="font-size:12.5px" class="dim">${d.mahnstufe ? d.mahnstufe + '. Erinnerung bereits versendet.' : 'Noch keine Erinnerung.'} Der Text kommt aus den Vorlagen (${k.anrede === 'du' ? 'Du' : 'Sie'}).</p>
+    <div class="row" style="margin-top:8px"><button class="btn" data-mahnen="${d.id}" ${t >= 0 ? 'disabled title="Noch nicht fällig"' : ''}>${d.mahnstufe ? 'Mahnung senden' : 'Zahlungserinnerung senden'}</button></div>
+    <div class="row" style="margin-top:16px;gap:6px"><button class="btn sm" data-korrigieren="${d.id}">Korrigieren…</button><button class="btn sm bad" data-storno="${d.id}">Stornieren…</button></div>`;
+  } else body = `<div class="box s1" style="margin-top:12px">✓ Vollständig bezahlt.</div>`;
+  return `<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div style="font-size:17px;font-weight:700">${esc(k.name || '')}</div><div class="dim" style="font-size:12.5px">Rechnung ${esc(d.id.slice(1))} · ${dt(d.datum)}</div></div><div class="num" style="font-size:17px;font-weight:700">${chf(s.brutto)}</div></div>
+    ${balkenD}${body}</div>
+    <div class="card" style="margin-top:12px"><h2>Protokoll</h2><div class="log" style="margin-top:6px">${(d.protokoll || []).slice().reverse().map(p => `<div><span class="dim">${esc(p[0])}</span><span>${esc(p[1])}</span></div>`).join('')}</div></div>`;
+}
+function kundenListe() {
+  const q = DSUCHE.trim().toLowerCase();
+  const L = DB.kunden.filter(k => !q || (k.name + ' ' + k.kontakt + ' ' + k.ort + ' ' + k.mail).toLowerCase().includes(q));
+  return `<div class="card"><div class="row"><input class="in" id="dsuche" type="search" placeholder="Name, Ort, E-Mail" value="${esc(DSUCHE)}" style="max-width:340px"><span class="spacer"></span><button class="btn" data-kundeneu>+ Neuer Kunde</button></div>
+  <div class="tw"><table class="t" style="margin-top:10px"><thead><tr><th>Kunde</th><th>Ort</th><th>Anrede</th><th class="r">Ziel</th><th class="r">Offen</th><th class="r">Umsatz 2026</th></tr></thead><tbody>
+  ${L.map(k => { const D = DB.debitoren.filter(d => d.kunde === k.id && !d.storniert); const off = D.filter(d => d.stufe === 'versendet').reduce((s, d) => s + debSummen(d).offen, 0);
+    return `<tr><td><b>${esc(k.name)}</b><div class="sub">${esc(k.kontakt)} · ${esc(k.mail)}</div></td><td>${esc(k.ort)}</td><td>${k.anrede === 'du' ? 'Du' : 'Sie'}</td><td class="r">${k.ziel} T.</td><td class="r num" style="${off ? 'font-weight:700' : ''}">${off ? fmt(off) : '—'}</td><td class="r num">${fmt(D.reduce((s, d) => s + debSummen(d).brutto, 0))}</td></tr>`; }).join('')}
+  </tbody></table></div></div>`;
+}
+VIEWS.kunden_nach = () => {
+  if (PARAM && innerWidth <= 900) { const p = document.querySelector('.split>.col:last-child'); if (p) setTimeout(() => p.scrollIntoView({ block: 'start' }), 0); }
+  const s = $('#dsuche'); if (s) s.addEventListener('input', () => { DSUCHE = s.value; const p = s.selectionStart; render(); const n = $('#dsuche'); n.focus(); n.setSelectionRange(p, p); });
+};
+/* ══════════════════════════════════════════════════════════════════════
+   KOSTEN — where the money goes, as a share of revenue, against the targets
+   the owner agreed with the Treuhänder. Read from the books, so it moves the
+   moment an invoice is confirmed.
+   ══════════════════════════════════════════════════════════════════════ */
+let KMONAT = '2026-09', KOFFEN = '';
+VIEWS.kosten = () => {
+  const B = buchungen();
+  const i = MONATSLISTE.indexOf(KMONAT), vor = MONATSLISTE[i - 1];
+  const z = monatsZahlen(KMONAT, B), zv = vor ? monatsZahlen(vor, B) : null;
+  const quote = (g, x) => x.umsatz ? x.gruppen[g] / x.umsatz * 100 : 0;
+  const live = KMONAT === '2026-10';
+  const schritte = Object.keys(GRUPPEN).map(g => ({ g, q: quote(g, z), ziel: ZIELE[g] }))
+    .filter(x => x.q > x.ziel).sort((a, b) => (b.q - b.ziel) - (a.q - a.ziel));
+  const o = offen();
+  const delta = (a, b) => { if (b == null) return ''; const d = a - b; const p = b ? d / b * 100 : 0; return `<span class="dim" style="font-size:12px">${d >= 0 ? '+' : '−'}${fmt(Math.abs(d), 0)} (${p >= 0 ? '+' : '−'}${Math.abs(p).toFixed(1)} %)</span>`; };
+  const kontenDerGruppe = g => KONTEN.filter(k => k.gruppe === g).map(k => {
+    let v = 0; B.forEach(x => { if (x.datum.slice(0, 7) !== KMONAT) return; if (x.soll === k.nr) v += x.betrag; if (x.haben === k.nr) v -= x.betrag; });
+    return { k, v };
+  }).filter(x => x.v);
+  return `
+  <div class="row" style="margin-bottom:14px"><div class="chips">${MONATSLISTE.map(m => `<button class="chip${m === KMONAT ? ' on' : ''}" data-kmonat="${m}">${monatKurz(m)}${m === '2026-10' ? ' (läuft)' : ''}</button>`).join('')}</div>
+    <span class="dim" style="font-size:12.5px">${vor ? 'Vergleich mit ' + monatName(vor) : ''}</span></div>
+  ${live ? `<div class="box s2" style="margin-bottom:14px"><b>Oktober ist noch nicht vollständig.</b> ${o.pruefen} Rechnungen sind noch nicht geprüft und ${o.bankOffen} Bankbuchungen haben keinen Beleg — sie fehlen in diesen Zahlen.</div>` : ''}
+  <div class="grid g4">
+    <div class="kpi"><div class="k">Umsatz netto</div><div class="v num">${chf(z.umsatz, 0)}</div><div class="s">${zv ? delta(z.umsatz, zv.umsatz) : ''}</div></div>
+    <div class="kpi"><div class="k">Warenaufwand</div><div class="v num">${pct(quote('waren', z))}</div><div class="s">Ziel ${ZIELE.waren} % · ${chf(z.gruppen.waren, 0)}</div></div>
+    <div class="kpi"><div class="k">Personal</div><div class="v num">${pct(quote('personal', z))}</div><div class="s">Ziel ${ZIELE.personal} % · ${chf(z.gruppen.personal, 0)}</div></div>
+    <div class="kpi"><div class="k">Ergebnis</div><div class="v num" style="color:${z.ergebnis < 0 ? 'var(--bad)' : 'var(--ok)'}">${chf(z.ergebnis, 0)}</div><div class="s">${pct(z.umsatz ? z.ergebnis / z.umsatz * 100 : 0)} vom Umsatz${live ? ' · vorläufig' : ''}</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px;align-items:start">
+    <div class="card"><h2>Wohin fliesst das Geld? <small>Anteil am Umsatz · Strich = Ziel</small></h2>
+      <div style="margin-top:12px">${Object.entries(GRUPPEN).map(([g, d]) => {
+        const q = quote(g, z), over = q > ZIELE[g], open = KOFFEN === g;
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--soft);cursor:pointer" data-kgruppe="${g}" role="button" tabindex="0" aria-expanded="${open}">
+          <div class="row" style="justify-content:space-between;gap:8px"><b style="font-size:13.5px">${open ? '▾' : '▸'} ${esc(d.name)}</b><span class="num"><b>${fmt(z.gruppen[g], 0)}</b> <span class="dim">· ${pct(q)}</span>${over ? ' <span class="pill s2">über Ziel</span>' : ''}</span></div>
+          <div class="hbar" style="margin-top:7px"><div style="width:${Math.min(100, q * 2)}%;background:${d.farbe}"></div><span class="ziel" style="left:${Math.min(100, ZIELE[g] * 2)}%"></span></div>
+          ${open ? `<div style="margin-top:8px">${kontenDerGruppe(g).map(x => `<div class="sum" style="font-size:12.5px"><span>${esc(kname(x.k.nr))}</span><span class="num">${fmt(x.v)}</span></div>`).join('') || '<div class="dim" style="font-size:12.5px">Keine Buchungen.</div>'}
+            <button class="btn sm link" data-go="konten" data-p="${KONTEN.find(k => k.gruppe === g).nr}">In den Konten ansehen →</button></div>` : ''}
+        </div>`;
+      }).join('')}</div>
+    </div>
+    <div class="stack">
+      <div class="card"><h2>Nächste Schritte</h2>
+        ${schritte.length ? schritte.slice(0, 3).map((x, n) => `<div class="todo" style="cursor:default"><span class="dot s2"></span><div><div class="t">${n + 1}. ${esc(GRUPPEN[x.g].name)}: ${pct(x.q)} statt ${x.ziel} %</div><div class="d">${(x.q - x.ziel).toFixed(1)} Punkte über Ziel — das sind ${chf((x.q - x.ziel) / 100 * z.umsatz, 0)} in diesem Monat.${x.g === 'waren' ? ' Die teuersten Lieferanten zuerst ansehen.' : x.g === 'personal' ? ' Dienstplan gegen die Gästezahlen legen.' : ''}</div></div></div>`).join('')
+          : '<div class="box s1" style="margin-top:10px">Alle Kostengruppen liegen im Ziel.</div>'}
+      </div>
+      <div class="card"><h2>Kostenquoten im Verlauf <small>% vom Umsatz</small></h2>
+        <div class="tw"><table class="t" style="margin-top:6px"><thead><tr><th></th>${MONATSLISTE.map(m => `<th class="r">${monatKurz(m)}</th>`).join('')}<th class="r">Ziel</th></tr></thead><tbody>
+        ${Object.entries(GRUPPEN).map(([g, d]) => `<tr><td>${esc(d.name)}</td>${MONATSLISTE.map(m => { const x = monatsZahlen(m, B), q = quote(g, x); return `<td class="r num" style="${q > ZIELE[g] ? 'color:var(--warn);font-weight:700' : ''}${m === KMONAT ? ';background:var(--wash)' : ''}">${q.toFixed(1)}</td>`; }).join('')}<td class="r num dim">${ZIELE[g]}</td></tr>`).join('')}
+        </tbody></table></div>
+      </div>
+    </div>
+  </div>`;
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   KONTEN — the trial balance, straight from the documents. Click an account
+   for its ledger with a running balance. The footer proves debit = credit.
+   ══════════════════════════════════════════════════════════════════════ */
+let KVON = '2026-10', KBIS = '2026-10';
+VIEWS.konten = () => {
+  const B = buchungen();
+  const auswahl = KONTEN.find(k => k.nr === PARAM);
+  const typen = [['A', 'Aktiven'], ['P', 'Passiven'], ['E', 'Ertrag'], ['K', 'Aufwand']];
+  let tSoll = 0, tHaben = 0;
+  const zeilen = typen.map(([t, name]) => {
+    const ks = KONTEN.filter(k => k.typ === t).sort((a, b) => a.nr < b.nr ? -1 : 1).map(k => ({ k, s: kontoStand(k.nr, KVON, KBIS, B) })).filter(x => x.s.soll || x.s.haben || x.s.vortrag);
+    ks.forEach(x => { tSoll += x.s.soll; tHaben += x.s.haben; });
+    return `<tr><td colspan="6" style="background:var(--surf);font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:uppercase;color:var(--dim)">${name}</td></tr>` +
+      ks.map(({ k, s }) => `<tr class="click${auswahl && auswahl.nr === k.nr ? ' sel' : ''}" data-go="konten" data-p="${k.nr}"><td class="mono">${k.nr}</td><td>${esc(k.name)}</td><td class="r num dim">${(t === 'A' || t === 'P') ? fmt(s.vortrag) : ''}</td><td class="r num">${fmt(s.soll)}</td><td class="r num">${fmt(s.haben)}</td><td class="r num" style="font-weight:650">${fmt(s.saldo)}</td></tr>`).join('');
+  }).join('');
+  const opt = (sel, id) => `<select class="in" id="${id}" style="width:auto">${MONATSLISTE.map(m => `<option value="${m}"${m === sel ? ' selected' : ''}>${monatName(m)}</option>`).join('')}</select>`;
+  let blatt = '';
+  if (auswahl) {
+    const s = kontoStand(auswahl.nr, KVON, KBIS, B), plus = auswahl.typ === 'A' || auswahl.typ === 'K';
+    let lauf = s.vortrag;
+    blatt = `<div class="card" style="margin-top:16px" id="kontoblatt"><h2>Kontoblatt ${esc(kname(auswahl.nr))} <small>${esc(monatName(KVON))}${KBIS !== KVON ? ' – ' + esc(monatName(KBIS)) : ''}</small></h2>
+      <div class="tw"><table class="t" style="margin-top:8px"><thead><tr><th>Datum</th><th>Text</th><th>Beleg</th><th>Gegenkonto</th><th class="r">Soll</th><th class="r">Haben</th><th class="r">Saldo</th></tr></thead><tbody>
+      ${(auswahl.typ === 'A' || auswahl.typ === 'P') ? `<tr><td></td><td class="dim">Vortrag</td><td></td><td></td><td></td><td></td><td class="r num dim">${fmt(s.vortrag)}</td></tr>` : ''}
+      ${s.zeilen.map(x => { const so = x.soll === auswahl.nr; lauf += (so ? 1 : -1) * (plus ? 1 : -1) * x.betrag;
+        const link = DB.rechnungen.some(r => r.id === x.beleg) ? `data-go="rechnungen" data-p="${x.beleg}"` : DB.debitoren.some(d => d.id === x.beleg) ? `data-go="kunden" data-p="${x.beleg}"` : '';
+        return `<tr${link ? ' class="click" ' + link : ''}><td class="num">${dt(x.datum)}</td><td>${esc(x.text)}</td><td class="mono dim">${esc(x.beleg)}</td><td class="mono">${so ? x.haben : x.soll}</td><td class="r num">${so ? fmt(x.betrag) : ''}</td><td class="r num">${so ? '' : fmt(x.betrag)}</td><td class="r num">${fmt(lauf)}</td></tr>`; }).join('')}
+      </tbody></table></div></div>`;
+  }
+  return `<div class="card"><div class="row"><span class="dim" style="font-size:12.5px">Von</span>${opt(KVON, 'kvon')}<span class="dim" style="font-size:12.5px">bis</span>${opt(KBIS, 'kbis')}<span class="spacer"></span><span class="dim" style="font-size:12px">April–September als Monatssammelbuchung, Oktober Beleg für Beleg</span></div>
+    <div class="tw"><table class="t" style="margin-top:12px"><thead><tr><th>Konto</th><th>Bezeichnung</th><th class="r">Vortrag</th><th class="r">Soll</th><th class="r">Haben</th><th class="r">Saldo</th></tr></thead><tbody>${zeilen}</tbody>
+    <tfoot><tr><td></td><td>Kontrolle: Soll = Haben</td><td></td><td class="r num">${fmt(tSoll)}</td><td class="r num">${fmt(tHaben)}</td><td class="r">${Math.abs(tSoll - tHaben) < 0.01 ? '<span class="pill s1">✓ stimmt</span>' : '<span class="pill s3">Differenz</span>'}</td></tr></tfoot></table></div></div>${blatt}`;
+};
+VIEWS.konten_nach = () => {
+  ['kvon', 'kbis'].forEach(id => { const s = $('#' + id); if (s) s.addEventListener('change', () => { if (id === 'kvon') KVON = s.value; else KBIS = s.value; if (KBIS < KVON) { if (id === 'kvon') KBIS = KVON; else KVON = KBIS; } render(); }); });
+  if (PARAM && $('#kontoblatt')) $('#kontoblatt').scrollIntoView({ block: 'start', behavior: 'smooth' });
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   MWST — effective method, per quarter, from the same postings. Due 60 days
+   after the quarter ends.
+   ══════════════════════════════════════════════════════════════════════ */
+let MQ = 3;
+const QENDE = { 1: '03-31', 2: '06-30', 3: '09-30', 4: '12-31' };
+VIEWS.mwst = () => {
+  const B = buchungen(), m = mwstQuartal(MQ, 2026, B);
+  const frist = plusTage('2026-' + QENDE[MQ], 60);
+  const laeuft = MQ === 4, eingereicht = DB.abgerechnet.includes('2026-Q' + MQ);
+  const z = (t, v, s) => `<tr><td>${t}</td><td class="r num"${s ? ' style="font-weight:700"' : ''}>${fmt(v)}</td></tr>`;
+  const docs = B.filter(x => x.mwst && quartal(x.datum) === MQ && x.datum.slice(0, 7) === '2026-10' && x.beleg !== 'Z-Bons');
+  return `<div class="row" style="margin-bottom:14px"><div class="chips">${[2, 3, 4].map(q => `<button class="chip${q === MQ ? ' on' : ''}" data-mq="${q}">Q${q} 2026${q === 4 ? ' (läuft)' : ''}</button>`).join('')}</div></div>
+  <div class="grid g4">
+    <div class="kpi"><div class="k">Umsatzsteuer</div><div class="v num">${chf(m.steuerUmsatz, 0)}</div><div class="s">auf ${chf(m.umsatz, 0)} Umsatz</div></div>
+    <div class="kpi"><div class="k">Vorsteuer</div><div class="v num">${chf(m.vorsteuer, 0)}</div><div class="s">aus geprüften Belegen</div></div>
+    <div class="kpi ${eingereicht ? 's1' : ''}"><div class="k">Zu bezahlen</div><div class="v num">${chf(m.zahllast, 0)}</div><div class="s">${laeuft ? 'Stand heute' : eingereicht ? 'eingereicht ✓' : 'einreichen bis ' + dt(frist)}</div></div>
+    <div class="kpi"><div class="k">Methode</div><div class="v" style="font-size:19px">Effektiv</div><div class="s">quartalsweise</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px;align-items:start">
+    <div class="card"><h2>Abrechnung Q${MQ} 2026 <small>${laeuft ? 'vorläufig — Quartal läuft' : 'Frist ' + dt(frist)}</small></h2>
+      <div class="tw"><table class="t" style="margin-top:8px"><tbody>
+        ${z('Steuerbarer Umsatz (8.1 %)', m.umsatz)}${z('Umsatzsteuer 8.1 %', m.steuerUmsatz)}${m.bezug ? z('Bezugsteuer auf Leistungen aus dem Ausland', m.bezug) : ''}
+        ${z('Total geschuldete Steuer', m.geschuldet, 1)}
+        ${z('Vorsteuer auf Material und Dienstleistungen', m.vstMaterial)}${z('Vorsteuer auf Investitionen und übrigem Betriebsaufwand', r2(m.vstBetrieb + m.bezug))}
+        ${z('Total Vorsteuer', m.vorsteuer, 1)}</tbody>
+        <tfoot><tr><td>Zu bezahlender Betrag</td><td class="r num">${chf(m.zahllast)}</td></tr></tfoot></table></div>
+      <div class="row" style="margin-top:14px">${laeuft ? '<span class="dim" style="font-size:12.5px">Einreichen ab 1. Januar 2027.</span>' : eingereicht ? '<span class="pill s1">✓ Als eingereicht markiert</span>' : `<button class="btn acc" data-eingereicht="2026-Q${MQ}">Als eingereicht markieren</button>`}
+        <button class="btn" data-export="mwst">Abrechnung als CSV</button></div>
+    </div>
+    <div class="card"><h2>Woher die Zahlen kommen</h2>
+      <p class="lead">${MQ === 4 ? 'Oktober Beleg für Beleg — ein Klick öffnet den Beleg.' : 'April bis September sind als Monatssammelbuchungen erfasst.'}</p>
+      ${MQ === 4 ? `<div class="tw"><table class="t"><thead><tr><th>Datum</th><th>Beleg</th><th class="r">Basis</th><th class="r">Steuer</th></tr></thead><tbody>
+        ${docs.map(x => { const link = DB.rechnungen.some(r => r.id === x.beleg) ? `data-go="rechnungen" data-p="${x.beleg}"` : DB.debitoren.some(d => d.id === x.beleg) ? `data-go="kunden" data-p="${x.beleg}"` : '';
+          return `<tr${link ? ' class="click" ' + link : ''}><td class="num">${dt(x.datum)}</td><td>${esc(x.text)}</td><td class="r num">${fmt(x.mwst.basis)}</td><td class="r num">${x.mwst.art === 'umsatz' ? '' : '−'}${fmt(x.betrag)}</td></tr>`; }).join('')}
+      </tbody></table></div>
+      <p class="dim" style="font-size:12px;margin-top:8px">Noch nicht drin: ${offen().pruefen} ungeprüfte Rechnungen und ${offen().bankOffen} Bankbuchungen ohne Beleg. Vorsteuer zählt erst mit geprüftem Beleg.</p>`
+      : `<div class="tw"><table class="t"><thead><tr><th>Monat</th><th class="r">Umsatzsteuer</th><th class="r">Vorsteuer</th></tr></thead><tbody>
+        ${[0, 1, 2].map(k => { const ym = '2026-' + String((MQ - 1) * 3 + 1 + k).padStart(2, '0'); let u = 0, v = 0; B.forEach(x => { if (!x.mwst || x.datum.slice(0, 7) !== ym) return; if (x.mwst.art === 'umsatz') u += x.betrag; else if (x.mwst.art !== 'bezug') v += x.betrag; }); return `<tr><td>${monatName(ym)}</td><td class="r num">${fmt(u)}</td><td class="r num">${fmt(v)}</td></tr>`; }).join('')}
+      </tbody></table></div>`}
+    </div>
+  </div>`;
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   BELEGE & EXPORT — in: receipts and the camt.053 statement; out: what the
+   Treuhänder imports. Everything stays in this browser.
+   ══════════════════════════════════════════════════════════════════════ */
+let EXPORT_Q = 'Q3';
+const UPLOADS = [];       // object URLs only live as long as the tab
+VIEWS.austausch = () => `
+  <div class="grid g2" style="align-items:start">
+    <div class="stack">
+      <div class="card"><h2>Rechnungen & Belege hochladen</h2><p class="lead">PDF oder Foto. Im Betrieb liest Axyom Lieferant, Datum, Positionen und MWST aus und legt die Rechnung unter «Zu prüfen» ab.</p>
+        <label class="drop" id="drop-belege"><b>Dateien hierher ziehen</b>oder klicken zum Auswählen<input type="file" id="up-belege" accept=".pdf,image/*" multiple hidden></label>
+        ${UPLOADS.length ? `<div style="margin-top:12px">${UPLOADS.map(u => `<div class="sum"><span>📄 <a href="${u.url}" target="_blank" rel="noopener">${esc(u.name)}</a> <span class="dim">· ${(u.size / 1024).toFixed(0)} KB</span></span><span class="pill g">in der Demo nicht ausgelesen</span></div>`).join('')}</div>` : ''}
+      </div>
+      <div class="card"><h2>Kontoauszug hochladen <small>camt.053 (XML)</small></h2><p class="lead">Die Buchungen erscheinen im Bankabgleich. Doppelte werden erkannt und übersprungen. Die Datei verlässt diesen Browser nicht.</p>
+        <label class="drop" id="drop-camt"><b>camt.053-Datei hierher ziehen</b>oder klicken zum Auswählen<input type="file" id="up-camt" accept=".xml,text/xml,application/xml" hidden></label>
+        <div class="row" style="margin-top:10px"><button class="btn sm" data-beispielcamt>Beispiel-Auszug laden</button><span class="dim" style="font-size:12px">drei erfundene Buchungen vom 16.10.</span></div>
+      </div>
+    </div>
+    <div class="card"><h2>Für den Treuhänder</h2><p class="lead">Exporte als CSV (Semikolon, UTF-8) — lässt sich in Abacus, Bexio und Excel einlesen. Das genaue Importformat wird beim Einrichten mit ${esc(DB.firma.treuhand)} abgestimmt.</p>
+      <div class="chips" style="margin-bottom:12px">${['Q2', 'Q3', 'Q4', 'Jahr'].map(q => `<button class="chip${q === EXPORT_Q ? ' on' : ''}" data-exq="${q}">${q === 'Jahr' ? 'Jahr 2026' : q + ' 2026'}</button>`).join('')}</div>
+      ${[['journal', 'Buchungsjournal', 'Jede Buchung mit Soll, Haben, Betrag, Beleg'], ['saldi', 'Kontensaldi', 'Vortrag, Soll, Haben, Saldo je Konto'], ['belege', 'Belegliste', 'Alle Lieferanten- und Kundenrechnungen mit Stand'], ['mwst', 'MWST-Abrechnung', 'Die Zahlen der Abrechnung je Quartal']].map(([k, t, d]) =>
+        `<div class="todo" data-export="${k}" role="button" tabindex="0"><span class="dot s1"></span><div><div class="t">${t}</div><div class="d">${d}</div></div><span class="n">⬇</span></div>`).join('')}
+      <div class="box i" style="margin-top:12px">Zu diesem Zeitraum: ${DB.bank.filter(b => b.zu && !b.abgeschlossen).length} Bankbuchungen noch nicht abgeschlossen, ${offen().bankOffen} ohne Beleg. Der Treuhänder sieht nur Abgeschlossenes als endgültig.</div>
+    </div>
+  </div>`;
+
+/* ══════════════════════════════════════════════════════════════════════
+   EINSTELLUNGEN
+   ══════════════════════════════════════════════════════════════════════ */
+VIEWS.einstellungen = () => {
+  const f = DB.firma;
+  const fld = (k, t, w) => `<label class="fld"${w ? ' style="grid-column:1/-1"' : ''}><span>${t}</span><input data-firma="${k}" value="${esc(f[k])}"></label>`;
+  const tx = (k, t) => `<label class="fld"><span>${t}</span><textarea data-text="${k}">${esc(DB.texte[k])}</textarea></label>`;
+  return `<div class="grid g2" style="align-items:start">
+    <div class="card"><h2>Firmendaten & Zahlteil</h2><p class="lead">Erscheinen auf jeder Kundenrechnung und im QR-Zahlteil.</p>
+      <div class="grid g2" style="gap:10px">${fld('name', 'Rechtlicher Name')}${fld('marke', 'Marke')}${fld('strasse', 'Strasse', 1)}${fld('plz', 'PLZ')}${fld('ort', 'Ort')}${fld('iban', 'IBAN', 1)}${fld('mwst', 'MWST-Nummer', 1)}${fld('email', 'E-Mail auf der Rechnung')}${fld('inhaber', 'Freigabe durch')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn acc" data-firmaspeichern>Speichern</button></div></div>
+    <div class="card"><h2>Textvorlagen <small>Du und Sie</small></h2><p class="lead">Die Anrede kommt aus dem Kunden — Vereine und Freunde per Du, Firmen per Sie.</p>
+      <div class="grid g2" style="gap:10px">${tx('einleitung_sie', 'Einleitung (Sie)')}${tx('einleitung_du', 'Einleitung (Du)')}${tx('erinnerung_sie', 'Zahlungserinnerung (Sie)')}${tx('erinnerung_du', 'Zahlungserinnerung (Du)')}${tx('mahnung_sie', 'Mahnung (Sie)')}${tx('mahnung_du', 'Mahnung (Du)')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn acc" data-textespeichern>Speichern</button></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Lieferanten <small>Standard für Konto, MWST und Zahlungsziel</small></h2><p class="lead">Daraus kommen die Vorschläge beim Prüfen.</p>
+    <div class="tw"><table class="t"><thead><tr><th>Lieferant</th><th>Ort</th><th>Konto</th><th class="r">MWST</th><th class="r">Ziel</th><th>Zahlung</th></tr></thead><tbody>
+    ${LIEFERANTEN.map(l => `<tr><td><b>${esc(l.name)}</b></td><td>${esc(l.ort)}</td><td>${esc(kname(l.konto))}</td><td class="r">${l.satz} %</td><td class="r">${l.ziel ? l.ziel + ' T.' : 'sofort'}</td><td>${l.auto ? '<span class="pill g">' + esc(l.auto) + '</span>' : l.waehrung ? '<span class="pill i">' + l.waehrung + '</span>' : 'E-Banking'}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+};
+/* ══════════════════════════════════════════════════════════════════════
+   EVENTS — one delegated listener for every view. Views are plain HTML
+   strings; behaviour lives here, keyed on data-attributes.
+   ══════════════════════════════════════════════════════════════════════ */
+const R_ = id => DB.rechnungen.find(r => r.id === id);
+const D_ = id => DB.debitoren.find(d => d.id === id);
+function prot(doc, text) { (doc.protokoll = doc.protokoll || []).push([jetzt(), text]); logge(text); }
+
+function download(name, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8' }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const csv = rows => rows.map(r => r.map(c => { const s = String(c == null ? '' : c); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\r\n');
+const csvZahl = n => n.toFixed(2);
+function exportZeitraum() {
+  if (EXPORT_Q === 'Jahr') return ['2026-01', '2026-12'];
+  const q = +EXPORT_Q.slice(1); return ['2026-' + String(q * 3 - 2).padStart(2, '0'), '2026-' + String(q * 3).padStart(2, '0')];
+}
+function exportieren(art) {
+  const B = buchungen(), [von, bis] = exportZeitraum(), tag = EXPORT_Q === 'Jahr' ? '2026' : '2026-' + EXPORT_Q;
+  const inZ = x => x.datum.slice(0, 7) >= von && x.datum.slice(0, 7) <= bis;
+  if (art === 'journal') download(`journal-${tag}.csv`, csv([['Datum', 'Soll', 'Haben', 'Betrag', 'Text', 'Beleg']].concat(B.filter(inZ).map(x => [dt(x.datum), x.soll, x.haben, csvZahl(x.betrag), x.text, x.beleg]))));
+  else if (art === 'saldi') download(`kontensaldi-${tag}.csv`, csv([['Konto', 'Bezeichnung', 'Vortrag', 'Soll', 'Haben', 'Saldo']].concat(KONTEN.slice().sort((a, b) => a.nr < b.nr ? -1 : 1).map(k => { const s = kontoStand(k.nr, von, bis, B); return [k.nr, k.name, csvZahl(s.vortrag), csvZahl(s.soll), csvZahl(s.haben), csvZahl(s.saldo)]; }))));
+  else if (art === 'belege') download(`belegliste-${tag}.csv`, csv([['Art', 'Nummer', 'Datum', 'Partner', 'Konto', 'Netto', 'MWST', 'Brutto CHF', 'Stand']].concat(
+    DB.rechnungen.filter(r => !r.geloescht && r.datum.slice(0, 7) >= von && r.datum.slice(0, 7) <= bis).map(r => { const s = summen(r); return ['Lieferant', r.nr, dt(r.datum), lief(r.lief).name, r.konto, csvZahl(s.netto * s.kurs), csvZahl(s.mwst * s.kurs), csvZahl(s.chf), STUFEN[stufeIdx(stufeVon(r))].name]; }),
+    DB.debitoren.filter(d => d.datum.slice(0, 7) >= von && d.datum.slice(0, 7) <= bis).map(d => { const s = debSummen(d); return ['Kunde', d.id.slice(1), dt(d.datum), (kunde(d.kunde) || {}).name, '3280', csvZahl(s.netto), csvZahl(s.mwst), csvZahl(s.brutto), d.storniert ? 'storniert' : DSTUFEN[stufeIdx2(d.stufe)].name]; }))));
+  else if (art === 'mwst') {
+    const qs = EXPORT_Q === 'Jahr' ? [1, 2, 3, 4] : [AKTIV === 'mwst' ? MQ : +EXPORT_Q.slice(1)];
+    download(`mwst-${AKTIV === 'mwst' ? '2026-Q' + MQ : tag}.csv`, csv([['Quartal', 'Steuerbarer Umsatz', 'Umsatzsteuer', 'Bezugsteuer', 'Vorsteuer Material', 'Vorsteuer Betrieb', 'Zahllast']].concat(qs.map(q => { const m = mwstQuartal(q, 2026, B); return ['Q' + q + ' 2026', csvZahl(m.umsatz), csvZahl(m.steuerUmsatz), csvZahl(m.bezug), csvZahl(m.vstMaterial), csvZahl(m.vstBetrieb + m.bezug), csvZahl(m.zahllast)]; }))));
+  }
+  toast('Export heruntergeladen.', 1);
+}
+
+/* camt.053: the ISO 20022 statement every Swiss bank provides. Only what the
+   reconciliation needs is read — date, amount, sign, text — and duplicates
+   (same date, amount and text) are skipped. */
+function camtLesen(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  if (doc.querySelector('parsererror')) throw new Error('Keine gültige XML-Datei.');
+  const q = (el, n) => [...el.getElementsByTagNameNS('*', n)];
+  const ntry = q(doc, 'Ntry');
+  if (!ntry.length) throw new Error('Keine Buchungen (Ntry) gefunden — ist das ein camt.053-Auszug?');
+  let neu = 0, doppelt = 0;
+  ntry.forEach((e, i) => {
+    const amt = parseFloat((q(e, 'Amt')[0] || {}).textContent || '0');
+    const sign = ((q(e, 'CdtDbtInd')[0] || {}).textContent || 'DBIT').trim() === 'CRDT' ? 1 : -1;
+    const bd = q(e, 'BookgDt')[0], datum = ((bd && (q(bd, 'Dt')[0] || q(bd, 'DtTm')[0])) || {}).textContent || HEUTE;
+    const text = ((q(e, 'AddtlNtryInf')[0] || q(e, 'Ustrd')[0] || q(e, 'Nm')[0] || {}).textContent || 'Bankbuchung').trim().replace(/\s+/g, ' ');
+    const b = { id: 'U' + Date.now().toString(36).slice(-4) + i, datum: datum.slice(0, 10), text, betrag: r2(sign * amt), zu: null, eigen: true };
+    if (DB.bank.some(x => x.datum === b.datum && Math.abs(x.betrag - b.betrag) < 0.005 && x.text === b.text)) { doppelt++; return; }
+    DB.bank.push(b); neu++;
+  });
+  return { neu, doppelt };
+}
+const BEISPIEL_CAMT = `<?xml version="1.0" encoding="UTF-8"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08"><BkToCstmrStmt><Stmt>
+<Ntry><Amt Ccy="CHF">58.40</Amt><CdtDbtInd>DBIT</CdtDbtInd><BookgDt><Dt>2026-10-16</Dt></BookgDt><AddtlNtryInf>Online Einkauf Hygieneartikel Gastro Debit Mastercard</AddtlNtryInf></Ntry>
+<Ntry><Amt Ccy="CHF">2318.45</Amt><CdtDbtInd>CRDT</CdtDbtInd><BookgDt><Dt>2026-10-16</Dt></BookgDt><AddtlNtryInf>Gutschrift Kartenterminal Abrechnung 15.10.</AddtlNtryInf></Ntry>
+<Ntry><Amt Ccy="CHF">18.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><BookgDt><Dt>2026-10-16</Dt></BookgDt><AddtlNtryInf>Gebühr Bargeldeinzahlung</AddtlNtryInf></Ntry>
+</Stmt></BkToCstmrStmt></Document>`;
+
+/* global search: suppliers, customers, invoice numbers, amounts */
+function suchen(q) {
+  q = q.trim().toLowerCase(); if (q.length < 2) return [];
+  const T = [];
+  DB.rechnungen.filter(r => !r.geloescht).forEach(r => { const s = summen(r); if ((lief(r.lief).name + ' ' + r.nr + ' ' + r.id + ' ' + fmt(s.brutto) + ' ' + s.brutto.toFixed(2)).toLowerCase().includes(q)) T.push(['rechnungen', r.id, lief(r.lief).name + ' · ' + r.nr, chf(s.chf) + ' · ' + STUFEN[stufeIdx(stufeVon(r))].name]); });
+  DB.debitoren.forEach(d => { const k = kunde(d.kunde) || {}, s = debSummen(d); if ((k.name + ' ' + d.id + ' ' + fmt(s.brutto) + ' ' + s.brutto.toFixed(2)).toLowerCase().includes(q)) T.push(['kunden', d.id, (k.name || '') + ' · Rechnung ' + d.id.slice(1), chf(s.brutto) + ' · ' + DSTUFEN[stufeIdx2(d.stufe)].name]); });
+  DB.bank.forEach(b => { if ((b.text + ' ' + b.id + ' ' + fmt(b.betrag) + ' ' + Math.abs(b.betrag).toFixed(2)).toLowerCase().includes(q)) T.push(['bank', '', b.text, dt(b.datum) + ' · ' + chf(b.betrag)]); });
+  KONTEN.forEach(k => { if ((k.nr + ' ' + k.name).toLowerCase().includes(q)) T.push(['konten', k.nr, 'Konto ' + k.nr + ' ' + k.name, '']); });
+  return T.slice(0, 12);
+}
+function sucheZeigen() {
+  const q = $('#suche').value, T = suchen(q);
+  let box = $('#treffer');
+  if (!q.trim() || q.trim().length < 2) { if (box) box.remove(); return; }
+  if (!box) { box = document.createElement('div'); box.id = 'treffer'; $('header .tools').appendChild(box); }
+  box.innerHTML = T.length ? T.map(t => `<button class="tr" data-go="${t[0]}" data-p="${esc(t[1])}"><b>${esc(t[2])}</b><span>${esc(t[3])}</span></button>`).join('') : '<div class="leer">Nichts gefunden.</div>';
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],#reset,#toast');
+  if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
+  const d = t.dataset;
+  if (t.id === 'toast') { t.classList.remove('show'); return; }
+  if (t.id === 'reset') {
+    modal(`<h3>Demo zurücksetzen?</h3><p class="dim">Alle Änderungen in diesem Browser gehen verloren — die Demo startet wieder wie am Anfang.</p><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Zurücksetzen</button></div>`,
+      () => { zuruecksetzen(); RFILTER = 'pruefen'; modalZu(); go('uebersicht'); toast('Demo zurückgesetzt.', 1); });
+    return;
+  }
+  if ('zu' in d) { modalZu(); return; }
+  if ('ok' in d) { if (MODAL_OK) MODAL_OK(); return; }
+  if (d.go !== undefined && !t.disabled) {
+    const b = $('#treffer'); if (b) { b.remove(); $('#suche').value = ''; }
+    go(d.go, d.p || ''); if (!d.p || d.go !== AKTIV) window.scrollTo(0, 0); return;
+  }
+
+  // ── Rechnungen ──
+  if (d.rfilter) { RFILTER = d.rfilter; PARAM = ''; location.hash = '#rechnungen'; render(); return; }
+  if ('papierkorb' in d) {
+    modal(`<h3>Papierkorb</h3><p class="dim" style="font-size:13px">Gelöschte Rechnungen bleiben hier und lassen sich wiederherstellen.</p>
+      ${DB.papierkorb.length ? DB.papierkorb.map(p => { const r = R_(p.id); return `<div class="sum" style="align-items:center"><span><b>${esc(lief(r.lief).name)}</b> ${esc(r.nr)}<br><span class="dim" style="font-size:12px">${esc(p.grund)} · ${esc(p.zeit)}</span></span><button class="btn sm" data-wiederher="${r.id}">Wiederherstellen</button></div>`; }).join('') : '<div class="leer">Leer.</div>'}
+      <div class="acts"><button class="btn" data-zu>Schliessen</button></div>`);
+    return;
+  }
+  if (d.wiederher) { const r = R_(d.wiederher); r.geloescht = false; DB.papierkorb = DB.papierkorb.filter(p => p.id !== r.id); prot(r, 'Aus dem Papierkorb wiederhergestellt'); modalZu(); neu(); go('rechnungen', r.id); toast('Wiederhergestellt.', 1); return; }
+  if (d.geklaert) { const r = R_(d.geklaert); prot(r, 'Frage geklärt: ' + r.klaerung); r.klaerung = ''; neu(); toast('Als geklärt markiert.', 1); return; }
+  if (d.frage) {
+    modal(`<h3>Frage notieren</h3><p class="dim" style="font-size:13px">Die Rechnung bleibt, wo sie ist — mit der Frage daran, bis sie geklärt ist.</p><label class="fld" style="margin-top:10px"><span>Was ist unklar?</span><textarea id="m-frage" placeholder="z.B. Menge stimmt nicht mit dem Lieferschein überein"></textarea></label><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Notieren</button></div>`,
+      () => { const v = $('#m-frage').value.trim(); if (!v) { $('#m-frage').closest('.fld').classList.add('err'); return; } const r = R_(d.frage); r.klaerung = v; prot(r, 'Frage notiert: ' + v); modalZu(); neu(); });
+    return;
+  }
+  if (d.doppelt) { const r = R_(d.doppelt); r.geloescht = true; DB.papierkorb.push({ id: r.id, grund: 'Doppelt eingegangen (wie ' + r.duplikatVon + ')', zeit: jetzt() }); prot(r, 'Als Doublette von ' + r.duplikatVon + ' in den Papierkorb'); neu(); go('rechnungen', ''); toast('In den Papierkorb gelegt — wird nicht doppelt bezahlt.', 1); return; }
+  if (d.keindoppel) { const r = R_(d.keindoppel); prot(r, 'Geprüft: keine Doublette von ' + r.duplikatVon); r.duplikatVon = ''; neu(); return; }
+  if ('zeileplus' in d) { const z = vatLesen(); z.push({ satz: 8.1, netto: 0 }); $('#kt-zeilen').innerHTML = z.map(vatZeile).join(''); vatLive(); const n = document.querySelectorAll('.kt-netto'); n[n.length - 1].select(); return; }
+  if (d.zeileweg !== undefined) { const z = vatLesen(); if (z.length < 2) return; z.splice(+d.zeileweg, 1); $('#kt-zeilen').innerHTML = z.map(vatZeile).join(''); vatLive(); return; }
+  if (d.kontieren) {
+    const r = R_(d.kontieren);
+    if (!$('#kt-ok').checked) { $('#kt-ok').closest('.check').style.color = 'var(--bad)'; toast('Bitte bestätigen, dass Konto und MWST mit dem Beleg verglichen sind.', 2); return; }
+    if (!$('#kt-check').dataset.ok) { toast('Die MWST-Zeilen ergeben nicht den Betrag des Belegs.', 3); return; }
+    const zeilen = vatLesen(), steuer = $('#kt-steuer').value, alt = r.konto;
+    r.konto = $('#kt-konto').value; r.bezug = steuer === 'bezug';
+    if ($('#kt-kurs')) r.kurs = zahl($('#kt-kurs').value, r.kurs);
+    const orig = summen({ ...r, zeilenManuell: null }).zeilen;
+    const gleich = zeilen.length === orig.length && zeilen.every((z, i) => z.satz === orig[i].satz && Math.abs(z.netto - orig[i].netto) < 0.005);
+    r.zeilenManuell = gleich ? null : zeilen.filter(z => z.netto);
+    r.stufe = r.auto ? 'kontiert' : 'kontiert';
+    prot(r, `Geprüft: ${kname(r.konto)}${alt !== r.konto ? ' (statt ' + alt + ')' : ''}, ${summen(r).zeilen.map(z => z.satz + ' %').join(' + ')}${r.bezug ? ', Bezugsteuer' : ''}`);
+    neu();
+    const rest = DB.rechnungen.filter(x => !x.geloescht && x.stufe === 'eingang');
+    if (rest.length) { RFILTER = 'pruefen'; go('rechnungen', rest[0].id); toast(`Geprüft und gebucht auf ${esc(kname(r.konto))}. Noch ${rest.length} zu prüfen.`, 1); }
+    else { RFILTER = 'zahlen'; go('rechnungen', r.id); toast('Alle Rechnungen geprüft. ✓', 1); }
+    return;
+  }
+  if (d.loeschen) {
+    const r = R_(d.loeschen);
+    modal(`<h3>Rechnung löschen?</h3><p class="dim" style="font-size:13px">${esc(lief(r.lief).name)} ${esc(r.nr)} kommt in den Papierkorb und lässt sich wiederherstellen. ${stufeIdx(r.stufe) >= 1 ? 'Die Buchung wird zurückgenommen.' : ''}</p><label class="fld" style="margin-top:10px"><span>Grund</span><input id="m-grund" placeholder="z.B. Testbeleg, falscher Empfänger"></label><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn bad" data-ok>Löschen</button></div>`,
+      () => { const g = $('#m-grund').value.trim(); if (!g) { $('#m-grund').closest('.fld').classList.add('err'); return; } r.geloescht = true; DB.papierkorb.push({ id: r.id, grund: g, zeit: jetzt() }); prot(r, 'Gelöscht: ' + g); modalZu(); neu(); go('rechnungen', ''); toast('In den Papierkorb gelegt.', 1); });
+    return;
+  }
+  if (d.bezahlt) { const r = R_(d.bezahlt); r.stufe = 'bezahlt'; r.bezahltAm = $('#bezahltam').value || HEUTE; prot(r, 'Im E-Banking bezahlt am ' + dt(r.bezahltAm)); neu(); toast('Als bezahlt markiert. Sobald die Bankbuchung kommt, wird sie zugeordnet.', 1); return; }
+  if (d.raten) {
+    const r = R_(d.raten);
+    modal(`<h3>In Raten zahlen</h3><p class="dim" style="font-size:13px">${chf(summen(r).chf)} an ${esc(lief(r.lief).name)} — vorher mit dem Lieferanten vereinbaren.</p><label class="fld" style="margin-top:10px"><span>Anzahl Raten</span><select id="m-raten"><option>2</option><option selected>3</option><option>4</option><option>6</option></select></label><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Raten festlegen</button></div>`,
+      () => { const n = +$('#m-raten').value; r.raten = { anzahl: n, bezahlt: 0 }; prot(r, 'In ' + n + ' Raten aufgeteilt'); modalZu(); neu(); });
+    return;
+  }
+  if (d.zuordnen) {
+    const b = DB.bank.find(x => x.id === d.zuordnen);
+    const r = R_(d.ref), deb = D_(d.ref);
+    if (r) { b.zu = { typ: 'kreditor', ref: r.id }; r.stufe = 'abgeglichen'; if (!r.bezahltAm) r.bezahltAm = b.datum; prot(r, 'Bankbuchung ' + b.id + ' vom ' + dt(b.datum) + ' zugeordnet'); }
+    else if (deb) { b.zu = { typ: 'debitor', ref: deb.id }; deb.zahlungen.push({ datum: b.datum, betrag: b.betrag, weg: 'Bank', bank: b.id, notiz: 'Zahlung' }); prot(deb, 'Zahlung ' + chf(b.betrag) + ' über Bank (' + b.id + ') zugeordnet'); if (debSummen(deb).offen <= 0.004) { deb.stufe = 'bezahlt'; prot(deb, 'Vollständig bezahlt'); } }
+    logge('Bankbuchung ' + b.id + ' zugeordnet'); neu(); toast('Zugeordnet. ✓', 1); return;
+  }
+
+  // ── Bank ──
+  if (d.bfilter) { BFILTER = d.bfilter; render(); return; }
+  if ('abschliessen' in d) {
+    const L = DB.bank.filter(b => b.zu && !b.abgeschlossen);
+    modal(`<h3>${L.length} Bankbuchungen abschliessen?</h3><p class="dim" style="font-size:13px">Alle sind vollständig zugeordnet. Abgeschlossen heisst: für den Treuhänder freigegeben. Was später noch geändert werden muss, geht über eine Korrektur.</p><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Abschliessen</button></div>`,
+      () => { L.forEach(b => b.abgeschlossen = true); logge(L.length + ' Bankbuchungen abgeschlossen'); modalZu(); neu(); toast(L.length + ' Bankbuchungen abgeschlossen. ✓', 1); });
+    return;
+  }
+  if (d.belegfuer) { const f = $('#belegdatei'); f.dataset.bank = d.belegfuer; f.value = ''; f.click(); return; }
+  if (d.ohnebeleg) {
+    const b = DB.bank.find(x => x.id === d.ohnebeleg), h = BANK_HINWEIS[b.id] || {};
+    modal(`<h3>Ohne Beleg buchen</h3><p class="dim" style="font-size:13px">${esc(b.text)} · ${chf(b.betrag)}</p>
+      <div class="box s2" style="margin-top:10px">Ohne Beleg gibt es <b>keinen Vorsteuerabzug</b>. Wenn sich die Quittung noch beschaffen lässt, lohnt sich das.</div>
+      <label class="fld" style="margin-top:12px"><span>Konto</span><select id="m-konto">${KONTEN.filter(k => k.typ === 'K').map(k => `<option value="${k.nr}"${k.nr === h.konto ? ' selected' : ''}>${k.nr} ${esc(k.name)}</option>`).join('')}</select></label>
+      <label class="fld" style="margin-top:8px"><span>Grund (Pflicht)</span><input id="m-grund" placeholder="z.B. Quittung verloren, Kleinbetrag"></label>
+      <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Ohne Beleg buchen</button></div>`,
+      () => { const g = $('#m-grund').value.trim(); if (!g) { $('#m-grund').closest('.fld').classList.add('err'); return; } b.zu = { typ: 'beleg', konto: $('#m-konto').value, satz: 0, grund: g }; logge('Bankbuchung ' + b.id + ' ohne Beleg gebucht: ' + g); modalZu(); neu(); toast('Gebucht — ohne Vorsteuer.', 2); });
+    return;
+  }
+
+  // ── Kasse ──
+  if (d.ksart) {
+    document.querySelectorAll('[data-ksart]').forEach(x => { x.classList.toggle('on', x === t); x.setAttribute('aria-checked', x === t); });
+    $('#ks-kontofld').style.display = d.ksart === 'auszahlung' ? '' : 'none';
+    if (d.ksart === 'auszahlung') $('#ks-betrag').value = '';
+    else if (!$('#ks-betrag').value) $('#ks-betrag').value = kasseStand().einzahlen.toFixed(2);
+    return;
+  }
+  if ('kasseerfassen' in d) {
+    const art = document.querySelector('[data-ksart].on').dataset.ksart, betrag = r2(zahl($('#ks-betrag').value)), k = kasseStand();
+    if (!(betrag > 0)) { $('#ks-betrag').closest('.fld').classList.add('err'); toast('Betrag fehlt.', 2); return; }
+    if (betrag > k.bestand + 0.004) { $('#ks-betrag').closest('.fld').classList.add('err'); toast(`Mehr als in der Kasse ist (${chf(k.bestand)}).`, 3); return; }
+    const e = { id: 'E-' + Date.now().toString(36).slice(-4).toUpperCase(), datum: $('#ks-datum').value || HEUTE, art, betrag, notiz: $('#ks-notiz').value.trim(), eigen: true };
+    if (art === 'auszahlung') e.konto = $('#ks-konto').value;
+    DB.kasse.push(e); logge('Kasse: ' + art + ' ' + chf(betrag)); neu();
+    toast(art === 'auszahlung' ? 'Barauslage erfasst.' : 'Einzahlung erfasst — wird zugeordnet, sobald sie auf dem Kontoauszug steht.', 1); return;
+  }
+  if (d.kasseweg) { DB.kasse = DB.kasse.filter(e => e.id !== d.kasseweg); neu(); return; }
+
+  // ── Kundenrechnungen ──
+  if (d.dtab) { DTAB = d.dtab; location.hash = '#kunden'; render(); return; }
+  if (d.ausbeleg) {
+    const q = DB.kassenbelege.find(x => x.id === d.ausbeleg), sel = $('#kb-kunde').value;
+    if (sel === 'neu') { kundeNeu(id => { q.kunde = id; neu(); go('kunden', q.id); }); return; }
+    if (!sel) { $('#kb-kunde').closest('.fld').classList.add('err'); toast('An wen geht die Rechnung?', 2); return; }
+    const k = kunde(sel), id = naechsteNr();
+    const dneu = { id, kunde: sel, datum: HEUTE, faellig: plusTage(HEUTE, k.ziel || 30), stufe: 'entwurf', satz: 8.1, pos: q.pos.map(p => p.slice()), zahlungen: [], protokoll: [] };
+    prot(dneu, 'Erstellt aus Kassenbeleg ' + q.id + ' (' + q.pos.length + ' Positionen übernommen)');
+    DB.debitoren.push(dneu); DB.kassenbelege = DB.kassenbelege.filter(x => x !== q);
+    neu(); go('kunden', id); toast('Rechnung ' + id.slice(1) + ' erstellt.', 1); return;
+  }
+  if (d.vorlegen) { const x = D_(d.vorlegen); x.stufe = 'freigabe'; prot(x, 'Zur Freigabe an ' + DB.firma.inhaber + ' vorgelegt'); neu(); toast('Zur Freigabe vorgelegt.', 1); return; }
+  if (d.zurueck) { const x = D_(d.zurueck); x.stufe = 'entwurf'; prot(x, 'Zurück zum Entwurf'); neu(); return; }
+  if (d.freigeben) {
+    const x = D_(d.freigeben), an = $('#mail-an').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(an)) { $('#mail-an').closest('.fld').classList.add('err'); toast('Bitte eine gültige E-Mail-Adresse.', 2); return; }
+    x.stufe = 'versendet'; prot(x, 'Von ' + DB.firma.inhaber + ' freigegeben und an ' + an + ' versendet'); neu();
+    toast('Freigegeben und versendet. <span style="opacity:.7">(Demo: keine echte Mail.)</span>', 1); return;
+  }
+  if (d.zahlung) {
+    const x = D_(d.zahlung), betrag = r2(zahl($('#z-betrag').value)), s = debSummen(x);
+    if (!(betrag > 0)) { $('#z-betrag').closest('.fld').classList.add('err'); return; }
+    if (betrag > s.offen + 0.004) { $('#z-betrag').closest('.fld').classList.add('err'); toast('Mehr als offen ist (' + chf(s.offen) + ').', 3); return; }
+    x.zahlungen.push({ datum: $('#z-datum').value || HEUTE, betrag, weg: $('#z-weg').value, notiz: 'Zahlung' });
+    prot(x, 'Zahlung ' + chf(betrag) + ' (' + $('#z-weg').value + ') erfasst');
+    if (debSummen(x).offen <= 0.004) { x.stufe = 'bezahlt'; prot(x, 'Vollständig bezahlt'); }
+    neu(); toast(x.stufe === 'bezahlt' ? 'Bezahlt. ✓' : 'Teilzahlung erfasst — Rest ' + chf(debSummen(x).offen) + '.', 1); return;
+  }
+  if (d.mahnen) {
+    const x = D_(d.mahnen), k = kunde(x.kunde), stufe = (x.mahnstufe || 0) + 1;
+    const text = DB.texte[(stufe === 1 ? 'erinnerung_' : 'mahnung_') + (k.anrede || 'sie')];
+    modal(`<h3>${stufe === 1 ? 'Zahlungserinnerung' : stufe + '. Mahnung'} an ${esc(k.name)}</h3><p class="dim" style="font-size:12.5px">${esc(k.mail)}</p><label class="fld" style="margin-top:10px"><span>Text</span><textarea id="m-text" style="min-height:110px">${esc(text)}</textarea></label><p class="dim" style="font-size:12px;margin-top:6px">Die Rechnung mit QR-Zahlteil über den offenen Betrag ${chf(debSummen(x).offen)} wird angehängt.</p><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Senden</button></div>`,
+      () => { x.mahnstufe = stufe; prot(x, (stufe === 1 ? 'Zahlungserinnerung' : stufe + '. Mahnung') + ' versendet'); modalZu(); neu(); toast('Versendet. <span style="opacity:.7">(Demo: keine echte Mail.)</span>', 1); });
+    return;
+  }
+  if (d.korrigieren) {
+    const x = D_(d.korrigieren);
+    modal(`<h3>Rechnung ${esc(x.id.slice(1))} korrigieren</h3><p class="dim" style="font-size:13px">Die Nummer bleibt. Die bisherige Fassung bleibt im Protokoll nachvollziehbar.</p>
+      <div style="margin-top:10px">${x.pos.map((p, i) => `<div class="grid" style="grid-template-columns:1fr 70px 90px;gap:6px;margin-bottom:6px"><input class="in" value="${esc(p[0])}" data-ki="${i}" data-kf="0"><input class="in num" value="${p[1]}" data-ki="${i}" data-kf="1" inputmode="decimal"><input class="in num" value="${p[2].toFixed(2)}" data-ki="${i}" data-kf="2" inputmode="decimal"></div>`).join('')}</div>
+      <label class="fld" style="margin-top:8px"><span>Was war falsch? (Pflicht)</span><input id="m-grund"></label>
+      <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Korrigieren & neu senden</button></div>`,
+      () => { const g = $('#m-grund').value.trim(); if (!g) { $('#m-grund').closest('.fld').classList.add('err'); return; }
+        const alt = debSummen(x).brutto;
+        document.querySelectorAll('[data-ki]').forEach(inp => { const p = x.pos[+inp.dataset.ki], f = +inp.dataset.kf; p[f] = f ? zahl(inp.value, p[f]) : inp.value; });
+        prot(x, `Korrigiert (${g}): ${chf(alt)} → ${chf(debSummen(x).brutto)}, neu versendet`); modalZu(); neu(); toast('Korrigiert und neu versendet.', 1); });
+    return;
+  }
+  if (d.storno) {
+    const x = D_(d.storno);
+    modal(`<h3>Rechnung ${esc(x.id.slice(1))} stornieren?</h3><p class="dim" style="font-size:13px">Die Rechnung bleibt mit Stempel «storniert» erhalten, die Buchung wird zurückgenommen.</p><label class="fld" style="margin-top:10px"><span>Grund (Pflicht)</span><input id="m-grund"></label><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn bad" data-ok>Stornieren</button></div>`,
+      () => { const g = $('#m-grund').value.trim(); if (!g) { $('#m-grund').closest('.fld').classList.add('err'); return; } x.storniert = g; x.stufe = 'bezahlt'; prot(x, 'Storniert: ' + g); modalZu(); neu(); toast('Storniert.', 1); });
+    return;
+  }
+  if ('kundeneu' in d) { kundeNeu(() => neu()); return; }
+
+  // ── Auswertung & Daten ──
+  if (d.kmonat) { KMONAT = d.kmonat; render(); return; }
+  if (d.kgruppe) { KOFFEN = KOFFEN === d.kgruppe ? '' : d.kgruppe; neu(); return; }
+  if (d.mq) { MQ = +d.mq; render(); return; }
+  if (d.eingereicht) { DB.abgerechnet.push(d.eingereicht); logge('MWST ' + d.eingereicht + ' als eingereicht markiert'); neu(); toast('Als eingereicht markiert.', 1); return; }
+  if (d.exq) { EXPORT_Q = d.exq; render(); return; }
+  if (d.export) { exportieren(d.export); return; }
+  if ('beispielcamt' in d) { const r = camtLesen(BEISPIEL_CAMT); neu(); toast(r.neu ? `${r.neu} Buchungen eingelesen${r.doppelt ? ', ' + r.doppelt + ' doppelte übersprungen' : ''} — jetzt im Bankabgleich.` : 'Schon eingelesen — nichts Neues.', r.neu ? 1 : 2); return; }
+  if ('firmaspeichern' in d) { document.querySelectorAll('[data-firma]').forEach(i => DB.firma[i.dataset.firma] = i.value.trim()); logge('Firmendaten geändert'); neu(); toast('Gespeichert.', 1); return; }
+  if ('textespeichern' in d) { document.querySelectorAll('[data-text]').forEach(i => DB.texte[i.dataset.text] = i.value.trim()); logge('Textvorlagen geändert'); neu(); toast('Gespeichert.', 1); return; }
+});
+
+function kundeNeu(fertig) {
+  modal(`<h3>Neuer Kunde</h3><div class="grid g2" style="gap:10px;margin-top:10px">
+    <label class="fld" style="grid-column:1/-1"><span>Name / Firma</span><input id="n-name"></label>
+    <label class="fld"><span>Kontakt</span><input id="n-kontakt"></label><label class="fld"><span>E-Mail</span><input id="n-mail" type="email"></label>
+    <label class="fld"><span>Strasse</span><input id="n-strasse"></label><label class="fld"><span>PLZ Ort</span><input id="n-ort"></label>
+    <label class="fld"><span>Anrede</span><select id="n-anrede"><option value="sie">Sie</option><option value="du">Du</option></select></label><label class="fld"><span>Zahlungsziel (Tage)</span><input id="n-ziel" value="30" inputmode="numeric"></label></div>
+    <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Anlegen</button></div>`,
+    () => { const name = $('#n-name').value.trim(); if (!name) { $('#n-name').closest('.fld').classList.add('err'); return; }
+      const id = 'C' + (Math.max(...DB.kunden.map(k => +k.id.slice(1))) + 1);
+      DB.kunden.push({ id, name, kontakt: $('#n-kontakt').value.trim(), strasse: $('#n-strasse').value.trim(), ort: $('#n-ort').value.trim(), anrede: $('#n-anrede').value, mail: $('#n-mail').value.trim(), ziel: zahl($('#n-ziel').value, 30) });
+      logge('Kunde angelegt: ' + name); modalZu(); fertig(id); toast('Kunde angelegt.', 1); });
+}
+
+// typing in the VAT lines recomputes them live
+document.addEventListener('input', e => {
+  if (e.target.matches('.kt-netto')) vatLive();
+  if (e.target.id === 'suche') sucheZeigen();
+  const f = e.target.closest('.fld.err'); if (f) f.classList.remove('err');
+});
+document.addEventListener('change', e => {
+  if (e.target.matches('.kt-satz')) vatLive();
+  if (e.target.id === 'belegdatei' && e.target.files[0]) {
+    const file = e.target.files[0], b = DB.bank.find(x => x.id === e.target.dataset.bank), h = BANK_HINWEIS[b.id] || {};
+    const url = URL.createObjectURL(file);
+    modal(`<h3>Beleg zuordnen</h3><p class="dim" style="font-size:13px">${esc(b.text)} · ${chf(b.betrag)}</p>
+      <div class="box s1" style="margin-top:10px">📄 <a href="${url}" target="_blank" rel="noopener">${esc(file.name)}</a> — bleibt in diesem Browser.</div>
+      <div class="grid g2" style="gap:10px;margin-top:12px"><label class="fld"><span>Konto</span><select id="m-konto">${KONTEN.filter(k => k.typ === 'K').map(k => `<option value="${k.nr}"${k.nr === h.konto ? ' selected' : ''}>${k.nr} ${esc(k.name)}</option>`).join('')}</select></label>
+      <label class="fld"><span>MWST laut Beleg</span><select id="m-satz">${SAETZE.map(s => `<option value="${s.satz}"${s.satz === 8.1 ? ' selected' : ''}>${s.name}</option>`).join('')}</select></label></div>
+      <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Zuordnen</button></div>`,
+      () => { b.zu = { typ: 'beleg', konto: $('#m-konto').value, satz: zahl($('#m-satz').value), datei: file.name }; UPLOADS.push({ name: file.name, size: file.size, url }); logge('Beleg ' + file.name + ' zu ' + b.id); modalZu(); neu(); toast('Beleg zugeordnet — Vorsteuer wird abgezogen. ✓', 1); });
+  }
+  if (e.target.id === 'up-belege') belegeHoch(e.target.files);
+  if (e.target.id === 'up-camt' && e.target.files[0]) camtHoch(e.target.files[0]);
+});
+function belegeHoch(files) {
+  [...files].forEach(f => UPLOADS.push({ name: f.name, size: f.size, url: URL.createObjectURL(f) }));
+  render(); toast(files.length + ' Datei' + (files.length > 1 ? 'en' : '') + ' hochgeladen.', 1);
+}
+function camtHoch(file) {
+  file.text().then(t => { try { const r = camtLesen(t); neu(); toast(`${r.neu} Buchungen eingelesen${r.doppelt ? ', ' + r.doppelt + ' doppelte übersprungen' : ''}.`, r.neu ? 1 : 2); } catch (err) { toast(esc(err.message), 3); } });
+}
+['dragover', 'dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => {
+  const z = e.target.closest && e.target.closest('.drop'); if (!z) return;
+  e.preventDefault();
+  z.classList.toggle('over', ev === 'dragover');
+  if (ev === 'drop' && e.dataTransfer.files.length) { if (z.id === 'drop-camt') camtHoch(e.dataTransfer.files[0]); else belegeHoch(e.dataTransfer.files); }
+}));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if ($('#modal').classList.contains('on')) modalZu(); const b = $('#treffer'); if (b) b.remove(); }
+  if (e.key === 'Enter' && e.target.matches('[role="button"][data-go],[role="button"][data-kgruppe],[role="button"][data-export]')) { e.preventDefault(); e.target.click(); }
+  if (e.key === 'Enter' && e.target.closest('#modal') && e.target.tagName === 'INPUT' && MODAL_OK) { e.preventDefault(); MODAL_OK(); }
+  // ← → leaf through invoices while reviewing, unless typing
+  if (AKTIV === 'rechnungen' && !e.target.closest('input,select,textarea') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !$('#modal').classList.contains('on')) {
+    const b = document.querySelector(`.panel [aria-label="${e.key === 'ArrowLeft' ? 'Vorherige' : 'Nächste'}"]`); if (b && !b.disabled) b.click();
+  }
+});
+window.addEventListener('hashchange', render);
+laden();
+render();
+</script>
+</body>
+</html>
