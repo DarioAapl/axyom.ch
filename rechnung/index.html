@@ -278,14 +278,14 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 [data-nav=schmal] #rail nav a:hover .lbl,[data-nav=schmal] #rail nav a:focus-visible .lbl{opacity:1;transform:translate(0,-50%)}
 [data-nav=schmal] #rail nav a .badge{position:absolute;top:3px;right:1px;margin:0;font-size:9.5px;padding:0 5px;line-height:15px;min-width:15px;text-align:center}
 
-/* oben, kacheln, menue — the dark bar runs across the top */
-[data-nav=oben] #app,[data-nav=kacheln] #app,[data-nav=menue] #app{flex-direction:column}
-[data-nav=oben] #rail,[data-nav=kacheln] #rail,[data-nav=menue] #rail{width:auto;height:auto;flex-direction:row;align-items:center;gap:10px;padding:9px 16px;min-height:56px}
-[data-nav=oben] #rail .brand,[data-nav=kacheln] #rail .brand,[data-nav=menue] #rail .brand{padding:0 8px 0 0;flex:none}
-[data-nav=oben] #rail .brand .logo,[data-nav=kacheln] #rail .brand .logo,[data-nav=menue] #rail .brand .logo{width:78px}
-[data-nav=oben] #rail .lade,[data-nav=kacheln] #rail .lade{flex-direction:row;align-items:center;min-width:0}
-[data-nav=oben] #rail .firm,[data-nav=oben] #rail .foot,[data-nav=kacheln] #rail .firm,[data-nav=kacheln] #rail .foot{display:none}
-[data-nav=oben] header,[data-nav=kacheln] header,[data-nav=menue] header{position:static}
+/* oben, menue — the dark bar runs across the top */
+[data-nav=oben] #app,[data-nav=menue] #app{flex-direction:column}
+[data-nav=oben] #rail,[data-nav=menue] #rail{width:auto;height:auto;flex-direction:row;align-items:center;gap:10px;padding:9px 16px;min-height:56px}
+[data-nav=oben] #rail .brand,[data-nav=menue] #rail .brand{padding:0 8px 0 0;flex:none}
+[data-nav=oben] #rail .brand .logo,[data-nav=menue] #rail .brand .logo{width:78px}
+[data-nav=oben] #rail .lade{flex-direction:row;align-items:center;min-width:0}
+[data-nav=oben] #rail .firm,[data-nav=oben] #rail .foot{display:none}
+[data-nav=oben] header,[data-nav=menue] header{position:static}
 [data-nav=oben] #rail nav{flex-direction:row;align-items:center;overflow-x:auto;scrollbar-width:none;gap:2px}
 [data-nav=oben] #rail nav::-webkit-scrollbar{display:none}
 [data-nav=oben] #rail .grp{font-size:0;padding:0;width:1px;height:20px;background:rgba(255,255,255,.14);margin:0 7px;flex:none}
@@ -293,11 +293,6 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 [data-nav=oben] #rail nav a{white-space:nowrap;padding:7px 11px;flex:none}
 [data-nav=oben] #rail nav a .lbl{overflow:visible}
 
-[data-nav=kacheln] #rail nav{flex-direction:row;align-items:center}
-[data-nav=kacheln] #rail nav a.alle{color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:6px 12px;white-space:nowrap}
-[data-nav=kacheln] #rail nav a.alle:hover{background:rgba(0,178,160,.2);border-color:rgba(0,178,160,.5)}
-[data-nav=kacheln] #rail nav a.alle .ic{opacity:1;color:var(--acc)}
-[data-nav=kacheln] #rail nav .wo{font-size:12.5px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 [data-nav=menue] #rail{justify-content:space-between;padding:9px 12px 9px 16px}
 [data-nav=menue] #rail .menu{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;
@@ -312,29 +307,6 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 .nav-offen[data-nav=menue] #schatten{opacity:1;pointer-events:auto}
 .nav-offen[data-nav=menue] body{overflow:hidden}
 @media (prefers-reduced-motion:reduce){#rail .lade,#schatten{transition:none}}
-
-/* the start page of «Kacheln» — one card per area, with what is open there */
-.kgrp{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);font-weight:650;margin:22px 2px 10px}
-.kgrp:first-child{margin-top:2px}
-.kacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.kachel{display:flex;flex-direction:column;gap:12px;background:var(--card);border:1px solid var(--soft);border-radius:16px;padding:16px;
-  text-decoration:none;color:var(--ink);min-height:136px;position:relative;transition:transform .15s,box-shadow .15s,border-color .15s}
-.kachel:hover{border-color:rgba(0,178,160,.45);box-shadow:0 10px 30px rgba(0,0,0,.07);transform:translateY(-1px)}
-.kachel:active{transform:translateY(0)}
-.kachel:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.kachel .kic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(155deg,#12302c,var(--dark) 70%);color:var(--acc)}
-.kachel .kic .ic{width:20px;height:20px}
-.kachel .kn{font-size:15px;font-weight:650;letter-spacing:-.01em;margin-top:2px}
-.kachel .ks{font-size:12.5px;color:var(--dim);line-height:1.4;margin-top:-8px}
-.kachel .ks .rot{color:var(--bad);font-weight:650}
-.kachel .ks .ok{color:var(--ok);font-weight:600}
-.kachel .badge{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px;background:var(--warn);color:#fff}
-.kachel .badge.s3{background:var(--bad)}
-@media (max-width:760px){
-  .kacheln{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .kachel{padding:13px;min-height:128px;border-radius:14px;gap:10px}
-  .kachel .kn{font-size:14px}.kachel .ks{font-size:12px}
-}
 
 /* Einstellungen › Darstellung */
 .ansicht{display:grid;gap:18px}
@@ -1022,8 +994,6 @@ const MODULES = [
   { grp: 'Daten' },
   { id: 'austausch', name: 'Belege & Export', titel: 'Belege & Export', sub: 'Hochladen, was ankommt — herunterladen, was der Treuhänder braucht' },
   { id: 'einstellungen', name: 'Einstellungen', titel: 'Einstellungen', sub: 'Darstellung, Firmendaten, Zahlteil und Textvorlagen' },
-  // the start page of the «Kacheln» view; never listed as an area itself
-  { id: 'start', name: 'Alle Bereiche', titel: 'Alle Bereiche', sub: 'Die Zahl auf einer Karte sagt, was dort noch offen ist', versteckt: true },
 ];
 const ICON = {
   uebersicht: '<rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/>',
@@ -1079,15 +1049,14 @@ const ANSICHTEN = {
   seite: ['Seitenleiste', 'Alle Bereiche links, immer sichtbar'],
   schmal: ['Schmale Leiste', 'Nur Symbole — mehr Platz für die Arbeit'],
   oben: ['Kopfleiste', 'Die Bereiche oben in einer Zeile'],
-  kacheln: ['Kacheln', 'Eine Startseite mit einer Karte je Bereich'],
 };
 const GERAETE = [
-  { id: 'computer', name: 'Computer', d: 'ab 1200 px Breite', wahl: ['seite', 'schmal', 'oben', 'kacheln'] },
-  { id: 'tablet', name: 'Tablet', d: '761 bis 1199 px', wahl: ['seite', 'schmal', 'oben', 'kacheln'] },
+  { id: 'computer', name: 'Computer', d: 'ab 1200 px Breite', wahl: ['seite', 'schmal', 'oben'] },
+  { id: 'tablet', name: 'Tablet', d: '761 bis 1199 px', wahl: ['seite', 'schmal', 'oben'] },
   // no narrow rail on a phone: 68 px of 390 is too much to give up
-  { id: 'handy', name: 'Handy', d: 'bis 760 px', wahl: ['seite', 'oben', 'kacheln'], namen: { seite: ['Menü', 'Die Seitenleiste zum Aufklappen'] } },
+  { id: 'handy', name: 'Handy', d: 'bis 760 px', wahl: ['seite', 'oben'], namen: { seite: ['Menü', 'Die Seitenleiste zum Aufklappen'] } },
 ];
-const ANSICHT_STANDARD = { computer: 'seite', tablet: 'kacheln', handy: 'kacheln' };
+const ANSICHT_STANDARD = { computer: 'seite', tablet: 'seite', handy: 'oben' };
 let ANSICHT = { ...ANSICHT_STANDARD };
 try {
   const s = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || 'null');
@@ -1102,7 +1071,6 @@ function ansichtSetzen(werte) {
   ANSICHT = { ...ANSICHT, ...werte };
   try { localStorage.setItem(ANSICHT_SPEICHER, JSON.stringify(ANSICHT)); } catch (e) { }
 }
-const heim = () => nav() === 'kacheln' ? 'start' : 'uebersicht';
 function menu(auf) {
   document.documentElement.classList.toggle('nav-offen', auf);
   $('#rail .menu').setAttribute('aria-expanded', auf);
@@ -1120,26 +1088,19 @@ function go(id, param) {
 }
 function lesen() {
   const [id, p] = location.hash.replace(/^#/, '').split('/');
-  AKTIV = MODULES.some(m => m.id === id) && !(id === 'start' && nav() !== 'kacheln') ? id : heim();
+  AKTIV = MODULES.some(m => m.id === id) ? id : 'uebersicht';
   PARAM = decodeURIComponent(p || '');
 }
 function renderRail() {
   const o = offen(), n = nav();
   document.documentElement.dataset.nav = n;
-  const alle = MODULES.filter(m => m.id && !m.versteckt).map(m => badge(m.id, o));
+  const alle = MODULES.filter(m => m.id).map(m => badge(m.id, o));
   const summe = alle.reduce((s, [x]) => s + x, 0), schwer = alle.some(([x, st]) => x && st === 3) ? 3 : 2;
-  if (n === 'kacheln') {
-    const m = MODULES.find(x => x.id === AKTIV);
-    $('#nav').innerHTML = AKTIV === 'start' ? '<span class="wo">Restaurant Talblick · Rechnungswesen</span>'
-      : `<a href="#start" class="alle">${ic('uebersicht')}<span class="lbl">Alle Bereiche</span>${summe ? `<span class="badge s${schwer}">${summe}</span>` : ''}</a><span class="wo">${esc(m.name)}</span>`;
-  } else {
-    $('#nav').innerHTML = MODULES.map(m => {
-      if (m.versteckt) return '';
-      if (m.grp) return `<div class="grp">${m.grp}</div>`;
-      const [z, s] = badge(m.id, o);
-      return `<a href="#${m.id}" class="${m.id === AKTIV ? 'on' : ''}" ${m.id === AKTIV ? 'aria-current="page"' : ''}>${ic(m.id)}<span class="lbl">${esc(m.name)}</span>${z ? `<span class="badge s${s}" aria-label="${z} offen">${z}</span>` : ''}</a>`;
-    }).join('');
-  }
+  $('#nav').innerHTML = MODULES.map(m => {
+    if (m.grp) return `<div class="grp">${m.grp}</div>`;
+    const [z, s] = badge(m.id, o);
+    return `<a href="#${m.id}" class="${m.id === AKTIV ? 'on' : ''}" ${m.id === AKTIV ? 'aria-current="page"' : ''}>${ic(m.id)}<span class="lbl">${esc(m.name)}</span>${z ? `<span class="badge s${s}" aria-label="${z} offen">${z}</span>` : ''}</a>`;
+  }).join('');
   const mb = $('#rail .menu .badge'); mb.hidden = !summe; mb.textContent = summe; mb.className = 'badge s' + schwer;
   $('#lade').inert = n === 'menue' && !document.documentElement.classList.contains('nav-offen');
   // in the top bar, keep the open area in view instead of scrolled off
@@ -1839,35 +1800,6 @@ VIEWS.austausch = () => `
     </div>
   </div>`;
 
-/* ══════════════════════════════════════════════════════════════════════
-   ALLE BEREICHE — the start page of the «Kacheln» view
-   ══════════════════════════════════════════════════════════════════════ */
-VIEWS.start = () => {
-  const o = offen(), k = kasseStand();
-  const teile = (...x) => x.filter(Boolean).join(' · ');
-  const rot = t => `<span class="rot">${t}</span>`, ok = t => `<span class="ok">${t}</span>`;
-  const STAND = {
-    uebersicht: 'Was heute zu tun ist — und wie der Monat läuft',
-    rechnungen: teile(o.pruefen && `${o.pruefen} zu prüfen`, o.zahlen && `${o.zahlen} zu zahlen`, o.ueberfaellig && rot(`${o.ueberfaellig} überfällig`)) || ok('Alles erledigt'),
-    bank: teile(o.bankOffen && `${o.bankOffen} ohne Beleg`, o.bankAbschluss && `${o.bankAbschluss} abzuschliessen`) || ok('Alles abgeglichen'),
-    kasse: teile(`Bestand ${chf(k.bestand, 0)}`, k.einzahlen > 0 && `${chf(k.einzahlen, 0)} auf die Bank`),
-    kunden: teile(o.debFreigabe && `${o.debFreigabe} zur Freigabe`, o.debEntwurf && `${o.debEntwurf} zu schreiben`, o.debUeber && rot(`${o.debUeber} überfällig`)) || ok('Alles bezahlt'),
-    kosten: 'Wohin das Geld fliesst, gemessen an Ihren Zielen',
-    konten: 'Saldo, Soll und Haben aus den Belegen',
-    mwst: 'Abrechnung Quartal für Quartal',
-    austausch: 'Belege hochladen, Exporte für den Treuhänder',
-    einstellungen: 'Darstellung, Firmendaten und Vorlagen',
-  };
-  let html = '', offenGrp = false;
-  for (const m of MODULES) {
-    if (m.versteckt) continue;
-    if (m.grp) { html += `${offenGrp ? '</div>' : ''}<h2 class="kgrp">${m.grp}</h2><div class="kacheln">`; offenGrp = true; continue; }
-    const [z, st] = badge(m.id, o);
-    html += `<a class="kachel" href="#${m.id}"><span class="kic">${ic(m.id)}</span>${z ? `<span class="badge s${st}" aria-label="${z} offen">${z}</span>` : ''}<span class="kn">${esc(m.name)}</span><span class="ks">${STAND[m.id] || ''}</span></a>`;
-  }
-  return html + (offenGrp ? '</div>' : '');
-};
-
 /* the small pictures on the Darstellung choices — drawn with boxes */
 function vorschau(a, hoch) {
   const i = (c, l, t, w, h) => `<i class="${c}" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%"></i>`;
@@ -1876,12 +1808,10 @@ function vorschau(a, hoch) {
     seite: () => i('d', 0, 0, 26, 100) + i('la', 5, 14, 14, 3) + i('l', 5, 26, 16, 3) + i('l', 5, 36, 12, 3) + i('l', 5, 46, 15, 3) + i('l', 5, 56, 11, 3) + inhalt(26, 0),
     schmal: () => i('d', 0, 0, 10, 100) + [14, 28, 40, 52, 64].map((t, n) => `<i class="${n ? 'l' : 'la'}" style="left:3%;top:${t}%;width:4%;height:6%;border-radius:50%"></i>`).join('') + inhalt(10, 0),
     oben: () => i('d', 0, 0, 100, 17) + i('la', 4, 7, 9, 3) + i('l', 17, 7, 10, 3) + i('l', 31, 7, 8, 3) + i('l', 43, 7, 10, 3) + i('l', 57, 7, 7, 3) + inhalt(0, 14),
-    kacheln: () => i('d', 0, 0, 100, 17) + i('la', 4, 7, 12, 3) + [0, 1, 2].map(x => [0, 1].map(y => i('c', 6 + x * 30, 27 + y * 36, 27, 31) + i('t', 9 + x * 30, 31 + y * 36, 7, 9)).join('')).join(''),
   };
   const H = {
     menue: () => i('d', 0, 0, 100, 13) + i('l', 66, 5, 22, 3) + i('g', 10, 22, 50, 4) + i('c', 10, 32, 80, 20) + i('c', 10, 56, 80, 20) + `<i style="left:0;top:0;width:100%;height:100%;background:rgba(10,12,16,.35)"></i>` + i('d', 0, 0, 62, 100) + i('la', 10, 10, 30, 3) + i('l', 10, 20, 40, 3) + i('l', 10, 28, 34, 3) + i('l', 10, 36, 40, 3),
     oben: () => i('d', 0, 0, 100, 13) + i('la', 8, 5, 18, 3) + i('l', 32, 5, 18, 3) + i('l', 56, 5, 18, 3) + i('l', 80, 5, 18, 3) + i('g', 10, 22, 50, 4) + i('c', 10, 32, 80, 22) + i('c', 10, 58, 80, 30),
-    kacheln: () => i('d', 0, 0, 100, 13) + [0, 1].map(x => [0, 1, 2].map(y => i('c', 9 + x * 43, 21 + y * 26, 39, 22) + i('t', 15 + x * 43, 25 + y * 26, 12, 7)).join('')).join(''),
   };
   return `<span class="vs${hoch ? ' hoch' : ''}" aria-hidden="true">${(hoch ? H : B)[a]()}</span>`;
 }
@@ -2018,7 +1948,7 @@ document.addEventListener('click', e => {
   if ('ansichtstd' in d) { ansichtSetzen(ANSICHT_STANDARD); neu(); toast('Darstellung auf Standard zurückgesetzt.', 1); return; }
   if (t.id === 'reset' || 'reset' in d) {
     modal(`<h3>Demo zurücksetzen?</h3><p class="dim">Alle Änderungen in diesem Browser gehen verloren — die Demo startet wieder wie am Anfang.</p><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Zurücksetzen</button></div>`,
-      () => { zuruecksetzen(); RFILTER = 'pruefen'; modalZu(); go(heim()); toast('Demo zurückgesetzt.', 1); });
+      () => { zuruecksetzen(); RFILTER = 'pruefen'; modalZu(); go('uebersicht'); toast('Demo zurückgesetzt.', 1); });
     return;
   }
   if ('zu' in d) { modalZu(); return; }
