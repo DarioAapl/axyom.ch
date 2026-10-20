@@ -476,7 +476,7 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
     <button class="menu" data-menu aria-expanded="false" aria-controls="lade"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></svg>Menü<span class="badge" hidden></span></button>
     <div id="schatten"></div>
     <div class="lade" id="lade">
-      <div class="firm"><b>Restaurant Talblick</b>Rechnungswesen</div>
+      <div class="firm"><b>Talblick Technik</b>Rechnungswesen</div>
       <nav id="nav" aria-label="Bereiche"></nav>
       <div class="foot">Demo mit erfundenen Daten.<br>Änderungen bleiben in diesem Browser.<br><button id="reset">Demo zurücksetzen</button> · <button data-go="einstellungen">Ansicht ändern</button></div>
     </div>
@@ -498,13 +498,17 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
    amount in MWST — nobody carries it across. Every business, person, amount
    and number in here is invented. «7999 Talwies» does not exist on purpose.
 
+   The demo firm is a small, ordinary business: IT, networks and office
+   technology for local companies and households, with a shop counter. It
+   buys hardware and material, sells it on, and bills its work by the hour.
+
    Today is fixed — Friday 16 October 2026 — because a demo you cannot
    rehearse is a demo that surprises you in front of a customer.
    ────────────────────────────────────────────────────────────────────────── */
 const HEUTE = '2026-10-16';
 
 const FIRMA = {
-  name: 'Talblick Gastro GmbH', marke: 'Restaurant Talblick',
+  name: 'Talblick Technik GmbH', marke: 'Talblick Technik',
   strasse: 'Seestrasse 12', plz: '7999', ort: 'Talwies', land: 'Schweiz',
   iban: 'CH93 0076 2011 6238 5295 7', mwst: 'CHE-000.000.000 MWST',
   email: 'rechnungen@talblick.example', web: 'talblick.example',
@@ -512,10 +516,10 @@ const FIRMA = {
   inhaber: 'Lea Brunner', treuhand: 'Treuhand Vogel & Partner',
 };
 
-/* Kontenplan — a slice of the Swiss KMU-Kontenrahmen, the accounts a
-   restaurant actually books to. «typ» decides the side and where it shows up:
-   A asset, P liability, E revenue, K cost. «gruppe» is the Kosten view's
-   category, so the analysis and the books can never disagree. */
+/* Kontenplan — a slice of the Swiss KMU-Kontenrahmen, the accounts a small
+   trading and service business books to. «typ» decides the side and where it
+   shows up: A asset, P liability, E revenue, K cost. «gruppe» is the Kosten
+   view's category, so the analysis and the books can never disagree. */
 const KONTEN = [
   { nr: '1000', name: 'Kasse',                      typ: 'A' },
   { nr: '1020', name: 'Bank',                       typ: 'A' },
@@ -525,17 +529,18 @@ const KONTEN = [
   { nr: '2000', name: 'Verbindlichkeiten Lieferanten', typ: 'P' },
   { nr: '2200', name: 'Geschuldete MWST',           typ: 'P' },
   { nr: '2270', name: 'Sozialversicherungen',       typ: 'P' },
-  { nr: '3200', name: 'Ertrag Speisen',             typ: 'E' },
-  { nr: '3210', name: 'Ertrag Getränke',            typ: 'E' },
-  { nr: '3280', name: 'Ertrag Bankette & Firmen',   typ: 'E' },
-  { nr: '4200', name: 'Wareneinkauf Küche',         typ: 'K', gruppe: 'waren' },
-  { nr: '4210', name: 'Wareneinkauf Getränke',      typ: 'K', gruppe: 'waren' },
+  { nr: '3200', name: 'Handelserlöse',              typ: 'E' },
+  { nr: '3400', name: 'Dienstleistungserlöse',      typ: 'E' },
+  { nr: '3600', name: 'Wartungsverträge & Abos',    typ: 'E' },
+  { nr: '4000', name: 'Materialaufwand',            typ: 'K', gruppe: 'waren' },
+  { nr: '4200', name: 'Handelswaren',               typ: 'K', gruppe: 'waren' },
   { nr: '4400', name: 'Verbrauchsmaterial',         typ: 'K', gruppe: 'waren' },
   { nr: '5000', name: 'Löhne',                      typ: 'K', gruppe: 'personal' },
   { nr: '5700', name: 'Sozialversicherungen AG',    typ: 'K', gruppe: 'personal' },
   { nr: '6000', name: 'Miete',                      typ: 'K', gruppe: 'raum' },
-  { nr: '6040', name: 'Reinigung & Wäsche',         typ: 'K', gruppe: 'raum' },
+  { nr: '6040', name: 'Reinigung',                  typ: 'K', gruppe: 'raum' },
   { nr: '6100', name: 'Unterhalt & Reparaturen',    typ: 'K', gruppe: 'betrieb' },
+  { nr: '6200', name: 'Fahrzeuge',                  typ: 'K', gruppe: 'betrieb' },
   { nr: '6300', name: 'Versicherungen',             typ: 'K', gruppe: 'verwaltung' },
   { nr: '6400', name: 'Energie',                    typ: 'K', gruppe: 'betrieb' },
   { nr: '6500', name: 'Büro & Verwaltung',          typ: 'K', gruppe: 'verwaltung' },
@@ -547,9 +552,9 @@ const KONTEN = [
 ];
 const GRUPPEN = {
   personal:   { name: 'Personal',              farbe: '#5b4bb7' },
-  waren:      { name: 'Warenaufwand',          farbe: '#00b2a0' },
+  waren:      { name: 'Material & Waren',      farbe: '#00b2a0' },
   raum:       { name: 'Miete & Raum',          farbe: '#2f6db3' },
-  betrieb:    { name: 'Betrieb & Energie',     farbe: '#b25e00' },
+  betrieb:    { name: 'Fahrzeuge & Betrieb',   farbe: '#b25e00' },
   verwaltung: { name: 'Verwaltung & Abos',     farbe: '#6e6e73' },
   werbung:    { name: 'Werbung',               farbe: '#c02a17' },
 };
@@ -563,21 +568,21 @@ const SAETZE = [
 ];
 
 const LIEFERANTEN = [
-  { id: 'L1',  name: 'Frischwerk Gemüse AG',       strasse: 'Industriestrasse 21', plz: '7302', ort: 'Landquart',   konto: '4200', satz: 2.6, ziel: 30 },
-  { id: 'L2',  name: 'Metzgerei Brunold',          strasse: 'Dorfstrasse 8', plz: '7999', ort: 'Talwies',     konto: '4200', satz: 2.6, ziel: 20 },
-  { id: 'L3',  name: 'Molkerei Säntisblick',       strasse: 'Käsereiweg 3', plz: '9200', ort: 'Gossau',      konto: '4200', satz: 2.6, ziel: 30 },
-  { id: 'L4',  name: 'Weinhandlung Rebgarten',     strasse: 'Weinbergstrasse 14', plz: '7304', ort: 'Maienfeld',   konto: '4210', satz: 8.1, ziel: 30, skonto: [2, 10] },
-  { id: 'L5',  name: 'Getränke Rhyner AG',         strasse: 'Bahnhofstrasse 52', plz: '7320', ort: 'Sargans',     konto: '4210', satz: 2.6, ziel: 30 },
-  { id: 'L6',  name: 'Alpina Grosshandel',         strasse: 'Grossmarktweg 7', plz: '7000', ort: 'Chur',        konto: '4200', satz: 2.6, ziel: 10 },
-  { id: 'L7',  name: 'Kaffeerösterei Bohnenwerk',  strasse: 'Rösterei-Gasse 2', plz: '9470', ort: 'Buchs',       konto: '4210', satz: 2.6, ziel: 30 },
-  { id: 'L8',  name: 'Wäscherei Weissfluh',        strasse: 'Wiesenweg 11', plz: '7999', ort: 'Talwies',     konto: '6040', satz: 8.1, ziel: 30 },
-  { id: 'L9',  name: 'Elektro Caduff GmbH',        strasse: 'Gewerbezone 5', plz: '7999', ort: 'Talwies',     konto: '6100', satz: 8.1, ziel: 30 },
+  { id: 'L1',  name: 'Elektro-Grosshandel Rhein AG', strasse: 'Industriestrasse 21', plz: '7302', ort: 'Landquart',   konto: '4000', satz: 8.1, ziel: 30 },
+  { id: 'L2',  name: 'Datatrade Distribution AG',  strasse: 'Hardstrasse 9', plz: '8957', ort: 'Spreitenbach', konto: '4200', satz: 8.1, ziel: 20 },
+  { id: 'L3',  name: 'Kabelwerk Säntis AG',        strasse: 'Fabrikstrasse 3', plz: '9200', ort: 'Gossau',      konto: '4000', satz: 8.1, ziel: 30 },
+  { id: 'L4',  name: 'Softline Lizenzen AG',       strasse: 'Seestrasse 140', plz: '8800', ort: 'Thalwil',     konto: '4200', satz: 8.1, ziel: 30, skonto: [2, 10] },
+  { id: 'L5',  name: 'Netzwerkhaus Rhyner AG',     strasse: 'Bahnhofstrasse 52', plz: '7320', ort: 'Sargans',     konto: '4200', satz: 8.1, ziel: 30 },
+  { id: 'L6',  name: 'Alpina Grosshandel AG',      strasse: 'Grossmarktweg 7', plz: '7000', ort: 'Chur',        konto: '4200', satz: 8.1, ziel: 10 },
+  { id: 'L7',  name: 'Kaffeeservice Bohnenwerk',   strasse: 'Rösterei-Gasse 2', plz: '9470', ort: 'Buchs',       konto: '6500', satz: 2.6, ziel: 30 },
+  { id: 'L8',  name: 'Reinigung Weissfluh',        strasse: 'Wiesenweg 11', plz: '7999', ort: 'Talwies',     konto: '6040', satz: 8.1, ziel: 30 },
+  { id: 'L9',  name: 'Garage Caduff GmbH',         strasse: 'Gewerbezone 5', plz: '7999', ort: 'Talwies',     konto: '6200', satz: 8.1, ziel: 30 },
   { id: 'L10', name: 'Immobilien Rheinpark AG',    strasse: 'Postplatz 3', plz: '7000', ort: 'Chur',        konto: '6000', satz: 0,   ziel: 0, auto: 'Dauerauftrag' },
   { id: 'L11', name: 'Energiewerk Talwies',        strasse: 'Werkstrasse 1', plz: '7999', ort: 'Talwies',     konto: '6400', satz: 8.1, ziel: 30, auto: 'LSV' },
-  { id: 'L12', name: 'KassaPlus AG',               strasse: 'Hardturmstrasse 120', plz: '8005', ort: 'Zürich',      konto: '6570', satz: 8.1, ziel: 30, auto: 'LSV' },
+  { id: 'L12', name: 'CloudOffice AG',             strasse: 'Hardturmstrasse 120', plz: '8005', ort: 'Zürich',      konto: '6570', satz: 8.1, ziel: 30, auto: 'LSV' },
   { id: 'L13', name: 'Druckerei Rheinbogen',       strasse: 'Druckereiweg 9', plz: '7320', ort: 'Sargans',     konto: '6600', satz: 8.1, ziel: 30 },
   { id: 'L14', name: 'Alpenschutz Versicherungen', strasse: 'Grabenstrasse 30', plz: '7000', ort: 'Chur',        konto: '6300', satz: 0,   ziel: 30 },
-  { id: 'L15', name: 'Tischwerk GmbH',             strasse: 'Hafenstrasse 18', plz: '78462', ort: 'Konstanz (DE)', konto: '6100', satz: 8.1, ziel: 14, waehrung: 'EUR' },
+  { id: 'L15', name: 'Werkplatz GmbH',             strasse: 'Hafenstrasse 18', plz: '78462', ort: 'Konstanz (DE)', konto: '6100', satz: 8.1, ziel: 14, waehrung: 'EUR' },
   { id: 'L16', name: 'Online-Bürobedarf',          strasse: 'Online-Shop', plz: '', ort: 'online',      konto: '6500', satz: 8.1, ziel: 0 },
 ];
 
@@ -591,69 +596,69 @@ const LIEFERANTEN = [
    on the original: [text, quantity, unit price net, rate]. The rate defaults
    to the supplier's usual one; the VAT lines are computed from these. */
 const RECHNUNGEN = [
-  { id: 'K301', lief: 'L1', nr: 'FW-88412', datum: '2026-10-02', eingang: '2026-10-03', stufe: 'abgeglichen', konto: '4200', pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Salatmix Saison, 5 kg', 12, 21.9], ['Karotten, 10 kg', 6, 16.4], ['Kräuter frisch, Bund', 40, 2.95], ['Zwiebeln, 25 kg', 3, 29.5], ['Tomaten Rispe, 6 kg', 10, 24.6], ['Zucchetti, 5 kg', 6, 19.8]] },
-  { id: 'K302', lief: 'L2', nr: '2026-1544', datum: '2026-10-03', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '4200', pos: [['Kalbsschnitzel, kg', 14, 52.5], ['Rindsentrecôte, kg', 12, 61.8], ['Bratwürste, Stk.', 80, 2.4], ['Hackfleisch Rind, kg', 15, 16.9]] },
-  { id: 'K303', lief: 'L4', nr: 'RG-26-0912', datum: '2026-10-05', eingang: '2026-10-06', stufe: 'bezahlt', konto: '4210', bezahltAm: '2026-10-14', pos: [['Maienfelder Pinot Noir 75 cl', 36, 24.5], ['Riesling-Silvaner 75 cl', 24, 17.0], ['Prosecco DOC 75 cl', 30, 15.0], ['Rotwein Hauswein 1 l', 24, 14.5]] },
+  { id: 'K301', lief: 'L1', nr: 'ER-88412', datum: '2026-10-02', eingang: '2026-10-03', stufe: 'abgeglichen', konto: '4000', pos: [['Installationskabel 3×1.5 mm², 100 m', 4, 86.5], ['Leitungsschutzschalter 13 A', 24, 9.8], ['Abzweigdosen AP, 10 Stk.', 6, 16.4], ['Kabelbinder 300 mm, 100 Stk.', 10, 6.95], ['Steckdosen T13 UP', 30, 7.5]] },
+  { id: 'K302', lief: 'L2', nr: '2026-1544', datum: '2026-10-03', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '4200', pos: [['Notebook 14" Business', 3, 812.0], ['Docking-Station USB-C', 3, 168.0], ['Monitor 27" QHD', 2, 274.0]] },
+  { id: 'K303', lief: 'L4', nr: 'SL-26-0912', datum: '2026-10-05', eingang: '2026-10-06', stufe: 'bezahlt', konto: '4200', bezahltAm: '2026-10-14', pos: [['Microsoft 365 Business Standard, 12 Monate', 12, 124.0], ['Virenschutz Business, 24 Lizenzen', 1, 600.0]] },
   { id: 'K304', lief: 'L6', nr: 'A-7720931', datum: '2026-10-06', eingang: '2026-10-06', stufe: 'kontiert', konto: '4200', posKonto: { 5: '4400' },
-    pos: [['Olivenöl extra vergine 5 l', 4, 48.9], ['Reis Carnaroli 5 kg', 3, 22.8], ['Mehl Typ 400, 25 kg', 2, 31.5], ['Pasta Penne 6 kg', 5, 19.9], ['Gewürze Sortiment', 1, 128.4], ['Reinigungsmittel Küche', 4, 29.6, 8.1]] },
-  { id: 'K305', lief: 'L3', nr: 'MS-55190', datum: '2026-10-07', eingang: '2026-10-08', stufe: 'kontiert', konto: '4200', pos: [['Vollrahm 35 %, 5 l', 18, 23.5], ['Butter, 10 kg', 2, 78.4], ['Milch UHT, 12 l', 10, 15.6], ['Gruyère AOP, kg', 4.5, 29.0]] },
-  { id: 'K306', lief: 'L8', nr: 'W-10/26-114', datum: '2026-10-08', eingang: '2026-10-09', stufe: 'kontiert', konto: '6040', pos: [['Tischwäsche, Stk.', 320, 0.9], ['Servietten Stoff, Stk.', 450, 0.32], ['Kochbekleidung Satz', 12, 4.5]] },
-  { id: 'K307', lief: 'L9', nr: 'EC-4471', datum: '2026-10-08', eingang: '2026-10-09', stufe: 'eingang', konto: '6100',
-    vorschlag: { konto: '6100', sicher: 'hoch', grund: 'Wie die letzten 4 Rechnungen dieses Lieferanten' }, pos: [['Service Kühlzelle, Arbeitsstunden', 4, 118.0], ['Thermostat Ersatzteil', 1, 214.0], ['Anfahrt', 1, 56.0]] },
+    pos: [['USB-Sticks 64 GB', 20, 8.9], ['Tastatur & Maus Set', 10, 34.5], ['Netzteil Universal 90 W', 6, 39.0], ['HDMI-Kabel 2 m', 25, 6.9], ['Toner schwarz', 4, 98.4], ['Reinigungstücher Bildschirm', 6, 12.6]] },
+  { id: 'K305', lief: 'L3', nr: 'KS-55190', datum: '2026-10-07', eingang: '2026-10-08', stufe: 'kontiert', konto: '4000', pos: [['Datenkabel Cat6a, 305 m', 4, 238.0], ['Glasfaser-Patchkabel LC/LC', 20, 14.5], ['Keystone-Module Cat6a', 60, 6.2]] },
+  { id: 'K306', lief: 'L8', nr: 'W-10/26-114', datum: '2026-10-08', eingang: '2026-10-09', stufe: 'kontiert', konto: '6040', pos: [['Büroreinigung Oktober', 1, 520.0], ['Fensterreinigung Laden', 1, 180.0], ['Hygienematerial', 1, 46.0]] },
+  { id: 'K307', lief: 'L9', nr: 'GC-4471', datum: '2026-10-08', eingang: '2026-10-09', stufe: 'eingang', konto: '6200',
+    vorschlag: { konto: '6200', sicher: 'hoch', grund: 'Wie die letzten 4 Rechnungen dieses Lieferanten' }, pos: [['Service Lieferwagen, Arbeitsstunden', 3, 118.0], ['Bremsbeläge Satz', 1, 214.0], ['Ölwechsel inkl. Öl', 1, 96.0]] },
   { id: 'K308', lief: 'L2', nr: '2026-1588', datum: '2026-10-10', eingang: '2026-10-12', stufe: 'eingang', konto: '4200',
-    vorschlag: { konto: '4200', sicher: 'hoch', grund: 'Fleisch, wie alle Rechnungen von Metzgerei Brunold' }, pos: [['Kalbsschnitzel, kg', 10, 52.5], ['Lammrücken, kg', 8, 64.9], ['Bratwürste, Stk.', 100, 2.4], ['Speck geräuchert, kg', 6, 24.7]] },
-  { id: 'K309', lief: 'L1', nr: 'FW-88690', datum: '2026-10-12', eingang: '2026-10-13', stufe: 'eingang', konto: '4200',
-    vorschlag: { konto: '4200', sicher: 'hoch', grund: 'Gemüse, wie alle Rechnungen von Frischwerk' }, pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Kürbis Butternut, kg', 30, 3.9], ['Salatmix Saison, 5 kg', 10, 21.9], ['Pilze Saison, kg', 8, 26.5], ['Kräuter frisch, Bund', 36, 2.95]] },
+    vorschlag: { konto: '4200', sicher: 'hoch', grund: 'Hardware für Kunden, wie alle Rechnungen von Datatrade' }, pos: [['Notebook 14" Business', 2, 812.0], ['Monitor 27" QHD', 4, 274.0], ['Docking-Station USB-C', 2, 168.0], ['Headset USB', 6, 49.0]] },
+  { id: 'K309', lief: 'L1', nr: 'ER-88690', datum: '2026-10-12', eingang: '2026-10-13', stufe: 'eingang', konto: '4000',
+    vorschlag: { konto: '4000', sicher: 'hoch', grund: 'Installationsmaterial, wie alle Rechnungen von Elektro-Grosshandel Rhein' }, pos: [['Installationskabel 3×1.5 mm², 100 m', 4, 86.5], ['Kabelkanal 40×60, 2 m', 30, 9.9], ['Steckdosen T13 UP', 10, 7.5], ['LED-Panel 60×60', 8, 64.5], ['Kabelbinder 300 mm, 100 Stk.', 36, 2.95]] },
   { id: 'K310', lief: 'L6', nr: 'A-7721488', datum: '2026-10-13', eingang: '2026-10-13', stufe: 'eingang', konto: '4200',
-    vorschlag: { konto: '4200', sicher: 'mittel', grund: 'Gemischte Rechnung: Lebensmittel auf 4200, das Spülmittel auf 4400 Verbrauchsmaterial — je Position vorgeschlagen' }, posVorschlag: { 4: '4400' },
-    pos: [['Zucker 10 kg', 2, 18.9], ['Mehl Typ 400, 25 kg', 3, 31.5], ['Konserven Tomaten 2.5 kg', 12, 6.9], ['Frittieröl 10 l', 4, 34.9], ['Spülmittel Profi 10 l', 2, 48.1, 8.1]] },
+    vorschlag: { konto: '4200', sicher: 'mittel', grund: 'Gemischte Rechnung: Zubehör für Kunden auf 4200, das Druckerpapier auf 4400 Verbrauchsmaterial — je Position vorgeschlagen' }, posVorschlag: { 4: '4400' },
+    pos: [['Maus kabellos', 12, 18.9], ['USB-C-Hub 7-in-1', 6, 31.5], ['Ladekabel USB-C 2 m', 20, 6.9], ['Notebook-Tasche 14"', 8, 34.9], ['Druckerpapier A4, 5 × 500 Blatt', 6, 26.1]] },
   { id: 'K311', lief: 'L13', nr: 'DR-3381', datum: '2026-10-13', eingang: '2026-10-14', stufe: 'eingang', konto: '6600',
-    vorschlag: { konto: '6600', sicher: 'hoch', grund: 'Druck von Speisekarten — Werbung' }, pos: [['Speisekarten Herbst, A4 gefalzt', 120, 3.5], ['Tischaufsteller Wildwochen', 60, 3.67]] },
-  { id: 'K312', lief: 'L15', nr: 'TW-2026-0418', datum: '2026-10-09', eingang: '2026-10-14', stufe: 'eingang', konto: '6100',
+    vorschlag: { konto: '6600', sicher: 'hoch', grund: 'Flyer und Plakate — Werbung' }, pos: [['Flyer Herbstaktion A5, 4-farbig', 2000, 0.21], ['Plakate A2 Schaufenster', 20, 11.0]] },
+  { id: 'K312', lief: 'L15', nr: 'WP-2026-0418', datum: '2026-10-09', eingang: '2026-10-14', stufe: 'eingang', konto: '6100',
     waehrung: 'EUR', kurs: 0.9381, bezug: true,
-    vorschlag: { konto: '6100', sicher: 'tief', grund: 'Ausländischer Lieferant in EUR: Bezugsteuer prüfen, Kurs vom Rechnungsdatum' }, pos: [['Tischplatten Eiche geölt 80×80', 4, 290.0], ['Montagematerial', 1, 120.0]] },
-  { id: 'K313', lief: 'L7', nr: 'BW-26-772', datum: '2026-10-14', eingang: '2026-10-15', stufe: 'eingang', konto: '4210',
-    vorschlag: { konto: '4210', sicher: 'hoch', grund: 'Kaffee — Wareneinkauf Getränke' }, pos: [['Espresso Bohnen Hausmischung, kg', 16, 29.4], ['Entkalker', 2, 24.0]] },
-  { id: 'K314', lief: 'L1', nr: 'FW-88690', datum: '2026-10-12', eingang: '2026-10-15', stufe: 'eingang', konto: '4200',
-    duplikatVon: 'K309', vorschlag: { konto: '4200', sicher: 'tief', grund: 'Gleiche Nummer und gleicher Betrag wie K309 — vermutlich doppelt per Mail und Post' }, pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Kürbis Butternut, kg', 30, 3.9], ['Salatmix Saison, 5 kg', 10, 21.9], ['Pilze Saison, kg', 8, 26.5], ['Kräuter frisch, Bund', 36, 2.95]] },
-  { id: 'K315', lief: 'L5', nr: 'GR-418820', datum: '2026-10-15', eingang: '2026-10-16', stufe: 'eingang', konto: '4210',
-    klaerung: 'Lieferschein sagt 12 Harassen Mineral, Rechnung verrechnet 14. Bei Getränke Rhyner nachfragen.',
-    vorschlag: { konto: '4210', sicher: 'hoch', grund: 'Getränke, wie alle Rechnungen von Rhyner' },
-    pos: [['Mineral mit Kohlensäure 12×1 l (Harasse)', 14, 14.5], ['Süssgetränke 24×33 cl', 12, 23.5], ['Apfelschorle 24×33 cl', 10, 19.9], ['Bier Lager 20×50 cl', 15, 27.5, 8.1]] },
+    vorschlag: { konto: '6100', sicher: 'tief', grund: 'Ausländischer Lieferant in EUR: Bezugsteuer prüfen, Kurs vom Rechnungsdatum' }, pos: [['Werkbank ESD 160×80', 4, 290.0], ['Montagematerial', 1, 120.0]] },
+  { id: 'K313', lief: 'L7', nr: 'BW-26-772', datum: '2026-10-14', eingang: '2026-10-15', stufe: 'eingang', konto: '6500',
+    vorschlag: { konto: '6500', sicher: 'hoch', grund: 'Kaffee für Büro und Kunden — Büro & Verwaltung' }, pos: [['Kaffeebohnen Hausmischung, kg', 16, 29.4], ['Entkalker', 2, 24.0, 8.1]] },
+  { id: 'K314', lief: 'L1', nr: 'ER-88690', datum: '2026-10-12', eingang: '2026-10-15', stufe: 'eingang', konto: '4000',
+    duplikatVon: 'K309', vorschlag: { konto: '4000', sicher: 'tief', grund: 'Gleiche Nummer und gleicher Betrag wie K309 — vermutlich doppelt per Mail und Post' }, pos: [['Installationskabel 3×1.5 mm², 100 m', 4, 86.5], ['Kabelkanal 40×60, 2 m', 30, 9.9], ['Steckdosen T13 UP', 10, 7.5], ['LED-Panel 60×60', 8, 64.5], ['Kabelbinder 300 mm, 100 Stk.', 36, 2.95]] },
+  { id: 'K315', lief: 'L5', nr: 'NR-418820', datum: '2026-10-15', eingang: '2026-10-16', stufe: 'eingang', konto: '4200',
+    klaerung: 'Lieferschein sagt 12 Switches, Rechnung verrechnet 14. Bei Netzwerkhaus Rhyner nachfragen.',
+    vorschlag: { konto: '4200', sicher: 'hoch', grund: 'Netzwerk-Hardware, wie alle Rechnungen von Rhyner' },
+    pos: [['Switch 8 Port unmanaged', 14, 34.5], ['Patchkabel Cat6 2 m, 10er-Pack', 12, 23.5], ['Steckdosenleiste 6-fach', 10, 19.9], ['Netzwerktester', 1, 412.5]] },
   { id: 'K316', lief: 'L14', nr: 'POL-55-881', datum: '2026-10-01', eingang: '2026-10-02', stufe: 'kontiert', konto: '6300',
-    raten: [{ betrag: 1620, faellig: '2026-10-01', bezahltAm: '2026-10-01' }, { betrag: 1620, faellig: '2026-11-02' }], pos: [['Betriebshaftpflicht 2026/27', 1, 1890.0], ['Sachversicherung Inventar 2026/27', 1, 1350.0]] },
+    raten: [{ betrag: 1620, faellig: '2026-10-01', bezahltAm: '2026-10-01' }, { betrag: 1620, faellig: '2026-11-02' }], pos: [['Betriebshaftpflicht 2026/27', 1, 1890.0], ['Sachversicherung Inventar & Lager 2026/27', 1, 1350.0]] },
   // automatic: standing order and direct debits — nothing to do but match
-  { id: 'K317', lief: 'L10', nr: 'Miete 10/2026', datum: '2026-10-01', eingang: '2026-10-01', stufe: 'abgeglichen', konto: '6000', auto: true, pos: [['Mietzins Oktober 2026, Restaurantfläche', 1, 9600.0], ['Nebenkosten akonto', 1, 800.0]] },
-  { id: 'K318', lief: 'L11', nr: 'EW-0926-3318', datum: '2026-10-05', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '6400', auto: true, pos: [['Strom September 2026', 1, 1288.4], ['Netznutzung', 1, 324.0]] },
-  { id: 'K319', lief: 'L12', nr: 'KP-26-10-0071', datum: '2026-10-01', eingang: '2026-10-01', stufe: 'bezahlt', konto: '6570', auto: true, bezahltAm: '2026-10-15', pos: [['Kassensystem Abo Oktober', 1, 149.0], ['Zusatzterminal', 1, 40.0]] },
+  { id: 'K317', lief: 'L10', nr: 'Miete 10/2026', datum: '2026-10-01', eingang: '2026-10-01', stufe: 'abgeglichen', konto: '6000', auto: true, pos: [['Mietzins Oktober 2026, Büro, Laden & Werkstatt', 1, 4200.0], ['Nebenkosten akonto', 1, 450.0]] },
+  { id: 'K318', lief: 'L11', nr: 'EW-0926-3318', datum: '2026-10-05', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '6400', auto: true, pos: [['Strom September 2026', 1, 512.4], ['Netznutzung', 1, 168.0]] },
+  { id: 'K319', lief: 'L12', nr: 'CO-26-10-0071', datum: '2026-10-01', eingang: '2026-10-01', stufe: 'bezahlt', konto: '6570', auto: true, bezahltAm: '2026-10-15', pos: [['Business-Software Abo Oktober', 1, 149.0], ['Zusatzlizenz', 1, 40.0]] },
 ];
 
 /* Bank lines, October to date. Negative = money out. A line is matched when
-   «zu» points at what explains it; «abgeschlossen» marks it as done for the
-   Treuhänder. Lines without «zu» are the open work: a receipt is missing or a
-   match has to be confirmed. */
+   «zu» points at what explains it; «abgeschlossen» marks it as handed over to
+   the Treuhänder. Lines without «zu» are the open work: a receipt is missing
+   or a match has to be confirmed. */
 const BANK = [
   { id: 'B5100', datum: '2026-10-01', text: 'Zahlung Alpenschutz Versicherungen POL-55-881 Rate 1/2', betrag: -1620.00, zu: { typ: 'kreditor', ref: 'K316' }, abgeschlossen: true },
-  { id: 'B5101', datum: '2026-10-01', text: 'Dauerauftrag Immobilien Rheinpark AG Miete 10/2026', betrag: -10400.00, zu: { typ: 'kreditor', ref: 'K317' }, abgeschlossen: true },
-  { id: 'B5102', datum: '2026-10-01', text: 'Gutschrift Kartenterminal Abrechnung 30.09.', betrag: 3984.20, zu: { typ: 'karten' }, abgeschlossen: true },
-  { id: 'B5103', datum: '2026-10-02', text: 'Gutschrift Kartenterminal Abrechnung 01.10.', betrag: 2210.65, zu: { typ: 'karten' }, abgeschlossen: true },
+  { id: 'B5101', datum: '2026-10-01', text: 'Dauerauftrag Immobilien Rheinpark AG Miete 10/2026', betrag: null, zu: { typ: 'kreditor', ref: 'K317' }, abgeschlossen: true },
+  { id: 'B5102', datum: '2026-10-01', text: 'Gutschrift Kartenterminal Abrechnung 30.09.', betrag: 1284.20, zu: { typ: 'karten' }, abgeschlossen: true },
+  { id: 'B5103', datum: '2026-10-02', text: 'Gutschrift Kartenterminal Abrechnung 01.10.', betrag: 910.65, zu: { typ: 'karten' }, abgeschlossen: true },
   { id: 'B5104', datum: '2026-10-02', text: 'Online Einkauf Online-Bürobedarf Debit Mastercard', betrag: -64.90, zu: null },
   { id: 'B5105', datum: '2026-10-05', text: 'LSV Energiewerk Talwies EW-0926-3318', betrag: null, zu: { typ: 'kreditor', ref: 'K318' }, abgeschlossen: true },
-  { id: 'B5106', datum: '2026-10-05', text: 'Zahlung Frischwerk Gemüse AG FW-88412', betrag: null, zu: { typ: 'kreditor', ref: 'K301' }, abgeschlossen: true },
-  { id: 'B5107', datum: '2026-10-06', text: 'Bareinzahlung Bancomat Talwies', betrag: 9000.00, zu: { typ: 'kasse', ref: 'E-1006' }, abgeschlossen: true },
-  { id: 'B5108', datum: '2026-10-06', text: 'Online Einkauf Streaming-Musik Business Debit Mastercard', betrag: -29.90, zu: null },
-  { id: 'B5109', datum: '2026-10-07', text: 'Zahlung Metzgerei Brunold 2026-1544', betrag: null, zu: { typ: 'kreditor', ref: 'K302' }, abgeschlossen: true },
-  { id: 'B5110', datum: '2026-10-08', text: 'Gutschrift Kartenterminal Abrechnung 07.10.', betrag: 3412.80, zu: { typ: 'karten' }, abgeschlossen: true },
+  { id: 'B5106', datum: '2026-10-05', text: 'Zahlung Elektro-Grosshandel Rhein AG ER-88412', betrag: null, zu: { typ: 'kreditor', ref: 'K301' }, abgeschlossen: true },
+  { id: 'B5107', datum: '2026-10-06', text: 'Bareinzahlung Bancomat Talwies', betrag: 1400.00, zu: { typ: 'kasse', ref: 'E-1006' }, abgeschlossen: true },
+  { id: 'B5108', datum: '2026-10-06', text: 'Online Einkauf Streaming-Musik Business Debit Mastercard', betrag: -29.90, zu: null,
+    klaerung: 'Kein Firmen-Abo bekannt. Wer hat das mit der Firmenkarte abgeschlossen?' },
+  { id: 'B5109', datum: '2026-10-07', text: 'Zahlung Datatrade Distribution AG 2026-1544', betrag: null, zu: { typ: 'kreditor', ref: 'K302' }, abgeschlossen: true },
+  { id: 'B5110', datum: '2026-10-08', text: 'Gutschrift Kartenterminal Abrechnung 07.10.', betrag: 1412.80, zu: { typ: 'karten' }, abgeschlossen: true },
   { id: 'B5111', datum: '2026-10-08', text: 'Gutschrift Kundenzahlung Bauunternehmung Gantenbein AG Rg 2026091', betrag: null, zu: { typ: 'debitor', ref: 'D2026091' }, abgeschlossen: false },
-  { id: 'B5112', datum: '2026-10-09', text: 'Online Einkauf Tankstelle Talwies Debit Mastercard', betrag: -82.40, zu: null,
-    klaerung: 'Das Restaurant hat kein Geschäftsauto. Wer hat mit der Firmenkarte getankt?' },
-  { id: 'B5113', datum: '2026-10-12', text: 'Gutschrift Kartenterminal Abrechnung 09.–11.10.', betrag: 9874.35, zu: { typ: 'karten' }, abgeschlossen: false },
-  { id: 'B5114', datum: '2026-10-12', text: 'Twint Abrechnung 05.–11.10.', betrag: 1288.60, zu: { typ: 'karten' }, abgeschlossen: false },
+  { id: 'B5112', datum: '2026-10-09', text: 'Online Einkauf Tankstelle Talwies Debit Mastercard', betrag: -82.40, zu: null },
+  { id: 'B5113', datum: '2026-10-12', text: 'Gutschrift Kartenterminal Abrechnung 09.–11.10.', betrag: 2874.35, zu: { typ: 'karten' }, abgeschlossen: false },
+  { id: 'B5114', datum: '2026-10-12', text: 'Twint Abrechnung 05.–11.10.', betrag: 288.60, zu: { typ: 'karten' }, abgeschlossen: false },
   { id: 'B5115', datum: '2026-10-13', text: 'Bankspesen Kontoführung 09/2026', betrag: -18.00, zu: { typ: 'spesen' }, abgeschlossen: false },
-  { id: 'B5116', datum: '2026-10-13', text: 'Bareinzahlung Bancomat Talwies', betrag: 12000.00, zu: { typ: 'kasse', ref: 'E-1013' }, abgeschlossen: false },
-  { id: 'B5117', datum: '2026-10-14', text: 'Zahlung Weinhandlung Rebgarten RG-26-0912 abzgl. 2 % Skonto', betrag: -2211.99, zu: null },
+  { id: 'B5116', datum: '2026-10-13', text: 'Bareinzahlung Bancomat Talwies', betrag: 1800.00, zu: { typ: 'kasse', ref: 'E-1013' }, abgeschlossen: false },
+  { id: 'B5117', datum: '2026-10-14', text: 'Zahlung Softline Lizenzen AG SL-26-0912 abzgl. 2 % Skonto', betrag: -2211.99, zu: null },
   { id: 'B5118', datum: '2026-10-14', text: 'Online Einkauf Online-Bürobedarf Debit Mastercard', betrag: -132.45, zu: null },
-  { id: 'B5119', datum: '2026-10-15', text: 'LSV KassaPlus AG KP-26-10-0071', betrag: null, zu: null },
+  { id: 'B5119', datum: '2026-10-15', text: 'LSV CloudOffice AG CO-26-10-0071', betrag: null, zu: null },
   { id: 'B5120', datum: '2026-10-15', text: 'Gutschrift Kundenzahlung Gemeinde Talwies Rg 2026097 Teilzahlung', betrag: 500.00, zu: null },
   { id: 'B5121', datum: '2026-10-15', text: 'Lohnzahlungen September 2026 Sammelauftrag', betrag: -31840.25, zu: { typ: 'lohn' }, abgeschlossen: false },
   { id: 'B5122', datum: '2026-10-16', text: 'Online Einkauf Werbeanzeige Social Media Debit Mastercard', betrag: -45.00, zu: null },
@@ -674,58 +679,57 @@ const FREIGABEN = [
 const BANK_HINWEIS = {
   B5104: { art: 'beleg', text: 'Beleg fehlt noch — Quittung aus dem Online-Konto hochladen', konto: '6500' },
   B5108: { art: 'beleg', text: 'Beleg fehlt noch — Abo-Rechnung herunterladen', konto: '6570' },
-  B5112: { art: 'beleg', text: 'Beleg fehlt noch — Tankquittung', konto: '6100' },
-  B5117: { art: 'vorschlag', text: 'Rechnung RG-26-0912 von Weinhandlung Rebgarten, mit 2 % Skonto bezahlt', ref: 'K303' },
+  B5112: { art: 'beleg', text: 'Beleg fehlt noch — Tankquittung Lieferwagen', konto: '6200' },
+  B5117: { art: 'vorschlag', text: 'Rechnung SL-26-0912 von Softline Lizenzen AG, mit 2 % Skonto bezahlt', ref: 'K303' },
   B5118: { art: 'beleg', text: 'Beleg fehlt noch — Bestellbestätigung', konto: '6500' },
-  B5119: { art: 'vorschlag', text: 'Passt zu Rechnung KP-26-10-0071 von KassaPlus AG', ref: 'K319' },
+  B5119: { art: 'vorschlag', text: 'Passt zu Rechnung CO-26-10-0071 von CloudOffice AG', ref: 'K319' },
   B5120: { art: 'vorschlag', text: 'Teilzahlung zu Kundenrechnung 2026097 der Gemeinde Talwies', ref: 'D2026097', typ: 'debitor' },
   B5122: { art: 'beleg', text: 'Beleg fehlt noch — Rechnung der Werbeplattform', konto: '6600' },
 };
 
-/* Kasse — every service day of October so far. Monday is Ruhetag. Cash is
-   gross takings in cash; tips belong to the team and are paid out, so the
-   amount that has to reach the bank is cash minus tips minus cash expenses. */
+/* Kasse — the shop counter. Every opening day of October so far (Monday to
+   Saturday); the amount is what customers paid in cash. Cards and Twint go
+   to the bank through the terminal and do not touch the till. */
 const KASSE_TAGE = [
-  ['2026-10-01', 1840.50, 96.00], ['2026-10-02', 2215.00, 121.50], ['2026-10-03', 2980.40, 168.00],
-  ['2026-10-04', 2410.80, 140.00], ['2026-10-06', 1388.20, 72.00], ['2026-10-07', 1505.90, 80.50],
-  ['2026-10-08', 1620.40, 88.00], ['2026-10-09', 2190.70, 118.00], ['2026-10-10', 3120.60, 176.50],
-  ['2026-10-11', 2580.30, 150.00], ['2026-10-13', 1420.10, 70.00], ['2026-10-14', 1612.80, 84.00],
-  ['2026-10-15', 1710.40, 95.50],
-].map(([datum, bar, tip]) => ({ datum, bar, tip }));
+  ['2026-10-01', 312.40], ['2026-10-02', 468.90], ['2026-10-03', 295.50], ['2026-10-05', 384.20],
+  ['2026-10-06', 256.80], ['2026-10-07', 341.60], ['2026-10-08', 402.30], ['2026-10-09', 515.70],
+  ['2026-10-10', 288.90], ['2026-10-12', 377.50], ['2026-10-13', 298.40], ['2026-10-14', 431.20],
+  ['2026-10-15', 365.70],
+].map(([datum, bar]) => ({ datum, bar }));
 const KASSE_BEWEGUNGEN = [
-  { id: 'E-1006', datum: '2026-10-06', art: 'bancomat', betrag: 9000.00, notiz: 'Einzahlung Woche 40', bank: 'B5107' },
-  { id: 'E-1009', datum: '2026-10-09', art: 'auszahlung', betrag: 86.40, notiz: 'Blumen Tischdeko, Markt', konto: '6500', beleg: 'Quittung_Blumenmarkt.jpg', satz: 2.6 },
-  // the till counted after Sunday service: 20 francs short
-  { id: 'E-1011', datum: '2026-10-11', art: 'zaehlung', betrag: -20.00, notiz: 'Wechselgeld falsch herausgegeben' },
-  { id: 'E-1013', datum: '2026-10-13', art: 'bancomat', betrag: 12000.00, notiz: 'Einzahlung Woche 41', bank: 'B5116' },
+  { id: 'E-1006', datum: '2026-10-06', art: 'bancomat', betrag: 1400.00, notiz: 'Einzahlung Woche 40', bank: 'B5107' },
+  { id: 'E-1009', datum: '2026-10-09', art: 'auszahlung', betrag: 86.40, notiz: 'Blumen Empfang, Markt', konto: '6500', beleg: 'Quittung_Blumenmarkt.jpg', satz: 2.6 },
+  // the till counted after Saturday's opening hours: 20 francs short
+  { id: 'E-1010', datum: '2026-10-10', art: 'zaehlung', betrag: -20.00, notiz: 'Wechselgeld falsch herausgegeben' },
+  { id: 'E-1013', datum: '2026-10-13', art: 'bancomat', betrag: 1800.00, notiz: 'Einzahlung Woche 41', bank: 'B5116' },
 ];
-const KASSE_ANFANG = 1200.00;   // Wechselgeld-Bestand am 1. Oktober
+const KASSE_ANFANG = 300.00;   // Wechselgeld-Bestand am 1. Oktober
 
 const KUNDEN = [
   { id: 'C1',  name: 'Bauunternehmung Gantenbein AG', kontakt: 'Herr R. Gantenbein', strasse: 'Industriestrasse 4', ort: '7999 Talwies', anrede: 'sie', mail: 'buchhaltung@gantenbein.example', ziel: 30 },
   { id: 'C2',  name: 'Gemeinde Talwies',              kontakt: 'Gemeindekanzlei',     strasse: 'Dorfplatz 1',        ort: '7999 Talwies', anrede: 'sie', mail: 'kanzlei@talwies.example', ziel: 30 },
   { id: 'C3',  name: 'Turnverein Talwies',            kontakt: 'Sandro Meli',         strasse: 'Turnhallenweg 2',    ort: '7999 Talwies', anrede: 'du',  mail: 'kasse@tv-talwies.example', ziel: 20 },
   { id: 'C4',  name: 'Praxis Dr. Albertin',           kontakt: 'Frau Dr. M. Albertin', strasse: 'Bahnhofweg 9',      ort: '7999 Talwies', anrede: 'sie', mail: 'praxis@albertin.example', ziel: 30 },
-  { id: 'C5',  name: 'Hochzeit Casutt-Derungs',       kontakt: 'Nina Casutt',         strasse: 'Rebweg 17',          ort: '7998 Obertal', anrede: 'du',  mail: 'nina.casutt@mail.example', ziel: 14 },
+  { id: 'C5',  name: 'Familie Casutt',                kontakt: 'Nina Casutt',         strasse: 'Rebweg 17',          ort: '7998 Obertal', anrede: 'du',  mail: 'nina.casutt@mail.example', ziel: 14 },
   { id: 'C6',  name: 'Garage Bergün AG',              kontakt: 'Herr P. Bergün',      strasse: 'Kantonsstrasse 40',  ort: '7998 Obertal', anrede: 'sie', mail: 'admin@garage-berguen.example', ziel: 30 },
   { id: 'C7',  name: 'Schreinerei Flütsch',           kontakt: 'Marco Flütsch',       strasse: 'Werkstrasse 3',      ort: '7999 Talwies', anrede: 'du',  mail: 'marco@fluetsch.example', ziel: 30 },
   { id: 'C8',  name: 'Weingut Sonnenrain',            kontakt: 'Frau A. Hunger',      strasse: 'Sonnenrain 1',       ort: '7997 Rebstal', anrede: 'sie', mail: 'office@sonnenrain.example', ziel: 30 },
   { id: 'C9',  name: 'Skiclub Piz Talwies',           kontakt: 'Jon Caviezel',        strasse: 'Postfach 12',        ort: '7999 Talwies', anrede: 'du',  mail: 'kasse@skiclub.example', ziel: 30 },
-  { id: 'C10', name: 'Raiffeisen-Gruppe Talwies',     kontakt: 'Frau S. Item',        strasse: 'Bahnhofstrasse 2',   ort: '7999 Talwies', anrede: 'sie', mail: 'events@rg-talwies.example', ziel: 30 },
+  { id: 'C10', name: 'Regionalbank Talwies',          kontakt: 'Frau S. Item',        strasse: 'Bahnhofstrasse 2',   ort: '7999 Talwies', anrede: 'sie', mail: 'it@regionalbank-talwies.example', ziel: 30 },
 ];
 
-/* Register receipts the guest asked to have invoiced. «tisch», «gedecke» and
-   the lines come from the till; the invoice is built from them, so nobody
-   retypes thirty positions. */
-const KASSENBELEGE = [
-  { id: 'Q-55120', datum: '2026-10-14', tisch: 'Saal', gedecke: 22, kunde: 'C10', notiz: 'Apéro riche nach Generalversammlung',
-    pos: [['Apéro riche pro Person', 22, 32.0], ['Prosecco 75 cl', 8, 54.0], ['Mineral 1 l', 10, 7.5], ['Kaffee', 18, 4.8]] },
-  { id: 'Q-55138', datum: '2026-10-15', tisch: '12', gedecke: 6, kunde: null, notiz: 'Gast bittet um Rechnung an Firma — Adresse fehlt noch',
-    pos: [['Tagesmenü', 6, 26.5], ['Mineral 0.5 l', 6, 5.2], ['Kaffee', 6, 4.8]] },
+/* Work reports not yet invoiced. A technician fills one in on site — what
+   was done, the hours, the parts — and the customer signs it; the invoice is
+   built from it, so nobody retypes the lines. */
+const RAPPORTE = [
+  { id: 'R-4120', datum: '2026-10-14', auftrag: 'Netzwerk-Erweiterung Schalterhalle', techniker: 'Luca Derungs', kunde: 'C10', notiz: 'Zwei neue Arbeitsplätze am Schalter angeschlossen',
+    pos: [['Arbeit Netzwerktechniker, Std.', 9, 128.0], ['Switch 24 Port PoE', 2, 489.0], ['Patchkabel Cat6, Stk.', 30, 6.5], ['Anfahrt Pauschale', 2, 45.0]] },
+  { id: 'R-4126', datum: '2026-10-15', auftrag: 'Druckerstörung behoben', techniker: 'Anna Gartmann', kunde: null, notiz: 'Kunde bittet um Rechnung an seine Firma — Adresse fehlt noch',
+    pos: [['Arbeit Supporttechniker, Std.', 1.5, 118.0], ['Fixiereinheit Ersatzteil', 1, 186.0], ['Anfahrt Pauschale', 1, 45.0]] },
 ];
 
 /* Kundenrechnungen. Stages, in order:
-     entwurf    built from the receipt, not yet released
+     entwurf    built from the work report, not yet released
      freigabe   waiting for the owner's release before it goes out
      versendet  sent — open until paid; «mahnstufe» counts reminders
      bezahlt    fully paid
@@ -733,50 +737,50 @@ const KASSENBELEGE = [
    a line in «protokoll», a cancellation needs a reason. */
 const DEBITOREN = [
   { id: 'D2026091', kunde: 'C1', datum: '2026-09-18', faellig: '2026-10-18', stufe: 'bezahlt', satz: 8.1,
-    pos: [['Firmenessen Menü «Herbst»', 18, 68.0], ['Wein Maienfelder 75 cl', 6, 58.0], ['Mineral 1 l', 8, 7.5]],
+    pos: [['IT-Support Pauschale September', 1, 980.0], ['Arbeit Systemtechniker, Std.', 4, 128.0], ['Notebook 14" Business, inkl. Einrichtung', 1, 1290.0]],
     zahlungen: [{ datum: '2026-10-08', betrag: null, weg: 'Bank', bank: 'B5111' }],
-    protokoll: [['2026-09-18 16:40', 'Erstellt aus Kassenbeleg Q-54810'], ['2026-09-18 17:02', 'Von Lea Brunner freigegeben und per Mail versendet'], ['2026-10-08 09:12', 'Zahlung über Bank zugeordnet — bezahlt']] },
+    protokoll: [['2026-09-18 16:40', 'Erstellt aus Rapport R-4071'], ['2026-09-18 17:02', 'Von Lea Brunner freigegeben und per Mail versendet'], ['2026-10-08 09:12', 'Zahlung über Bank zugeordnet — bezahlt']] },
   { id: 'D2026094', kunde: 'C3', datum: '2026-09-21', faellig: '2026-10-11', stufe: 'versendet', satz: 8.1, mahnstufe: 0,
-    pos: [['Vereinsessen Pasta-Buffet', 34, 24.0], ['Bier vom Fass 3 dl', 52, 5.5], ['Mineral 1 l', 12, 7.5]],
-    zahlungen: [], protokoll: [['2026-09-21 22:15', 'Erstellt aus Kassenbeleg Q-54872'], ['2026-09-22 08:30', 'Freigegeben und per Mail versendet']] },
+    pos: [['Website Hosting & Pflege 2026/27', 1, 480.0], ['Arbeit Webentwicklung, Std.', 5, 98.0], ['Domain, 1 Jahr', 1, 22.0]],
+    zahlungen: [], protokoll: [['2026-09-21 16:15', 'Erstellt aus Rapport R-4083'], ['2026-09-22 08:30', 'Freigegeben und per Mail versendet']] },
   { id: 'D2026097', kunde: 'C2', datum: '2026-09-30', faellig: '2026-10-30', stufe: 'versendet', satz: 8.1, mahnstufe: 0,
-    pos: [['Seniorenmittag Menü', 42, 22.0], ['Kaffee & Dessert', 42, 8.5], ['Mineral 1 l', 14, 7.5]],
-    zahlungen: [], protokoll: [['2026-09-30 15:10', 'Erstellt aus Kassenbeleg Q-55011'], ['2026-09-30 16:00', 'Freigegeben und per Mail versendet']] },
+    pos: [['Netzwerk-Wartung Gemeindehaus Q3', 1, 840.0], ['Arbeit Netzwerktechniker, Std.', 3, 128.0], ['Firewall-Lizenz Verlängerung 1 Jahr', 1, 390.0]],
+    zahlungen: [], protokoll: [['2026-09-30 15:10', 'Erstellt aus Rapport R-4098'], ['2026-09-30 16:00', 'Freigegeben und per Mail versendet']] },
   { id: 'D2026098', kunde: 'C5', datum: '2026-10-04', faellig: '2026-10-18', stufe: 'versendet', satz: 8.1, mahnstufe: 0,
-    pos: [['Hochzeitsmenü 4 Gänge', 64, 89.0], ['Weinbegleitung pauschal', 64, 28.0], ['Apéro', 70, 18.0], ['Mitternachtssnack', 50, 9.0]],
+    pos: [['Heimnetz & WLAN Einrichtung Neubau', 1, 1850.0], ['WLAN Access Point', 4, 219.0], ['Netzwerkschrank 12 HE inkl. Montage', 1, 1180.0], ['Arbeit Netzwerktechniker, Std.', 22, 118.0], ['Kleinmaterial Pauschale', 1, 260.0]],
     zahlungen: [{ datum: '2026-09-15', betrag: 2000.00, weg: 'Bank', notiz: 'Anzahlung' }],
-    protokoll: [['2026-10-04 23:50', 'Erstellt aus Kassenbeleg Q-55062'], ['2026-10-05 10:20', 'Anzahlung CHF 2’000 vom 15.09. angerechnet'], ['2026-10-05 10:24', 'Freigegeben und per Mail versendet']] },
+    protokoll: [['2026-10-04 17:50', 'Erstellt aus Rapport R-4105'], ['2026-10-05 10:20', 'Anzahlung CHF 2’000 vom 15.09. angerechnet'], ['2026-10-05 10:24', 'Freigegeben und per Mail versendet']] },
   { id: 'D2026086', kunde: 'C6', datum: '2026-08-28', faellig: '2026-09-27', stufe: 'versendet', satz: 8.1, mahnstufe: 1,
-    pos: [['Geschäftsessen à la carte', 1, 412.0], ['Wein', 1, 96.0]],
-    zahlungen: [], protokoll: [['2026-08-28 21:30', 'Erstellt aus Kassenbeleg Q-54620'], ['2026-08-29 09:00', 'Freigegeben und per Mail versendet'], ['2026-10-02 08:00', 'Zahlungserinnerung versendet']] },
+    pos: [['Kassendrucker Ersatz inkl. Installation', 1, 412.0], ['Arbeit Supporttechniker, Std.', 0.75, 128.0]],
+    zahlungen: [], protokoll: [['2026-08-28 16:30', 'Erstellt aus Rapport R-4040'], ['2026-08-29 09:00', 'Freigegeben und per Mail versendet'], ['2026-10-02 08:00', 'Zahlungserinnerung versendet']] },
   { id: 'D2026099', kunde: 'C8', datum: '2026-10-10', faellig: '2026-11-09', stufe: 'freigabe', satz: 8.1,
-    pos: [['Weindegustation mit Menü', 28, 74.0], ['Raummiete Saal', 1, 250.0]],
-    zahlungen: [], protokoll: [['2026-10-10 23:10', 'Erstellt aus Kassenbeleg Q-55101'], ['2026-10-11 09:00', 'Zur Freigabe an Lea Brunner vorgelegt']] },
+    pos: [['Webshop-Anbindung Warenwirtschaft', 1, 1650.0], ['Arbeit Webentwicklung, Std.', 6, 98.0]],
+    zahlungen: [], protokoll: [['2026-10-10 17:10', 'Erstellt aus Rapport R-4112'], ['2026-10-11 09:00', 'Zur Freigabe an Lea Brunner vorgelegt']] },
   { id: 'D2026100', kunde: 'C4', datum: '2026-10-15', faellig: '2026-11-14', stufe: 'entwurf', satz: 8.1,
-    pos: [['Praxisessen Mittag', 8, 34.0], ['Mineral 0.5 l', 8, 5.2]],
-    zahlungen: [], protokoll: [['2026-10-15 14:05', 'Erstellt aus Kassenbeleg Q-55131']] },
+    pos: [['PC-Arbeitsplatz komplett', 2, 1180.0], ['Arbeit Systemtechniker, Std.', 3.5, 128.0]],
+    zahlungen: [], protokoll: [['2026-10-15 14:05', 'Erstellt aus Rapport R-4123']] },
 ];
 
 /* Six closed months, the history the charts and Kosten read. Each month is
    the sum of what was booked to each account — the October column is NOT in
    here; it is computed live from the documents above. */
 const VERLAUF = [
-  { monat: '2026-04', umsatz: { '3200': 52400, '3210': 21800, '3280': 4100 }, kosten: { '4200': 16120, '4210': 6240, '4400': 980, '5000': 33100, '5700': 4630, '6000': 10400, '6040': 1180, '6100': 980, '6300': 540, '6400': 1720, '6500': 410, '6570': 690, '6600': 380, '6800': 1210 } },
-  { monat: '2026-05', umsatz: { '3200': 61200, '3210': 26100, '3280': 7900 }, kosten: { '4200': 19310, '4210': 7420, '4400': 1120, '5000': 35800, '5700': 5010, '6000': 10400, '6040': 1310, '6100': 2340, '6300': 540, '6400': 1610, '6500': 380, '6570': 690, '6600': 920, '6800': 1430 } },
-  { monat: '2026-06', umsatz: { '3200': 66800, '3210': 31400, '3280': 9200 }, kosten: { '4200': 20870, '4210': 8930, '4400': 1240, '5000': 37200, '5700': 5210, '6000': 10400, '6040': 1420, '6100': 760, '6300': 540, '6400': 1490, '6500': 520, '6570': 690, '6600': 410, '6800': 1610 } },
-  { monat: '2026-07', umsatz: { '3200': 72300, '3210': 35900, '3280': 6400 }, kosten: { '4200': 22410, '4210': 10180, '4400': 1310, '5000': 38900, '5700': 5450, '6000': 10400, '6040': 1530, '6100': 1180, '6300': 540, '6400': 1420, '6500': 360, '6570': 690, '6600': 380, '6800': 1740 } },
-  { monat: '2026-08', umsatz: { '3200': 70100, '3210': 34200, '3280': 5100 }, kosten: { '4200': 21980, '4210': 9840, '4400': 1260, '5000': 38600, '5700': 5400, '6000': 10400, '6040': 1490, '6100': 3420, '6300': 540, '6400': 1450, '6500': 440, '6570': 690, '6600': 380, '6800': 1690 } },
-  { monat: '2026-09', umsatz: { '3200': 58900, '3210': 24600, '3280': 8800 }, kosten: { '4200': 18210, '4210': 7210, '4400': 1080, '5000': 35900, '5700': 5020, '6000': 10400, '6040': 1270, '6100': 640, '6300': 3780, '6400': 1560, '6500': 390, '6570': 690, '6600': 1240, '6800': 1450 } },
+  { monat: '2026-04', umsatz: { '3200': 34800, '3400': 41200, '3600': 5600 }, kosten: { '4000': 9100, '4200': 22600, '4400': 640, '5000': 29800, '5700': 4170, '6000': 4650, '6040': 690, '6100': 380, '6200': 1980, '6300': 540, '6400': 610, '6500': 420, '6570': 880, '6600': 460, '6800': 380 } },
+  { monat: '2026-05', umsatz: { '3200': 39100, '3400': 45800, '3600': 5600 }, kosten: { '4000': 10400, '4200': 25300, '4400': 710, '5000': 31200, '5700': 4370, '6000': 4650, '6040': 690, '6100': 1240, '6200': 2110, '6300': 540, '6400': 560, '6500': 380, '6570': 880, '6600': 1120, '6800': 410 } },
+  { monat: '2026-06', umsatz: { '3200': 41800, '3400': 49900, '3600': 5600 }, kosten: { '4000': 11800, '4200': 27100, '4400': 760, '5000': 32600, '5700': 4560, '6000': 4650, '6040': 690, '6100': 420, '6200': 2240, '6300': 540, '6400': 520, '6500': 510, '6570': 880, '6600': 470, '6800': 440 } },
+  { monat: '2026-07', umsatz: { '3200': 36200, '3400': 43100, '3600': 5700 }, kosten: { '4000': 9900, '4200': 23400, '4400': 690, '5000': 33100, '5700': 4630, '6000': 4650, '6040': 690, '6100': 610, '6200': 2050, '6300': 540, '6400': 490, '6500': 360, '6570': 880, '6600': 380, '6800': 390 } },
+  { monat: '2026-08', umsatz: { '3200': 33900, '3400': 39800, '3600': 5700 }, kosten: { '4000': 9200, '4200': 21900, '4400': 650, '5000': 32800, '5700': 4590, '6000': 4650, '6040': 690, '6100': 2840, '6200': 2190, '6300': 540, '6400': 500, '6500': 440, '6570': 880, '6600': 380, '6800': 370 } },
+  { monat: '2026-09', umsatz: { '3200': 40600, '3400': 48200, '3600': 5800 }, kosten: { '4000': 11600, '4200': 26900, '4400': 720, '5000': 32400, '5700': 4540, '6000': 4650, '6040': 690, '6100': 520, '6200': 2310, '6300': 3780, '6400': 530, '6500': 390, '6570': 880, '6600': 1240, '6800': 420 } },
 ];
 /* The share of revenue each cost group should stay under — the targets the
    owner set with the Treuhänder. Kosten measures against these. */
-const ZIELE = { waren: 30, personal: 44, raum: 13, betrieb: 5, verwaltung: 5, werbung: 1.5 };
+const ZIELE = { waren: 40, personal: 42, raum: 7, betrieb: 5, verwaltung: 4, werbung: 1.5 };
 
-/* What the October revenue is so far (register Z-reports, net of VAT),
-   needed for the live month column. Bank and cash only show what moved, not
-   what was earned. */
-const OKTOBER_UMSATZ = { '3200': 31240, '3210': 13980, '3280': 3260 };
-const OKTOBER_PERSONAL = { '5000': 18900, '5700': 2650 };   // pro rata, from the payroll draft
+/* What the October revenue is so far (net of VAT, from the shop till and the
+   card terminal), needed for the live month column. Bank and cash only show
+   what moved, not what was earned. */
+const OKTOBER_UMSATZ = { '3200': 18400, '3400': 22100, '3600': 2900 };
+const OKTOBER_PERSONAL = { '5000': 17200, '5700': 2410 };   // pro rata, from the payroll draft
 /* ── helpers ───────────────────────────────────────────────────────────── */
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -819,11 +823,11 @@ const jetzt = () => {
 const SPEICHER = 'axyom-rechnungswesen-v1';
 const SEED = () => JSON.parse(JSON.stringify({
   rechnungen: RECHNUNGEN, bank: BANK, kasseTage: KASSE_TAGE, kasse: KASSE_BEWEGUNGEN,
-  kunden: KUNDEN, kassenbelege: KASSENBELEGE, debitoren: DEBITOREN, firma: FIRMA,
+  kunden: KUNDEN, rapporte: RAPPORTE, debitoren: DEBITOREN, firma: FIRMA,
   freigaben: FREIGABEN, papierkorb: [], abgerechnet: ['2026-Q2'], log: [],
   texte: {
-    einleitung_sie: 'Vielen Dank für Ihren Besuch. Gerne stellen wir Ihnen Folgendes in Rechnung:',
-    einleitung_du: 'Merci für euren Besuch! Hier die Rechnung dazu:',
+    einleitung_sie: 'Vielen Dank für Ihren Auftrag. Gerne stellen wir Ihnen Folgendes in Rechnung:',
+    einleitung_du: 'Merci für den Auftrag! Hier die Rechnung dazu:',
     erinnerung_sie: 'Gerne erinnern wir Sie an unsere untenstehende Rechnung. Falls sich Ihre Zahlung mit diesem Schreiben gekreuzt hat, betrachten Sie es bitte als gegenstandslos.',
     erinnerung_du: 'Kleine Erinnerung an die Rechnung unten — falls schon bezahlt, vergiss diese Nachricht einfach.',
     mahnung_sie: 'Leider ist unsere Rechnung trotz Erinnerung noch offen. Wir bitten Sie, den Betrag innert 10 Tagen zu überweisen.',
@@ -835,14 +839,14 @@ function laden() {
   DB = SEED();
   try {
     const s = localStorage.getItem(SPEICHER);
-    // v2: payments can differ from the invoice, instalments carry dates —
-    // a v1 save has neither, so it is dropped rather than half-read
-    if (s) { const g = JSON.parse(s); if (g && g.v === 2) Object.assign(DB, g.db); }
+    // v3: the demo firm became a generic business — a save from the
+    // restaurant demo (v1/v2) belongs to other data and is dropped
+    if (s) { const g = JSON.parse(s); if (g && g.v === 3) Object.assign(DB, g.db); }
   } catch (e) { /* storage blocked: the demo still runs, it just forgets */ }
   vorbereiten();
 }
 function speichern() {
-  try { localStorage.setItem(SPEICHER, JSON.stringify({ v: 2, db: DB })); } catch (e) { }
+  try { localStorage.setItem(SPEICHER, JSON.stringify({ v: 3, db: DB })); } catch (e) { }
 }
 function zuruecksetzen() {
   try { localStorage.removeItem(SPEICHER); } catch (e) { }
@@ -1027,7 +1031,7 @@ const BLEGENDE = [
 // the same for customer invoices (the list on Kundenrechnungen)
 const DLEGENDE = [
   { tab: 'entwurf', name: 'Zu verrechnen', zeilen: [
-    ['i', 'Rechnung erstellen', 'Ein Kassenbeleg, den der Gast «auf Rechnung» bezahlt. Daraus wird mit einem Klick die Rechnung, ohne Abtippen.'],
+    ['i', 'Rechnung erstellen', 'Ein Arbeitsrapport, der noch nicht verrechnet ist. Daraus wird mit einem Klick die Rechnung, ohne Abtippen.'],
     ['i', 'Entwurf', 'Die Rechnung ist erstellt, aber noch nicht vorgelegt. Kurz prüfen und zur Freigabe vorlegen.'],
   ] },
   { tab: 'freigabe', name: 'Zur Freigabe', zeilen: [
@@ -1094,15 +1098,15 @@ function buchungen() {
     const d = m.monat + '-28';
     Object.entries(m.umsatz).forEach(([k, netto]) => {
       const steuer = r2(netto * 0.081);
-      b(d, '1000', k, r2(netto * BARANTEIL), 'Umsatz bar ' + monatName(m.monat), 'Z-Bons', null);
-      b(d, '1091', k, r2(netto * (1 - BARANTEIL)), 'Umsatz Karten/Twint ' + monatName(m.monat), 'Z-Bons', null);
-      b(d, '1091', '2200', steuer, 'MWST 8.1 % auf Umsatz ' + monatName(m.monat), 'Z-Bons', { art: 'umsatz', satz: 8.1, basis: netto });
+      b(d, '1000', k, r2(netto * BARANTEIL), 'Umsatz bar ' + monatName(m.monat), 'Tagesabschluss', null);
+      b(d, '1091', k, r2(netto * (1 - BARANTEIL)), 'Umsatz Karten/Twint ' + monatName(m.monat), 'Tagesabschluss', null);
+      b(d, '1091', '2200', steuer, 'MWST 8.1 % auf Umsatz ' + monatName(m.monat), 'Tagesabschluss', { art: 'umsatz', satz: 8.1, basis: netto });
     });
     b(d, '1020', '1091', r2(Object.values(m.umsatz).reduce((s, v) => s + v * (1 - BARANTEIL) + v * 0.081, 0)), 'Kartengutschriften ' + monatName(m.monat), 'Bank');
     b(d, '1020', '1000', r2(Object.values(m.umsatz).reduce((s, v) => s + v * BARANTEIL, 0)), 'Bareinzahlungen ' + monatName(m.monat), 'Bank');
     b(d, '2400', '1020', 6000, 'Amortisation Bankdarlehen ' + monatName(m.monat), 'Bank');
     Object.entries(m.kosten).forEach(([k, netto]) => {
-      const satz = { '4200': 2.6, '4210': 4.8, '4400': 8.1, '6040': 8.1, '6100': 8.1, '6400': 8.1, '6500': 8.1, '6570': 8.1, '6600': 8.1 }[k] || 0;
+      const satz = { '4000': 8.1, '4200': 8.1, '4400': 8.1, '6040': 8.1, '6100': 8.1, '6200': 8.1, '6400': 8.1, '6500': 8.1, '6570': 8.1, '6600': 8.1 }[k] || 0;
       const vst = r2(netto * satz / 100);
       // September wages are paid in October (bank line B5121), so they are owed at month end
       const lohnOffen = m.monat === '2026-09' && konto(k).gruppe === 'personal';
@@ -1138,8 +1142,8 @@ function buchungen() {
   });
   const okt = '2026-10-15';
   Object.entries(OKTOBER_UMSATZ).forEach(([k, netto]) => {
-    b(okt, '1091', k, netto, 'Umsatz Oktober bis heute (Z-Bons)', 'Z-Bons');
-    b(okt, '1091', '2200', r2(netto * 0.081), 'MWST 8.1 % auf Umsatz Oktober', 'Z-Bons', { art: 'umsatz', satz: 8.1, basis: netto });
+    b(okt, '1091', k, netto, 'Umsatz Oktober bis heute (Kasse & Terminal)', 'Tagesabschluss');
+    b(okt, '1091', '2200', r2(netto * 0.081), 'MWST 8.1 % auf Umsatz Oktober', 'Tagesabschluss', { art: 'umsatz', satz: 8.1, basis: netto });
   });
   // the cash part of the takings sits in the till, not on the card account
   const bar = r2(DB.kasseTage.reduce((s, t) => s + t.bar, 0));
@@ -1161,7 +1165,7 @@ function buchungen() {
   DB.debitoren.forEach(d => {
     if (stufeIdx2(d.stufe) < 2 || d.storniert) return;
     const s = debSummen(d), k = kunde(d.kunde);
-    b(d.datum, '1100', '3280', s.netto, 'Rechnung ' + d.id + ' ' + (k ? k.name : ''), d.id);
+    b(d.datum, '1100', '3400', s.netto, 'Rechnung ' + d.id + ' ' + (k ? k.name : ''), d.id);
     b(d.datum, '1100', '2200', s.mwst, 'MWST 8.1 % Rechnung ' + d.id, d.id, { art: 'umsatz', satz: d.satz, basis: s.netto });
     (d.zahlungen || []).forEach(z => b(z.datum, z.weg === 'Bar' ? '1000' : '1020', '1100', z.betrag, 'Zahlung ' + d.id + (z.notiz ? ' · ' + z.notiz : ''), d.id));
   });
@@ -1304,7 +1308,7 @@ function offen() {
   const bankOffen = DB.bank.filter(b => !b.zu).length;
   const bankAbschluss = DB.bank.filter(b => b.zu && !b.abgeschlossen).length;  // ready to hand over
   const debFreigabe = DB.debitoren.filter(d => d.stufe === 'freigabe').length;
-  const debEntwurf = DB.debitoren.filter(d => d.stufe === 'entwurf').length + DB.kassenbelege.length;
+  const debEntwurf = DB.debitoren.filter(d => d.stufe === 'entwurf').length + DB.rapporte.length;
   const debUeber = DB.debitoren.filter(d => d.stufe === 'versendet' && tageBis(d.faellig) < 0 && debSummen(d).offen > 0).length;
   return { pruefen, zahlen, ueberfaellig, bankOffen, bankAbschluss, debFreigabe, debEntwurf, debUeber, einzahlen: kasseStand().einzahlen };
 }
@@ -1312,7 +1316,7 @@ function badge(id, o) {
   if (id === 'rechnungen') return [o.pruefen + o.zahlen, o.ueberfaellig ? 3 : 2];
   if (id === 'bank') return [o.bankOffen, 2];
   if (id === 'kunden') return [o.debFreigabe + o.debUeber + o.debEntwurf, o.debUeber ? 3 : 2];
-  if (id === 'kasse') return [o.einzahlen > 3000 ? 1 : 0, 2];
+  if (id === 'kasse') return [o.einzahlen > 1000 ? 1 : 0, 2];
   return [0, 1];
 }
 
@@ -1330,7 +1334,7 @@ function kasseStand() {
    in the morning comes first, the evening's takings next, a count last. */
 function kassenbuch() {
   const Z = [
-    ...DB.kasseTage.map(t => ({ datum: t.datum, art: 'tag', betrag: t.bar, tip: t.tip, id: 'T' + t.datum })),
+    ...DB.kasseTage.map(t => ({ datum: t.datum, art: 'tag', betrag: t.bar, id: 'T' + t.datum })),
     ...DB.kasse.map(e => ({ ...e })),
   ];
   const rang = { tag: 1, zaehlung: 2 };
@@ -1599,8 +1603,8 @@ function belegLayout(r) {
   return { pages, name: `${l.name.split(/\s+/)[0]}_${r.nr}.pdf`.replace(/[^\w.\-äöüÄÖÜ]+/g, '-') };
 }
 
-/* A customer invoice from the restaurant: the same A4 letter with the
-   restaurant as sender, prices including VAT (as on the menu), payments
+/* A customer invoice from the firm: the same A4 letter with the firm as
+   sender, prices including VAT (as on the work report), payments
    already made, and a QR-bill over what is still open. */
 function debLayout(d) {
   const k = kunde(d.kunde) || {}, s = debSummen(d), f = DB.firma, nr = d.id.slice(1);
@@ -1758,7 +1762,7 @@ function belegPDF(layout, titel) {
 let BELEG_ZOOM = 1;
 const ZOOMS = [1, 1.25, 1.5, 2];
 // a document id → its layout and its title: supplier invoices are the
-// Originalbeleg, customer invoices are the restaurant's own letter
+// Originalbeleg, customer invoices are the firm's own letter
 function dokument(id) {
   const r = DB.rechnungen.find(x => x.id === id);
   if (r) return { lay: belegLayout(r), kopf: 'Originalbeleg', titel: 'Rechnung ' + r.nr + ' · ' + lief(r.lief).name };
@@ -1811,8 +1815,8 @@ VIEWS.uebersicht = () => {
   if (o.pruefen) todo.push([2, `${o.pruefen} Rechnung${o.pruefen > 1 ? 'en' : ''} prüfen & kontieren`, 'Konto und MWST bestätigen — Vorschläge stehen bereit', 'rechnungen', 'pruefen']);
   if (o.bankOffen) todo.push([2, `${o.bankOffen} Bankbuchung${o.bankOffen > 1 ? 'en' : ''} ohne Beleg`, 'Beleg hochladen oder Vorschlag bestätigen', 'bank', '']);
   if (o.debFreigabe) todo.push([2, `${o.debFreigabe} Kundenrechnung zur Freigabe`, 'Kurz ansehen und versenden', 'kunden', 'freigabe']);
-  if (o.debEntwurf) todo.push([1, `${o.debEntwurf} Kassenbeleg${o.debEntwurf > 1 ? 'e' : ''} zu verrechnen`, 'Rechnung aus dem Kassenbeleg erstellen', 'kunden', 'entwurf']);
-  if (o.einzahlen > 3000) todo.push([2, `${chf(o.einzahlen, 0)} Bargeld einzahlen`, 'Über dem Wechselgeld-Bestand — gehört auf die Bank', 'kasse', '']);
+  if (o.debEntwurf) todo.push([1, `${o.debEntwurf} Rapport${o.debEntwurf > 1 ? 'e' : ''} oder Entwürfe zu verrechnen`, 'Rechnung aus dem Arbeitsrapport erstellen', 'kunden', 'entwurf']);
+  if (o.einzahlen > 1000) todo.push([2, `${chf(o.einzahlen, 0)} Bargeld einzahlen`, 'Über dem Wechselgeld-Bestand — gehört auf die Bank', 'kasse', '']);
   if (o.zahlen) todo.push([1, `${o.zahlen} Rechnung${o.zahlen > 1 ? 'en' : ''} zum Bezahlen bereit`, `${chf(summeZahlen, 0)} — nach Fälligkeit sortiert`, 'rechnungen', 'zahlen']);
   if (o.bankAbschluss) todo.push([1, `${o.bankAbschluss} Bankbuchungen freigeben`, 'Vollständig, bereit für den Treuhänder', 'bank', 'abschluss']);
 
@@ -2207,17 +2211,17 @@ function freigabenKarte() {
    ══════════════════════════════════════════════════════════════════════ */
 VIEWS.kasse = () => {
   const k = kasseStand(), Z = kassenbuch();
-  const tip = DB.kasseTage.reduce((s, t) => s + t.tip, 0);
+  const auslagen = DB.kasse.filter(e => e.art === 'auszahlung');
   const gezaehlt = DB.kasse.filter(e => e.art === 'zaehlung').sort((a, b) => a.datum < b.datum ? 1 : -1)[0];
   const minus = Z.find(z => z.saldo < 0);
   const ART = { bancomat: 'Einzahlung auf die Bank', ueberweisung: 'Einzahlung auf die Bank', auszahlung: 'Barauslage', zaehlung: 'Kasse gezählt' };
   const tag = d => ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(d + 'T12:00').getDay()] + ' ' + dt(d);
   return `
   <div class="grid g4 rkopf">
-    <button class="kpi kl ${k.einzahlen > 3000 ? 's2' : ''}" data-kseinzahlen><div class="k">Jetzt einzuzahlen</div><div class="v num">${chf(k.einzahlen, 0)}</div><div class="s">Bargeld über dem Wechselgeld</div><div class="go">Einzahlung erfassen →</div></button>
+    <button class="kpi kl ${k.einzahlen > 1000 ? 's2' : ''}" data-kseinzahlen><div class="k">Jetzt einzuzahlen</div><div class="v num">${chf(k.einzahlen, 0)}</div><div class="s">Bargeld über dem Wechselgeld</div><div class="go">Einzahlung erfassen →</div></button>
     <div class="kpi"><div class="k">Bargeld in der Kasse</div><div class="v num">${chf(k.bestand, 0)}</div><div class="s">davon ${chf(KASSE_ANFANG, 0)} Wechselgeld${gezaehlt ? ' · gezählt ' + dtk(gezaehlt.datum) : ''}</div></div>
-    <div class="kpi"><div class="k">Bar-Umsatz Oktober</div><div class="v num">${chf(k.bar, 0)}</div><div class="s">${DB.kasseTage.length} Kassenabschlüsse</div></div>
-    <div class="kpi"><div class="k">Trinkgeld ans Team</div><div class="v num">${chf(tip, 0)}</div><div class="s">bar ausbezahlt, kein Umsatz</div></div>
+    <div class="kpi"><div class="k">Barverkäufe Oktober</div><div class="v num">${chf(k.bar, 0)}</div><div class="s">${DB.kasseTage.length} Kassenabschlüsse am Ladentisch</div></div>
+    <div class="kpi"><div class="k">Barauslagen Oktober</div><div class="v num">${chf(k.aus, 0)}</div><div class="s">${auslagen.length} Auslage${auslagen.length === 1 ? '' : 'n'} aus der Kasse</div></div>
   </div>
   ${minus ? `<div class="box s3" style="margin-top:16px"><b>Die Kasse wäre am ${dt(minus.datum)} im Minus</b> (${chf(minus.saldo)}). Mehr Bargeld herausgenommen als drin war: Bitte die Einträge an diesem Tag prüfen.</div>` : ''}
   <div class="grid g2" style="margin-top:16px;align-items:start">
@@ -2252,7 +2256,7 @@ VIEWS.kasse = () => {
     <div class="tw"><table class="t kb" style="margin-top:6px"><thead><tr><th>Datum</th><th>Was</th><th class="r">Rein</th><th class="r">Raus</th><th class="r">Bestand</th><th></th></tr></thead><tbody>
     ${Z.slice().reverse().map(z => {
       let was, sub = '', stand = '';
-      if (z.art === 'tag') { was = 'Kassenabschluss'; sub = `Trinkgeld ${fmt(z.tip)} direkt ans Team`; }
+      if (z.art === 'tag') { was = 'Kassenabschluss'; sub = 'Barverkäufe am Ladentisch'; }
       else {
         was = ART[z.art] + (z.art === 'auszahlung' ? ' · ' + esc(kname(z.konto || '6100')) : ''); sub = esc(z.notiz || '');
         if (z.art === 'auszahlung') stand = z.beleg ? `<span class="pill s1" title="${esc(z.beleg)}">Beleg ✓</span>` : `${pill('s2', 'Beleg fehlt')} <button class="btn sm" data-kbeleg="${z.id}">Beleg hochladen</button>`;
@@ -2267,7 +2271,6 @@ VIEWS.kasse = () => {
     }).join('')}
     <tr class="anf"><td class="num">${dt('2026-10-01')}</td><td>Wechselgeld zu Monatsbeginn</td><td></td><td></td><td class="r num" data-l="Bestand" style="font-weight:650">${fmt(KASSE_ANFANG)}</td><td></td></tr>
     </tbody></table></div>
-    <p class="dim" style="font-size:12px;margin-top:8px">Trinkgeld wird separat gezählt und ans Team ausbezahlt. Es ist kein Umsatz und taucht in der Buchhaltung nicht auf.</p>
   </div>
   <input type="file" id="kassebeleg" accept=".pdf,image/*" hidden>`;
 };
@@ -2325,22 +2328,22 @@ function dListe() {
   const passt = t => !q || t.toLowerCase().includes(q);
   const liste = DB.debitoren.filter(d => f(d) && passt(((kunde(d.kunde) || {}).name || '') + ' ' + d.id.slice(1) + ' ' + fmt(debSummen(d).brutto) + ' ' + debSummen(d).brutto.toFixed(2)))
     .sort((a, b) => DTAB === 'offen' || DTAB === 'ueber' ? (a.faellig < b.faellig ? -1 : 1) : (a.datum < b.datum ? 1 : -1));
-  const belege = DTAB === 'entwurf' || DTAB === 'alle' ? DB.kassenbelege.filter(x => passt('Kassenbeleg ' + x.id + ' ' + (x.notiz || '') + ' ' + fmt(belegSumme(x)))) : [];
+  const belege = DTAB === 'entwurf' || DTAB === 'alle' ? DB.rapporte.filter(x => passt('Rapport ' + x.id + ' ' + x.auftrag + ' ' + (x.notiz || '') + ' ' + fmt(belegSumme(x)))) : [];
   return { liste, belege };
 }
 function dChips() {
-  const n = k => k === 'kunden' ? DB.kunden.length : DB.debitoren.filter(DTABS[k].f).length + (k === 'entwurf' || k === 'alle' ? DB.kassenbelege.length : 0);
+  const n = k => k === 'kunden' ? DB.kunden.length : DB.debitoren.filter(DTABS[k].f).length + (k === 'entwurf' || k === 'alle' ? DB.rapporte.length : 0);
   return `<div class="chips">${Object.entries(DTABS).filter(([k, t]) => !t.versteckt || k === DTAB).map(([k, t]) => `<button class="chip${k === DTAB ? ' on' : ''}${k === 'kunden' ? ' ku' : ''}" data-dtab="${k}">${t.name}<span class="n">${n(k)}</span></button>`).join('')}</div>`;
 }
 /* The four figures above the list — each opens the list that makes it up. */
 function kundenKopf() {
   const D = DB.debitoren, sum = L => L.reduce((s, x) => s + x, 0);
   const ent = D.filter(DTABS.entwurf.f), frei = D.filter(DTABS.freigabe.f), off = D.filter(DTABS.offen.f), ueb = D.filter(DTABS.ueber.f);
-  const nEnt = ent.length + DB.kassenbelege.length, alt = Math.max(0, ...ueb.map(d => -tageBis(d.faellig)));
+  const nEnt = ent.length + DB.rapporte.length, alt = Math.max(0, ...ueb.map(d => -tageBis(d.faellig)));
   const k = (f, cls, titel, wert, unter) => `<button class="kpi kl ${cls}${DTAB === f ? ' on' : ''}" data-dtab="${f}"><div class="k">${titel}</div><div class="v num">${wert}</div><div class="s">${unter}</div></button>`;
   const rg = n => n + ' Rechnung' + (n === 1 ? '' : 'en');
   return `<div class="grid g4 rkopf">
-    ${k('entwurf', nEnt ? 's2' : 's1', 'Zu verrechnen', nEnt, nEnt ? chf(sum(ent.map(d => debSummen(d).brutto)) + sum(DB.kassenbelege.map(belegSumme)), 0) + ' aus Kassenbelegen' : 'nichts offen')}
+    ${k('entwurf', nEnt ? 's2' : 's1', 'Zu verrechnen', nEnt, nEnt ? chf(sum(ent.map(d => debSummen(d).brutto)) + sum(DB.rapporte.map(belegSumme)), 0) + ' aus Rapporten und Entwürfen' : 'nichts offen')}
     ${k('freigabe', frei.length ? 's2' : 's1', 'Zur Freigabe', frei.length, frei.length ? 'wartet auf ' + esc(DB.firma.inhaber) : 'nichts offen')}
     ${k('offen', '', 'Offen', chf(sum(off.map(d => debSummen(d).offen)), 0), rg(off.length) + ' versendet')}
     ${k('ueber', ueb.length ? 's3' : 's1', 'Überfällig', ueb.length ? chf(sum(ueb.map(d => debSummen(d).offen)), 0) : 'keine', ueb.length ? `${rg(ueb.length)} · älteste ${alt} T.` : 'alles im Ziel')}
@@ -2359,7 +2362,7 @@ function altersstruktur() {
 VIEWS.kunden = () => {
   if (DTABS[PARAM]) { DTAB = PARAM; PARAM = ''; DZEIGE = ''; }
   const id = PARAM || DZEIGE;
-  let d = DB.debitoren.find(x => x.id === id), q = DB.kassenbelege.find(x => x.id === id);
+  let d = DB.debitoren.find(x => x.id === id), q = DB.rapporte.find(x => x.id === id);
   if (DTAB === 'kunden' && (PARAM && (d || q))) DTAB = 'alle';
   if (DTAB === 'kunden') return kundenKopf() + kundenListe();
   let { liste, belege } = dListe();
@@ -2369,7 +2372,7 @@ VIEWS.kunden = () => {
   DZEIGE = d ? d.id : q ? q.id : '';
   const ids = [...belege.map(x => x.id), ...liste.map(x => x.id)];
   const item = x => `<button class="li${d && x.id === d.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>${esc((kunde(x.kunde) || {}).name || '—')}</span><span class="num">${fmt(x.stufe === 'versendet' ? debSummen(x).offen : debSummen(x).brutto)}</span></div><div class="b"><span>${esc(x.id.slice(1))} · ${dt(x.datum)}</span>${debSummen(x).bezahlt && x.stufe === 'versendet' ? '<span>Rest</span>' : ''}</div><div class="c">${dStatus(x)}</div><div style="margin-top:7px">${dBalken(x, true)}</div></button>`;
-  const beleg = x => `<button class="li${q && x.id === q.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>Kassenbeleg ${esc(x.id)}</span><span class="num">${fmt(belegSumme(x))}</span></div><div class="b"><span>${dt(x.datum)} · Tisch ${esc(x.tisch)} · ${x.gedecke} Gedecke</span></div><div class="c">${pill('i', 'Rechnung erstellen', null, DLEGENDE)}</div></button>`;
+  const beleg = x => `<button class="li${q && x.id === q.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>Rapport ${esc(x.id)}</span><span class="num">${fmt(belegSumme(x))}</span></div><div class="b"><span>${dt(x.datum)} · ${esc(x.auftrag)}</span></div><div class="c">${pill('i', 'Rechnung erstellen', null, DLEGENDE)}</div></button>`;
   return kundenKopf() + (DTAB === 'offen' || DTAB === 'ueber' ? altersstruktur() : '') + `<div class="split deb" style="margin-top:16px">
     <div class="col"><div class="liste">
       <div class="lh">${dChips()}<input class="in" id="dlsuche" type="search" placeholder="Kunde, Nummer, Betrag" value="${esc(DLSUCHE)}" style="margin-top:10px"></div>
@@ -2377,7 +2380,7 @@ VIEWS.kunden = () => {
         ${!belege.length && !liste.length ? `<div class="leer">${DLSUCHE ? 'Nichts gefunden.' : 'Nichts in dieser Ansicht.'}</div>` : ''}</div>
       <div class="lh row" style="border-top:1px solid var(--soft);border-bottom:0;font-size:12px;justify-content:flex-end"><button class="btn link" data-dlegende>Legende</button></div>
     </div></div>
-    ${q ? kassenbelegDetail(q, ids) : d ? `<div class="col doc">${belegViewer(d)}</div><div class="col"><div class="panel">${debAktionen(d, ids)}</div></div>` : '<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links einen Eintrag.</div></div>'}
+    ${q ? rapportDetail(q, ids) : d ? `<div class="col doc">${belegViewer(d)}</div><div class="col"><div class="panel">${debAktionen(d, ids)}</div></div>` : '<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links einen Eintrag.</div></div>'}
   </div>`;
 };
 // «1 von 5» with ← → — the same as on Rechnungen
@@ -2387,17 +2390,22 @@ function dBlaettern(id, ids) {
       <span class="dim" style="font-size:12px">${i >= 0 ? (i + 1) + ' von ' + ids.length : ''}</span>
       <span class="row" style="gap:6px"><button class="btn sm" ${i > 0 ? `data-go="kunden" data-p="${ids[i - 1]}"` : 'disabled'} aria-label="Vorherige">←</button><button class="btn sm" ${i >= 0 && i < ids.length - 1 ? `data-go="kunden" data-p="${ids[i + 1]}"` : 'disabled'} aria-label="Nächste">→</button></span></div>`;
 }
-function kassenbelegDetail(q, ids) {
-  const tot = belegSumme(q);
-  return `<div class="col doc"><div class="paper" style="max-width:380px;font-family:var(--mono);font-size:12px">
-    <div style="text-align:center"><b>${esc(DB.firma.marke)}</b><br>${esc(DB.firma.strasse)} · ${esc(DB.firma.plz)} ${esc(DB.firma.ort)}</div>
-    <div style="margin:12px 0;border-top:1px dashed #999;padding-top:8px">Beleg ${esc(q.id)}<br>${dt(q.datum)} · Tisch ${esc(q.tisch)} · ${q.gedecke} Gedecke</div>
-    ${q.pos.map(p => `<div style="display:flex;justify-content:space-between;gap:10px"><span>${p[1]}× ${esc(p[0])}</span><span>${fmt(p[1] * p[2])}</span></div>`).join('')}
-    <div style="display:flex;justify-content:space-between;border-top:1px dashed #999;margin-top:8px;padding-top:6px;font-weight:700"><span>TOTAL CHF</span><span>${fmt(tot)}</span></div>
-    <div style="margin-top:8px">inkl. MWST 8.1 %: ${fmt(tot * 8.1 / 108.1)}</div>
-    <div style="margin-top:8px;border-top:1px dashed #999;padding-top:8px">Zahlungsart: AUF RECHNUNG</div></div></div>
+// the technician's work report, signed on site, as it came in
+function rapportDetail(q, ids) {
+  const tot = belegSumme(q), k = kunde(q.kunde);
+  return `<div class="col doc"><div class="paper" aria-label="Arbeitsrapport">
+    <div class="ph"><div><div class="lg">Arbeitsrapport ${esc(q.id)}</div><div class="dim">${esc(DB.firma.marke)} · ${esc(DB.firma.strasse)} · ${esc(DB.firma.plz)} ${esc(DB.firma.ort)}</div></div></div>
+    <table style="margin-top:14px"><tbody>
+      <tr><td class="dim" style="width:110px">Datum</td><td>${dt(q.datum)}</td></tr>
+      <tr><td class="dim">Kunde</td><td>${k ? esc(k.name) : '<i class="dim">noch nicht erfasst</i>'}</td></tr>
+      <tr><td class="dim">Auftrag</td><td>${esc(q.auftrag)}</td></tr>
+      <tr><td class="dim">Techniker/in</td><td>${esc(q.techniker)}</td></tr></tbody></table>
+    <table style="margin-top:14px"><thead><tr><th>Leistung / Material</th><th style="text-align:right">Menge</th><th style="text-align:right">Preis</th><th style="text-align:right">CHF</th></tr></thead>
+    <tbody>${q.pos.map(p => `<tr><td>${esc(p[0])}</td><td style="text-align:right">${p[1]}</td><td style="text-align:right">${fmt(p[2])}</td><td style="text-align:right">${fmt(p[1] * p[2])}</td></tr>`).join('')}</tbody></table>
+    <table class="tot" style="width:auto;margin-left:auto;margin-top:12px"><tbody><tr><td>Total inkl. MWST</td><td style="text-align:right;padding-left:30px">CHF ${fmt(tot)}</td></tr></tbody></table>
+    <div style="margin-top:22px;border-top:1px solid #999;padding-top:6px;width:220px;font-size:12px" class="dim">Vom Kunden vor Ort unterschrieben ✓</div></div></div>
   <div class="col"><div class="panel"><div class="card">${dBlaettern(q.id, ids)}
-    <div style="font-size:17px;font-weight:700">Rechnung aus Kassenbeleg</div>
+    <div style="font-size:17px;font-weight:700">Rechnung aus Rapport</div>
     <p class="dim" style="font-size:12.5px;margin:4px 0 10px">${esc(q.notiz || '')}</p>
     <label class="fld"><span>Rechnung an</span><select id="kb-kunde"><option value="">— Kunde wählen —</option>${DB.kunden.map(k => `<option value="${k.id}"${k.id === q.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
     <p class="dim" style="font-size:12px;margin-top:8px">Alle ${q.pos.length} Positionen werden übernommen, nichts muss abgetippt werden. Die Nummer wird beim Erstellen vergeben.</p>
@@ -2425,7 +2433,7 @@ function debAktionen(d, ids) {
   const k = kunde(d.kunde) || {}, s = debSummen(d);
   let body = '';
   if (d.storniert) body = `<div class="box i" style="margin-top:12px">Storniert: ${esc(d.storniert)}</div>`;
-  else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">Die Rechnung ist aus dem Kassenbeleg gebaut. Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
+  else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">Die Rechnung ist aus dem Arbeitsrapport gebaut. Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
   else if (d.stufe === 'freigabe') body = `<div class="step"><i>2</i>Freigeben und senden</div>
     <label class="fld"><span>An</span><input id="mail-an" value="${esc(k.mail || '')}"></label>
     <label class="fld" style="margin-top:8px"><span>Begleittext</span><textarea id="mail-text">${esc((k.anrede === 'du' ? 'Hallo ' + (k.kontakt || '').split(' ')[0] : 'Guten Tag ' + (k.kontakt || '')) + '\n\n' + DB.texte['einleitung_' + (k.anrede || 'sie')] + '\n\nDie Rechnung mit QR-Zahlteil ist angehängt.\n\nFreundliche Grüsse\n' + DB.firma.marke)}</textarea></label>
@@ -2493,7 +2501,7 @@ VIEWS.kosten = () => {
   ${live ? `<div class="box s2" style="margin-bottom:14px"><b>Oktober ist noch nicht vollständig.</b> ${o.pruefen} Rechnungen sind noch nicht geprüft und ${o.bankOffen} Bankbuchungen haben keinen Beleg — sie fehlen in diesen Zahlen.</div>` : ''}
   <div class="grid g4">
     <div class="kpi"><div class="k">Umsatz netto</div><div class="v num">${chf(z.umsatz, 0)}</div><div class="s">${zv ? delta(z.umsatz, zv.umsatz) : ''}</div></div>
-    <div class="kpi"><div class="k">Warenaufwand</div><div class="v num">${pct(quote('waren', z))}</div><div class="s">Ziel ${ZIELE.waren} % · ${chf(z.gruppen.waren, 0)}</div></div>
+    <div class="kpi"><div class="k">Material & Waren</div><div class="v num">${pct(quote('waren', z))}</div><div class="s">Ziel ${ZIELE.waren} % · ${chf(z.gruppen.waren, 0)}</div></div>
     <div class="kpi"><div class="k">Personal</div><div class="v num">${pct(quote('personal', z))}</div><div class="s">Ziel ${ZIELE.personal} % · ${chf(z.gruppen.personal, 0)}</div></div>
     <div class="kpi"><div class="k">Ergebnis</div><div class="v num" style="color:${z.ergebnis < 0 ? 'var(--bad)' : 'var(--ok)'}">${chf(z.ergebnis, 0)}</div><div class="s">${pct(z.umsatz ? z.ergebnis / z.umsatz * 100 : 0)} vom Umsatz${live ? ' · vorläufig' : ''}</div></div>
   </div>
@@ -2511,7 +2519,7 @@ VIEWS.kosten = () => {
     </div>
     <div class="stack">
       <div class="card"><h2>Nächste Schritte</h2>
-        ${schritte.length ? schritte.slice(0, 3).map((x, n) => `<div class="todo" style="cursor:default"><span class="dot s2"></span><div><div class="t">${n + 1}. ${esc(GRUPPEN[x.g].name)}: ${pct(x.q)} statt ${x.ziel} %</div><div class="d">${(x.q - x.ziel).toFixed(1)} Punkte über Ziel — das sind ${chf((x.q - x.ziel) / 100 * z.umsatz, 0)} in diesem Monat.${x.g === 'waren' ? ' Die teuersten Lieferanten zuerst ansehen.' : x.g === 'personal' ? ' Dienstplan gegen die Gästezahlen legen.' : ''}</div></div></div>`).join('')
+        ${schritte.length ? schritte.slice(0, 3).map((x, n) => `<div class="todo" style="cursor:default"><span class="dot s2"></span><div><div class="t">${n + 1}. ${esc(GRUPPEN[x.g].name)}: ${pct(x.q)} statt ${x.ziel} %</div><div class="d">${(x.q - x.ziel).toFixed(1)} Punkte über Ziel — das sind ${chf((x.q - x.ziel) / 100 * z.umsatz, 0)} in diesem Monat.${x.g === 'waren' ? ' Die teuersten Lieferanten zuerst ansehen.' : x.g === 'personal' ? ' Einsatzplanung gegen die verrechneten Stunden legen.' : ''}</div></div></div>`).join('')
           : '<div class="box s1" style="margin-top:10px">Alle Kostengruppen liegen im Ziel.</div>'}
       </div>
       <div class="card"><h2>Kostenquoten im Verlauf <small>% vom Umsatz</small></h2>
@@ -2572,7 +2580,7 @@ VIEWS.mwst = () => {
   const frist = plusTage('2026-' + QENDE[MQ], 60);
   const laeuft = MQ === 4, eingereicht = DB.abgerechnet.includes('2026-Q' + MQ);
   const z = (t, v, s) => `<tr><td>${t}</td><td class="r num"${s ? ' style="font-weight:700"' : ''}>${fmt(v)}</td></tr>`;
-  const docs = B.filter(x => x.mwst && quartal(x.datum) === MQ && x.datum.slice(0, 7) === '2026-10' && x.beleg !== 'Z-Bons');
+  const docs = B.filter(x => x.mwst && quartal(x.datum) === MQ && x.datum.slice(0, 7) === '2026-10' && x.beleg !== 'Tagesabschluss');
   return `<div class="row" style="margin-bottom:14px"><div class="chips">${[2, 3, 4].map(q => `<button class="chip${q === MQ ? ' on' : ''}" data-mq="${q}">Q${q} 2026${q === 4 ? ' (läuft)' : ''}</button>`).join('')}</div></div>
   <div class="grid g4">
     <div class="kpi"><div class="k">Umsatzsteuer</div><div class="v num">${chf(m.steuerUmsatz, 0)}</div><div class="s">auf ${chf(m.umsatz, 0)} Umsatz</div></div>
@@ -2737,7 +2745,7 @@ function camtLesen(xml) {
   return { neu, doppelt };
 }
 const BEISPIEL_CAMT = `<?xml version="1.0" encoding="UTF-8"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08"><BkToCstmrStmt><Stmt>
-<Ntry><Amt Ccy="CHF">58.40</Amt><CdtDbtInd>DBIT</CdtDbtInd><BookgDt><Dt>2026-10-16</Dt></BookgDt><AddtlNtryInf>Online Einkauf Hygieneartikel Gastro Debit Mastercard</AddtlNtryInf></Ntry>
+<Ntry><Amt Ccy="CHF">58.40</Amt><CdtDbtInd>DBIT</CdtDbtInd><BookgDt><Dt>2026-10-16</Dt></BookgDt><AddtlNtryInf>Online Einkauf Druckerpatronen Debit Mastercard</AddtlNtryInf></Ntry>
 <Ntry><Amt Ccy="CHF">2318.45</Amt><CdtDbtInd>CRDT</CdtDbtInd><BookgDt><Dt>2026-10-16</Dt></BookgDt><AddtlNtryInf>Gutschrift Kartenterminal Abrechnung 15.10.</AddtlNtryInf></Ntry>
 <Ntry><Amt Ccy="CHF">18.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><BookgDt><Dt>2026-10-16</Dt></BookgDt><AddtlNtryInf>Gebühr Bargeldeinzahlung</AddtlNtryInf></Ntry>
 </Stmt></BkToCstmrStmt></Document>`;
@@ -2942,7 +2950,7 @@ document.addEventListener('click', e => {
   if (d.ksart) {
     document.querySelectorAll('[data-ksart]').forEach(x => { x.classList.toggle('on', x === t); x.setAttribute('aria-checked', x === t); });
     $('#ks-auslage').style.display = d.ksart === 'auszahlung' ? '' : 'none';
-    $('#ks-notiz').placeholder = d.ksart === 'auszahlung' ? 'Wofür? z.B. Blumen Tischdeko' : 'z.B. Einzahlung Woche 42';
+    $('#ks-notiz').placeholder = d.ksart === 'auszahlung' ? 'Wofür? z.B. Blumen für den Empfang' : 'z.B. Einzahlung Woche 42';
     if (d.ksart === 'auszahlung') $('#ks-betrag').value = '';
     else if (!$('#ks-betrag').value) $('#ks-betrag').value = kasseStand().einzahlen.toFixed(2);
     return;
@@ -2993,13 +3001,13 @@ document.addEventListener('click', e => {
     return;
   }
   if (d.ausbeleg) {
-    const q = DB.kassenbelege.find(x => x.id === d.ausbeleg), sel = $('#kb-kunde').value;
+    const q = DB.rapporte.find(x => x.id === d.ausbeleg), sel = $('#kb-kunde').value;
     if (sel === 'neu') { kundeNeu(id => { q.kunde = id; neu(); go('kunden', q.id); }); return; }
     if (!sel) { $('#kb-kunde').closest('.fld').classList.add('err'); toast('An wen geht die Rechnung?', 2); return; }
     const k = kunde(sel), id = naechsteNr();
     const dneu = { id, kunde: sel, datum: HEUTE, faellig: plusTage(HEUTE, k.ziel || 30), stufe: 'entwurf', satz: 8.1, pos: q.pos.map(p => p.slice()), zahlungen: [], protokoll: [] };
-    prot(dneu, 'Erstellt aus Kassenbeleg ' + q.id + ' (' + q.pos.length + ' Positionen übernommen)');
-    DB.debitoren.push(dneu); DB.kassenbelege = DB.kassenbelege.filter(x => x !== q);
+    prot(dneu, 'Erstellt aus Rapport ' + q.id + ' (' + q.pos.length + ' Positionen übernommen)');
+    DB.debitoren.push(dneu); DB.rapporte = DB.rapporte.filter(x => x !== q);
     neu(); go('kunden', id); toast('Rechnung ' + id.slice(1) + ' erstellt.', 1); return;
   }
   if (d.vorlegen) { const x = D_(d.vorlegen); x.stufe = 'freigabe'; prot(x, 'Zur Freigabe an ' + DB.firma.inhaber + ' vorgelegt'); neu(); toast('Zur Freigabe vorgelegt.', 1); return; }
