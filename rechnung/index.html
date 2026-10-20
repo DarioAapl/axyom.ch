@@ -146,6 +146,21 @@ table.t tr.click{cursor:pointer}
 table.t tr.click:hover td{background:rgba(0,178,160,.04)}
 table.t tr.sel td{background:var(--wash)}
 table.t td.r,table.t th.r{text-align:right}
+.btn.link.fr{color:var(--dim);font-size:12px;font-weight:500;padding:2px 0}
+/* bank lines on a phone: one card per line instead of a squeezed table */
+@media (max-width:760px){
+  table.bt,table.bt tbody{display:block}
+  table.bt thead{display:none}
+  table.bt tr{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:12px 2px;border-bottom:1px solid var(--soft)}
+  table.bt td{display:block;padding:0;border:0}
+  table.bt td:nth-child(1){grid-area:1/1;font-size:12px;color:var(--dim)}
+  table.bt td:nth-child(2){grid-area:2/1}
+  table.bt td:nth-child(3){grid-area:1/2/3/3}
+  table.bt td:nth-child(4){grid-column:1/-1;margin-top:6px}
+  table.bt td:nth-child(5){grid-column:1/-1;text-align:left;margin-top:6px}
+  table.fv th:nth-child(3),table.fv td:nth-child(3){display:none}
+  table.fv th,table.fv td{padding:8px 5px;white-space:normal}
+}
 table.t tfoot td{font-weight:700;border-bottom:0;border-top:1px solid var(--line)}
 table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 
@@ -597,7 +612,8 @@ const BANK = [
   { id: 'B5109', datum: '2026-10-07', text: 'Zahlung Metzgerei Brunold 2026-1544', betrag: null, zu: { typ: 'kreditor', ref: 'K302' }, abgeschlossen: true },
   { id: 'B5110', datum: '2026-10-08', text: 'Gutschrift Kartenterminal Abrechnung 07.10.', betrag: 3412.80, zu: { typ: 'karten' }, abgeschlossen: true },
   { id: 'B5111', datum: '2026-10-08', text: 'Gutschrift Kundenzahlung Bauunternehmung Gantenbein AG Rg 2026091', betrag: null, zu: { typ: 'debitor', ref: 'D2026091' }, abgeschlossen: false },
-  { id: 'B5112', datum: '2026-10-09', text: 'Online Einkauf Tankstelle Talwies Debit Mastercard', betrag: -82.40, zu: null },
+  { id: 'B5112', datum: '2026-10-09', text: 'Online Einkauf Tankstelle Talwies Debit Mastercard', betrag: -82.40, zu: null,
+    klaerung: 'Das Restaurant hat kein Geschäftsauto. Wer hat mit der Firmenkarte getankt?' },
   { id: 'B5113', datum: '2026-10-12', text: 'Gutschrift Kartenterminal Abrechnung 09.–11.10.', betrag: 9874.35, zu: { typ: 'karten' }, abgeschlossen: false },
   { id: 'B5114', datum: '2026-10-12', text: 'Twint Abrechnung 05.–11.10.', betrag: 1288.60, zu: { typ: 'karten' }, abgeschlossen: false },
   { id: 'B5115', datum: '2026-10-13', text: 'Bankspesen Kontoführung 09/2026', betrag: -18.00, zu: { typ: 'spesen' }, abgeschlossen: false },
@@ -608,6 +624,13 @@ const BANK = [
   { id: 'B5120', datum: '2026-10-15', text: 'Gutschrift Kundenzahlung Gemeinde Talwies Rg 2026097 Teilzahlung', betrag: 500.00, zu: null },
   { id: 'B5121', datum: '2026-10-15', text: 'Lohnzahlungen September 2026 Sammelauftrag', betrag: -31840.25, zu: { typ: 'lohn' }, abgeschlossen: false },
   { id: 'B5122', datum: '2026-10-16', text: 'Online Einkauf Werbeanzeige Social Media Debit Mastercard', betrag: -45.00, zu: null },
+  // the same card purchase debited twice — flagged «Doppelt?» on its own
+  { id: 'B5123', datum: '2026-10-14', text: 'Online Einkauf Online-Bürobedarf Debit Mastercard', betrag: -132.45, zu: null },
+];
+/* Hand-overs to the Treuhänder so far: which bank lines went, and when. */
+const FREIGABEN = [
+  { datum: '2026-10-05', ids: ['B5100', 'B5101', 'B5102', 'B5103'] },
+  { datum: '2026-10-09', ids: ['B5105', 'B5106', 'B5107', 'B5109', 'B5110'] },
 ];
 /* «betrag: null» = the amount is the document's own gross, filled in at start
    (03-core.js), so a bank line and the invoice it pays can never drift apart. */
@@ -762,7 +785,7 @@ const SPEICHER = 'axyom-rechnungswesen-v1';
 const SEED = () => JSON.parse(JSON.stringify({
   rechnungen: RECHNUNGEN, bank: BANK, kasseTage: KASSE_TAGE, kasse: KASSE_BEWEGUNGEN,
   kunden: KUNDEN, kassenbelege: KASSENBELEGE, debitoren: DEBITOREN, firma: FIRMA,
-  papierkorb: [], abgerechnet: ['2026-Q2'], log: [],
+  freigaben: FREIGABEN, papierkorb: [], abgerechnet: ['2026-Q2'], log: [],
   texte: {
     einleitung_sie: 'Vielen Dank für Ihren Besuch. Gerne stellen wir Ihnen Folgendes in Rechnung:',
     einleitung_du: 'Merci für euren Besuch! Hier die Rechnung dazu:',
@@ -887,6 +910,10 @@ function debSummen(d) {
   return { brutto, mwst, netto: r2(brutto - mwst), bezahlt, offen: r2(brutto - bezahlt) };
 }
 function vorbereiten() {
+  // lines handed over before the history existed get one entry of their own
+  const drin = new Set(DB.freigaben.flatMap(f => f.ids));
+  const ohne = DB.bank.filter(b => b.abgeschlossen && !drin.has(b.id)).map(b => b.id);
+  if (ohne.length) DB.freigaben.push({ datum: HEUTE, ids: ohne });
   DB.rechnungen.forEach(r => {
     if (r.raten && !Array.isArray(r.raten)) delete r.raten;
   });
@@ -947,8 +974,23 @@ const LEGENDE = [
     ['s1', 'abgeschlossen', 'Die Zahlung ist auf dem Bankauszug und passt zur Rechnung. Nichts mehr zu tun.'],
   ] },
 ];
+// the same for bank lines
+const BLEGENDE = [
+  { tab: 'offen', name: 'Offen', zeilen: [
+    ['s2', 'Beleg fehlt', 'Die Bank kennt nur den Betrag. Quittung oder Rechnung hochladen. Ohne Beleg geht es auch, dann aber ohne Vorsteuerabzug.'],
+    ['i', 'Vorschlag', 'Passt zu einer Rechnung, die schon da ist. «Zuordnen» bestätigt es.'],
+    ['s2', 'Klärung', 'Eine Frage ist notiert, z.B. wer die Zahlung ausgelöst hat. Sie bleibt offen, bis Sie «Geklärt» drücken.'],
+    ['s3', 'Doppelt?', 'Gleicher Tag, gleicher Betrag und gleicher Text wie eine andere Buchung. Entweder doppelt belastet oder zwei echte Käufe.'],
+  ] },
+  { tab: 'abschluss', name: 'Zur Freigabe', zeilen: [
+    ['s1', 'vollständig', 'Die Buchung hat ihren Beleg oder ihre Rechnung. Bereit für den Treuhänder.'],
+  ] },
+  { tab: 'frei', name: 'Freigegeben', zeilen: [
+    ['g', 'freigegeben', 'An den Treuhänder übergeben. Er übernimmt sie so in die Buchhaltung.'],
+  ] },
+];
 function pill(cls, text, legText) {
-  const z = LEGENDE.flatMap(g => g.zeilen).find(x => x[1] === (legText || text));
+  const z = [...LEGENDE, ...BLEGENDE].flatMap(g => g.zeilen).find(x => x[1] === (legText || text));
   return `<span class="pill ${cls}"${z ? ` title="${esc(z[2])}"` : ''}>${text}</span>`;
 }
 function statusPill(r) {
@@ -964,15 +1006,15 @@ function statusPill(r) {
   if (s === 'bezahlt') return pill('g', 'wartet auf Bank');
   return pill('s1', 'abgeschlossen');
 }
-function legende(aktiv) {
+function legende(aktiv, gruppen = LEGENDE) {
   const balken = (i, hold) => `<div class="stufen mini" style="width:92px;flex:none">${STUFEN.map((_, j) => `<div class="st ${j < i ? 'done' : j === i ? (hold ? 'hold' : 'now') : ''}"></div>`).join('')}</div>`;
   return `<h3>Legende</h3><p class="dim" style="font-size:13px">Was die Markierungen in der Liste bedeuten, nach Schritt geordnet.</p>
-    ${LEGENDE.map(g => `<div class="leg${g.tab === aktiv ? ' on' : ''}"><div class="legk">${esc(g.name)}${g.tab === aktiv ? ' <span class="dim">· diese Ansicht</span>' : ''}</div>
+    ${gruppen.map(g => `<div class="leg${g.tab === aktiv ? ' on' : ''}"><div class="legk">${esc(g.name)}${g.tab === aktiv ? ' <span class="dim">· diese Ansicht</span>' : ''}</div>
       ${g.zeilen.map(([c, t, x]) => `<div class="legz"><span><span class="pill ${c}">${esc(t)}</span></span><span>${esc(x)}</span></div>`).join('')}</div>`).join('')}
-    <div class="leg"><div class="legk">Der Balken darunter</div>
+    ${gruppen !== LEGENDE ? '' : `<div class="leg"><div class="legk">Der Balken darunter</div>
       <p style="font-size:13px;margin:4px 0 8px">Vier Schritte: ${STUFEN.map(s => esc(s.name)).join(' → ')}.</p>
       <div class="legz"><span>${balken(1)}</span><span>Grün ist erledigt, schwarz ist der Schritt, auf dem sie gerade steht.</span></div>
-      <div class="legz"><span>${balken(0, true)}</span><span>Orange: angehalten, bis eine offene Frage geklärt ist.</span></div></div>
+      <div class="legz"><span>${balken(0, true)}</span><span>Orange: angehalten, bis eine offene Frage geklärt ist.</span></div></div>`}
     <div class="acts"><button class="btn" data-zu>Schliessen</button></div>`;
 }
 
@@ -1193,7 +1235,7 @@ function offen() {
   const zahlen = R.filter(r => r.stufe === 'kontiert' && !r.auto && !r.klaerung).length;
   const ueberfaellig = R.filter(r => r.stufe === 'kontiert' && !r.auto && tageBis(faellig(r)) < 0).length;
   const bankOffen = DB.bank.filter(b => !b.zu).length;
-  const bankAbschluss = DB.bank.filter(b => b.zu && !b.abgeschlossen).length;
+  const bankAbschluss = DB.bank.filter(b => b.zu && !b.abgeschlossen).length;  // ready to hand over
   const debFreigabe = DB.debitoren.filter(d => d.stufe === 'freigabe').length;
   const debEntwurf = DB.debitoren.filter(d => d.stufe === 'entwurf').length + DB.kassenbelege.length;
   const debUeber = DB.debitoren.filter(d => d.stufe === 'versendet' && tageBis(d.faellig) < 0 && debSummen(d).offen > 0).length;
@@ -1621,7 +1663,7 @@ VIEWS.uebersicht = () => {
   if (o.debEntwurf) todo.push([1, `${o.debEntwurf} Kassenbeleg${o.debEntwurf > 1 ? 'e' : ''} zu verrechnen`, 'Rechnung aus dem Kassenbeleg erstellen', 'kunden', 'entwurf']);
   if (o.einzahlen > 3000) todo.push([2, `${chf(o.einzahlen, 0)} Bargeld einzahlen`, 'Über dem Wechselgeld-Bestand — gehört auf die Bank', 'kasse', '']);
   if (o.zahlen) todo.push([1, `${o.zahlen} Rechnung${o.zahlen > 1 ? 'en' : ''} zum Bezahlen bereit`, `${chf(summeZahlen, 0)} — nach Fälligkeit sortiert`, 'rechnungen', 'zahlen']);
-  if (o.bankAbschluss) todo.push([1, `${o.bankAbschluss} Bankbuchungen abschliessen`, 'Vollständig — für den Treuhänder freigeben', 'bank', 'abschluss']);
+  if (o.bankAbschluss) todo.push([1, `${o.bankAbschluss} Bankbuchungen freigeben`, 'Vollständig, bereit für den Treuhänder', 'bank', 'abschluss']);
 
   const serien = Object.entries(GRUPPEN).map(([key, g]) => ({ key, name: g.name, farbe: g.farbe }));
   const reihen = MONATSLISTE.map(ym => { const z = monatsZahlen(ym, B); return { label: monatKurz(ym), titel: monatName(ym), werte: z.gruppen, live: ym === '2026-10' }; });
@@ -1925,42 +1967,76 @@ function zuText(b) {
   if (z.typ === 'beleg') return `${z.datei ? 'Beleg ' + esc(z.datei) : 'Ohne Beleg: ' + esc(z.grund || '')} · ${esc(z.konto)}`;
   return '';
 }
+// a second line with the same day, amount and text as an earlier one
+function doppelVon(b) {
+  if (b.zu || b.keinDoppel) return null;
+  return DB.bank.find(x => x !== b && x.id < b.id && x.datum === b.datum && x.betrag === b.betrag && x.text === b.text) || null;
+}
+const BFILTER_DEF = {
+  offen: { name: 'Offen', f: b => !b.zu },
+  abschluss: { name: 'Zur Freigabe', f: b => b.zu && !b.abgeschlossen },
+  frei: { name: 'Freigegeben', f: b => b.zu && b.abgeschlossen },
+  alle: { name: 'Alle', f: () => true },
+  // reached from the figures above the table; a chip only while open
+  ein: { name: 'Eingänge', f: b => b.betrag > 0, versteckt: true },
+  aus: { name: 'Ausgänge', f: b => b.betrag < 0, versteckt: true },
+};
+let BSUCHE = '';
 VIEWS.bank = () => {
   if (PARAM === 'abschluss') { BFILTER = 'abschluss'; PARAM = ''; }
-  const alle = DB.bank.slice().sort((a, b) => a.datum < b.datum ? 1 : -1);
-  const offenL = alle.filter(b => !b.zu), abschl = alle.filter(b => b.zu && !b.abgeschlossen);
-  const liste = BFILTER === 'offen' ? offenL : BFILTER === 'abschluss' ? abschl : alle;
-  const ein = alle.filter(b => b.betrag > 0).reduce((s, b) => s + b.betrag, 0);
-  const aus = alle.filter(b => b.betrag < 0).reduce((s, b) => s - b.betrag, 0);
+  const alle = DB.bank.slice().sort((a, b) => a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : a.id < b.id ? 1 : -1);
+  const n = k => alle.filter(BFILTER_DEF[k].f);
+  const q = BSUCHE.trim().toLowerCase();
+  const liste = n(BFILTER).filter(b => !q || (b.text + ' ' + b.id + ' ' + fmt(b.betrag) + ' ' + Math.abs(b.betrag).toFixed(2) + ' ' + zuText(b) + ' ' + (b.klaerung || '')).toLowerCase().includes(q));
+  const offenL = n('offen'), abschl = n('abschluss'), einL = n('ein'), ausL = n('aus');
+  const sum = L => L.reduce((s, b) => s + Math.abs(b.betrag), 0);
+  const k = (f, cls, titel, wert, unter) => `<button class="kpi kl ${cls}${BFILTER === f ? ' on' : ''}" data-bfilter="${f}"><div class="k">${titel}</div><div class="v num">${wert}</div><div class="s">${unter}</div></button>`;
   return `
-  <div class="grid g4">
-    <div class="kpi ${offenL.length ? 's2' : 's1'}"><div class="k">Ohne Beleg oder Zuordnung</div><div class="v">${offenL.length}</div><div class="s">${chf(offenL.reduce((s, b) => s + Math.abs(b.betrag), 0))} betroffen</div></div>
-    <div class="kpi"><div class="k">Bereit zum Abschliessen</div><div class="v">${abschl.length}</div><div class="s">vollständig zugeordnet</div></div>
-    <div class="kpi"><div class="k">Eingänge Oktober</div><div class="v num">${chf(ein, 0)}</div><div class="s">${alle.filter(b => b.betrag > 0).length} Buchungen</div></div>
-    <div class="kpi"><div class="k">Ausgänge Oktober</div><div class="v num">${chf(aus, 0)}</div><div class="s">${alle.filter(b => b.betrag < 0).length} Buchungen</div></div>
+  <div class="grid g4 rkopf">
+    ${k('offen', offenL.length ? 's2' : 's1', 'Ohne Beleg oder Zuordnung', offenL.length, offenL.length ? chf(sum(offenL)) + ' betroffen' : 'nichts offen')}
+    ${k('abschluss', '', 'Bereit zur Freigabe', abschl.length, 'vollständig, für den Treuhänder')}
+    ${k('ein', '', 'Eingänge Oktober', chf(sum(einL), 0), einL.length + ' Buchungen')}
+    ${k('aus', '', 'Ausgänge Oktober', chf(sum(ausL), 0), ausL.length + ' Buchungen')}
   </div>
   <div class="card" style="margin-top:16px">
     <div class="row" style="justify-content:space-between">
-      <div class="chips">
-        <button class="chip${BFILTER === 'offen' ? ' on' : ''}" data-bfilter="offen">Offen<span class="n">${offenL.length}</span></button>
-        <button class="chip${BFILTER === 'abschluss' ? ' on' : ''}" data-bfilter="abschluss">Zum Abschliessen<span class="n">${abschl.length}</span></button>
-        <button class="chip${BFILTER === 'alle' ? ' on' : ''}" data-bfilter="alle">Alle<span class="n">${alle.length}</span></button></div>
-      ${abschl.length ? `<button class="btn dark" data-abschliessen>Alle ${abschl.length} vollständigen abschliessen</button>` : ''}
+      <div class="chips">${Object.entries(BFILTER_DEF).filter(([f, d]) => !d.versteckt || f === BFILTER).map(([f, d]) => `<button class="chip${BFILTER === f ? ' on' : ''}" data-bfilter="${f}">${d.name}<span class="n">${n(f).length}</span></button>`).join('')}</div>
+      ${abschl.length ? `<button class="btn dark" data-bfreigabe>Alle ${abschl.length} für den Treuhänder freigeben</button>` : ''}
     </div>
-    <p class="dim" style="font-size:12.5px;margin:10px 0 4px">Buchungen kommen aus dem Kontoauszug (camt.053) — massgebend sind Bankdatum und Betrag. Abgeschlossene Buchungen sind für den Treuhänder freigegeben.</p>
-    ${liste.length ? `<div class="tw"><table class="t"><thead><tr><th>Datum</th><th>Bankbuchung</th><th class="r">Betrag</th><th>Was dazugehört</th><th></th></tr></thead><tbody>
+    <div class="row" style="margin-top:10px;gap:10px"><input class="in" id="bsuche" type="search" placeholder="Text, Betrag oder Nummer" value="${esc(BSUCHE)}" style="flex:1 1 220px;max-width:360px"><button class="btn link" data-blegende>Legende</button></div>
+    <p class="dim" style="font-size:12.5px;margin:10px 0 4px">Buchungen kommen aus dem Kontoauszug (camt.053), massgebend sind Bankdatum und Betrag. Vollständige Buchungen geben Sie für den Treuhänder frei.</p>
+    ${liste.length ? `<div class="tw"><table class="t bt"><thead><tr><th>Datum</th><th>Bankbuchung</th><th class="r">Betrag</th><th>Was dazugehört</th><th></th></tr></thead><tbody>
     ${liste.map(b => {
-      const h = !b.zu && BANK_HINWEIS[b.id];
+      const h = !b.zu && BANK_HINWEIS[b.id], dop = doppelVon(b);
+      const frage = `<div><button class="btn link fr" data-bfrage="${b.id}">Frage notieren</button></div>`;
+      const beleg = `<button class="btn acc sm" data-belegfuer="${b.id}">Beleg hochladen</button><button class="btn sm" data-ohnebeleg="${b.id}">Ohne Beleg…</button>`;
       let was, akt = '';
-      if (b.zu) { was = `<span style="color:var(--ok)">✓</span> ${zuText(b)}`; akt = b.abgeschlossen ? '<span class="pill g">abgeschlossen</span>' : '<span class="pill s1">vollständig</span>'; }
-      else if (h && h.art === 'vorschlag') { was = `<span class="pill i">Vorschlag</span> <span style="font-size:12.5px">${esc(h.text)}</span>`; akt = `<button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${h.ref}">Zuordnen</button>`; }
-      else { was = `<span class="pill s2">Beleg fehlt</span> <span class="dim" style="font-size:12.5px">${esc(h ? h.text.replace(/^Beleg fehlt noch — /, '') : 'Unbekannt — bitte zuordnen')}</span>`; akt = `<span class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn acc sm" data-belegfuer="${b.id}">Beleg hochladen</button><button class="btn sm" data-ohnebeleg="${b.id}">Ohne Beleg…</button></span>`; }
+      if (b.zu) { was = `<span style="color:var(--ok)">✓</span> ${zuText(b)}`; akt = b.abgeschlossen ? pill('g', 'freigegeben') : pill('s1', 'vollständig'); }
+      else if (dop) { was = `${pill('s3', 'Doppelt?')} <span style="font-size:12.5px">Gleicher Tag, Betrag und Text wie ${esc(dop.id)}.</span>`; akt = `<span class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn dark sm" data-doppelbelastet="${b.id}">Doppelt belastet</button><button class="btn sm" data-zweikaeufe="${b.id}">Zwei Käufe</button></span>`; }
+      else if (b.klaerung) { was = `${pill('s2', 'Klärung')} <span style="font-size:12.5px">${esc(b.klaerung)}</span>`; akt = `<span class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm" data-bgeklaert="${b.id}">Geklärt</button></span>`; }
+      else if (h && h.art === 'vorschlag') { was = `${pill('i', 'Vorschlag')} <span style="font-size:12.5px">${esc(h.text)}</span>${frage}`; akt = `<button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${h.ref}">Zuordnen</button>`; }
+      else { was = `${pill('s2', 'Beleg fehlt')} <span class="dim" style="font-size:12.5px">${esc(h ? h.text.replace(/^Beleg fehlt noch — /, '') : 'Unbekannt, bitte zuordnen')}</span>${frage}`; akt = `<span class="row" style="gap:6px;flex-wrap:nowrap">${beleg}</span>`; }
       return `<tr><td class="num">${dt(b.datum)}</td><td>${esc(b.text)}<div class="sub mono">${b.id}</div></td>
         <td class="r num" style="font-weight:650;${b.betrag > 0 ? 'color:var(--ok)' : ''}">${b.betrag > 0 ? '+' : ''}${fmt(b.betrag)}</td><td>${was}</td><td class="r">${akt}</td></tr>`;
-    }).join('')}</tbody></table></div>` : `<div class="leer">${BFILTER === 'offen' ? 'Jede Bankbuchung hat ihren Beleg. ✓' : 'Nichts in dieser Ansicht.'}</div>`}
+    }).join('')}</tbody></table></div>` : `<div class="leer">${q ? 'Nichts gefunden.' : BFILTER === 'offen' ? 'Jede Bankbuchung hat ihren Beleg. ✓' : 'Nichts in dieser Ansicht.'}</div>`}
   </div>
+  ${freigabenKarte()}
   <input type="file" id="belegdatei" accept=".pdf,image/*" hidden>`;
 };
+VIEWS.bank_nach = () => {
+  const s = $('#bsuche'); if (s) s.addEventListener('input', () => { BSUCHE = s.value; const p = s.selectionStart; render(); const n = $('#bsuche'); n.focus(); n.setSelectionRange(p, p); });
+};
+/* What went to the Treuhänder, and when — newest first. */
+function freigabenKarte() {
+  const F = DB.freigaben.slice().reverse();
+  return `<div class="card" style="margin-top:16px"><h2>Freigaben an den Treuhänder</h2>
+    ${F.length ? `<div class="tw"><table class="t fv" style="margin-top:6px"><thead><tr><th>Freigegeben am</th><th>Buchungen</th><th>Bankdaten</th><th class="r">Eingänge</th><th class="r">Ausgänge</th></tr></thead><tbody>
+    ${F.map(f => {
+      const L = f.ids.map(id => DB.bank.find(b => b.id === id)).filter(Boolean), d = L.map(b => b.datum).sort();
+      const ein = L.filter(b => b.betrag > 0).reduce((s, b) => s + b.betrag, 0), aus = L.filter(b => b.betrag < 0).reduce((s, b) => s - b.betrag, 0);
+      return `<tr><td class="num">${dt(f.datum)}</td><td>${L.length}</td><td class="num">${d.length ? dt(d[0]) + (d[0] !== d[d.length - 1] ? ' – ' + dt(d[d.length - 1]) : '') : ''}</td><td class="r num">${fmt(ein)}</td><td class="r num">${fmt(aus)}</td></tr>`;
+    }).join('')}</tbody></table></div>` : '<div class="leer">Noch nichts freigegeben.</div>'}</div>`;
+}
 
 /* ══════════════════════════════════════════════════════════════════════
    KASSE — the till's cash. What came in, what tips went to the team, what
@@ -2288,7 +2364,7 @@ VIEWS.austausch = () => `
       <div class="chips" style="margin-bottom:12px">${['Q2', 'Q3', 'Q4', 'Jahr'].map(q => `<button class="chip${q === EXPORT_Q ? ' on' : ''}" data-exq="${q}">${q === 'Jahr' ? 'Jahr 2026' : q + ' 2026'}</button>`).join('')}</div>
       ${[['journal', 'Buchungsjournal', 'Jede Buchung mit Soll, Haben, Betrag, Beleg'], ['saldi', 'Kontensaldi', 'Vortrag, Soll, Haben, Saldo je Konto'], ['belege', 'Belegliste', 'Alle Lieferanten- und Kundenrechnungen mit Stand'], ['mwst', 'MWST-Abrechnung', 'Die Zahlen der Abrechnung je Quartal']].map(([k, t, d]) =>
         `<div class="todo" data-export="${k}" role="button" tabindex="0"><span class="dot s1"></span><div><div class="t">${t}</div><div class="d">${d}</div></div><span class="n">⬇</span></div>`).join('')}
-      <div class="box i" style="margin-top:12px">Zu diesem Zeitraum: ${DB.bank.filter(b => b.zu && !b.abgeschlossen).length} Bankbuchungen noch nicht abgeschlossen, ${offen().bankOffen} ohne Beleg. Der Treuhänder sieht nur Abgeschlossenes als endgültig.</div>
+      <div class="box i" style="margin-top:12px">Zu diesem Zeitraum: ${DB.bank.filter(b => b.zu && !b.abgeschlossen).length} Bankbuchungen noch nicht freigegeben, ${offen().bankOffen} ohne Beleg. Der Treuhänder sieht nur Freigegebenes als endgültig.</div>
     </div>
   </div>`;
 
@@ -2422,7 +2498,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -2565,11 +2641,25 @@ document.addEventListener('click', e => {
 
   // ── Bank ──
   if (d.bfilter) { BFILTER = d.bfilter; render(); return; }
-  if ('abschliessen' in d) {
+  if ('blegende' in d) { modal(legende(BFILTER, BLEGENDE)); return; }
+  if ('bfreigabe' in d) {
     const L = DB.bank.filter(b => b.zu && !b.abgeschlossen);
-    modal(`<h3>${L.length} Bankbuchungen abschliessen?</h3><p class="dim" style="font-size:13px">Alle sind vollständig zugeordnet. Abgeschlossen heisst: für den Treuhänder freigegeben. Was später noch geändert werden muss, geht über eine Korrektur.</p><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Abschliessen</button></div>`,
-      () => { L.forEach(b => b.abgeschlossen = true); logge(L.length + ' Bankbuchungen abgeschlossen'); modalZu(); neu(); toast(L.length + ' Bankbuchungen abgeschlossen. ✓', 1); });
+    modal(`<h3>${L.length} Bankbuchungen für den Treuhänder freigeben?</h3><p class="dim" style="font-size:13px">Alle sind vollständig zugeordnet. Der Treuhänder übernimmt sie so in die Buchhaltung.</p><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Freigeben</button></div>`,
+      () => { L.forEach(b => b.abgeschlossen = true); DB.freigaben.push({ datum: HEUTE, ids: L.map(b => b.id) }); logge(L.length + ' Bankbuchungen für den Treuhänder freigegeben'); modalZu(); neu(); toast(L.length + ' Bankbuchungen freigegeben. ✓', 1); });
     return;
+  }
+  if (d.bfrage) {
+    const b = DB.bank.find(x => x.id === d.bfrage);
+    modal(`<h3>Frage notieren</h3><p class="dim" style="font-size:13px">${esc(b.text)} · ${chf(b.betrag)}. Die Buchung bleibt offen, mit der Frage daran, bis sie geklärt ist.</p><label class="fld" style="margin-top:10px"><span>Was ist unklar?</span><textarea id="m-frage" placeholder="z.B. Wer hat das bestellt?"></textarea></label><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Notieren</button></div>`,
+      () => { const f = $('#m-frage').value.trim(); if (!f) { $('#m-frage').closest('.fld').classList.add('err'); return; } b.klaerung = f; logge('Frage zu ' + b.id + ': ' + f); modalZu(); neu(); toast('Frage notiert.', 1); });
+    return;
+  }
+  if (d.bgeklaert) { const b = DB.bank.find(x => x.id === d.bgeklaert); logge('Frage zu ' + b.id + ' geklärt: ' + b.klaerung); delete b.klaerung; neu(); toast('Als geklärt markiert.', 1); return; }
+  if (d.zweikaeufe) { const b = DB.bank.find(x => x.id === d.zweikaeufe); b.keinDoppel = true; logge(b.id + ': kein Doppel, zwei Käufe'); neu(); toast('Als eigener Kauf behandelt. Er braucht seinen eigenen Beleg.', 1); return; }
+  if (d.doppelbelastet) {
+    const b = DB.bank.find(x => x.id === d.doppelbelastet), o = doppelVon(b);
+    b.keinDoppel = true; b.klaerung = `Doppelt belastet wie ${o ? o.id : 'eine andere Buchung'}. Beim Händler oder der Bank zurückfordern.`;
+    logge(b.id + ' doppelt belastet, Rückforderung offen'); neu(); toast('Notiert. Sobald die Gutschrift kommt, drücken Sie «Geklärt».', 1); return;
   }
   if (d.belegfuer) { const f = $('#belegdatei'); f.dataset.bank = d.belegfuer; f.value = ''; f.click(); return; }
   if (d.ohnebeleg) {
