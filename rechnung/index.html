@@ -914,12 +914,10 @@ const STUFEN = [
   { id: 'eingang',      name: 'Eingang',      tun: 'Prüfen & kontieren' },
   { id: 'kontiert',     name: 'Geprüft',      tun: 'Bezahlen' },
   { id: 'bezahlt',      name: 'Bezahlt',      tun: 'Auf Bankbuchung warten' },
-  { id: 'abgeglichen',  name: 'Abgeglichen',  tun: 'Abschliessen' },
-  { id: 'abgeschlossen', name: 'Abschluss', tun: '' },
+  { id: 'abgeglichen',  name: 'Abgeschlossen', tun: '' },
 ];
 function bankZu(typ, ref) { return DB.bank.find(b => b.zu && b.zu.typ === typ && b.zu.ref === ref); }
 function stufeVon(r) {
-  if (r.stufe === 'abgeglichen') { const L = zahlungenVon(r); return L.length && L.every(b => b.abgeschlossen) ? 'abgeschlossen' : 'abgeglichen'; }
   return r.stufe;
 }
 const stufeIdx = id => STUFEN.findIndex(s => s.id === id);
@@ -946,8 +944,7 @@ const LEGENDE = [
     ['g', 'wartet auf Bank', 'Bezahlt, aber die Zahlung ist auf dem Bankauszug noch nicht aufgetaucht. Meist ein bis zwei Tage.'],
   ] },
   { tab: 'fertig', name: 'Erledigt', zeilen: [
-    ['s1', 'abgeglichen', 'Die Zahlung ist auf dem Bankauszug und passt zur Rechnung. Lässt sich noch ändern.'],
-    ['s1', 'abgeschlossen', 'Im Bankabgleich für den Treuhänder freigegeben, meist zum Monatsende. Endgültig; Änderungen nur noch per Korrektur.'],
+    ['s1', 'abgeschlossen', 'Die Zahlung ist auf dem Bankauszug und passt zur Rechnung. Nichts mehr zu tun.'],
   ] },
 ];
 function pill(cls, text, legText) {
@@ -965,7 +962,7 @@ function statusPill(r) {
     return t < 0 ? pill('s3', `${-t} T. überfällig`, '4 T. überfällig') : t <= 5 ? pill('s2', t ? `fällig in ${t} T.` : 'heute fällig', 'fällig in 3 T.') : pill('g', `fällig ${dtk(faellig(r))}`, 'fällig 14.11.');
   }
   if (s === 'bezahlt') return pill('g', 'wartet auf Bank');
-  return pill('s1', s === 'abgeschlossen' ? 'abgeschlossen' : 'abgeglichen');
+  return pill('s1', 'abgeschlossen');
 }
 function legende(aktiv) {
   const balken = (i, hold) => `<div class="stufen mini" style="width:92px;flex:none">${STUFEN.map((_, j) => `<div class="st ${j < i ? 'done' : j === i ? (hold ? 'hold' : 'now') : ''}"></div>`).join('')}</div>`;
@@ -973,7 +970,7 @@ function legende(aktiv) {
     ${LEGENDE.map(g => `<div class="leg${g.tab === aktiv ? ' on' : ''}"><div class="legk">${esc(g.name)}${g.tab === aktiv ? ' <span class="dim">· diese Ansicht</span>' : ''}</div>
       ${g.zeilen.map(([c, t, x]) => `<div class="legz"><span><span class="pill ${c}">${esc(t)}</span></span><span>${esc(x)}</span></div>`).join('')}</div>`).join('')}
     <div class="leg"><div class="legk">Der Balken darunter</div>
-      <p style="font-size:13px;margin:4px 0 8px">Fünf Schritte: ${STUFEN.map(s => esc(s.name)).join(' → ')}.</p>
+      <p style="font-size:13px;margin:4px 0 8px">Vier Schritte: ${STUFEN.map(s => esc(s.name)).join(' → ')}.</p>
       <div class="legz"><span>${balken(1)}</span><span>Grün ist erledigt, schwarz ist der Schritt, auf dem sie gerade steht.</span></div>
       <div class="legz"><span>${balken(0, true)}</span><span>Orange: angehalten, bis eine offene Frage geklärt ist.</span></div></div>
     <div class="acts"><button class="btn" data-zu>Schliessen</button></div>`;
@@ -1787,10 +1784,9 @@ function entscheidung(r, liste) {
     body = `<div class="step"><i>3</i>Bankbuchung zuordnen</div>
       <p style="font-size:13px">Bezahlt am ${dt(r.bezahltAm || HEUTE)}. Sobald die Belastung auf dem Konto ist, gehört sie hierher.</p>` + bankAbgleich(r, true);
   } else {
-    body = `<div class="step done"><i>✓</i>${st === 'abgeschlossen' ? 'Abgeschlossen' : 'Abgeglichen'}</div>
+    body = `<div class="step done"><i>✓</i>Abgeschlossen</div>
       ${zahlungenVon(r).map(b => `<div class="sum"><span>Bankbuchung</span><span class="num">${dt(b.datum)} · ${chf(-b.betrag)}</span></div><div class="dim" style="font-size:12px">${esc(b.text)}</div>${b.zu.abw ? `<div class="dim" style="font-size:12px">${esc(ABWEICHUNG[b.zu.abw.grund])}${b.zu.abw.betrag ? ' ' + chf(Math.abs(b.zu.abw.betrag)) : ''} — ${esc(b.zu.abw.notiz)}</div>` : ''}`).join('')}
-      <div class="sum"><span>Gebucht auf</span><span>${kontenText(r)}</span></div>
-      ${st === 'abgeglichen' ? '<p class="dim" style="font-size:12px;margin-top:8px">Wird beim Monatsabschluss im Bankabgleich abgeschlossen.</p>' : ''}`;
+      <div class="sum"><span>Gebucht auf</span><span>${kontenText(r)}</span></div>`;
   }
   const prot = (r.protokoll || []).slice().reverse();
   return kopf + body + `</div>
@@ -1816,7 +1812,7 @@ function ratenPlan(r) {
   return `<div class="step"><i>2</i>Bezahlen <small class="dim" style="font-weight:500;font-size:12px;margin-left:auto">in ${r.raten.length} Raten</small></div>
     <div class="raten">${r.raten.map((x, i) => {
       const t = tageBis(x.faellig), b = x.bank && DB.bank.find(y => y.id === x.bank);
-      const stand = x.bezahltAm ? (b ? `<span class="pill s1">abgeglichen</span>` : `<span class="pill g">bezahlt ${dtk(x.bezahltAm)}</span>`)
+      const stand = x.bezahltAm ? (b ? `<span class="pill s1">abgeschlossen</span>` : `<span class="pill g">bezahlt ${dtk(x.bezahltAm)}</span>`)
         : t < 0 ? `<span class="pill s3">${-t} T. überfällig</span>` : `<span class="pill ${x === naechste ? 's2' : 'g'}">fällig ${dtk(x.faellig)}</span>`;
       return `<div class="rate${x === naechste ? ' jetzt' : ''}"><span class="nr">${i + 1}</span><span class="num">${dt(x.faellig)}</span><span class="num r">${chf(x.betrag)}</span>${stand}</div>`;
     }).join('')}</div>
