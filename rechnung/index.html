@@ -155,6 +155,16 @@ table.t tr.click:hover td{background:rgba(0,178,160,.04)}
 table.t tr.sel td{background:var(--wash)}
 table.t td.r,table.t th.r{text-align:right}
 .pill.pl{border:0;cursor:pointer;font-family:inherit}
+.chip.ku{margin-left:auto}
+.alter .abar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--soft);margin-top:10px}
+.alter .abar span{display:block;height:100%}
+.alter .g{background:#c9ced3} .alter .s2{background:#e08a00} .alter .s3{background:var(--bad)} .alter .s3.tief{background:#7a1610}
+.alter .agrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;font-size:12.5px}
+.alter .agrid>div{display:grid;grid-template-columns:auto 1fr;gap:1px 6px;align-items:center}
+.alter .agrid .dot{width:9px;height:9px;border-radius:50%;grid-row:span 3;align-self:start;margin-top:4px}
+.alter .agrid .num{font-weight:700;font-size:14px}
+details.bar summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--acci)}
+@media (max-width:760px){.alter .agrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 table.kb tr.anf td{color:var(--dim)}
 .btn.link.fr{color:var(--dim);font-size:12px;font-weight:500;padding:2px 0}
 /* bank lines on a phone: one card per line instead of a squeezed table */
@@ -1014,8 +1024,31 @@ const BLEGENDE = [
     ['g', 'freigegeben', 'An den Treuhänder übergeben. Er übernimmt sie so in die Buchhaltung.'],
   ] },
 ];
-function pill(cls, text, legText) {
-  const z = [...LEGENDE, ...BLEGENDE].flatMap(g => g.zeilen).find(x => x[1] === (legText || text));
+// the same for customer invoices (the list on Kundenrechnungen)
+const DLEGENDE = [
+  { tab: 'entwurf', name: 'Zu verrechnen', zeilen: [
+    ['i', 'Rechnung erstellen', 'Ein Kassenbeleg, den der Gast «auf Rechnung» bezahlt. Daraus wird mit einem Klick die Rechnung, ohne Abtippen.'],
+    ['i', 'Entwurf', 'Die Rechnung ist erstellt, aber noch nicht vorgelegt. Kurz prüfen und zur Freigabe vorlegen.'],
+  ] },
+  { tab: 'freigabe', name: 'Zur Freigabe', zeilen: [
+    ['s2', 'wartet auf Freigabe', 'Liegt bei der Inhaberin. Erst nach ihrer Freigabe geht die Rechnung an den Kunden.'],
+  ] },
+  { tab: 'offen', name: 'Offen', zeilen: [
+    ['g', 'fällig 14.11.', 'Versendet, die Zahlungsfrist läuft noch.'],
+    ['s2', 'fällig in 3 T.', 'Heute oder in den nächsten 5 Tagen fällig.'],
+    ['s3', '5 T. überfällig', 'Die Zahlungsfrist ist verpasst. Eine Zahlungserinnerung senden.'],
+    ['s3', '19 T. überfällig · 1. Erinnerung', 'Die Erinnerung ist schon verschickt und die Rechnung immer noch offen. Als Nächstes die Mahnung.'],
+    ['g', 'Teilzahlung', 'Ein Teil ist bezahlt, der Rest ist noch offen.'],
+  ] },
+  { tab: 'erledigt', name: 'Erledigt', zeilen: [
+    ['s1', 'bezahlt', 'Vollständig bezahlt. Nichts mehr zu tun.'],
+    ['g', 'storniert', 'Mit Grund storniert. Die Rechnung bleibt sichtbar, die Buchung ist zurückgenommen.'],
+  ] },
+];
+// gruppen: which table explains this marker (a «fällig» means different
+// things for a bill you pay and an invoice you are owed)
+function pill(cls, text, legText, gruppen) {
+  const z = (gruppen || [...LEGENDE, ...BLEGENDE]).flatMap(g => g.zeilen).find(x => x[1] === (legText || text));
   return `<span class="pill ${cls}"${z ? ` title="${esc(z[2])}"` : ''}>${text}</span>`;
 }
 function statusPill(r) {
@@ -1031,15 +1064,15 @@ function statusPill(r) {
   if (s === 'bezahlt') return pill('g', 'wartet auf Bank');
   return pill('s1', 'abgeschlossen');
 }
-function legende(aktiv, gruppen = LEGENDE) {
-  const balken = (i, hold) => `<div class="stufen mini" style="width:92px;flex:none">${STUFEN.map((_, j) => `<div class="st ${j < i ? 'done' : j === i ? (hold ? 'hold' : 'now') : ''}"></div>`).join('')}</div>`;
+function legende(aktiv, gruppen = LEGENDE, bar = gruppen === LEGENDE ? { stufen: STUFEN, hold: 'Orange: angehalten, bis eine offene Frage geklärt ist.' } : null) {
+  const balken = (i, hold) => `<div class="stufen mini" style="width:92px;flex:none">${bar.stufen.map((_, j) => `<div class="st ${j < i ? 'done' : j === i ? (hold ? 'hold' : 'now') : ''}"></div>`).join('')}</div>`;
   return `<h3>Legende</h3><p class="dim" style="font-size:13px">Was die Markierungen in der Liste bedeuten, nach Schritt geordnet.</p>
     ${gruppen.map(g => `<div class="leg${g.tab === aktiv ? ' on' : ''}"><div class="legk">${esc(g.name)}${g.tab === aktiv ? ' <span class="dim">· diese Ansicht</span>' : ''}</div>
       ${g.zeilen.map(([c, t, x]) => `<div class="legz"><span><span class="pill ${c}">${esc(t)}</span></span><span>${esc(x)}</span></div>`).join('')}</div>`).join('')}
-    ${gruppen !== LEGENDE ? '' : `<div class="leg"><div class="legk">Der Balken darunter</div>
-      <p style="font-size:13px;margin:4px 0 8px">Vier Schritte: ${STUFEN.map(s => esc(s.name)).join(' → ')}.</p>
+    ${!bar ? '' : `<div class="leg"><div class="legk">Der Balken darunter</div>
+      <p style="font-size:13px;margin:4px 0 8px">${['', 'Ein', 'Zwei', 'Drei', 'Vier', 'Fünf'][bar.stufen.length]} Schritte: ${bar.stufen.map(s => esc(s.name)).join(' → ')}.</p>
       <div class="legz"><span>${balken(1)}</span><span>Grün ist erledigt, schwarz ist der Schritt, auf dem sie gerade steht.</span></div>
-      <div class="legz"><span>${balken(0, true)}</span><span>Orange: angehalten, bis eine offene Frage geklärt ist.</span></div></div>`}
+      <div class="legz"><span>${balken(bar.holdBei || 0, true)}</span><span>${bar.hold}</span></div></div>`}
     <div class="acts"><button class="btn" data-zu>Schliessen</button></div>`;
 }
 
@@ -1561,15 +1594,77 @@ function belegLayout(r) {
   // gets a page of its own — as the Swiss standard allows
   if (qr) {
     if (y + 2 > 190) { pages.push([]); P = pages[pages.length - 1]; }
-    qrRechnung(r, l, s, T, L, R);
+    qrRechnung({ seed: r.id, an: ['CH44 3199 9123 0008 8901 2', l.name, l.strasse, l.plz + ' ' + ort], von: [f.name, f.strasse, f.plz + ' ' + f.ort], betrag: s.brutto, ref: r.nr, info: 'Rechnung ' + r.nr + ' vom ' + dt(r.datum) }, T, L, R);
   }
   return { pages, name: `${l.name.split(/\s+/)[0]}_${r.nr}.pdf`.replace(/[^\w.\-äöüÄÖÜ]+/g, '-') };
 }
 
-function qrRechnung(r, l, s, T, L, R) {
-  const f = DB.firma, top = 192, iban = 'CH44 3199 9123 0008 8901 2';
-  const an = [iban, l.name, l.strasse, l.plz + ' ' + l.ort.replace(/\s*\(\w\w\)$/, '')];
-  const von = [f.name, f.strasse, f.plz + ' ' + f.ort];
+/* A customer invoice from the restaurant: the same A4 letter with the
+   restaurant as sender, prices including VAT (as on the menu), payments
+   already made, and a QR-bill over what is still open. */
+function debLayout(d) {
+  const k = kunde(d.kunde) || {}, s = debSummen(d), f = DB.firma, nr = d.id.slice(1);
+  const pages = [[]]; let P = pages[0];
+  const T = (x, y, str, o = {}) => P.push({ t: 'text', x, y, s: String(str), pt: o.pt || 9, b: !!o.b, a: o.a || 'l', c: o.c || SCHWARZ });
+  const L = (x1, y1, x2, y2, o = {}) => P.push({ t: 'line', x1, y1, x2, y2, w: o.w || .25, c: o.c || SCHWARZ, dash: o.dash });
+  const R = (x, y, wd, ht, c) => P.push({ t: 'rect', x, y, w: wd, h: ht, c: c || SCHWARZ });
+
+  T(190, 26, f.marke, { pt: 18, b: true, a: 'r', c: '#0f6e63' });
+  [[f.name, true], [f.strasse], [f.plz + ' ' + f.ort], [f.email], [f.mwst]].forEach(([z, b], i) => T(190, 33 + i * 4.2, z, { pt: 8.5, b, a: 'r' }));
+  [k.name, k.kontakt, k.strasse, k.ort].filter(Boolean).forEach((z, i) => T(20, 52 + i * 4.4, z, { pt: 9.5 }));
+  if (d.storniert) T(190, 60, 'STORNIERT', { pt: 20, b: true, a: 'r', c: '#b42318' });
+
+  T(20, 78, 'Rechnung ' + nr, { pt: 13, b: true });
+  L(20, 81, 190, 81);
+  T(20, 86.5, 'Datum:', { pt: 9 }); T(52, 86.5, dt(d.datum), { pt: 9 });
+  T(110, 86.5, 'Zahlbar bis:', { pt: 9 }); T(142, 86.5, dt(d.faellig), { pt: 9 });
+  L(20, 89.5, 190, 89.5);
+  const du = k.anrede === 'du';
+  T(20, 97, du ? 'Hallo ' + (k.kontakt || '').split(' ')[0] : 'Guten Tag' + (k.kontakt && !/kanzlei|buchhaltung/i.test(k.kontakt) ? ' ' + k.kontakt : ''), { pt: 9.5 });
+  let yi = 102.5;
+  umbrechen(DB.texte['einleitung_' + (k.anrede || 'sie')], 170, 9.5).forEach(z => { T(20, yi, z, { pt: 9.5 }); yi += 4.6; });
+
+  let y = yi + 6;
+  [['Pos.', 20, 'l'], ['Beschreibung', 30, 'l'], ['Menge', 136, 'r'], ['Preis', 160, 'r'], ['Total CHF', 190, 'r']].forEach(([t, x, a]) => T(x, y, t, { pt: 8.5, b: true, a }));
+  L(20, y + 2, 190, y + 2);
+  y += 7.5;
+  d.pos.forEach((p, i) => {
+    const zeilen = umbrechen(p[0], 96, 9, true);
+    T(20, y, i + 1, { pt: 9 });
+    zeilen.forEach((z, j) => T(30, y + j * 4.2, z, { pt: 9, b: true }));
+    T(136, y, String(p[1]), { pt: 9, a: 'r' }); T(160, y, fmt(p[2]), { pt: 9, a: 'r' }); T(190, y, fmt(p[1] * p[2]), { pt: 9, a: 'r' });
+    y += 5.5 + (zeilen.length - 1) * 4.2;
+  });
+  L(20, y - 3, 190, y - 3);
+
+  let yt = y + 2;
+  T(112, yt, 'Total inkl. MWST', { pt: 9, b: true }); T(190, yt, fmt(s.brutto), { pt: 9, b: true, a: 'r' }); yt += 5;
+  T(112, yt, `enthält MWST ${d.satz} % auf ${fmt(s.netto)}`, { pt: 9, c: GRAU }); T(190, yt, fmt(s.mwst), { pt: 9, a: 'r', c: GRAU }); yt += 5;
+  (d.zahlungen || []).forEach(z => { T(112, yt, `${z.notiz || 'Zahlung'} ${dt(z.datum)}`, { pt: 9 }); T(190, yt, '− ' + fmt(z.betrag), { pt: 9, a: 'r' }); yt += 5; });
+  L(112, yt - 3, 190, yt - 3);
+  T(112, yt + 1, s.bezahlt ? 'Noch offen' : 'Zu bezahlen', { pt: 9.5, b: true }); T(190, yt + 1, 'CHF ' + fmt(s.offen), { pt: 9.5, b: true, a: 'r' });
+  L(112, yt + 3.2, 190, yt + 3.2, { w: .3 }); L(112, yt + 4, 190, yt + 4, { w: .3 });
+  yt += 4;
+
+  let yl = y + 2;
+  const zahlung = d.storniert ? 'Diese Rechnung ist storniert: ' + d.storniert + '.' : s.offen <= 0.004 ? 'Vielen Dank, die Rechnung ist bezahlt.' : `Bitte bis ${dt(d.faellig)} mit dem QR-Zahlteil unten einzahlen.`;
+  umbrechen(zahlung, 84, 9).forEach(z => { T(20, yl, z, { pt: 9 }); yl += 4.2; });
+  yl += 3;
+  T(20, yl, du ? 'Liebe Grüsse' : 'Freundliche Grüsse', { pt: 9.5 }); yl += 5;
+  T(20, yl, f.marke, { pt: 9.5, b: true });
+  y = Math.max(yt, yl);
+
+  if (!d.storniert && s.offen > 0.004) {
+    if (y + 2 > 190) { pages.push([]); P = pages[pages.length - 1]; }
+    const [plz, ...ort] = (k.ort || '').split(' ');
+    qrRechnung({ seed: d.id, an: [f.iban, f.name, f.strasse, f.plz + ' ' + f.ort], von: [k.name, k.strasse, [plz, ...ort].join(' ')].filter(Boolean), betrag: s.offen, ref: nr, info: 'Rechnung ' + nr + ' vom ' + dt(d.datum) }, T, L, R);
+  }
+  return { pages, name: `Rechnung_${nr}_${(k.name || '').split(/\s+/)[0]}.pdf`.replace(/[^\w.\-äöüÄÖÜ]+/g, '-') };
+}
+
+// q: { seed, an: [IBAN, name, …], von: [name, …], betrag, ref, info }
+function qrRechnung(q0, T, L, R) {
+  const top = 192, an = q0.an, von = q0.von;
   L(0, top, 210, top, { dash: [1, 1], c: '#000' });
   L(62, top, 62, 297, { dash: [1, 1], c: '#000' });
   // Empfangsschein
@@ -1577,14 +1672,14 @@ function qrRechnung(r, l, s, T, L, R) {
   let y = top + 17;
   const block = (x, titel, zeilen, pt = 8, kpt = 6) => { T(x, y, titel, { pt: kpt, b: true }); y += 3.6; zeilen.forEach(z => { T(x, y, z, { pt }); y += 3.6; }); y += 2; };
   block(5, 'Konto / Zahlbar an', an);
-  block(5, 'Referenz', [r.nr]);
+  block(5, 'Referenz', [q0.ref]);
   block(5, 'Zahlbar durch', von);
   T(5, top + 68, 'Währung', { pt: 6, b: true }); T(20, top + 68, 'Betrag', { pt: 6, b: true });
-  T(5, top + 72, 'CHF', { pt: 8 }); T(20, top + 72, fmt(s.brutto).replace(/’/g, ' '), { pt: 8 });
+  T(5, top + 72, 'CHF', { pt: 8 }); T(20, top + 72, fmt(q0.betrag).replace(/’/g, ' '), { pt: 8 });
   T(57, top + 83, 'Annahmestelle', { pt: 6, b: true, a: 'r' });
   // Zahlteil
   T(67, top + 10, 'Zahlteil', { pt: 11, b: true });
-  const q = qrModule(r.id), x0 = 67, y0 = top + 17, mod = 46 / q.n;
+  const q = qrModule(q0.seed), x0 = 67, y0 = top + 17, mod = 46 / q.n;
   R(x0, y0, 46, 46, '#ffffff');
   q.m.forEach(([x, yy]) => R(x0 + x * mod, y0 + yy * mod, mod, mod));
   [[0, 0], [q.n - 7, 0], [0, q.n - 7]].forEach(([x, yy]) => { R(x0 + x * mod, y0 + yy * mod, 7 * mod, 7 * mod); R(x0 + (x + 1) * mod, y0 + (yy + 1) * mod, 5 * mod, 5 * mod, '#ffffff'); R(x0 + (x + 2) * mod, y0 + (yy + 2) * mod, 3 * mod, 3 * mod); });
@@ -1592,12 +1687,12 @@ function qrRechnung(r, l, s, T, L, R) {
   R(x0 + 22.4, y0 + 21.2, 1.2, 3.6, '#ffffff'); R(x0 + 21.2, y0 + 22.4, 3.6, 1.2, '#ffffff');
   T(x0 + 23, y0 + 49, 'Demo — QR-Code nicht scannbar', { pt: 6, a: 'c', c: GRAU });
   T(67, top + 72, 'Währung', { pt: 8, b: true }); T(87, top + 72, 'Betrag', { pt: 8, b: true });
-  T(67, top + 77, 'CHF', { pt: 10 }); T(87, top + 77, fmt(s.brutto).replace(/’/g, ' '), { pt: 10 });
+  T(67, top + 77, 'CHF', { pt: 10 }); T(87, top + 77, fmt(q0.betrag).replace(/’/g, ' '), { pt: 10 });
   y = top + 10;
   T(118, y, 'Konto / Zahlbar an', { pt: 8, b: true }); y += 4.2;
   an.forEach(z => { T(118, y, z, { pt: 10 }); y += 4.2; }); y += 2.5;
-  T(118, y, 'Referenz', { pt: 8, b: true }); y += 4.2; T(118, y, r.nr, { pt: 10 }); y += 6.7;
-  T(118, y, 'Zusätzliche Informationen', { pt: 8, b: true }); y += 4.2; T(118, y, 'Rechnung ' + r.nr + ' vom ' + dt(r.datum), { pt: 10 }); y += 6.7;
+  T(118, y, 'Referenz', { pt: 8, b: true }); y += 4.2; T(118, y, q0.ref, { pt: 10 }); y += 6.7;
+  T(118, y, 'Zusätzliche Informationen', { pt: 8, b: true }); y += 4.2; T(118, y, q0.info, { pt: 10 }); y += 6.7;
   T(118, y, 'Zahlbar durch', { pt: 8, b: true }); y += 4.2;
   von.forEach(z => { T(118, y, z, { pt: 10 }); y += 4.2; });
 }
@@ -1662,11 +1757,19 @@ function belegPDF(layout, titel) {
 /* ── the viewer ──────────────────────────────────────────────────────── */
 let BELEG_ZOOM = 1;
 const ZOOMS = [1, 1.25, 1.5, 2];
+// a document id → its layout and its title: supplier invoices are the
+// Originalbeleg, customer invoices are the restaurant's own letter
+function dokument(id) {
+  const r = DB.rechnungen.find(x => x.id === id);
+  if (r) return { lay: belegLayout(r), kopf: 'Originalbeleg', titel: 'Rechnung ' + r.nr + ' · ' + lief(r.lief).name };
+  const d = DB.debitoren.find(x => x.id === id);
+  return { lay: debLayout(d), kopf: 'Rechnung als PDF', titel: 'Rechnung ' + d.id.slice(1) + ' · ' + ((kunde(d.kunde) || {}).name || '') };
+}
 function belegViewer(r) {
-  const lay = belegLayout(r), n = lay.pages.length;
-  return `<div class="pdfv" aria-label="Originalbeleg">
+  const dok = dokument(r.id), lay = dok.lay, n = lay.pages.length;
+  return `<div class="pdfv" aria-label="${dok.kopf}">
     <div class="pdfbar">
-      <div class="pt"><b>Originalbeleg</b><span>${esc(lay.name)} · ${n} Seite${n > 1 ? 'n' : ''}</span></div>
+      <div class="pt"><b>${dok.kopf}</b><span>${esc(lay.name)} · ${n} Seite${n > 1 ? 'n' : ''}</span></div>
       <div class="pa">
         <span class="zoom"><button class="ib" data-zoom="-1" aria-label="Verkleinern"${BELEG_ZOOM === ZOOMS[0] ? ' disabled' : ''}>−</button><span class="zv">${Math.round(BELEG_ZOOM * 100)} %</span><button class="ib" data-zoom="1" aria-label="Vergrössern"${BELEG_ZOOM === ZOOMS[ZOOMS.length - 1] ? ' disabled' : ''}>+</button></span>
         <button class="ib" data-pdf="laden" data-r="${r.id}" aria-label="Als PDF herunterladen" title="Herunterladen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.8 7.5 8 10.7l3.2-3.2M3 13.5h10"/></svg></button>
@@ -1676,9 +1779,9 @@ function belegViewer(r) {
     <div class="pdfscroll"><div class="pdfseiten" style="width:${BELEG_ZOOM * 100}%">${lay.pages.map((ops, i) => belegSVG(ops, i + 1, n)).join('')}</div></div>
   </div>`;
 }
-function belegOeffnen(r, laden) {
-  const lay = belegLayout(r);
-  const url = URL.createObjectURL(new Blob([belegPDF(lay, 'Rechnung ' + r.nr + ' · ' + lief(r.lief).name)], { type: 'application/pdf' }));
+function belegOeffnen(id, laden) {
+  const dok = dokument(id), lay = dok.lay;
+  const url = URL.createObjectURL(new Blob([belegPDF(lay, dok.titel)], { type: 'application/pdf' }));
   if (laden) {
     const a = document.createElement('a'); a.href = url; a.download = lay.name; document.body.appendChild(a); a.click(); a.remove();
   } else if (!window.open(url, '_blank')) {
@@ -1704,7 +1807,7 @@ VIEWS.uebersicht = () => {
 
   const todo = [];
   if (o.ueberfaellig) todo.push([3, `${o.ueberfaellig} Rechnung${o.ueberfaellig > 1 ? 'en' : ''} überfällig`, 'Jetzt bezahlen oder mit dem Lieferanten klären', 'rechnungen', 'zahlen']);
-  if (o.debUeber) todo.push([3, `${o.debUeber} Kundenrechnung${o.debUeber > 1 ? 'en' : ''} überfällig`, 'Erinnerung senden', 'kunden', 'offen']);
+  if (o.debUeber) todo.push([3, `${o.debUeber} Kundenrechnung${o.debUeber > 1 ? 'en' : ''} überfällig`, 'Erinnerung senden', 'kunden', 'ueber']);
   if (o.pruefen) todo.push([2, `${o.pruefen} Rechnung${o.pruefen > 1 ? 'en' : ''} prüfen & kontieren`, 'Konto und MWST bestätigen — Vorschläge stehen bereit', 'rechnungen', 'pruefen']);
   if (o.bankOffen) todo.push([2, `${o.bankOffen} Bankbuchung${o.bankOffen > 1 ? 'en' : ''} ohne Beleg`, 'Beleg hochladen oder Vorschlag bestätigen', 'bank', '']);
   if (o.debFreigabe) todo.push([2, `${o.debFreigabe} Kundenrechnung zur Freigabe`, 'Kurz ansehen und versenden', 'kunden', 'freigabe']);
@@ -2007,7 +2110,7 @@ let BFILTER = 'offen';
 function zuText(b) {
   const z = b.zu; if (!z) return '';
   if (z.typ === 'kreditor') { const r = DB.rechnungen.find(x => x.id === z.ref); return r ? `Rechnung ${esc(r.nr)} · ${esc(lief(r.lief).name)}` : 'Lieferantenrechnung'; }
-  if (z.typ === 'debitor') return `Kundenrechnung ${esc(z.ref)}`;
+  if (z.typ === 'debitor') return `Kundenrechnung ${esc(z.ref.slice(1))}`;
   if (z.typ === 'kasse') return `Bareinzahlung ${esc(z.ref)}`;
   if (z.typ === 'karten') return 'Kartenabrechnung · Umsatz';
   if (z.typ === 'lohn') return 'Lohnlauf';
@@ -2186,43 +2289,106 @@ VIEWS.kasse_nach = () => {
    are recorded on it. A correction keeps the number and leaves a log line;
    a cancellation needs a reason.
    ══════════════════════════════════════════════════════════════════════ */
-let DTAB = 'entwurf', DSUCHE = '';
+// DZEIGE: the invoice on screen — after an action it stays, and the list
+// switches to the tab it now belongs to (as on Rechnungen)
+let DTAB = 'entwurf', DSUCHE = '', DLSUCHE = '', DZEIGE = '';
 const DTABS = {
   entwurf: { name: 'Zu verrechnen', f: d => d.stufe === 'entwurf' },
   freigabe: { name: 'Zur Freigabe', f: d => d.stufe === 'freigabe' },
   offen: { name: 'Offen', f: d => d.stufe === 'versendet' },
   erledigt: { name: 'Erledigt', f: d => d.stufe === 'bezahlt' },
-  kunden: { name: 'Kunden' },
+  alle: { name: 'Alle', f: () => true },
+  // reached from the figure above the list; a chip only while open
+  ueber: { name: 'Überfällig', f: d => d.stufe === 'versendet' && tageBis(d.faellig) < 0, versteckt: true },
+  kunden: { name: 'Kunden' },   // the customer list, not a status
 };
+const DBALKEN = { stufen: DSTUFEN, holdBei: 2, hold: 'Orange: versendet und überfällig, die Zahlungsfrist ist verpasst.' };
 const naechsteNr = () => 'D' + (Math.max(FIRMA.nummerAb, ...DB.debitoren.map(d => +d.id.slice(1))) + 1);
+const belegSumme = q => q.pos.reduce((s, p) => s + p[1] * p[2], 0);
+function dStatus(x) {
+  const t = tageBis(x.faellig), s = debSummen(x), P = (c, t, l) => pill(c, t, l, DLEGENDE);
+  if (x.storniert) return P('g', 'storniert');
+  if (x.stufe === 'bezahlt') return P('s1', 'bezahlt');
+  if (x.stufe === 'freigabe') return P('s2', 'wartet auf Freigabe');
+  if (x.stufe === 'entwurf') return P('i', 'Entwurf');
+  const frist = t < 0 ? P('s3', `${-t} T. überfällig${x.mahnstufe ? ' · ' + x.mahnstufe + '. Erinnerung' : ''}`, x.mahnstufe ? '19 T. überfällig · 1. Erinnerung' : '5 T. überfällig')
+    : t <= 5 ? P('s2', t ? `fällig in ${t} T.` : 'heute fällig', 'fällig in 3 T.') : P('g', `fällig ${dtk(x.faellig)}`, 'fällig 14.11.');
+  return frist + (s.bezahlt ? ' ' + P('g', 'Teilzahlung') : '');
+}
+function dBalken(d, mini) {
+  const i = stufeIdx2(d.stufe), ueber = d.stufe === 'versendet' && tageBis(d.faellig) < 0;
+  return `<div class="stufen${mini ? ' mini' : ''}" aria-label="Stand: ${esc(d.storniert ? 'storniert' : DSTUFEN[i].name)}">` + DSTUFEN.map((x, j) =>
+    `<div class="st ${d.storniert ? '' : j < i || (d.stufe === 'bezahlt' && j === i) ? 'done' : j === i ? (ueber ? 'hold' : 'now') : ''}" title="${esc(x.name)}">${esc(x.name)}</div>`).join('') + '</div>';
+}
+function dListe() {
+  const q = DLSUCHE.trim().toLowerCase(), f = DTABS[DTAB].f;
+  const passt = t => !q || t.toLowerCase().includes(q);
+  const liste = DB.debitoren.filter(d => f(d) && passt(((kunde(d.kunde) || {}).name || '') + ' ' + d.id.slice(1) + ' ' + fmt(debSummen(d).brutto) + ' ' + debSummen(d).brutto.toFixed(2)))
+    .sort((a, b) => DTAB === 'offen' || DTAB === 'ueber' ? (a.faellig < b.faellig ? -1 : 1) : (a.datum < b.datum ? 1 : -1));
+  const belege = DTAB === 'entwurf' || DTAB === 'alle' ? DB.kassenbelege.filter(x => passt('Kassenbeleg ' + x.id + ' ' + (x.notiz || '') + ' ' + fmt(belegSumme(x)))) : [];
+  return { liste, belege };
+}
+function dChips() {
+  const n = k => k === 'kunden' ? DB.kunden.length : DB.debitoren.filter(DTABS[k].f).length + (k === 'entwurf' || k === 'alle' ? DB.kassenbelege.length : 0);
+  return `<div class="chips">${Object.entries(DTABS).filter(([k, t]) => !t.versteckt || k === DTAB).map(([k, t]) => `<button class="chip${k === DTAB ? ' on' : ''}${k === 'kunden' ? ' ku' : ''}" data-dtab="${k}">${t.name}<span class="n">${n(k)}</span></button>`).join('')}</div>`;
+}
+/* The four figures above the list — each opens the list that makes it up. */
+function kundenKopf() {
+  const D = DB.debitoren, sum = L => L.reduce((s, x) => s + x, 0);
+  const ent = D.filter(DTABS.entwurf.f), frei = D.filter(DTABS.freigabe.f), off = D.filter(DTABS.offen.f), ueb = D.filter(DTABS.ueber.f);
+  const nEnt = ent.length + DB.kassenbelege.length, alt = Math.max(0, ...ueb.map(d => -tageBis(d.faellig)));
+  const k = (f, cls, titel, wert, unter) => `<button class="kpi kl ${cls}${DTAB === f ? ' on' : ''}" data-dtab="${f}"><div class="k">${titel}</div><div class="v num">${wert}</div><div class="s">${unter}</div></button>`;
+  const rg = n => n + ' Rechnung' + (n === 1 ? '' : 'en');
+  return `<div class="grid g4 rkopf">
+    ${k('entwurf', nEnt ? 's2' : 's1', 'Zu verrechnen', nEnt, nEnt ? chf(sum(ent.map(d => debSummen(d).brutto)) + sum(DB.kassenbelege.map(belegSumme)), 0) + ' aus Kassenbelegen' : 'nichts offen')}
+    ${k('freigabe', frei.length ? 's2' : 's1', 'Zur Freigabe', frei.length, frei.length ? 'wartet auf ' + esc(DB.firma.inhaber) : 'nichts offen')}
+    ${k('offen', '', 'Offen', chf(sum(off.map(d => debSummen(d).offen)), 0), rg(off.length) + ' versendet')}
+    ${k('ueber', ueb.length ? 's3' : 's1', 'Überfällig', ueb.length ? chf(sum(ueb.map(d => debSummen(d).offen)), 0) : 'keine', ueb.length ? `${rg(ueb.length)} · älteste ${alt} T.` : 'alles im Ziel')}
+  </div>`;
+}
+/* How old the open amount is — who to chase first. */
+function altersstruktur() {
+  const off = DB.debitoren.filter(DTABS.offen.f);
+  const B = [['Nicht fällig', t => t >= 0, 'g'], ['1–30 Tage', t => t < 0 && t >= -30, 's2'], ['31–60 Tage', t => t < -30 && t >= -60, 's3'], ['über 60 Tage', t => t < -60, 's3 tief']]
+    .map(([name, f, c]) => { const L = off.filter(d => f(tageBis(d.faellig))); return { name, c, n: L.length, chf: L.reduce((s, d) => s + debSummen(d).offen, 0) }; });
+  const tot = B.reduce((s, b) => s + b.chf, 0) || 1;
+  return `<div class="card alter" style="margin-top:16px"><h2>Altersstruktur</h2><div class="lead">Offene Rechnungen nach Tagen über der Zahlungsfrist</div>
+    <div class="abar">${B.filter(b => b.chf).map(b => `<span class="${b.c}" style="width:${(b.chf / tot * 100).toFixed(2)}%" title="${b.name}: ${chf(b.chf)}"></span>`).join('')}</div>
+    <div class="agrid">${B.map(b => `<div><span class="dot ${b.c}"></span><b>${b.name}</b><span class="num">${chf(b.chf, 0)}</span><span class="dim">${b.n} Rechnung${b.n === 1 ? '' : 'en'}</span></div>`).join('')}</div></div>`;
+}
 VIEWS.kunden = () => {
-  if (DTABS[PARAM]) { DTAB = PARAM; PARAM = ''; }
-  let d = DB.debitoren.find(x => x.id === PARAM);
-  let q = DB.kassenbelege.find(x => x.id === PARAM);
-  if (d) DTAB = Object.keys(DTABS).find(k => DTABS[k].f && DTABS[k].f(d)) || DTAB;
-  if (q) DTAB = 'entwurf';
-  const n = k => k === 'entwurf' ? DB.debitoren.filter(DTABS.entwurf.f).length + DB.kassenbelege.length : k === 'kunden' ? DB.kunden.length : DB.debitoren.filter(DTABS[k].f).length;
-  const tabs = `<div class="tabs" role="tablist">${Object.entries(DTABS).map(([k, t]) => `<button class="tab${k === DTAB ? ' on' : ''}" data-dtab="${k}" role="tab" aria-selected="${k === DTAB}">${t.name}<span class="n">${n(k)}</span></button>`).join('')}</div>`;
-  if (DTAB === 'kunden') return tabs + kundenListe();
-  const liste = DB.debitoren.filter(DTABS[DTAB].f).sort((a, b) => a.datum < b.datum ? 1 : -1);
-  const belege = DTAB === 'entwurf' ? DB.kassenbelege : [];
-  if (!d && !q) { d = liste[0]; if (!d) q = belege[0]; }
-  const item = x => {
-    const s = debSummen(x), k = kunde(x.kunde), t = tageBis(x.faellig);
-    const pill = x.storniert ? '<span class="pill g">storniert</span>' : x.stufe === 'versendet' ? (t < 0 ? `<span class="pill s3">${-t} T. überfällig${x.mahnstufe ? ' · ' + x.mahnstufe + '. Erinnerung' : ''}</span>` : `<span class="pill g">fällig ${dtk(x.faellig)}</span>`) : x.stufe === 'bezahlt' ? '<span class="pill s1">bezahlt</span>' : x.stufe === 'freigabe' ? '<span class="pill s2">wartet auf Freigabe</span>' : '<span class="pill i">Entwurf</span>';
-    return `<button class="li${d && x.id === d.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>${esc(k ? k.name : '—')}</span><span class="num">${fmt(x.stufe === 'versendet' ? s.offen : s.brutto)}</span></div><div class="b"><span>${esc(x.id)} · ${dt(x.datum)}</span>${s.bezahlt && x.stufe === 'versendet' ? '<span>Rest</span>' : ''}</div><div class="c">${pill}</div></button>`;
-  };
-  return tabs + `<div class="split deb">
-    <div class="col"><div class="liste"><div class="items">
-      ${belege.map(x => `<button class="li${q && x.id === q.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>Kassenbeleg ${esc(x.id)}</span><span class="num">${fmt(x.pos.reduce((s, p) => s + p[1] * p[2], 0))}</span></div><div class="b"><span>${dt(x.datum)} · Tisch ${esc(x.tisch)} · ${x.gedecke} Gedecke</span></div><div class="c"><span class="pill i">Rechnung erstellen</span></div></button>`).join('')}
-      ${liste.map(item).join('')}
-      ${!belege.length && !liste.length ? '<div class="leer">Nichts in dieser Ansicht.</div>' : ''}
-    </div></div></div>
-    ${q ? kassenbelegDetail(q) : d ? `<div class="col doc">${debPapier(d)}</div><div class="col"><div class="panel">${debAktionen(d)}</div></div>` : '<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links einen Eintrag.</div></div>'}
+  if (DTABS[PARAM]) { DTAB = PARAM; PARAM = ''; DZEIGE = ''; }
+  const id = PARAM || DZEIGE;
+  let d = DB.debitoren.find(x => x.id === id), q = DB.kassenbelege.find(x => x.id === id);
+  if (DTAB === 'kunden' && (PARAM && (d || q))) DTAB = 'alle';
+  if (DTAB === 'kunden') return kundenKopf() + kundenListe();
+  let { liste, belege } = dListe();
+  if (d && !liste.includes(d)) { DTAB = Object.keys(DTABS).find(k => !['alle', 'kunden', 'ueber'].includes(k) && DTABS[k].f(d)) || 'alle'; DLSUCHE = ''; ({ liste, belege } = dListe()); }
+  if (q && !belege.includes(q)) { DTAB = 'entwurf'; DLSUCHE = ''; ({ liste, belege } = dListe()); }
+  if (!d && !q) { q = belege[0]; if (!q) d = liste[0]; }
+  DZEIGE = d ? d.id : q ? q.id : '';
+  const ids = [...belege.map(x => x.id), ...liste.map(x => x.id)];
+  const item = x => `<button class="li${d && x.id === d.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>${esc((kunde(x.kunde) || {}).name || '—')}</span><span class="num">${fmt(x.stufe === 'versendet' ? debSummen(x).offen : debSummen(x).brutto)}</span></div><div class="b"><span>${esc(x.id.slice(1))} · ${dt(x.datum)}</span>${debSummen(x).bezahlt && x.stufe === 'versendet' ? '<span>Rest</span>' : ''}</div><div class="c">${dStatus(x)}</div><div style="margin-top:7px">${dBalken(x, true)}</div></button>`;
+  const beleg = x => `<button class="li${q && x.id === q.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>Kassenbeleg ${esc(x.id)}</span><span class="num">${fmt(belegSumme(x))}</span></div><div class="b"><span>${dt(x.datum)} · Tisch ${esc(x.tisch)} · ${x.gedecke} Gedecke</span></div><div class="c">${pill('i', 'Rechnung erstellen', null, DLEGENDE)}</div></button>`;
+  return kundenKopf() + (DTAB === 'offen' || DTAB === 'ueber' ? altersstruktur() : '') + `<div class="split deb" style="margin-top:16px">
+    <div class="col"><div class="liste">
+      <div class="lh">${dChips()}<input class="in" id="dlsuche" type="search" placeholder="Kunde, Nummer, Betrag" value="${esc(DLSUCHE)}" style="margin-top:10px"></div>
+      <div class="items">${belege.map(beleg).join('')}${liste.map(item).join('')}
+        ${!belege.length && !liste.length ? `<div class="leer">${DLSUCHE ? 'Nichts gefunden.' : 'Nichts in dieser Ansicht.'}</div>` : ''}</div>
+      <div class="lh row" style="border-top:1px solid var(--soft);border-bottom:0;font-size:12px;justify-content:flex-end"><button class="btn link" data-dlegende>Legende</button></div>
+    </div></div>
+    ${q ? kassenbelegDetail(q, ids) : d ? `<div class="col doc">${belegViewer(d)}</div><div class="col"><div class="panel">${debAktionen(d, ids)}</div></div>` : '<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links einen Eintrag.</div></div>'}
   </div>`;
 };
-function kassenbelegDetail(q) {
-  const tot = q.pos.reduce((s, p) => s + p[1] * p[2], 0);
+// «1 von 5» with ← → — the same as on Rechnungen
+function dBlaettern(id, ids) {
+  const i = ids.indexOf(id);
+  return `<div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <span class="dim" style="font-size:12px">${i >= 0 ? (i + 1) + ' von ' + ids.length : ''}</span>
+      <span class="row" style="gap:6px"><button class="btn sm" ${i > 0 ? `data-go="kunden" data-p="${ids[i - 1]}"` : 'disabled'} aria-label="Vorherige">←</button><button class="btn sm" ${i >= 0 && i < ids.length - 1 ? `data-go="kunden" data-p="${ids[i + 1]}"` : 'disabled'} aria-label="Nächste">→</button></span></div>`;
+}
+function kassenbelegDetail(q, ids) {
+  const tot = belegSumme(q);
   return `<div class="col doc"><div class="paper" style="max-width:380px;font-family:var(--mono);font-size:12px">
     <div style="text-align:center"><b>${esc(DB.firma.marke)}</b><br>${esc(DB.firma.strasse)} · ${esc(DB.firma.plz)} ${esc(DB.firma.ort)}</div>
     <div style="margin:12px 0;border-top:1px dashed #999;padding-top:8px">Beleg ${esc(q.id)}<br>${dt(q.datum)} · Tisch ${esc(q.tisch)} · ${q.gedecke} Gedecke</div>
@@ -2230,37 +2396,33 @@ function kassenbelegDetail(q) {
     <div style="display:flex;justify-content:space-between;border-top:1px dashed #999;margin-top:8px;padding-top:6px;font-weight:700"><span>TOTAL CHF</span><span>${fmt(tot)}</span></div>
     <div style="margin-top:8px">inkl. MWST 8.1 %: ${fmt(tot * 8.1 / 108.1)}</div>
     <div style="margin-top:8px;border-top:1px dashed #999;padding-top:8px">Zahlungsart: AUF RECHNUNG</div></div></div>
-  <div class="col"><div class="panel"><div class="card">
-    <div style="font-size:16px;font-weight:700">Rechnung aus Kassenbeleg</div>
+  <div class="col"><div class="panel"><div class="card">${dBlaettern(q.id, ids)}
+    <div style="font-size:17px;font-weight:700">Rechnung aus Kassenbeleg</div>
     <p class="dim" style="font-size:12.5px;margin:4px 0 10px">${esc(q.notiz || '')}</p>
     <label class="fld"><span>Rechnung an</span><select id="kb-kunde"><option value="">— Kunde wählen —</option>${DB.kunden.map(k => `<option value="${k.id}"${k.id === q.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
-    <p class="dim" style="font-size:12px;margin-top:8px">Alle ${q.pos.length} Positionen werden übernommen — nichts muss abgetippt werden. Die Nummer wird beim Erstellen vergeben.</p>
+    <p class="dim" style="font-size:12px;margin-top:8px">Alle ${q.pos.length} Positionen werden übernommen, nichts muss abgetippt werden. Die Nummer wird beim Erstellen vergeben.</p>
     <div class="row" style="margin-top:12px"><button class="btn acc" data-ausbeleg="${q.id}">Rechnung erstellen</button></div>
   </div></div></div>`;
 }
-function debPapier(d) {
-  const k = kunde(d.kunde) || {}, s = debSummen(d), f = DB.firma;
-  const intro = DB.texte['einleitung_' + (k.anrede || 'sie')];
-  return `<div class="paper" aria-label="Kundenrechnung">
-    ${d.storniert ? '<div style="text-align:right"><span class="stamp">STORNIERT</span></div>' : ''}
-    <div class="ph"><div><div class="lg">${esc(f.marke)}</div><div class="dim">${esc(f.strasse)} · ${esc(f.plz)} ${esc(f.ort)}<br>${esc(f.email)} · ${esc(f.mwst)}</div></div><div style="text-align:right" class="dim">${esc(f.name)}</div></div>
-    <div class="adr">${esc(k.name || '')}<br>${esc(k.kontakt || '')}<br>${esc(k.strasse || '')}<br>${esc(k.ort || '')}</div>
-    <h3>Rechnung ${esc(d.id.slice(1))}</h3>
-    <div class="dim">Datum ${dt(d.datum)} · zahlbar bis ${dt(d.faellig)}</div>
-    <p style="margin-top:12px">${k.anrede === 'du' ? 'Hallo ' + esc((k.kontakt || '').split(' ')[0]) : 'Guten Tag ' + esc(k.kontakt || '')}${k.anrede === 'du' ? '' : ''}<br>${esc(intro)}</p>
-    <table><thead><tr><th>Position</th><th style="text-align:right">Menge</th><th style="text-align:right">Preis</th><th style="text-align:right">CHF</th></tr></thead>
-    <tbody>${d.pos.map(p => `<tr><td>${esc(p[0])}</td><td style="text-align:right">${p[1]}</td><td style="text-align:right">${fmt(p[2])}</td><td style="text-align:right">${fmt(p[1] * p[2])}</td></tr>`).join('')}</tbody></table>
-    <table class="tot" style="width:auto;margin-left:auto;margin-top:12px"><tbody>
-      <tr><td>Total inkl. MWST</td><td style="text-align:right;padding-left:30px">CHF ${fmt(s.brutto)}</td></tr>
-      <tr><td class="dim">enthält MWST 8.1 % auf ${fmt(s.netto)}</td><td style="text-align:right" class="dim">${fmt(s.mwst)}</td></tr>
-      ${(d.zahlungen || []).map(z => `<tr><td>${esc(z.notiz || 'Zahlung')} ${dt(z.datum)}</td><td style="text-align:right">− ${fmt(z.betrag)}</td></tr>`).join('')}
-      <tr><td>${s.bezahlt ? 'Noch offen' : 'Zu bezahlen'}</td><td style="text-align:right">CHF ${fmt(s.offen)}</td></tr></tbody></table>
-    <div class="qr">${qrBild(d.id)}<div><b>Zahlteil</b><br>Konto ${esc(f.iban)}<br>${esc(f.name)}, ${esc(f.plz)} ${esc(f.ort)}<br>Referenz ${esc(d.id.slice(1))}<br>Betrag CHF ${fmt(s.offen)}<br><span class="dim">Demo — QR-Code nicht scannbar</span></div></div>
-  </div>`;
+/* An incoming payment comes from the bank statement: offered here when the
+   amount fits, or the customer's name or the invoice number is in the text.
+   Typing a bank payment by hand would count it twice once the statement
+   arrives — only cash and Twint are typed. */
+function debBankAbgleich(d) {
+  const s = debSummen(d), k = kunde(d.kunde) || {}, nr = d.id.slice(1);
+  const frei = DB.bank.filter(b => !b.zu && b.betrag > 0);
+  const wort = (k.name || '').split(/\s+/).find(w => w.length >= 4) || '';
+  const genau = frei.filter(b => Math.abs(b.betrag - s.offen) < 0.01);
+  const nah = frei.filter(b => !genau.includes(b) && (b.text.includes(nr) || (wort && b.text.toLowerCase().includes(wort.toLowerCase()))));
+  const box = (b, titel, cls) => { const rest = r2(s.offen - b.betrag);
+    return `<div class="box ${cls}" style="margin-top:10px"><b>${titel}</b><br><span class="num">${dt(b.datum)} · ${chf(b.betrag)}</span>${rest > 0.004 ? ` <span class="pill s2">Teilzahlung, Rest ${fmt(rest)}</span>` : rest < -0.004 ? ` <span class="pill s3">${fmt(-rest)} mehr als offen</span>` : ''}<br><span style="font-size:12.5px">${esc(b.text)}</span><br><button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${d.id}"${rest < -0.004 ? ' disabled' : ''}>Zuordnen</button></div>`; };
+  return `${genau.map(b => box(b, 'Passende Bankbuchung gefunden', 's1')).join('')}
+    ${nah.map(b => box(b, 'Gleicher Kunde, anderer Betrag', 'i')).join('')}
+    ${genau.length || nah.length ? '' : '<div class="box i" style="margin-top:10px">Noch keine passende Gutschrift auf der Bank. Sie erscheint hier, sobald der Kontoauszug sie bringt.</div>'}
+    ${frei.length ? `<button class="btn sm link" data-dandere="${d.id}" style="margin-top:8px">Andere Bankbuchung wählen…</button>` : ''}`;
 }
-function debAktionen(d) {
-  const k = kunde(d.kunde) || {}, s = debSummen(d), i = stufeIdx2(d.stufe);
-  const balkenD = `<div class="stufen" style="margin-top:12px">${DSTUFEN.map((x, j) => `<div class="st ${j < i || (d.stufe === 'bezahlt' && j === i) ? 'done' : j === i ? 'now' : ''}">${x.name}</div>`).join('')}</div>`;
+function debAktionen(d, ids) {
+  const k = kunde(d.kunde) || {}, s = debSummen(d);
   let body = '';
   if (d.storniert) body = `<div class="box i" style="margin-top:12px">Storniert: ${esc(d.storniert)}</div>`;
   else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">Die Rechnung ist aus dem Kassenbeleg gebaut. Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
@@ -2270,25 +2432,30 @@ function debAktionen(d) {
     <div class="row" style="margin-top:12px"><button class="btn acc" data-freigeben="${d.id}">Freigeben & per Mail senden</button><button class="btn" data-zurueck="${d.id}">Zurück zum Entwurf</button></div>`;
   else if (d.stufe === 'versendet') {
     const t = tageBis(d.faellig);
-    body = `<div class="sum"><span>Fällig</span><span class="num" style="${t < 0 ? 'color:var(--bad);font-weight:700' : ''}">${dt(d.faellig)}${t < 0 ? ' · ' + (-t) + ' T. überfällig' : ''}</span></div>
+    body = `<div class="sum" style="margin-top:12px"><span>Fällig</span><span class="num" style="${t < 0 ? 'color:var(--bad);font-weight:700' : ''}">${dt(d.faellig)}${t < 0 ? ' · ' + (-t) + ' T. überfällig' : t === 0 ? ' · heute' : ' · in ' + t + ' Tagen'}</span></div>
+    ${s.bezahlt ? `<div class="sum"><span>Schon bezahlt</span><span class="num">${chf(s.bezahlt)}</span></div>` : ''}
     <div class="sum big"><span>Offen</span><span class="num">${chf(s.offen)}</span></div>
-    <div class="step"><i>3</i>Zahlung erfassen</div>
-    <div class="grid g2" style="gap:8px"><label class="fld"><span>Betrag</span><input id="z-betrag" inputmode="decimal" value="${s.offen.toFixed(2)}"></label><label class="fld"><span>Datum</span><input type="date" id="z-datum" value="${HEUTE}"></label></div>
-    <label class="fld" style="margin-top:8px"><span>Weg</span><select id="z-weg"><option>Bank</option><option>Bar</option><option>Twint</option></select></label>
-    <div class="row" style="margin-top:10px"><button class="btn acc" data-zahlung="${d.id}">Zahlung erfassen</button></div>
+    <div class="step"><i>3</i>Zahlung zuordnen</div>
+    ${debBankAbgleich(d)}
+    <details class="bar" style="margin-top:12px"><summary>Bar oder mit Twint bezahlt?</summary>
+      <div class="grid g2" style="gap:8px;margin-top:8px"><label class="fld"><span>Betrag</span><input id="z-betrag" inputmode="decimal" value="${s.offen.toFixed(2)}"></label><label class="fld"><span>Datum</span><input type="date" id="z-datum" value="${HEUTE}"></label></div>
+      <label class="fld" style="margin-top:8px"><span>Weg</span><select id="z-weg"><option>Bar</option><option>Twint</option></select></label>
+      <div class="row" style="margin-top:10px"><button class="btn" data-zahlung="${d.id}">Zahlung erfassen</button></div></details>
     <div class="step"><i>!</i>Erinnern</div>
     <p style="font-size:12.5px" class="dim">${d.mahnstufe ? d.mahnstufe + '. Erinnerung bereits versendet.' : 'Noch keine Erinnerung.'} Der Text kommt aus den Vorlagen (${k.anrede === 'du' ? 'Du' : 'Sie'}).</p>
     <div class="row" style="margin-top:8px"><button class="btn" data-mahnen="${d.id}" ${t >= 0 ? 'disabled title="Noch nicht fällig"' : ''}>${d.mahnstufe ? 'Mahnung senden' : 'Zahlungserinnerung senden'}</button></div>
     <div class="row" style="margin-top:16px;gap:6px"><button class="btn sm" data-korrigieren="${d.id}">Korrigieren…</button><button class="btn sm bad" data-storno="${d.id}">Stornieren…</button></div>`;
-  } else body = `<div class="box s1" style="margin-top:12px">✓ Vollständig bezahlt.</div>`;
-  return `<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div style="font-size:17px;font-weight:700">${esc(k.name || '')}</div><div class="dim" style="font-size:12.5px">Rechnung ${esc(d.id.slice(1))} · ${dt(d.datum)}</div></div><div class="num" style="font-size:17px;font-weight:700">${chf(s.brutto)}</div></div>
-    ${balkenD}${body}</div>
+  } else body = `<div class="step done"><i>✓</i>Bezahlt</div>
+    ${(d.zahlungen || []).map(z => `<div class="sum"><span>${esc(z.notiz || 'Zahlung')} · ${esc(z.weg || '')}</span><span class="num">${dt(z.datum)} · ${chf(z.betrag)}</span></div>${z.bank ? `<div class="dim" style="font-size:12px">Bankbuchung <button class="btn link sm" data-go="bank" style="padding:0">${esc(z.bank)}</button></div>` : ''}`).join('')}`;
+  return `<div class="card">${dBlaettern(d.id, ids)}
+    <div class="row" style="justify-content:space-between;align-items:flex-start"><div><div style="font-size:17px;font-weight:700">${esc(k.name || '')}</div><div class="dim" style="font-size:12.5px">Rechnung ${esc(d.id.slice(1))} · ${dt(d.datum)}</div></div><div class="num" style="font-size:17px;font-weight:700">${chf(s.brutto)}</div></div>
+    <div style="margin-top:12px">${dBalken(d)}</div>${body}</div>
     <div class="card" style="margin-top:12px"><h2>Protokoll</h2><div class="log" style="margin-top:6px">${(d.protokoll || []).slice().reverse().map(p => `<div><span class="dim">${esc(p[0])}</span><span>${esc(p[1])}</span></div>`).join('')}</div></div>`;
 }
 function kundenListe() {
   const q = DSUCHE.trim().toLowerCase();
   const L = DB.kunden.filter(k => !q || (k.name + ' ' + k.kontakt + ' ' + k.ort + ' ' + k.mail).toLowerCase().includes(q));
-  return `<div class="card"><div class="row"><input class="in" id="dsuche" type="search" placeholder="Name, Ort, E-Mail" value="${esc(DSUCHE)}" style="max-width:340px"><span class="spacer"></span><button class="btn" data-kundeneu>+ Neuer Kunde</button></div>
+  return `<div class="card" style="margin-top:16px">${dChips()}<div class="row" style="margin-top:12px"><input class="in" id="dsuche" type="search" placeholder="Name, Ort, E-Mail" value="${esc(DSUCHE)}" style="max-width:340px"><span class="spacer"></span><button class="btn" data-kundeneu>+ Neuer Kunde</button></div>
   <div class="tw"><table class="t" style="margin-top:10px"><thead><tr><th>Kunde</th><th>Ort</th><th>Anrede</th><th class="r">Ziel</th><th class="r">Offen</th><th class="r">Umsatz 2026</th></tr></thead><tbody>
   ${L.map(k => { const D = DB.debitoren.filter(d => d.kunde === k.id && !d.storniert); const off = D.filter(d => d.stufe === 'versendet').reduce((s, d) => s + debSummen(d).offen, 0);
     return `<tr><td><b>${esc(k.name)}</b><div class="sub">${esc(k.kontakt)} · ${esc(k.mail)}</div></td><td>${esc(k.ort)}</td><td>${k.anrede === 'du' ? 'Du' : 'Sie'}</td><td class="r">${k.ziel} T.</td><td class="r num" style="${off ? 'font-weight:700' : ''}">${off ? fmt(off) : '—'}</td><td class="r num">${fmt(D.reduce((s, d) => s + debSummen(d).brutto, 0))}</td></tr>`; }).join('')}
@@ -2296,7 +2463,9 @@ function kundenListe() {
 }
 VIEWS.kunden_nach = () => {
   if (PARAM && innerWidth <= 900) { const p = document.querySelector('.split>.col:last-child'); if (p) setTimeout(() => p.scrollIntoView({ block: 'start' }), 0); }
-  const s = $('#dsuche'); if (s) s.addEventListener('input', () => { DSUCHE = s.value; const p = s.selectionStart; render(); const n = $('#dsuche'); n.focus(); n.setSelectionRange(p, p); });
+  [['#dsuche', v => DSUCHE = v], ['#dlsuche', v => { DLSUCHE = v; DZEIGE = ''; }]].forEach(([sel, setze]) => {
+    const s = $(sel); if (s) s.addEventListener('input', () => { setze(s.value); const p = s.selectionStart; render(); const n = $(sel); n.focus(); n.setSelectionRange(p, p); });
+  });
 };
 /* ══════════════════════════════════════════════════════════════════════
    KOSTEN — where the money goes, as a share of revenue, against the targets
@@ -2592,7 +2761,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-dlegende],[data-dandere],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -2628,7 +2797,7 @@ document.addEventListener('click', e => {
     const y = window.scrollY; render(); window.scrollTo(0, y);
     const n = $('.pdfscroll'); if (n) n.scrollTop = fx * n.scrollHeight; return;
   }
-  if (d.pdf) { belegOeffnen(R_(d.r), d.pdf === 'laden'); return; }
+  if (d.pdf) { belegOeffnen(d.r, d.pdf === 'laden'); return; }
   // ── Rechnungen ──
   if (d.rfilter) { RFILTER = d.rfilter; PARAM = ''; ZEIGE = ''; location.hash = '#rechnungen'; render(); return; }
   if ('legende' in d) { modal(legende(RFILTER)); return; }
@@ -2729,7 +2898,9 @@ document.addEventListener('click', e => {
     const b = DB.bank.find(x => x.id === d.zuordnen);
     const r = R_(d.ref), deb = D_(d.ref);
     if (r) { modalZu(); kreditorZuordnen(b, r); return; }
-    else if (deb) { b.zu = { typ: 'debitor', ref: deb.id }; deb.zahlungen.push({ datum: b.datum, betrag: b.betrag, weg: 'Bank', bank: b.id, notiz: 'Zahlung' }); prot(deb, 'Zahlung ' + chf(b.betrag) + ' über Bank (' + b.id + ') zugeordnet'); if (debSummen(deb).offen <= 0.004) { deb.stufe = 'bezahlt'; prot(deb, 'Vollständig bezahlt'); } }
+    else if (deb) {
+      if (b.betrag > debSummen(deb).offen + 0.004) { toast(`Die Gutschrift (${chf(b.betrag)}) ist höher als offen (${chf(debSummen(deb).offen)}).`, 3); return; }
+      modalZu(); b.zu = { typ: 'debitor', ref: deb.id }; deb.zahlungen.push({ datum: b.datum, betrag: b.betrag, weg: 'Bank', bank: b.id, notiz: 'Zahlung' }); prot(deb, 'Zahlung ' + chf(b.betrag) + ' über Bank (' + b.id + ') zugeordnet'); if (debSummen(deb).offen <= 0.004) { deb.stufe = 'bezahlt'; prot(deb, 'Vollständig bezahlt'); } }
     logge('Bankbuchung ' + b.id + ' zugeordnet'); neu(); toast('Zugeordnet. ✓', 1); return;
   }
 
@@ -2811,7 +2982,16 @@ document.addEventListener('click', e => {
   if (d.kasseweg) { DB.kasse = DB.kasse.filter(e => e.id !== d.kasseweg); neu(); return; }
 
   // ── Kundenrechnungen ──
-  if (d.dtab) { DTAB = d.dtab; location.hash = '#kunden'; render(); return; }
+  if (d.dtab) { DTAB = d.dtab; DZEIGE = ''; PARAM = ''; location.hash = '#kunden'; render(); return; }
+  if ('dlegende' in d) { modal(legende(DTAB, DLEGENDE, DBALKEN)); return; }
+  if (d.dandere) {
+    const x = D_(d.dandere), soll = debSummen(x).offen;
+    const frei = DB.bank.filter(b => !b.zu && b.betrag > 0).sort((a, b) => Math.abs(a.betrag - soll) - Math.abs(b.betrag - soll));
+    modal(`<h3>Bankbuchung wählen</h3><p class="dim" style="font-size:13px">Für Rechnung ${esc(x.id.slice(1))} · ${esc((kunde(x.kunde) || {}).name || '')} · offen ${chf(soll)}. Nächstliegende Beträge zuerst; ein kleinerer Betrag gilt als Teilzahlung.</p>
+      <div style="margin-top:10px;max-height:50vh;overflow:auto">${frei.map(b => `<button class="todo" style="width:100%;text-align:left;border:0;background:none" data-zuordnen="${b.id}" data-ref="${x.id}"><span class="dot ${b.betrag > soll + 0.004 ? 's3' : 's1'}"></span><div><div class="t num">${chf(b.betrag)} <span class="dim" style="font-weight:400">· ${dt(b.datum)}</span></div><div class="d">${esc(b.text)}</div></div><span class="n">›</span></button>`).join('')}</div>
+      <div class="acts"><button class="btn" data-zu>Abbrechen</button></div>`);
+    return;
+  }
   if (d.ausbeleg) {
     const q = DB.kassenbelege.find(x => x.id === d.ausbeleg), sel = $('#kb-kunde').value;
     if (sel === 'neu') { kundeNeu(id => { q.kunde = id; neu(); go('kunden', q.id); }); return; }
