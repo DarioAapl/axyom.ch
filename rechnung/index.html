@@ -59,7 +59,6 @@ header{padding:18px 28px 14px;background:rgba(255,255,255,.92);backdrop-filter:s
   -webkit-backdrop-filter:saturate(1.6) blur(12px);border-bottom:1px solid var(--soft);
   display:flex;align-items:flex-end;justify-content:space-between;gap:18px;position:sticky;top:0;z-index:20}
 header h1{font-size:21px;font-weight:700;letter-spacing:-.015em}
-header .sub{font-size:12.5px;color:var(--dim);margin-top:2px}
 header .tools{display:flex;gap:8px;align-items:center}
 #suche{width:240px;padding:8px 12px 8px 32px;border-radius:9px;border:1px solid var(--line);background:#fff
   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236e6e73' stroke-width='1.6'%3E%3Ccircle cx='7' cy='7' r='4.6'/%3E%3Cpath d='m10.5 10.5 3.3 3.3'/%3E%3C/svg%3E") 10px 50%/14px no-repeat;font-size:16px}
@@ -431,7 +430,7 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
   </aside>
   <main>
     <header>
-      <div><h1 id="titel"></h1><div class="sub" id="untertitel"></div></div>
+      <div><h1 id="titel"></h1></div>
       <div class="tools"><input id="suche" type="search" placeholder="Suchen: Lieferant, Kunde, Nummer, Betrag" autocomplete="off" aria-label="Suchen"></div>
     </header>
     <div id="view"></div>
@@ -1119,18 +1118,18 @@ function mwstQuartal(q, jahr = 2026, B) {
 /* ── modules ──────────────────────────────────────────────────────────── */
 const MODULES = [
   { grp: 'Arbeit' },
-  { id: 'uebersicht', name: 'Übersicht', titel: 'Übersicht', sub: 'Was heute zu tun ist — und wie der Monat läuft' },
-  { id: 'rechnungen', name: 'Rechnungen', titel: 'Lieferantenrechnungen', sub: 'Prüfen, kontieren, bezahlen — eine Rechnung nach der anderen' },
-  { id: 'bank', name: 'Bank', titel: 'Bankabgleich', sub: 'Jede Bankbuchung braucht einen Beleg — hier fehlt noch etwas' },
-  { id: 'kasse', name: 'Kasse', titel: 'Kasse & Bareinzahlung', sub: 'Bargeld aus der Kasse, das auf die Bank gehört' },
-  { id: 'kunden', name: 'Kundenrechnungen', titel: 'Kundenrechnungen', sub: 'Vom Kassenbeleg zur QR-Rechnung — und bis sie bezahlt ist' },
+  { id: 'uebersicht', name: 'Übersicht', titel: 'Übersicht' },
+  { id: 'rechnungen', name: 'Rechnungen', titel: 'Lieferantenrechnungen' },
+  { id: 'bank', name: 'Bank', titel: 'Bankabgleich' },
+  { id: 'kasse', name: 'Kasse', titel: 'Kasse & Bareinzahlung' },
+  { id: 'kunden', name: 'Kundenrechnungen', titel: 'Kundenrechnungen' },
   { grp: 'Auswertung' },
-  { id: 'kosten', name: 'Kosten', titel: 'Kosten & Ergebnis', sub: 'Wohin das Geld fliesst, gemessen an Ihren Zielen' },
-  { id: 'konten', name: 'Konten', titel: 'Konten', sub: 'Saldo, Soll und Haben — direkt aus den Belegen gebucht' },
-  { id: 'mwst', name: 'MWST', titel: 'MWST', sub: 'Abrechnung nach der effektiven Methode, Quartal für Quartal' },
+  { id: 'kosten', name: 'Kosten', titel: 'Kosten & Ergebnis' },
+  { id: 'konten', name: 'Konten', titel: 'Konten' },
+  { id: 'mwst', name: 'MWST', titel: 'MWST' },
   { grp: 'Daten' },
-  { id: 'austausch', name: 'Belege & Export', titel: 'Belege & Export', sub: 'Hochladen, was ankommt — herunterladen, was der Treuhänder braucht' },
-  { id: 'einstellungen', name: 'Einstellungen', titel: 'Einstellungen', sub: 'Darstellung, Firmendaten, Zahlteil und Textvorlagen' },
+  { id: 'austausch', name: 'Belege & Export', titel: 'Belege & Export' },
+  { id: 'einstellungen', name: 'Einstellungen', titel: 'Einstellungen' },
 ];
 const ICON = {
   uebersicht: '<rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/>',
@@ -1252,7 +1251,6 @@ function render() {
   lesen();
   const m = MODULES.find(x => x.id === AKTIV);
   $('#titel').textContent = m.titel;
-  $('#untertitel').textContent = m.sub;
   document.title = m.titel + ' · Rechnungswesen · Axyom';
   renderRail();
   $('#view').innerHTML = VIEWS[AKTIV]();
