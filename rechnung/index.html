@@ -154,6 +154,8 @@ table.t tr.click{cursor:pointer}
 table.t tr.click:hover td{background:rgba(0,178,160,.04)}
 table.t tr.sel td{background:var(--wash)}
 table.t td.r,table.t th.r{text-align:right}
+.pill.pl{border:0;cursor:pointer;font-family:inherit}
+table.kb tr.anf td{color:var(--dim)}
 .btn.link.fr{color:var(--dim);font-size:12px;font-weight:500;padding:2px 0}
 /* bank lines on a phone: one card per line instead of a squeezed table */
 @media (max-width:760px){
@@ -167,6 +169,18 @@ table.t td.r,table.t th.r{text-align:right}
   table.bt td:nth-child(4){grid-column:1/-1;margin-top:6px}
   table.bt td:nth-child(5){grid-column:1/-1;text-align:left;margin-top:6px}
   table.fv th:nth-child(3),table.fv td:nth-child(3){display:none}
+  table.kb,table.kb tbody{display:block}
+  table.kb thead{display:none}
+  table.kb tr{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:12px 2px;border-bottom:1px solid var(--soft)}
+  table.kb td{display:block;padding:0;border:0}
+  table.kb td:nth-child(1){grid-area:1/1;font-size:12px;color:var(--dim)}
+  table.kb td:nth-child(2){grid-area:2/1}
+  table.kb td:nth-child(3),table.kb td:nth-child(4){grid-area:1/2;font-weight:650}
+  table.kb td:nth-child(3):empty,table.kb td:nth-child(4):empty{display:none}
+  table.kb td:nth-child(5){grid-area:2/2;font-weight:400!important;font-size:12px;color:var(--dim)}
+  table.kb td:nth-child(5)::before{content:attr(data-l) " "}
+  table.kb td:nth-child(6){grid-column:1/-1;text-align:left}
+  table.kb td:nth-child(6):empty{display:none}
   table.fv th,table.fv td{padding:8px 5px;white-space:normal}
 }
 table.t tfoot td{font-weight:700;border-bottom:0;border-top:1px solid var(--line)}
@@ -519,6 +533,7 @@ const KONTEN = [
   { nr: '6600', name: 'Werbung',                    typ: 'K', gruppe: 'werbung' },
   { nr: '6800', name: 'Kartengebühren & Bankspesen', typ: 'K', gruppe: 'verwaltung' },
   { nr: '6950', name: 'Kursdifferenzen',           typ: 'K', gruppe: 'verwaltung' },
+  { nr: '6960', name: 'Kassendifferenzen',         typ: 'K', gruppe: 'verwaltung' },
 ];
 const GRUPPEN = {
   personal:   { name: 'Personal',              farbe: '#5b4bb7' },
@@ -669,7 +684,9 @@ const KASSE_TAGE = [
 ].map(([datum, bar, tip]) => ({ datum, bar, tip }));
 const KASSE_BEWEGUNGEN = [
   { id: 'E-1006', datum: '2026-10-06', art: 'bancomat', betrag: 9000.00, notiz: 'Einzahlung Woche 40', bank: 'B5107' },
-  { id: 'E-1009', datum: '2026-10-09', art: 'auszahlung', betrag: 86.40, notiz: 'Blumen Tischdeko, Markt', beleg: true },
+  { id: 'E-1009', datum: '2026-10-09', art: 'auszahlung', betrag: 86.40, notiz: 'Blumen Tischdeko, Markt', konto: '6500', beleg: 'Quittung_Blumenmarkt.jpg', satz: 2.6 },
+  // the till counted after Sunday service: 20 francs short
+  { id: 'E-1011', datum: '2026-10-11', art: 'zaehlung', betrag: -20.00, notiz: 'Wechselgeld falsch herausgegeben' },
   { id: 'E-1013', datum: '2026-10-13', art: 'bancomat', betrag: 12000.00, notiz: 'Einzahlung Woche 41', bank: 'B5116' },
 ];
 const KASSE_ANFANG = 1200.00;   // Wechselgeld-Bestand am 1. Oktober
@@ -1096,7 +1113,16 @@ function buchungen() {
   b(okt, '1000', '1091', bar, 'Davon bar eingenommen (Kassenabschlüsse)', 'Kasse');
   Object.entries(OKTOBER_PERSONAL).forEach(([k, v]) => b(okt, k, '2270', v, konto(k).name + ' Oktober (Lohnlauf-Entwurf)', 'Lohn'));
   DB.kasse.forEach(e => {
-    if (e.art === 'auszahlung') b(e.datum, e.konto || '6100', '1000', e.betrag, 'Barauslage: ' + e.notiz, e.id);
+    if (e.art === 'auszahlung') {
+      // only a receipt proves the input tax; without one the whole amount is cost
+      const satz = e.beleg ? e.satz || 0 : 0, netto = r2(e.betrag / (1 + satz / 100));
+      b(e.datum, e.konto || '6100', '1000', netto, 'Barauslage: ' + e.notiz, e.id);
+      if (satz) b(e.datum, '1170', '1000', r2(e.betrag - netto), 'Vorsteuer ' + satz + ' % · Barauslage ' + e.notiz, e.id, { art: konto(e.konto || '6100').gruppe === 'waren' ? 'vst-material' : 'vst-betrieb', satz, basis: netto });
+    }
+    else if (e.art === 'zaehlung') {
+      if (e.betrag > 0) b(e.datum, '1000', '6960', e.betrag, 'Kassendifferenz, Überschuss · ' + e.notiz, e.id);
+      else b(e.datum, '6960', '1000', -e.betrag, 'Kassendifferenz, Fehlbetrag · ' + e.notiz, e.id);
+    }
     else b(e.datum, '1020', '1000', e.betrag, (e.art === 'bancomat' ? 'Bareinzahlung Bancomat' : 'Bareinzahlung Überweisung') + (e.notiz ? ' · ' + e.notiz : ''), e.id);
   });
   DB.debitoren.forEach(d => {
@@ -1260,11 +1286,25 @@ function badge(id, o) {
 /* Kasse: what is in the till, and what should go to the bank. */
 function kasseStand() {
   const bar = r2(DB.kasseTage.reduce((s, t) => s + t.bar, 0));
-  const ein = r2(DB.kasse.filter(e => e.art !== 'auszahlung').reduce((s, e) => s + e.betrag, 0));
-  const aus = r2(DB.kasse.filter(e => e.art === 'auszahlung').reduce((s, e) => s + e.betrag, 0));
-  const bestand = r2(KASSE_ANFANG + bar - ein - aus);
+  const summe = f => r2(DB.kasse.filter(f).reduce((s, e) => s + e.betrag, 0));
+  const ein = summe(e => e.art === 'bancomat' || e.art === 'ueberweisung'), aus = summe(e => e.art === 'auszahlung'), diff = summe(e => e.art === 'zaehlung');
+  const bestand = r2(KASSE_ANFANG + bar - ein - aus + diff);
   // the float stays in the till; everything above it belongs on the bank
-  return { bar, ein, aus, bestand, einzahlen: Math.max(0, r2(bestand - KASSE_ANFANG)) };
+  return { bar, ein, aus, diff, bestand, einzahlen: Math.max(0, r2(bestand - KASSE_ANFANG)) };
+}
+/* The cash book: every day's takings in, every deposit and expense out, and
+   after each line what should be in the till. Within a day, money taken out
+   in the morning comes first, the evening's takings next, a count last. */
+function kassenbuch() {
+  const Z = [
+    ...DB.kasseTage.map(t => ({ datum: t.datum, art: 'tag', betrag: t.bar, tip: t.tip, id: 'T' + t.datum })),
+    ...DB.kasse.map(e => ({ ...e })),
+  ];
+  const rang = { tag: 1, zaehlung: 2 };
+  Z.sort((a, b) => a.datum !== b.datum ? (a.datum < b.datum ? -1 : 1) : (rang[a.art] || 0) - (rang[b.art] || 0));
+  let s = KASSE_ANFANG;
+  Z.forEach(z => { z.wert = z.art === 'tag' ? z.betrag : z.art === 'zaehlung' ? z.betrag : -z.betrag; s = r2(s + z.wert); z.saldo = s; });
+  return Z;
 }
 
 /* ── Ansicht ──────────────────────────────────────────────────────────
@@ -2063,17 +2103,22 @@ function freigabenKarte() {
    bank. A deposit is matched to its bank line like everything else.
    ══════════════════════════════════════════════════════════════════════ */
 VIEWS.kasse = () => {
-  const k = kasseStand();
+  const k = kasseStand(), Z = kassenbuch();
   const tip = DB.kasseTage.reduce((s, t) => s + t.tip, 0);
+  const gezaehlt = DB.kasse.filter(e => e.art === 'zaehlung').sort((a, b) => a.datum < b.datum ? 1 : -1)[0];
+  const minus = Z.find(z => z.saldo < 0);
+  const ART = { bancomat: 'Bancomat-Einzahlung', ueberweisung: 'Einzahlung am Bankschalter', auszahlung: 'Barauslage', zaehlung: 'Kasse gezählt' };
+  const tag = d => ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(d + 'T12:00').getDay()] + ' ' + dt(d);
   return `
-  <div class="grid g4">
-    <div class="kpi ${k.einzahlen > 3000 ? 's2' : ''}"><div class="k">Jetzt einzuzahlen</div><div class="v num">${chf(k.einzahlen, 0)}</div><div class="s">Bargeld über dem Wechselgeld</div></div>
-    <div class="kpi"><div class="k">Bargeld in der Kasse</div><div class="v num">${chf(k.bestand, 0)}</div><div class="s">davon ${chf(KASSE_ANFANG, 0)} Wechselgeld</div></div>
+  <div class="grid g4 rkopf">
+    <button class="kpi kl ${k.einzahlen > 3000 ? 's2' : ''}" data-kseinzahlen><div class="k">Jetzt einzuzahlen</div><div class="v num">${chf(k.einzahlen, 0)}</div><div class="s">Bargeld über dem Wechselgeld</div><div class="go">Einzahlung erfassen →</div></button>
+    <div class="kpi"><div class="k">Bargeld in der Kasse</div><div class="v num">${chf(k.bestand, 0)}</div><div class="s">davon ${chf(KASSE_ANFANG, 0)} Wechselgeld${gezaehlt ? ' · gezählt ' + dtk(gezaehlt.datum) : ''}</div></div>
     <div class="kpi"><div class="k">Bar-Umsatz Oktober</div><div class="v num">${chf(k.bar, 0)}</div><div class="s">${DB.kasseTage.length} Kassenabschlüsse</div></div>
     <div class="kpi"><div class="k">Trinkgeld ans Team</div><div class="v num">${chf(tip, 0)}</div><div class="s">bar ausbezahlt, kein Umsatz</div></div>
   </div>
+  ${minus ? `<div class="box s3" style="margin-top:16px"><b>Die Kasse wäre am ${dt(minus.datum)} im Minus</b> (${chf(minus.saldo)}). Mehr Bargeld herausgenommen als drin war: Bitte die Einträge an diesem Tag prüfen.</div>` : ''}
   <div class="grid g2" style="margin-top:16px;align-items:start">
-    <div class="card"><h2>Kassenbewegung erfassen</h2><div class="lead">Was aus der Kasse genommen wurde — auf die Bank oder für eine Barauslage.</div>
+    <div class="card" id="ks-form"><h2>Kassenbewegung erfassen</h2><div class="lead">Was aus der Kasse genommen wurde: auf die Bank oder für eine Barauslage.</div>
       <div class="chips" id="ks-art" role="radiogroup">
         <button class="chip on" data-ksart="bancomat" role="radio" aria-checked="true">Bancomat-Einzahlung</button>
         <button class="chip" data-ksart="ueberweisung" role="radio" aria-checked="false">Bankschalter</button>
@@ -2082,27 +2127,58 @@ VIEWS.kasse = () => {
         <label class="fld"><span>Datum</span><input type="date" id="ks-datum" value="${HEUTE}"></label>
         <label class="fld"><span>Betrag CHF</span><input id="ks-betrag" inputmode="decimal" value="${k.einzahlen ? k.einzahlen.toFixed(2) : ''}"></label>
       </div>
-      <label class="fld" id="ks-kontofld" style="margin-top:10px;display:none"><span>Konto der Barauslage</span><select id="ks-konto">${KONTEN.filter(x => x.typ === 'K' && !['5000', '5700', '6000'].includes(x.nr)).map(x => `<option value="${x.nr}">${x.nr} ${esc(x.name)}</option>`).join('')}</select></label>
+      <div id="ks-auslage" style="display:none">
+        <div class="grid g2" style="gap:10px;margin-top:10px">
+          <label class="fld"><span>Konto</span><select id="ks-konto">${KONTEN.filter(x => x.typ === 'K' && !['5000', '5700', '6000', '6950', '6960'].includes(x.nr)).map(x => `<option value="${x.nr}">${x.nr} ${esc(x.name)}</option>`).join('')}</select></label>
+          <label class="fld"><span>MWST laut Beleg</span><select id="ks-satz">${SAETZE.map(x => `<option value="${x.satz}"${x.satz === 8.1 ? ' selected' : ''}>${x.name}</option>`).join('')}</select></label>
+        </div>
+        <label class="fld" style="margin-top:10px"><span>Beleg (Quittung)</span><input type="file" id="ks-beleg" accept=".pdf,image/*"></label>
+        <div class="box s2" id="ks-ohne" style="margin-top:10px;font-size:12.5px">Ohne Beleg gibt es <b>keinen Vorsteuerabzug</b>. Die Quittung lässt sich auch später noch hochladen.</div>
+      </div>
       <label class="fld" style="margin-top:10px"><span>Notiz</span><input id="ks-notiz" placeholder="z.B. Einzahlung Woche 42"></label>
       <div class="row" style="margin-top:14px"><button class="btn acc" data-kasseerfassen>Erfassen</button></div>
     </div>
-    <div class="card"><h2>Bewegungen <small>Oktober</small></h2>
-      <div class="tw"><table class="t" style="margin-top:6px"><thead><tr><th>Datum</th><th>Art</th><th class="r">Betrag</th><th>Bank</th><th></th></tr></thead><tbody>
-      ${DB.kasse.slice().sort((a, b) => a.datum < b.datum ? 1 : -1).map(e => {
-        const b = DB.bank.find(x => x.zu && x.zu.typ === 'kasse' && x.zu.ref === e.id);
-        return `<tr><td class="num">${dt(e.datum)}</td><td>${{ bancomat: 'Bancomat-Einzahlung', ueberweisung: 'Bankschalter', auszahlung: 'Barauslage' }[e.art]}<div class="sub">${esc(e.notiz || '')}</div></td>
-        <td class="r num">${e.art === 'auszahlung' ? '−' : ''}${fmt(e.betrag)}</td>
-        <td>${e.art === 'auszahlung' ? '<span class="dim">—</span>' : b ? `<span class="pill s1">✓ ${b.id}</span>` : '<span class="pill g">wartet auf Bank</span>'}</td>
-        <td class="r">${e.eigen ? `<button class="btn sm link" data-kasseweg="${e.id}">entfernen</button>` : ''}</td></tr>`;
-      }).join('')}</tbody></table></div>
+    <div class="card"><h2>Kasse zählen</h2><div class="lead">Bargeld zählen und hier eintragen. Eine Differenz wird mit Grund als Kassendifferenz gebucht.</div>
+      <div class="sum" style="margin-top:6px"><span>Laut Kassenbuch in der Kasse</span><b class="num">${chf(k.bestand)}</b></div>
+      <label class="fld" style="margin-top:10px"><span>Gezählt CHF</span><input id="kz-gezaehlt" inputmode="decimal" placeholder="${fmt(k.bestand)}"></label>
+      <div class="sum" id="kz-diff" style="display:none"><span>Differenz</span><b class="num"></b></div>
+      <label class="fld" id="kz-grundfld" style="margin-top:10px;display:none"><span>Grund der Differenz (Pflicht)</span><input id="kz-grund" placeholder="z.B. Wechselgeld falsch herausgegeben"></label>
+      <div class="row" style="margin-top:14px"><button class="btn dark" data-kassezaehlen>Zählung speichern</button></div>
     </div>
   </div>
-  <div class="card" style="margin-top:16px"><h2>Kassenabschlüsse <small>Montag Ruhetag</small></h2>
-    <div class="tw"><table class="t" style="margin-top:6px"><thead><tr><th>Tag</th><th class="r">Bar-Umsatz</th><th class="r">Trinkgeld</th><th class="r">Bleibt in der Kasse</th></tr></thead><tbody>
-    ${DB.kasseTage.slice().reverse().map(t => `<tr><td>${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(t.datum + 'T12:00').getDay()]} ${dt(t.datum)}</td><td class="r num">${fmt(t.bar)}</td><td class="r num dim">${fmt(t.tip)}</td><td class="r num">${fmt(t.bar)}</td></tr>`).join('')}
-    </tbody><tfoot><tr><td>Total</td><td class="r num">${fmt(k.bar)}</td><td class="r num">${fmt(tip)}</td><td class="r num">${fmt(k.bar)}</td></tr></tfoot></table></div>
-    <p class="dim" style="font-size:12px;margin-top:8px">Trinkgeld wird separat gezählt und ans Team ausbezahlt — es ist kein Umsatz und taucht in der Buchhaltung nicht auf.</p>
-  </div>`;
+  <div class="card" style="margin-top:16px"><h2>Kassenbuch <small>Oktober · neueste zuerst</small></h2>
+    <div class="tw"><table class="t kb" style="margin-top:6px"><thead><tr><th>Datum</th><th>Was</th><th class="r">Rein</th><th class="r">Raus</th><th class="r">Bestand</th><th></th></tr></thead><tbody>
+    ${Z.slice().reverse().map(z => {
+      let was, sub = '', stand = '';
+      if (z.art === 'tag') { was = 'Kassenabschluss'; sub = `Trinkgeld ${fmt(z.tip)} direkt ans Team`; }
+      else {
+        was = ART[z.art] + (z.art === 'auszahlung' ? ' · ' + esc(kname(z.konto || '6100')) : ''); sub = esc(z.notiz || '');
+        if (z.art === 'auszahlung') stand = z.beleg ? `<span class="pill s1" title="${esc(z.beleg)}">Beleg ✓</span>` : `${pill('s2', 'Beleg fehlt')} <button class="btn sm" data-kbeleg="${z.id}">Beleg hochladen</button>`;
+        else if (z.art === 'zaehlung') stand = z.betrag ? `<span class="pill s2">Differenz</span>` : `<span class="pill s1">stimmt</span>`;
+        else { const b = DB.bank.find(x => x.zu && x.zu.typ === 'kasse' && x.zu.ref === z.id); stand = b ? `<button class="pill s1 pl" data-go="bank">✓ ${b.id}</button>` : `<button class="pill g pl" data-go="bank">wartet auf Bank</button>`; }
+        if (z.eigen) stand += ` <button class="btn sm link" data-kasseweg="${z.id}">entfernen</button>`;
+        if (z.art === 'zaehlung') sub = z.betrag ? `${z.betrag > 0 ? 'Überschuss' : 'Fehlbetrag'} · ${esc(z.notiz)}` : 'ohne Differenz';
+      }
+      return `<tr><td class="num">${tag(z.datum)}</td><td>${was}<div class="sub">${sub}</div></td>
+        <td class="r num">${z.wert > 0 ? '+' + fmt(z.wert) : ''}</td><td class="r num">${z.wert < 0 ? fmt(z.wert) : ''}</td>
+        <td class="r num" data-l="Bestand" style="font-weight:650${z.saldo < 0 ? ';color:var(--bad)' : ''}">${fmt(z.saldo)}</td><td class="r">${stand}</td></tr>`;
+    }).join('')}
+    <tr class="anf"><td class="num">${dt('2026-10-01')}</td><td>Wechselgeld zu Monatsbeginn</td><td></td><td></td><td class="r num" data-l="Bestand" style="font-weight:650">${fmt(KASSE_ANFANG)}</td><td></td></tr>
+    </tbody></table></div>
+    <p class="dim" style="font-size:12px;margin-top:8px">Trinkgeld wird separat gezählt und ans Team ausbezahlt. Es ist kein Umsatz und taucht in der Buchhaltung nicht auf.</p>
+  </div>
+  <input type="file" id="kassebeleg" accept=".pdf,image/*" hidden>`;
+};
+VIEWS.kasse_nach = () => {
+  const g = $('#kz-gezaehlt'); if (!g) return;
+  g.addEventListener('input', () => {
+    const d = g.value.trim() ? r2(zahl(g.value) - kasseStand().bestand) : null;
+    $('#kz-diff').style.display = d === null ? 'none' : '';
+    $('#kz-diff b').textContent = d === null ? '' : d ? chf(d) : '0.00 ✓';
+    $('#kz-diff b').style.color = d ? 'var(--warn)' : 'var(--ok)';
+    $('#kz-grundfld').style.display = d ? '' : 'none';
+  });
+  const f = $('#ks-beleg'); if (f) f.addEventListener('change', () => { $('#ks-ohne').style.display = f.files[0] ? 'none' : ''; });
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2517,7 +2593,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -2695,7 +2771,8 @@ document.addEventListener('click', e => {
   // ── Kasse ──
   if (d.ksart) {
     document.querySelectorAll('[data-ksart]').forEach(x => { x.classList.toggle('on', x === t); x.setAttribute('aria-checked', x === t); });
-    $('#ks-kontofld').style.display = d.ksart === 'auszahlung' ? '' : 'none';
+    $('#ks-auslage').style.display = d.ksart === 'auszahlung' ? '' : 'none';
+    $('#ks-notiz').placeholder = d.ksart === 'auszahlung' ? 'Wofür? z.B. Blumen Tischdeko' : 'z.B. Einzahlung Woche 42';
     if (d.ksart === 'auszahlung') $('#ks-betrag').value = '';
     else if (!$('#ks-betrag').value) $('#ks-betrag').value = kasseStand().einzahlen.toFixed(2);
     return;
@@ -2703,12 +2780,35 @@ document.addEventListener('click', e => {
   if ('kasseerfassen' in d) {
     const art = document.querySelector('[data-ksart].on').dataset.ksart, betrag = r2(zahl($('#ks-betrag').value)), k = kasseStand();
     if (!(betrag > 0)) { $('#ks-betrag').closest('.fld').classList.add('err'); toast('Betrag fehlt.', 2); return; }
-    if (betrag > k.bestand + 0.004) { $('#ks-betrag').closest('.fld').classList.add('err'); toast(`Mehr als in der Kasse ist (${chf(k.bestand)}).`, 3); return; }
     const e = { id: 'E-' + Date.now().toString(36).slice(-4).toUpperCase(), datum: $('#ks-datum').value || HEUTE, art, betrag, notiz: $('#ks-notiz').value.trim(), eigen: true };
-    if (art === 'auszahlung') e.konto = $('#ks-konto').value;
-    DB.kasse.push(e); logge('Kasse: ' + art + ' ' + chf(betrag)); neu();
-    toast(art === 'auszahlung' ? 'Barauslage erfasst.' : 'Einzahlung erfasst — wird zugeordnet, sobald sie auf dem Kontoauszug steht.', 1); return;
+    if (art === 'auszahlung') {
+      if (!e.notiz) { $('#ks-notiz').closest('.fld').classList.add('err'); toast('Wofür war die Barauslage?', 2); return; }
+      const f = $('#ks-beleg').files[0];
+      e.konto = $('#ks-konto').value;
+      if (f) { e.beleg = f.name; e.satz = zahl($('#ks-satz').value); UPLOADS.push({ name: f.name, size: f.size, url: URL.createObjectURL(f) }); }
+    }
+    // the till can never have gone below zero, on that day or any day after
+    DB.kasse.push(e);
+    const minus = kassenbuch().find(z => z.saldo < -0.004);
+    if (minus) { DB.kasse.pop(); $('#ks-betrag').closest('.fld').classList.add('err'); toast(`Am ${dt(minus.datum)} wäre die Kasse im Minus (${chf(minus.saldo)}). So viel Bargeld war nicht da.`, 3); return; }
+    logge('Kasse: ' + art + ' ' + chf(betrag)); neu();
+    toast(art === 'auszahlung' ? (e.beleg ? 'Barauslage mit Beleg erfasst, Vorsteuer wird abgezogen. ✓' : 'Barauslage erfasst, ohne Beleg.') : 'Einzahlung erfasst. Sie wird zugeordnet, sobald sie auf dem Kontoauszug steht.', e.beleg || art !== 'auszahlung' ? 1 : 2); return;
   }
+  if ('kseinzahlen' in d) {
+    const c = document.querySelector('[data-ksart="bancomat"]'); if (c) c.click();
+    $('#ks-betrag').value = kasseStand().einzahlen.toFixed(2);
+    $('#ks-form').scrollIntoView({ block: 'start', behavior: 'smooth' }); $('#ks-betrag').focus(); return;
+  }
+  if ('kassezaehlen' in d) {
+    const v = $('#kz-gezaehlt').value.trim(), soll = kasseStand().bestand;
+    if (!v || !(zahl(v) >= 0)) { $('#kz-gezaehlt').closest('.fld').classList.add('err'); toast('Bitte den gezählten Betrag eintragen.', 2); return; }
+    const diff = r2(zahl(v) - soll), grund = $('#kz-grund').value.trim();
+    if (diff && !grund) { $('#kz-grund').closest('.fld').classList.add('err'); toast('Bei einer Differenz braucht es einen Grund.', 2); return; }
+    DB.kasse.push({ id: 'E-' + Date.now().toString(36).slice(-4).toUpperCase(), datum: HEUTE, art: 'zaehlung', betrag: diff, notiz: diff ? grund : '', eigen: true });
+    logge('Kasse gezählt: ' + chf(zahl(v)) + (diff ? ', Differenz ' + chf(diff) : ', stimmt'));
+    neu(); toast(diff ? `Gezählt. Differenz ${chf(diff)} als Kassendifferenz gebucht.` : 'Gezählt. Die Kasse stimmt. ✓', diff ? 2 : 1); return;
+  }
+  if (d.kbeleg) { const f = $('#kassebeleg'); f.dataset.id = d.kbeleg; f.value = ''; f.click(); return; }
   if (d.kasseweg) { DB.kasse = DB.kasse.filter(e => e.id !== d.kasseweg); neu(); return; }
 
   // ── Kundenrechnungen ──
@@ -2816,6 +2916,14 @@ document.addEventListener('change', e => {
       <label class="fld"><span>MWST laut Beleg</span><select id="m-satz">${SAETZE.map(s => `<option value="${s.satz}"${s.satz === 8.1 ? ' selected' : ''}>${s.name}</option>`).join('')}</select></label></div>
       <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Zuordnen</button></div>`,
       () => { b.zu = { typ: 'beleg', konto: $('#m-konto').value, satz: zahl($('#m-satz').value), datei: file.name }; UPLOADS.push({ name: file.name, size: file.size, url }); logge('Beleg ' + file.name + ' zu ' + b.id); modalZu(); neu(); toast('Beleg zugeordnet — Vorsteuer wird abgezogen. ✓', 1); });
+  }
+  if (e.target.id === 'kassebeleg' && e.target.files[0]) {
+    const file = e.target.files[0], k = DB.kasse.find(x => x.id === e.target.dataset.id);
+    modal(`<h3>Beleg zur Barauslage</h3><p class="dim" style="font-size:13px">${esc(k.notiz)} · ${chf(k.betrag)}</p>
+      <div class="box s1" style="margin-top:10px">📄 ${esc(file.name)}, bleibt in diesem Browser.</div>
+      <label class="fld" style="margin-top:12px"><span>MWST laut Beleg</span><select id="m-satz">${SAETZE.map(s => `<option value="${s.satz}"${s.satz === 8.1 ? ' selected' : ''}>${s.name}</option>`).join('')}</select></label>
+      <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Zuordnen</button></div>`,
+      () => { k.beleg = file.name; k.satz = zahl($('#m-satz').value); UPLOADS.push({ name: file.name, size: file.size, url: URL.createObjectURL(file) }); logge('Beleg ' + file.name + ' zu Barauslage ' + k.id); modalZu(); neu(); toast('Beleg zugeordnet, Vorsteuer wird abgezogen. ✓', 1); });
   }
   if (e.target.id === 'up-belege') belegeHoch(e.target.files);
   if (e.target.id === 'up-camt' && e.target.files[0]) camtHoch(e.target.files[0]);
