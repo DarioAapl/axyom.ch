@@ -1672,7 +1672,9 @@ VIEWS.uebersicht = () => {
    Eingang «stimmt das Konto und die MWST?», in Geprüft «bezahlen?», in
    Bezahlt «welche Bankbuchung war es?». Nothing else competes for the eye.
    ══════════════════════════════════════════════════════════════════════ */
-let RFILTER = 'pruefen', RSUCHE = '';
+// ZEIGE: the invoice on screen. After an action changes its status it stays
+// on screen, and the list switches to the tab it now belongs to.
+let RFILTER = 'pruefen', RSUCHE = '', ZEIGE = '';
 const RFILTER_DEF = {
   pruefen: { name: 'Zu prüfen', f: r => r.stufe === 'eingang' },
   zahlen: { name: 'Zu bezahlen', f: r => r.stufe === 'kontiert' },
@@ -1690,11 +1692,12 @@ function rechnungsListe() {
     .sort((a, b) => RFILTER === 'zahlen' ? (faellig(a) < faellig(b) ? -1 : 1) : (a.eingang < b.eingang ? 1 : -1));
 }
 VIEWS.rechnungen = () => {
-  if (RFILTER_DEF[PARAM]) { RFILTER = PARAM; PARAM = ''; }
+  if (RFILTER_DEF[PARAM]) { RFILTER = PARAM; PARAM = ''; ZEIGE = ''; }
   let liste = rechnungsListe();
-  let r = DB.rechnungen.find(x => x.id === PARAM && !x.geloescht);
+  let r = DB.rechnungen.find(x => x.id === (PARAM || ZEIGE) && !x.geloescht);
   if (r && !liste.includes(r)) { RFILTER = Object.keys(RFILTER_DEF).find(k => k !== 'alle' && RFILTER_DEF[k].f(r)) || 'alle'; liste = rechnungsListe(); }
   if (!r) r = liste[0];
+  ZEIGE = r ? r.id : '';
   const n = k => DB.rechnungen.filter(x => !x.geloescht && RFILTER_DEF[k].f(x)).length;
   return rechnungenKopf() + `<div class="split">
     <div class="col"><div class="liste">
@@ -1728,13 +1731,13 @@ function rechnungenKopf() {
   return `<div class="grid g4 rkopf">
     ${k('pruefen', pruef.length ? 's2' : 's1', 'Zu prüfen', pruef.length, pruef.length ? chf(sum(pruef.map(r => summen(r).chf)), 0) : 'nichts offen')}
     ${k('zahlen', ueber.length ? 's3' : '', 'Zu bezahlen', chf(sum(zahl.map(nochZuZahlen)), 0), `${zahl.length} Rechnung${zahl.length === 1 ? '' : 'en'}${ueber.length ? ` · <b style="color:var(--bad)">${ueber.length} überfällig</b>` : ''}`)}
-    ${k('auto', '', 'Läuft automatisch', chf(sum(auto.map(r => summen(r).chf)), 0), `${auto.length} per LSV / Dauerauftrag · nichts zu tun`)}
+    ${k('auto', auto.length ? '' : 's1', 'Läuft automatisch', auto.length ? chf(sum(auto.map(r => summen(r).chf)), 0) : 'keine', auto.length ? `${auto.length} Rechnung${auto.length === 1 ? '' : 'en'} · per LSV / Dauerauftrag` : 'Lastschriften und Daueraufträge')}
     ${k('fragen', fragen.length ? 's2' : 's1', 'Offene Fragen', fragen.length, fragen.length ? 'Klärung oder vermutlich doppelt' : 'keine')}
   </div>`;
 }
 VIEWS.rechnungen_nach = () => {
   if (PARAM && innerWidth <= 900) { const p = document.querySelector('.split>.col:last-child'); if (p) setTimeout(() => p.scrollIntoView({ block: 'start' }), 0); }
-  const s = $('#rsuche'); if (s) s.addEventListener('input', () => { RSUCHE = s.value; const p = s.selectionStart; render(); const n = $('#rsuche'); n.focus(); n.setSelectionRange(p, p); });
+  const s = $('#rsuche'); if (s) s.addEventListener('input', () => { RSUCHE = s.value; ZEIGE = ''; const p = s.selectionStart; render(); const n = $('#rsuche'); n.focus(); n.setSelectionRange(p, p); });
   vatLive();
 };
 
@@ -1865,7 +1868,7 @@ function kontierFormular(r) {
     <div id="kt-check" style="margin-top:10px"></div>
     <div class="step"><i>3</i>Bestätigen</div>
     <label class="check"><input type="checkbox" id="kt-ok"> Konto und MWST-Zeilen mit dem Beleg verglichen</label>
-    <div class="row" style="margin-top:12px"><button class="btn acc" data-kontieren="${r.id}">Geprüft — weiter zur nächsten</button></div>`;
+    <div class="row" style="margin-top:12px"><button class="btn acc" data-kontieren="${r.id}">Geprüft</button></div>`;
 }
 // «Je Position»: open when it was used or suggested, otherwise one tap away
 function posBlock(r) {
@@ -2457,7 +2460,7 @@ document.addEventListener('click', e => {
   }
   if (d.pdf) { belegOeffnen(R_(d.r), d.pdf === 'laden'); return; }
   // ── Rechnungen ──
-  if (d.rfilter) { RFILTER = d.rfilter; PARAM = ''; location.hash = '#rechnungen'; render(); return; }
+  if (d.rfilter) { RFILTER = d.rfilter; PARAM = ''; ZEIGE = ''; location.hash = '#rechnungen'; render(); return; }
   if ('legende' in d) { modal(legende(RFILTER)); return; }
   if ('papierkorb' in d) {
     modal(`<h3>Papierkorb</h3><p class="dim" style="font-size:13px">Gelöschte Rechnungen bleiben hier und lassen sich wiederherstellen.</p>
@@ -2493,8 +2496,8 @@ document.addEventListener('click', e => {
     prot(r, `Geprüft: ${r.posKonto ? 'je Position — ' + kontenVon(r).map(k => k.konto + ' ' + fmt(k.netto)).join(', ') : kname(r.konto)}${alt !== r.konto ? ' (statt ' + alt + ')' : ''}, ${summen(r).zeilen.map(z => z.satz + ' %').join(' + ')}${r.bezug ? ', Bezugsteuer' : ''}`);
     neu();
     const rest = DB.rechnungen.filter(x => !x.geloescht && x.stufe === 'eingang');
-    if (rest.length) { RFILTER = 'pruefen'; go('rechnungen', rest[0].id); toast(`Geprüft und gebucht auf ${r.posKonto ? kontenVon(r).length + ' Konten' : esc(kname(r.konto))}. Noch ${rest.length} zu prüfen.`, 1); }
-    else { RFILTER = 'zahlen'; go('rechnungen', r.id); toast('Alle Rechnungen geprüft. ✓', 1); }
+    go('rechnungen', r.id);
+    toast(`Geprüft und gebucht auf ${r.posKonto ? kontenVon(r).length + ' Konten' : esc(kname(r.konto))}. ${rest.length ? 'Noch ' + rest.length + ' zu prüfen.' : 'Alle Rechnungen geprüft. ✓'}`, 1);
     return;
   }
   if (d.loeschen) {
