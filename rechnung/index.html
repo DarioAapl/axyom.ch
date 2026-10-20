@@ -362,6 +362,27 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 .abw label small{display:block;color:var(--dim);font-size:11.5px}
 @media (max-width:560px){.rate{grid-template-columns:22px 1fr auto;}.rate .pill{grid-column:2/-1;justify-self:start}.posz{grid-template-columns:minmax(0,1fr)}}
 
+/* Originalbeleg: a small PDF reader — grey desk, white A4 pages */
+.pdfv{background:#fff;border:1px solid var(--soft);border-radius:var(--r);overflow:hidden}
+.pdfbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 10px 16px;border-bottom:1px solid var(--soft)}
+.pdfbar .pt{display:flex;flex-direction:column;min-width:0}
+.pdfbar .pt b{font-size:14px}
+.pdfbar .pt span{font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdfbar .pa{display:flex;align-items:center;gap:6px;flex:none}
+.pdfbar .zoom{display:inline-flex;align-items:center;gap:2px;background:var(--surf);border-radius:8px;padding:2px}
+.pdfbar .zv{font-size:11.5px;color:var(--dim);min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+.pdfbar .ib{width:30px;height:30px;border:0;border-radius:7px;background:none;cursor:pointer;display:grid;place-items:center;font-size:16px;color:var(--ink)}
+.pdfbar .ib:hover:not(:disabled){background:rgba(0,0,0,.06)}
+.pdfbar .ib:disabled{opacity:.3;cursor:default}
+.pdfbar .ib svg{width:16px;height:16px}
+.pdfbar .lk{border:0;background:none;color:var(--acci);font-weight:600;font-size:12.5px;cursor:pointer;padding:6px 4px;white-space:nowrap}
+.pdfbar .lk:hover{text-decoration:underline}
+.pdfscroll{background:#6b6f73;padding:14px;overflow:auto;max-height:min(1060px,calc(100vh - 120px))}
+.pdfseiten{min-width:100%;display:flex;flex-direction:column;gap:14px}
+.pdfseite{display:block;width:100%;height:auto;box-shadow:0 2px 10px rgba(0,0,0,.35);background:#fff}
+@media (max-width:560px){.pdfbar .zoom{display:none}.pdfscroll{padding:8px;max-height:none}}
+@media print{.pdfbar{display:none}.pdfscroll{background:none;padding:0;max-height:none}}
+
 /* ── narrower screens ── */
 @media (max-width:1280px){
   .split,.split.deb{grid-template-columns:minmax(240px,300px) minmax(0,1fr)}
@@ -489,22 +510,22 @@ const SAETZE = [
 ];
 
 const LIEFERANTEN = [
-  { id: 'L1',  name: 'Frischwerk Gemüse AG',       ort: 'Landquart',   konto: '4200', satz: 2.6, ziel: 30 },
-  { id: 'L2',  name: 'Metzgerei Brunold',          ort: 'Talwies',     konto: '4200', satz: 2.6, ziel: 20 },
-  { id: 'L3',  name: 'Molkerei Säntisblick',       ort: 'Gossau',      konto: '4200', satz: 2.6, ziel: 30 },
-  { id: 'L4',  name: 'Weinhandlung Rebgarten',     ort: 'Maienfeld',   konto: '4210', satz: 8.1, ziel: 30, skonto: [2, 10] },
-  { id: 'L5',  name: 'Getränke Rhyner AG',         ort: 'Sargans',     konto: '4210', satz: 2.6, ziel: 30 },
-  { id: 'L6',  name: 'Alpina Grosshandel',         ort: 'Chur',        konto: '4200', satz: 2.6, ziel: 10 },
-  { id: 'L7',  name: 'Kaffeerösterei Bohnenwerk',  ort: 'Buchs',       konto: '4210', satz: 2.6, ziel: 30 },
-  { id: 'L8',  name: 'Wäscherei Weissfluh',        ort: 'Talwies',     konto: '6040', satz: 8.1, ziel: 30 },
-  { id: 'L9',  name: 'Elektro Caduff GmbH',        ort: 'Talwies',     konto: '6100', satz: 8.1, ziel: 30 },
-  { id: 'L10', name: 'Immobilien Rheinpark AG',    ort: 'Chur',        konto: '6000', satz: 0,   ziel: 0, auto: 'Dauerauftrag' },
-  { id: 'L11', name: 'Energiewerk Talwies',        ort: 'Talwies',     konto: '6400', satz: 8.1, ziel: 30, auto: 'LSV' },
-  { id: 'L12', name: 'KassaPlus AG',               ort: 'Zürich',      konto: '6570', satz: 8.1, ziel: 30, auto: 'LSV' },
-  { id: 'L13', name: 'Druckerei Rheinbogen',       ort: 'Sargans',     konto: '6600', satz: 8.1, ziel: 30 },
-  { id: 'L14', name: 'Alpenschutz Versicherungen', ort: 'Chur',        konto: '6300', satz: 0,   ziel: 30 },
-  { id: 'L15', name: 'Tischwerk GmbH',             ort: 'Konstanz (DE)', konto: '6100', satz: 8.1, ziel: 14, waehrung: 'EUR' },
-  { id: 'L16', name: 'Online-Bürobedarf',          ort: 'online',      konto: '6500', satz: 8.1, ziel: 0 },
+  { id: 'L1',  name: 'Frischwerk Gemüse AG',       strasse: 'Industriestrasse 21', plz: '7302', ort: 'Landquart',   konto: '4200', satz: 2.6, ziel: 30 },
+  { id: 'L2',  name: 'Metzgerei Brunold',          strasse: 'Dorfstrasse 8', plz: '7999', ort: 'Talwies',     konto: '4200', satz: 2.6, ziel: 20 },
+  { id: 'L3',  name: 'Molkerei Säntisblick',       strasse: 'Käsereiweg 3', plz: '9200', ort: 'Gossau',      konto: '4200', satz: 2.6, ziel: 30 },
+  { id: 'L4',  name: 'Weinhandlung Rebgarten',     strasse: 'Weinbergstrasse 14', plz: '7304', ort: 'Maienfeld',   konto: '4210', satz: 8.1, ziel: 30, skonto: [2, 10] },
+  { id: 'L5',  name: 'Getränke Rhyner AG',         strasse: 'Bahnhofstrasse 52', plz: '7320', ort: 'Sargans',     konto: '4210', satz: 2.6, ziel: 30 },
+  { id: 'L6',  name: 'Alpina Grosshandel',         strasse: 'Grossmarktweg 7', plz: '7000', ort: 'Chur',        konto: '4200', satz: 2.6, ziel: 10 },
+  { id: 'L7',  name: 'Kaffeerösterei Bohnenwerk',  strasse: 'Rösterei-Gasse 2', plz: '9470', ort: 'Buchs',       konto: '4210', satz: 2.6, ziel: 30 },
+  { id: 'L8',  name: 'Wäscherei Weissfluh',        strasse: 'Wiesenweg 11', plz: '7999', ort: 'Talwies',     konto: '6040', satz: 8.1, ziel: 30 },
+  { id: 'L9',  name: 'Elektro Caduff GmbH',        strasse: 'Gewerbezone 5', plz: '7999', ort: 'Talwies',     konto: '6100', satz: 8.1, ziel: 30 },
+  { id: 'L10', name: 'Immobilien Rheinpark AG',    strasse: 'Postplatz 3', plz: '7000', ort: 'Chur',        konto: '6000', satz: 0,   ziel: 0, auto: 'Dauerauftrag' },
+  { id: 'L11', name: 'Energiewerk Talwies',        strasse: 'Werkstrasse 1', plz: '7999', ort: 'Talwies',     konto: '6400', satz: 8.1, ziel: 30, auto: 'LSV' },
+  { id: 'L12', name: 'KassaPlus AG',               strasse: 'Hardturmstrasse 120', plz: '8005', ort: 'Zürich',      konto: '6570', satz: 8.1, ziel: 30, auto: 'LSV' },
+  { id: 'L13', name: 'Druckerei Rheinbogen',       strasse: 'Druckereiweg 9', plz: '7320', ort: 'Sargans',     konto: '6600', satz: 8.1, ziel: 30 },
+  { id: 'L14', name: 'Alpenschutz Versicherungen', strasse: 'Grabenstrasse 30', plz: '7000', ort: 'Chur',        konto: '6300', satz: 0,   ziel: 30 },
+  { id: 'L15', name: 'Tischwerk GmbH',             strasse: 'Hafenstrasse 18', plz: '78462', ort: 'Konstanz (DE)', konto: '6100', satz: 8.1, ziel: 14, waehrung: 'EUR' },
+  { id: 'L16', name: 'Online-Bürobedarf',          strasse: 'Online-Shop', plz: '', ort: 'online',      konto: '6500', satz: 8.1, ziel: 0 },
 ];
 
 /* Kreditoren — the open workload. Stages, in order:
@@ -1287,6 +1308,257 @@ function qrBild(seed) {
   const f = (x, y) => `<rect x="${x * z}" y="${y * z}" width="${7 * z}" height="${7 * z}" fill="none" stroke="#000" stroke-width="${z}" transform="translate(${z / 2} ${z / 2})" style="transform:translate(0,0)"/><rect x="${(x + 2) * z}" y="${(y + 2) * z}" width="${3 * z}" height="${3 * z}"/>`;
   return `<svg class="code" viewBox="0 0 92 92" fill="#000" aria-label="QR-Code (Demo, nicht scannbar)"><rect width="92" height="92" fill="#fff"/>${s}${f(0, 0)}${f(n - 7, 0)}${f(0, n - 7)}<rect x="38" y="38" width="16" height="16" fill="#000"/><path d="M44 41h4v4h4v3h-4v4h-4v-4h-4v-3h4z" fill="#fff"/></svg>`;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   ORIGINALBELEG — one layout, two renderers
+   A supplier invoice is laid out ONCE, in millimetres on A4, as a list of
+   drawing operations. The viewer draws them as SVG; «Separat öffnen» writes
+   the very same operations into a real PDF — so the reader it opens in shows
+   exactly what the app shows, down to where each line breaks.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Helvetica widths (1/1000 em) for ASCII 32–126, from the standard font
+   metrics. Every PDF reader has these fonts built in, so nothing is embedded
+   and the file stays a few KB. */
+const HELV_W = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const HELVB_W = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+const SONDER_W = { '’': [222, 278], '‘': [222, 278], '–': [556, 556], '—': [1000, 1000], '×': [584, 584], '€': [556, 556], '•': [350, 350] };
+function textBreite(s, pt, fett) {
+  let w = 0;
+  for (const ch of String(s)) {
+    const c = ch.charCodeAt(0);
+    if (c >= 32 && c <= 126) w += (fett ? HELVB_W : HELV_W)[c - 32];
+    else if (SONDER_W[ch]) w += SONDER_W[ch][fett ? 1 : 0];
+    else { const b = ch.normalize('NFD').charCodeAt(0); w += b >= 32 && b <= 126 ? (fett ? HELVB_W : HELV_W)[b - 32] : 556; }
+  }
+  return w / 1000 * pt * 0.3528;   // pt → mm
+}
+function umbrechen(s, breite, pt, fett) {
+  const out = []; let z = '';
+  for (const w of String(s).split(' ')) {
+    const t = z ? z + ' ' + w : w;
+    if (z && textBreite(t, pt, fett) > breite) { out.push(z); z = w; } else z = t;
+  }
+  if (z) out.push(z);
+  return out;
+}
+
+/* The deterministic stand-in for a Swiss QR code: three finder squares and
+   the Swiss cross, the rest a pattern seeded by the document id. */
+function qrModule(seed) {
+  let h = 0; for (const c of String(seed)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const n = 25, m = [];
+  const rnd = () => (h = (h * 1103515245 + 12345) >>> 0) / 4294967296;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if ((x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9)) continue;
+    if (rnd() > .52) m.push([x, y]);
+  }
+  return { n, m };
+}
+
+const SCHWARZ = '#111111', GRAU = '#6b6b6b';
+function belegLayout(r) {
+  const l = lief(r.lief), s = summen(r), f = DB.firma, w = r.waehrung || 'CHF';
+  const ausland = /\((\w\w)\)$/.exec(l.ort), ort = l.ort.replace(/\s*\(\w\w\)$/, '');
+  const qr = !r.auto && w === 'CHF';
+  const pages = [[]]; let P = pages[0];
+  const T = (x, y, str, o = {}) => P.push({ t: 'text', x, y, s: String(str), pt: o.pt || 9, b: !!o.b, a: o.a || 'l', c: o.c || SCHWARZ });
+  const L = (x1, y1, x2, y2, o = {}) => P.push({ t: 'line', x1, y1, x2, y2, w: o.w || .25, c: o.c || SCHWARZ, dash: o.dash });
+  const R = (x, y, wd, ht, c) => P.push({ t: 'rect', x, y, w: wd, h: ht, c: c || SCHWARZ });
+
+  // letterhead: the supplier's name as a word mark, address under it
+  const marke = l.name.split(/\s+/)[0].toUpperCase();
+  const farbe = ['#2f6b3a', '#8a2d1f', '#1f4f8a', '#6b2d6b', '#8a5a12', '#2d6b6b'][parseInt(l.id.slice(1)) % 6];
+  T(190, 26, marke, { pt: 22, b: true, a: 'r', c: farbe });
+  [[l.name, true], [l.strasse], [(l.plz ? l.plz + ' ' : '') + ort], ...(ausland ? [['Deutschland']] : [])]
+    .forEach(([z, b], i) => T(190, 33 + i * 4.2, z, { pt: 8.5, b, a: 'r' }));
+  // recipient, where a window envelope shows it
+  [f.name, f.marke, f.strasse, f.plz + ' ' + f.ort].forEach((z, i) => T(20, 52 + i * 4.4, z, { pt: 9.5 }));
+
+  T(20, 78, 'Rechnung ' + r.nr, { pt: 13, b: true });
+  L(20, 81, 190, 81);
+  const lieferung = r.auto ? r.pos[0][0] : 'Lieferung vom ' + dt(r.datum);
+  T(20, 87, lieferung, { pt: 10.5, b: true });
+  L(20, 90, 190, 90);
+  const zahlbar = r.auto ? (l.auto === 'LSV' ? 'per LSV' : 'per Dauerauftrag') : l.ziel ? dt(plusTage(r.datum, l.ziel)) : 'sofort';
+  T(20, 95.5, 'Datum:', { pt: 9 }); T(52, 95.5, dt(r.datum), { pt: 9 });
+  T(110, 95.5, 'Zahlbar bis:', { pt: 9 }); T(142, 95.5, zahlbar, { pt: 9 });
+  L(20, 98.5, 190, 98.5);
+  T(20, 106, 'Sehr geehrte Damen und Herren', { pt: 9.5 });
+  T(20, 111.5, 'Wir erlauben uns, Ihnen wie folgt in Rechnung zu stellen:', { pt: 9.5 });
+
+  // positions
+  let y = 121;
+  const kopf = [['Pos.', 20, 'l'], ['Beschreibung', 30, 'l'], ['Menge', 124, 'r'], ['Einzelpreis', 146, 'r'], ['MWST', 162, 'r'], ['Preis in ' + w, 190, 'r']];
+  kopf.forEach(([t, x, a]) => T(x, y, t, { pt: 8.5, b: true, a }));
+  L(20, y + 2, 190, y + 2);
+  y += 7.5;
+  r.pos.forEach((p, i) => {
+    const satz = p[3] != null ? p[3] : (r.bezug ? 0 : l.satz);
+    const zeilen = umbrechen(p[0], 82, 9, true);
+    T(20, y, i + 1, { pt: 9 });
+    zeilen.forEach((z, j) => T(30, y + j * 4.2, z, { pt: 9, b: true }));
+    T(124, y, String(p[1]).replace('.', ','), { pt: 9, a: 'r' });
+    T(146, y, fmt(p[2]), { pt: 9, a: 'r' });
+    T(162, y, satz + ' %', { pt: 9, a: 'r' });
+    T(190, y, fmt(p[1] * p[2]), { pt: 9, a: 'r' });
+    y += 5.5 + (zeilen.length - 1) * 4.2;
+  });
+  L(20, y - 3, 190, y - 3);
+
+  // totals on the right, the closing words beside them on the left — the
+  // compact Swiss layout that leaves the bottom 105 mm to the QR-bill
+  let yt = y + 2;
+  T(112, yt, 'Total netto', { pt: 9, b: true }); T(190, yt, fmt(s.netto), { pt: 9, b: true, a: 'r' }); yt += 5;
+  s.zeilen.filter(z => z.satz).forEach(z => { T(112, yt, `Zzgl. MWST ${z.satz} % auf ${fmt(z.netto)}`, { pt: 9 }); T(190, yt, fmt(z.mwst), { pt: 9, a: 'r' }); yt += 5; });
+  L(112, yt - 3, 190, yt - 3);
+  T(112, yt + 1, 'Betrag inkl. MWST', { pt: 9.5, b: true }); T(190, yt + 1, w + ' ' + fmt(s.brutto), { pt: 9.5, b: true, a: 'r' });
+  L(112, yt + 3.2, 190, yt + 3.2, { w: .3 }); L(112, yt + 4, 190, yt + 4, { w: .3 });
+  yt += 4;
+
+  const hinweise = [];
+  if (r.bezug) hinweise.push('Leistung aus dem Ausland ohne Schweizer MWST — die Steuer schuldet der Leistungsempfänger (Bezugsteuer).');
+  if (r.auto) hinweise.push(`Wird ${l.auto === 'LSV' ? 'per Lastschrift (LSV)' : 'per Dauerauftrag'} belastet — bitte nicht separat einzahlen.`);
+  else if (l.skonto) hinweise.push(`Zahlbar innert ${l.skonto[1]} Tagen mit ${l.skonto[0]} % Skonto oder innert ${l.ziel} Tagen netto.`);
+  else hinweise.push(l.ziel ? `Zahlbar innert ${l.ziel} Tagen netto, bitte mit Rechnungsnummer.` : 'Zahlbar sofort.');
+  if (!qr && !r.auto) hinweise.push('Bankverbindung: IBAN DE00 0000 0000 0000 0000 00 (Demo) · Referenz ' + r.nr);
+  let yl = y + 2;
+  hinweise.forEach(h => { umbrechen(h, 84, 9).forEach(z => { T(20, yl, z, { pt: 9 }); yl += 4.2; }); yl += 1; });
+  yl += 2;
+  T(20, yl, 'Freundliche Grüsse', { pt: 9.5 }); yl += 5;
+  T(20, yl, l.name, { pt: 9.5, b: true });
+  y = Math.max(yt, yl);
+
+  // the QR-bill sits on the bottom 105 mm; if the letter runs into it, it
+  // gets a page of its own — as the Swiss standard allows
+  if (qr) {
+    if (y + 2 > 190) { pages.push([]); P = pages[pages.length - 1]; }
+    qrRechnung(r, l, s, T, L, R);
+  }
+  return { pages, name: `${l.name.split(/\s+/)[0]}_${r.nr}.pdf`.replace(/[^\w.\-äöüÄÖÜ]+/g, '-') };
+}
+
+function qrRechnung(r, l, s, T, L, R) {
+  const f = DB.firma, top = 192, iban = 'CH44 3199 9123 0008 8901 2';
+  const an = [iban, l.name, l.strasse, l.plz + ' ' + l.ort.replace(/\s*\(\w\w\)$/, '')];
+  const von = [f.name, f.strasse, f.plz + ' ' + f.ort];
+  L(0, top, 210, top, { dash: [1, 1], c: '#000' });
+  L(62, top, 62, 297, { dash: [1, 1], c: '#000' });
+  // Empfangsschein
+  T(5, top + 10, 'Empfangsschein', { pt: 11, b: true });
+  let y = top + 17;
+  const block = (x, titel, zeilen, pt = 8, kpt = 6) => { T(x, y, titel, { pt: kpt, b: true }); y += 3.6; zeilen.forEach(z => { T(x, y, z, { pt }); y += 3.6; }); y += 2; };
+  block(5, 'Konto / Zahlbar an', an);
+  block(5, 'Referenz', [r.nr]);
+  block(5, 'Zahlbar durch', von);
+  T(5, top + 68, 'Währung', { pt: 6, b: true }); T(20, top + 68, 'Betrag', { pt: 6, b: true });
+  T(5, top + 72, 'CHF', { pt: 8 }); T(20, top + 72, fmt(s.brutto).replace(/’/g, ' '), { pt: 8 });
+  T(57, top + 83, 'Annahmestelle', { pt: 6, b: true, a: 'r' });
+  // Zahlteil
+  T(67, top + 10, 'Zahlteil', { pt: 11, b: true });
+  const q = qrModule(r.id), x0 = 67, y0 = top + 17, mod = 46 / q.n;
+  R(x0, y0, 46, 46, '#ffffff');
+  q.m.forEach(([x, yy]) => R(x0 + x * mod, y0 + yy * mod, mod, mod));
+  [[0, 0], [q.n - 7, 0], [0, q.n - 7]].forEach(([x, yy]) => { R(x0 + x * mod, y0 + yy * mod, 7 * mod, 7 * mod); R(x0 + (x + 1) * mod, y0 + (yy + 1) * mod, 5 * mod, 5 * mod, '#ffffff'); R(x0 + (x + 2) * mod, y0 + (yy + 2) * mod, 3 * mod, 3 * mod); });
+  R(x0 + 19.5, y0 + 19.5, 7, 7, '#ffffff'); R(x0 + 20, y0 + 20, 6, 6);
+  R(x0 + 22.4, y0 + 21.2, 1.2, 3.6, '#ffffff'); R(x0 + 21.2, y0 + 22.4, 3.6, 1.2, '#ffffff');
+  T(x0 + 23, y0 + 49, 'Demo — QR-Code nicht scannbar', { pt: 6, a: 'c', c: GRAU });
+  T(67, top + 72, 'Währung', { pt: 8, b: true }); T(87, top + 72, 'Betrag', { pt: 8, b: true });
+  T(67, top + 77, 'CHF', { pt: 10 }); T(87, top + 77, fmt(s.brutto).replace(/’/g, ' '), { pt: 10 });
+  y = top + 10;
+  T(118, y, 'Konto / Zahlbar an', { pt: 8, b: true }); y += 4.2;
+  an.forEach(z => { T(118, y, z, { pt: 10 }); y += 4.2; }); y += 2.5;
+  T(118, y, 'Referenz', { pt: 8, b: true }); y += 4.2; T(118, y, r.nr, { pt: 10 }); y += 6.7;
+  T(118, y, 'Zusätzliche Informationen', { pt: 8, b: true }); y += 4.2; T(118, y, 'Rechnung ' + r.nr + ' vom ' + dt(r.datum), { pt: 10 }); y += 6.7;
+  T(118, y, 'Zahlbar durch', { pt: 8, b: true }); y += 4.2;
+  von.forEach(z => { T(118, y, z, { pt: 10 }); y += 4.2; });
+}
+
+/* ── renderer 1: SVG, for the viewer ─────────────────────────────────── */
+function belegSVG(ops, nr, von) {
+  const a = { l: 'start', r: 'end', c: 'middle' };
+  return `<svg class="pdfseite" viewBox="0 0 210 297" role="img" aria-label="Seite ${nr} von ${von}" font-family="Helvetica, Arial, sans-serif"><rect width="210" height="297" fill="#fff"/>` + ops.map(o =>
+    o.t === 'text' ? `<text x="${o.x}" y="${o.y}" font-size="${(o.pt * .3528).toFixed(3)}"${o.b ? ' font-weight="700"' : ''} fill="${o.c}"${o.a !== 'l' ? ` text-anchor="${a[o.a]}"` : ''}>${esc(o.s)}</text>`
+    : o.t === 'line' ? `<line x1="${o.x1}" y1="${o.y1}" x2="${o.x2}" y2="${o.y2}" stroke="${o.c}" stroke-width="${o.w}"${o.dash ? ` stroke-dasharray="${o.dash.join(' ')}"` : ''}/>`
+    : `<rect x="${o.x.toFixed(3)}" y="${o.y.toFixed(3)}" width="${(o.w + (o.c === '#ffffff' ? 0 : .02)).toFixed(3)}" height="${(o.h + (o.c === '#ffffff' ? 0 : .02)).toFixed(3)}" fill="${o.c}"/>`).join('') + '</svg>';
+}
+
+/* ── renderer 2: a real PDF, written by hand ─────────────────────────────
+   Base-14 Helvetica in WinAnsiEncoding — every reader has it — so the file
+   needs no embedded font. Coordinates turn from mm-top-left into
+   pt-bottom-left. */
+const WINANSI = { '€': 0x80, '‚': 0x82, '„': 0x84, '…': 0x85, '‘': 0x91, '’': 0x92, '“': 0x93, '”': 0x94, '•': 0x95, '–': 0x96, '—': 0x97, '−': 0x2d };
+function pdfText(s) {
+  let o = '';
+  for (const ch of s) {
+    let c = ch.charCodeAt(0);
+    if (WINANSI[ch] != null) c = WINANSI[ch]; else if (c > 0xff) c = 0x3f;
+    const z = String.fromCharCode(c);
+    o += z === '\\' || z === '(' || z === ')' ? '\\' + z : z;
+  }
+  return o;
+}
+function belegPDF(layout, titel) {
+  const k = 72 / 25.4, H = 842, X = v => (v * k).toFixed(2), Y = v => (H - v * k).toFixed(2);
+  const farbe = c => { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => (v / 255).toFixed(3)).join(' '); };
+  const objs = [];   // index + 1 = object number
+  const add = s => (objs.push(s), objs.length);
+  const katalog = add(''), seiten = add(''), f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'), f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  const kinder = layout.pages.map(ops => {
+    let c = '';
+    ops.forEach(o => {
+      if (o.t === 'rect') c += `${farbe(o.c)} rg ${X(o.x)} ${Y(o.y + o.h)} ${X(o.w)} ${X(o.h)} re f\n`;
+      else if (o.t === 'line') c += `${farbe(o.c)} RG ${X(o.w)} w ${o.dash ? '[' + o.dash.map(X).join(' ') + '] 0 d' : '[] 0 d'} ${X(o.x1)} ${Y(o.y1)} m ${X(o.x2)} ${Y(o.y2)} l S\n`;
+      else {
+        const wd = textBreite(o.s, o.pt, o.b), x = o.a === 'r' ? o.x - wd : o.a === 'c' ? o.x - wd / 2 : o.x;
+        c += `BT /${o.b ? 'F2' : 'F1'} ${o.pt} Tf ${farbe(o.c)} rg ${X(x)} ${Y(o.y)} Td (${pdfText(o.s)}) Tj ET\n`;
+      }
+    });
+    const inhalt = add(`<< /Length ${c.length} >>\nstream\n${c}endstream`);
+    return add(`<< /Type /Page /Parent ${seiten} 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${inhalt} 0 R >>`);
+  });
+  objs[katalog - 1] = `<< /Type /Catalog /Pages ${seiten} 0 R >>`;
+  objs[seiten - 1] = `<< /Type /Pages /Kids [${kinder.map(n => n + ' 0 R').join(' ')}] /Count ${kinder.length} >>`;
+  const info = add(`<< /Title (${pdfText(titel)}) /Producer (Axyom Rechnungswesen Demo) >>`);
+  let out = '%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'; const off = [];
+  objs.forEach((o, i) => { off.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+  const xref = out.length;
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + off.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
+  out += `trailer\n<< /Size ${objs.length + 1} /Root ${katalog} 0 R /Info ${info} 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  // one character = one byte: every char above is ≤ 0xFF by construction
+  const bytes = new Uint8Array(out.length);
+  for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i);
+  return bytes;
+}
+
+/* ── the viewer ──────────────────────────────────────────────────────── */
+let BELEG_ZOOM = 1;
+const ZOOMS = [1, 1.25, 1.5, 2];
+function belegViewer(r) {
+  const lay = belegLayout(r), n = lay.pages.length;
+  return `<div class="pdfv" aria-label="Originalbeleg">
+    <div class="pdfbar">
+      <div class="pt"><b>Originalbeleg</b><span>${esc(lay.name)} · ${n} Seite${n > 1 ? 'n' : ''}</span></div>
+      <div class="pa">
+        <span class="zoom"><button class="ib" data-zoom="-1" aria-label="Verkleinern"${BELEG_ZOOM === ZOOMS[0] ? ' disabled' : ''}>−</button><span class="zv">${Math.round(BELEG_ZOOM * 100)} %</span><button class="ib" data-zoom="1" aria-label="Vergrössern"${BELEG_ZOOM === ZOOMS[ZOOMS.length - 1] ? ' disabled' : ''}>+</button></span>
+        <button class="ib" data-pdf="laden" data-r="${r.id}" aria-label="Als PDF herunterladen" title="Herunterladen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.8 7.5 8 10.7l3.2-3.2M3 13.5h10"/></svg></button>
+        <button class="lk" data-pdf="oeffnen" data-r="${r.id}">Separat öffnen ↗</button>
+      </div>
+    </div>
+    <div class="pdfscroll"><div class="pdfseiten" style="width:${BELEG_ZOOM * 100}%">${lay.pages.map((ops, i) => belegSVG(ops, i + 1, n)).join('')}</div></div>
+  </div>`;
+}
+function belegOeffnen(r, laden) {
+  const lay = belegLayout(r);
+  const url = URL.createObjectURL(new Blob([belegPDF(lay, 'Rechnung ' + r.nr + ' · ' + lief(r.lief).name)], { type: 'application/pdf' }));
+  if (laden) {
+    const a = document.createElement('a'); a.href = url; a.download = lay.name; document.body.appendChild(a); a.click(); a.remove();
+  } else if (!window.open(url, '_blank')) {
+    toast('Der Browser hat das neue Fenster blockiert — <a href="' + url + '" target="_blank" rel="noopener">hier öffnen</a>.', 2);
+    return;
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
 /* ══════════════════════════════════════════════════════════════════════
    ÜBERSICHT — what to do today, then how the month is going. The to-do list
    is built from the same counts as the rail badges (offen()), so the two can
@@ -1432,20 +1704,7 @@ function belegPapier(r) {
   const l = lief(r.lief), s = summen(r), w = r.waehrung || 'CHF';
   const dup = r.duplikatVon && DB.rechnungen.find(x => x.id === r.duplikatVon);
   return `${dup ? `<div class="box s3" style="margin-bottom:12px"><b>Vermutlich doppelt.</b> Gleiche Rechnungsnummer ${esc(r.nr)} und gleicher Betrag wie die Rechnung vom ${dt(dup.eingang)} (${esc(dup.id)}). Wahrscheinlich einmal per Mail, einmal per Post.</div>` : ''}
-  <div class="paper" aria-label="Originalbeleg">
-    <div class="ph"><div><div class="lg">${esc(l.name)}</div><div class="dim">${esc(l.ort)}</div></div>
-      <div style="text-align:right" class="dim">${r.auto ? `<span class="pill g">${esc(l.auto)}</span><br>` : ''}Eingang ${dt(r.eingang)}<br>${r.eingang === r.datum ? 'per E-Mail' : 'per Post, gescannt'}</div></div>
-    <div class="adr">${esc(DB.firma.name)}<br>${esc(DB.firma.marke)}<br>${esc(DB.firma.strasse)}<br>${esc(DB.firma.plz)} ${esc(DB.firma.ort)}</div>
-    <h3>Rechnung ${esc(r.nr)}</h3>
-    <div class="dim">Datum ${dt(r.datum)} · zahlbar ${l.ziel ? 'innert ' + l.ziel + ' Tagen' : 'sofort'}${r.bezug ? ' · Leistung aus dem Ausland, ohne Schweizer MWST' : ''}</div>
-    <table><thead><tr><th>Artikel</th><th style="text-align:right">Menge</th><th style="text-align:right">Preis</th><th style="text-align:right">MWST</th><th style="text-align:right">Betrag ${w}</th></tr></thead>
-    <tbody>${r.pos.map(p => { const satz = p[3] != null ? p[3] : (r.bezug ? 0 : l.satz); return `<tr><td>${esc(p[0])}</td><td style="text-align:right">${p[1]}</td><td style="text-align:right">${fmt(p[2])}</td><td style="text-align:right">${satz} %</td><td style="text-align:right">${fmt(p[1] * p[2])}</td></tr>`; }).join('')}</tbody></table>
-    <table class="tot" style="width:auto;margin-left:auto;margin-top:12px"><tbody>
-      <tr><td>Total netto</td><td style="text-align:right;padding-left:30px">${w} ${fmt(s.netto)}</td></tr>
-      ${s.zeilen.filter(z => z.satz).map(z => `<tr><td>MWST ${z.satz} % auf ${fmt(z.netto)}</td><td style="text-align:right">${w} ${fmt(z.mwst)}</td></tr>`).join('')}
-      <tr><td>Total</td><td style="text-align:right">${w} ${fmt(s.brutto)}</td></tr></tbody></table>
-    ${r.waehrung && r.waehrung !== 'CHF' ? '' : `<div class="qr">${qrBild(r.id)}<div><b>Zahlteil</b><br>Konto ${esc(l.name)}<br>Referenz ${esc(r.nr)}<br>Betrag CHF ${fmt(s.brutto)}<br><span class="dim">Demo — QR-Code nicht scannbar</span></div></div>`}
-  </div>`;
+  ${belegViewer(r)}`;
 }
 
 /* the right-hand panel: one stage, one question */
@@ -2123,7 +2382,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -2151,6 +2410,15 @@ document.addEventListener('click', e => {
     go(d.go, d.p || ''); if (!d.p || d.go !== AKTIV) window.scrollTo(0, 0); return;
   }
 
+  // ── Originalbeleg ──
+  if (d.zoom) {
+    const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(BELEG_ZOOM) + +d.zoom)); BELEG_ZOOM = ZOOMS[i];
+    // keep the reader where it was in the page, not back at the top
+    const sc = $('.pdfscroll'), fx = sc ? sc.scrollTop / Math.max(1, sc.scrollHeight) : 0;
+    const y = window.scrollY; render(); window.scrollTo(0, y);
+    const n = $('.pdfscroll'); if (n) n.scrollTop = fx * n.scrollHeight; return;
+  }
+  if (d.pdf) { belegOeffnen(R_(d.r), d.pdf === 'laden'); return; }
   // ── Rechnungen ──
   if (d.rfilter) { RFILTER = d.rfilter; PARAM = ''; location.hash = '#rechnungen'; render(); return; }
   if ('papierkorb' in d) {
