@@ -338,6 +338,30 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
   .wahl{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
+/* Rechnungen: figures above the list, instalments, per-position accounts */
+.rkopf{margin-bottom:16px}
+.kpi.kl{padding:12px 16px}.kpi.kl .v{font-size:21px;margin-top:2px}
+.kpi.kl.on{border-color:var(--acc);box-shadow:0 0 0 3px var(--wash)}
+.raten{border:1px solid var(--soft);border-radius:10px;overflow:hidden;margin:4px 0 10px}
+.rate{display:grid;grid-template-columns:22px 1fr auto auto;gap:10px;align-items:center;padding:8px 10px;font-size:13px;border-top:1px solid var(--soft)}
+.rate:first-child{border-top:0}
+.rate.jetzt{background:var(--wash)}
+.rate .nr{width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.06);display:grid;place-items:center;font-size:11px;font-weight:700}
+.rate .r{text-align:right}
+.posk .posl{display:none;margin-top:8px;border:1px solid var(--soft);border-radius:10px}
+.posk.on .posl{display:block}
+.posz{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,200px);gap:10px;align-items:center;padding:8px 10px;border-top:1px solid var(--soft)}
+.posz:first-child{border-top:0}
+.posz .pt{display:flex;flex-direction:column;font-size:12.5px;min-width:0}
+.posz .pt span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.posz .pt .dim{font-size:11.5px}
+.posz select{font-size:12.5px;padding:6px 8px}
+.abw{display:grid;gap:6px;margin-top:10px}
+.abw label{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:9px;padding:9px 11px;cursor:pointer;font-size:13px}
+.abw label:has(input:checked){border-color:var(--acc);background:var(--wash)}
+.abw label small{display:block;color:var(--dim);font-size:11.5px}
+@media (max-width:560px){.rate{grid-template-columns:22px 1fr auto;}.rate .pill{grid-column:2/-1;justify-self:start}.posz{grid-template-columns:minmax(0,1fr)}}
+
 /* ── narrower screens ── */
 @media (max-width:1280px){
   .split,.split.deb{grid-template-columns:minmax(240px,300px) minmax(0,1fr)}
@@ -445,6 +469,7 @@ const KONTEN = [
   { nr: '6570', name: 'Informatik & Abos',          typ: 'K', gruppe: 'verwaltung' },
   { nr: '6600', name: 'Werbung',                    typ: 'K', gruppe: 'werbung' },
   { nr: '6800', name: 'Kartengebühren & Bankspesen', typ: 'K', gruppe: 'verwaltung' },
+  { nr: '6950', name: 'Kursdifferenzen',           typ: 'K', gruppe: 'verwaltung' },
 ];
 const GRUPPEN = {
   personal:   { name: 'Personal',              farbe: '#5b4bb7' },
@@ -467,7 +492,7 @@ const LIEFERANTEN = [
   { id: 'L1',  name: 'Frischwerk Gemüse AG',       ort: 'Landquart',   konto: '4200', satz: 2.6, ziel: 30 },
   { id: 'L2',  name: 'Metzgerei Brunold',          ort: 'Talwies',     konto: '4200', satz: 2.6, ziel: 20 },
   { id: 'L3',  name: 'Molkerei Säntisblick',       ort: 'Gossau',      konto: '4200', satz: 2.6, ziel: 30 },
-  { id: 'L4',  name: 'Weinhandlung Rebgarten',     ort: 'Maienfeld',   konto: '4210', satz: 8.1, ziel: 30 },
+  { id: 'L4',  name: 'Weinhandlung Rebgarten',     ort: 'Maienfeld',   konto: '4210', satz: 8.1, ziel: 30, skonto: [2, 10] },
   { id: 'L5',  name: 'Getränke Rhyner AG',         ort: 'Sargans',     konto: '4210', satz: 2.6, ziel: 30 },
   { id: 'L6',  name: 'Alpina Grosshandel',         ort: 'Chur',        konto: '4200', satz: 2.6, ziel: 10 },
   { id: 'L7',  name: 'Kaffeerösterei Bohnenwerk',  ort: 'Buchs',       konto: '4210', satz: 2.6, ziel: 30 },
@@ -495,7 +520,7 @@ const RECHNUNGEN = [
   { id: 'K301', lief: 'L1', nr: 'FW-88412', datum: '2026-10-02', eingang: '2026-10-03', stufe: 'abgeglichen', konto: '4200', pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Salatmix Saison, 5 kg', 12, 21.9], ['Karotten, 10 kg', 6, 16.4], ['Kräuter frisch, Bund', 40, 2.95], ['Zwiebeln, 25 kg', 3, 29.5], ['Tomaten Rispe, 6 kg', 10, 24.6], ['Zucchetti, 5 kg', 6, 19.8]] },
   { id: 'K302', lief: 'L2', nr: '2026-1544', datum: '2026-10-03', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '4200', pos: [['Kalbsschnitzel, kg', 14, 52.5], ['Rindsentrecôte, kg', 12, 61.8], ['Bratwürste, Stk.', 80, 2.4], ['Hackfleisch Rind, kg', 15, 16.9]] },
   { id: 'K303', lief: 'L4', nr: 'RG-26-0912', datum: '2026-10-05', eingang: '2026-10-06', stufe: 'bezahlt', konto: '4210', bezahltAm: '2026-10-14', pos: [['Maienfelder Pinot Noir 75 cl', 36, 24.5], ['Riesling-Silvaner 75 cl', 24, 17.0], ['Prosecco DOC 75 cl', 30, 15.0], ['Rotwein Hauswein 1 l', 24, 14.5]] },
-  { id: 'K304', lief: 'L6', nr: 'A-7720931', datum: '2026-10-06', eingang: '2026-10-06', stufe: 'kontiert', konto: '4200',
+  { id: 'K304', lief: 'L6', nr: 'A-7720931', datum: '2026-10-06', eingang: '2026-10-06', stufe: 'kontiert', konto: '4200', posKonto: { 5: '4400' },
     pos: [['Olivenöl extra vergine 5 l', 4, 48.9], ['Reis Carnaroli 5 kg', 3, 22.8], ['Mehl Typ 400, 25 kg', 2, 31.5], ['Pasta Penne 6 kg', 5, 19.9], ['Gewürze Sortiment', 1, 128.4], ['Reinigungsmittel Küche', 4, 29.6, 8.1]] },
   { id: 'K305', lief: 'L3', nr: 'MS-55190', datum: '2026-10-07', eingang: '2026-10-08', stufe: 'kontiert', konto: '4200', pos: [['Vollrahm 35 %, 5 l', 18, 23.5], ['Butter, 10 kg', 2, 78.4], ['Milch UHT, 12 l', 10, 15.6], ['Gruyère AOP, kg', 4.5, 29.0]] },
   { id: 'K306', lief: 'L8', nr: 'W-10/26-114', datum: '2026-10-08', eingang: '2026-10-09', stufe: 'kontiert', konto: '6040', pos: [['Tischwäsche, Stk.', 320, 0.9], ['Servietten Stoff, Stk.', 450, 0.32], ['Kochbekleidung Satz', 12, 4.5]] },
@@ -506,7 +531,7 @@ const RECHNUNGEN = [
   { id: 'K309', lief: 'L1', nr: 'FW-88690', datum: '2026-10-12', eingang: '2026-10-13', stufe: 'eingang', konto: '4200',
     vorschlag: { konto: '4200', sicher: 'hoch', grund: 'Gemüse, wie alle Rechnungen von Frischwerk' }, pos: [['Kartoffeln festkochend, 25 kg', 4, 38.5], ['Kürbis Butternut, kg', 30, 3.9], ['Salatmix Saison, 5 kg', 10, 21.9], ['Pilze Saison, kg', 8, 26.5], ['Kräuter frisch, Bund', 36, 2.95]] },
   { id: 'K310', lief: 'L6', nr: 'A-7721488', datum: '2026-10-13', eingang: '2026-10-13', stufe: 'eingang', konto: '4200',
-    vorschlag: { konto: '4200', sicher: 'mittel', grund: 'Gemischte Rechnung: Lebensmittel 2.6 % und Reinigungsmittel 8.1 % — zweite Zeile prüfen' },
+    vorschlag: { konto: '4200', sicher: 'mittel', grund: 'Gemischte Rechnung: Lebensmittel auf 4200, das Spülmittel auf 4400 Verbrauchsmaterial — je Position vorgeschlagen' }, posVorschlag: { 4: '4400' },
     pos: [['Zucker 10 kg', 2, 18.9], ['Mehl Typ 400, 25 kg', 3, 31.5], ['Konserven Tomaten 2.5 kg', 12, 6.9], ['Frittieröl 10 l', 4, 34.9], ['Spülmittel Profi 10 l', 2, 48.1, 8.1]] },
   { id: 'K311', lief: 'L13', nr: 'DR-3381', datum: '2026-10-13', eingang: '2026-10-14', stufe: 'eingang', konto: '6600',
     vorschlag: { konto: '6600', sicher: 'hoch', grund: 'Druck von Speisekarten — Werbung' }, pos: [['Speisekarten Herbst, A4 gefalzt', 120, 3.5], ['Tischaufsteller Wildwochen', 60, 3.67]] },
@@ -522,7 +547,7 @@ const RECHNUNGEN = [
     vorschlag: { konto: '4210', sicher: 'hoch', grund: 'Getränke, wie alle Rechnungen von Rhyner' },
     pos: [['Mineral mit Kohlensäure 12×1 l (Harasse)', 14, 14.5], ['Süssgetränke 24×33 cl', 12, 23.5], ['Apfelschorle 24×33 cl', 10, 19.9], ['Bier Lager 20×50 cl', 15, 27.5, 8.1]] },
   { id: 'K316', lief: 'L14', nr: 'POL-55-881', datum: '2026-10-01', eingang: '2026-10-02', stufe: 'kontiert', konto: '6300',
-    raten: { anzahl: 2, bezahlt: 1 }, pos: [['Betriebshaftpflicht 2026/27', 1, 1890.0], ['Sachversicherung Inventar 2026/27', 1, 1350.0]] },
+    raten: [{ betrag: 1620, faellig: '2026-10-01', bezahltAm: '2026-10-01' }, { betrag: 1620, faellig: '2026-11-02' }], pos: [['Betriebshaftpflicht 2026/27', 1, 1890.0], ['Sachversicherung Inventar 2026/27', 1, 1350.0]] },
   // automatic: standing order and direct debits — nothing to do but match
   { id: 'K317', lief: 'L10', nr: 'Miete 10/2026', datum: '2026-10-01', eingang: '2026-10-01', stufe: 'abgeglichen', konto: '6000', auto: true, pos: [['Mietzins Oktober 2026, Restaurantfläche', 1, 9600.0], ['Nebenkosten akonto', 1, 800.0]] },
   { id: 'K318', lief: 'L11', nr: 'EW-0926-3318', datum: '2026-10-05', eingang: '2026-10-05', stufe: 'abgeglichen', konto: '6400', auto: true, pos: [['Strom September 2026', 1, 1288.4], ['Netznutzung', 1, 324.0]] },
@@ -534,6 +559,7 @@ const RECHNUNGEN = [
    Treuhänder. Lines without «zu» are the open work: a receipt is missing or a
    match has to be confirmed. */
 const BANK = [
+  { id: 'B5100', datum: '2026-10-01', text: 'Zahlung Alpenschutz Versicherungen POL-55-881 Rate 1/2', betrag: -1620.00, zu: { typ: 'kreditor', ref: 'K316' }, abgeschlossen: true },
   { id: 'B5101', datum: '2026-10-01', text: 'Dauerauftrag Immobilien Rheinpark AG Miete 10/2026', betrag: -10400.00, zu: { typ: 'kreditor', ref: 'K317' }, abgeschlossen: true },
   { id: 'B5102', datum: '2026-10-01', text: 'Gutschrift Kartenterminal Abrechnung 30.09.', betrag: 3984.20, zu: { typ: 'karten' }, abgeschlossen: true },
   { id: 'B5103', datum: '2026-10-02', text: 'Gutschrift Kartenterminal Abrechnung 01.10.', betrag: 2210.65, zu: { typ: 'karten' }, abgeschlossen: true },
@@ -550,7 +576,7 @@ const BANK = [
   { id: 'B5114', datum: '2026-10-12', text: 'Twint Abrechnung 05.–11.10.', betrag: 1288.60, zu: { typ: 'karten' }, abgeschlossen: false },
   { id: 'B5115', datum: '2026-10-13', text: 'Bankspesen Kontoführung 09/2026', betrag: -18.00, zu: { typ: 'spesen' }, abgeschlossen: false },
   { id: 'B5116', datum: '2026-10-13', text: 'Bareinzahlung Bancomat Talwies', betrag: 12000.00, zu: { typ: 'kasse', ref: 'E-1013' }, abgeschlossen: false },
-  { id: 'B5117', datum: '2026-10-14', text: 'Zahlung Weinhandlung Rebgarten RG-26-0912', betrag: null, zu: null },
+  { id: 'B5117', datum: '2026-10-14', text: 'Zahlung Weinhandlung Rebgarten RG-26-0912 abzgl. 2 % Skonto', betrag: -2211.99, zu: null },
   { id: 'B5118', datum: '2026-10-14', text: 'Online Einkauf Online-Bürobedarf Debit Mastercard', betrag: -132.45, zu: null },
   { id: 'B5119', datum: '2026-10-15', text: 'LSV KassaPlus AG KP-26-10-0071', betrag: null, zu: null },
   { id: 'B5120', datum: '2026-10-15', text: 'Gutschrift Kundenzahlung Gemeinde Talwies Rg 2026097 Teilzahlung', betrag: 500.00, zu: null },
@@ -567,7 +593,7 @@ const BANK_HINWEIS = {
   B5104: { art: 'beleg', text: 'Beleg fehlt noch — Quittung aus dem Online-Konto hochladen', konto: '6500' },
   B5108: { art: 'beleg', text: 'Beleg fehlt noch — Abo-Rechnung herunterladen', konto: '6570' },
   B5112: { art: 'beleg', text: 'Beleg fehlt noch — Tankquittung', konto: '6100' },
-  B5117: { art: 'vorschlag', text: 'Passt zu Rechnung RG-26-0912 von Weinhandlung Rebgarten', ref: 'K303' },
+  B5117: { art: 'vorschlag', text: 'Rechnung RG-26-0912 von Weinhandlung Rebgarten, mit 2 % Skonto bezahlt', ref: 'K303' },
   B5118: { art: 'beleg', text: 'Beleg fehlt noch — Bestellbestätigung', konto: '6500' },
   B5119: { art: 'vorschlag', text: 'Passt zu Rechnung KP-26-10-0071 von KassaPlus AG', ref: 'K319' },
   B5120: { art: 'vorschlag', text: 'Teilzahlung zu Kundenrechnung 2026097 der Gemeinde Talwies', ref: 'D2026097', typ: 'debitor' },
@@ -725,12 +751,14 @@ function laden() {
   DB = SEED();
   try {
     const s = localStorage.getItem(SPEICHER);
-    if (s) { const g = JSON.parse(s); if (g && g.v === 1) Object.assign(DB, g.db); }
+    // v2: payments can differ from the invoice, instalments carry dates —
+    // a v1 save has neither, so it is dropped rather than half-read
+    if (s) { const g = JSON.parse(s); if (g && g.v === 2) Object.assign(DB, g.db); }
   } catch (e) { /* storage blocked: the demo still runs, it just forgets */ }
   vorbereiten();
 }
 function speichern() {
-  try { localStorage.setItem(SPEICHER, JSON.stringify({ v: 1, db: DB })); } catch (e) { }
+  try { localStorage.setItem(SPEICHER, JSON.stringify({ v: 2, db: DB })); } catch (e) { }
 }
 function zuruecksetzen() {
   try { localStorage.removeItem(SPEICHER); } catch (e) { }
@@ -764,7 +792,68 @@ function summen(r) {
   const bezugsteuer = r.bezug ? r2(netto * kurs * 0.081) : 0;
   return { zeilen, netto, mwst, brutto, kurs, chf: r2(brutto * kurs), bezugsteuer };
 }
-const faellig = r => r.faellig || plusTage(r.datum, (lief(r.lief) || {}).ziel || 30);
+// with an instalment plan, what is due is the next unpaid instalment
+const faellig = r => {
+  if (r.raten) { const n = r.raten.find(x => !x.bezahltAm) || r.raten[r.raten.length - 1]; return n.faellig; }
+  return r.faellig || plusTage(r.datum, (lief(r.lief) || {}).ziel || 30);
+};
+
+/* ── paying a supplier invoice ────────────────────────────────────────────
+   «Gedeckt» is what the bank has settled: each matched bank line, plus any
+   difference written off with a reason (Skonto, fee, exchange rate). What is
+   left is still owed. A partial payment simply leaves a rest. */
+const ABWEICHUNG = {
+  skonto: 'Skonto / Rabatt abgezogen', teil: 'Teilzahlung — Rest bleibt offen',
+  gebuehr: 'Bank- oder Überweisungsgebühr', kurs: 'Kursdifferenz',
+};
+const zahlungenVon = r => DB.bank.filter(b => b.zu && b.zu.typ === 'kreditor' && b.zu.ref === r.id);
+const gedeckt = r => r2(zahlungenVon(r).reduce((s, b) => s - b.betrag + ((b.zu.abw && b.zu.abw.betrag) || 0), 0));
+const restOffen = r => r2(summen(r).chf - gedeckt(r));
+// what has been sent from the e-banking but not yet seen on the bank
+function unterwegs(r) {
+  const ausgeloest = r.raten ? r.raten.filter(x => x.bezahltAm).reduce((s, x) => s + x.betrag, 0) : (r.stufe === 'bezahlt' ? summen(r).chf : gedeckt(r));
+  return r2(Math.max(0, ausgeloest - gedeckt(r)));
+}
+// what still has to be paid: unpaid instalments, or the rest after a partial payment
+function nochZuZahlen(r) {
+  if (r.raten) return r2(r.raten.filter(x => !x.bezahltAm).reduce((s, x) => s + x.betrag, 0));
+  return r.stufe === 'kontiert' ? restOffen(r) : 0;
+}
+// after a bank line is matched: settled → abgeglichen; a rest → pay it
+function zahlstandPruefen(r) {
+  if (restOffen(r) <= 0.004) { r.stufe = 'abgeglichen'; return; }
+  const alleRaten = r.raten && r.raten.every(x => x.bezahltAm);
+  // without a plan, a rest after a partial payment has to be paid again
+  r.stufe = r.raten ? (alleRaten ? 'bezahlt' : 'kontiert') : 'kontiert';
+}
+
+/* «Je Position»: one invoice can go to several accounts — a grocery invoice
+   with cleaning agent on it. Each VAT line is split over the accounts in the
+   proportion of its own positions, so manual VAT lines still split cleanly. */
+function kontoTeile(r, satz, netto) {
+  const l = lief(r.lief) || {};
+  if (!r.posKonto) return [{ konto: r.konto, netto }];
+  const m = {};
+  (r.pos || []).forEach((p, i) => {
+    const ps = p[3] != null ? p[3] : (r.bezug ? 0 : l.satz || 0);
+    if (ps !== satz) return;
+    const k = r.posKonto[i] || r.konto;
+    m[k] = (m[k] || 0) + p[1] * p[2];
+  });
+  const tot = Object.values(m).reduce((s, v) => s + v, 0);
+  if (!tot) return [{ konto: r.konto, netto }];
+  const teile = Object.entries(m).map(([konto, v]) => ({ konto, netto: r2(netto * v / tot) }));
+  // the rounding cent goes to the largest share, so the parts add up exactly
+  const diff = r2(netto - teile.reduce((s, t) => s + t.netto, 0));
+  if (diff) teile.sort((a, b) => b.netto - a.netto)[0].netto = r2(teile[0].netto + diff);
+  return teile;
+}
+// for display: each account with its net amount in CHF
+function kontenVon(r) {
+  const s = summen(r), m = {};
+  s.zeilen.forEach(z => kontoTeile(r, z.satz, z.netto).forEach(t => m[t.konto] = r2((m[t.konto] || 0) + t.netto * s.kurs)));
+  return Object.entries(m).map(([konto, netto]) => ({ konto, netto })).sort((a, b) => b.netto - a.netto);
+}
 function debSummen(d) {
   const brutto = r2((d.pos || []).reduce((s, p) => s + p[1] * p[2], 0));
   const mwst = r2(brutto * d.satz / (100 + d.satz));      // prices include VAT
@@ -772,6 +861,9 @@ function debSummen(d) {
   return { brutto, mwst, netto: r2(brutto - mwst), bezahlt, offen: r2(brutto - bezahlt) };
 }
 function vorbereiten() {
+  DB.rechnungen.forEach(r => {
+    if (r.raten && !Array.isArray(r.raten)) delete r.raten;
+  });
   // bank lines that pay a document take the document's own amount
   DB.bank.forEach(b => {
     if (b.betrag != null) return;
@@ -801,7 +893,7 @@ const STUFEN = [
 ];
 function bankZu(typ, ref) { return DB.bank.find(b => b.zu && b.zu.typ === typ && b.zu.ref === ref); }
 function stufeVon(r) {
-  if (r.stufe === 'abgeglichen') { const b = bankZu('kreditor', r.id); return b && b.abgeschlossen ? 'abgeschlossen' : 'abgeglichen'; }
+  if (r.stufe === 'abgeglichen') { const L = zahlungenVon(r); return L.length && L.every(b => b.abgeschlossen) ? 'abgeschlossen' : 'abgeglichen'; }
   return r.stufe;
 }
 const stufeIdx = id => STUFEN.findIndex(s => s.id === id);
@@ -870,8 +962,15 @@ function buchungen() {
     if (r.geloescht || stufeIdx(r.stufe) < 1) return;
     const s = summen(r), l = lief(r.lief);
     s.zeilen.forEach(z => {
-      b(r.datum, r.konto, '2000', r2(z.netto * s.kurs), l.name + ' ' + r.nr + (s.zeilen.length > 1 ? ' (' + z.satz + ' %)' : ''), r.id);
-      if (z.mwst) b(r.datum, '1170', '2000', r2(z.mwst * s.kurs), 'Vorsteuer ' + z.satz + ' % ' + l.name, r.id, { art: konto(r.konto).gruppe === 'waren' ? 'vst-material' : 'vst-betrieb', satz: z.satz, basis: r2(z.netto * s.kurs) });
+      const teile = kontoTeile(r, z.satz, z.netto);
+      let vstRest = r2(z.mwst * s.kurs);
+      teile.forEach((t, i) => {
+        b(r.datum, t.konto, '2000', r2(t.netto * s.kurs), l.name + ' ' + r.nr + (s.zeilen.length > 1 ? ' (' + z.satz + ' %)' : '') + (teile.length > 1 ? ' · ' + konto(t.konto).name : ''), r.id);
+        // the input tax follows each part, so material and operating VAT stay apart
+        const vst = i === teile.length - 1 ? vstRest : r2(t.netto * z.satz / 100 * s.kurs);
+        vstRest = r2(vstRest - vst);
+        if (z.mwst) b(r.datum, '1170', '2000', vst, 'Vorsteuer ' + z.satz + ' % ' + l.name, r.id, { art: konto(t.konto).gruppe === 'waren' ? 'vst-material' : 'vst-betrieb', satz: z.satz, basis: r2(t.netto * s.kurs) });
+      });
     });
     if (s.bezugsteuer) {
       b(r.datum, '1170', '2200', s.bezugsteuer, 'Bezugsteuer 8.1 % ' + l.name, r.id, { art: 'bezug', satz: 8.1, basis: r2(s.netto * s.kurs) });
@@ -900,7 +999,23 @@ function buchungen() {
   DB.bank.forEach(x => {
     if (!x.zu) return;
     const t = x.zu.typ;
-    if (t === 'kreditor') b(x.datum, '2000', '1020', -x.betrag, 'Zahlung ' + (DB.rechnungen.find(r => r.id === x.zu.ref) || {}).nr, x.id);
+    if (t === 'kreditor') {
+      const r = DB.rechnungen.find(y => y.id === x.zu.ref) || {}, a = x.zu.abw;
+      b(x.datum, '2000', '1020', -x.betrag, 'Zahlung ' + r.nr, x.id);
+      if (a && a.betrag && r.id) {
+        const s = summen(r), name = (lief(r.lief) || {}).name;
+        if (a.grund === 'skonto') {
+          // a discount lowers the cost AND the input tax already claimed
+          const vst = s.chf ? r2(a.betrag * s.mwst * s.kurs / s.chf) : 0, netto = r2(a.betrag - vst);
+          b(x.datum, '2000', r.konto, netto, 'Skonto ' + name + ' ' + r.nr, x.id);
+          if (vst) b(x.datum, '2000', '1170', vst, 'Vorsteuerkorrektur Skonto ' + name, x.id, { art: konto(r.konto).gruppe === 'waren' ? 'vst-material' : 'vst-betrieb', basis: -netto, minus: true });
+        } else if (a.grund === 'gebuehr') b(x.datum, '6800', '2000', -a.betrag, 'Gebühr Zahlung ' + r.nr, x.id);
+        else if (a.grund === 'kurs') {
+          if (a.betrag > 0) b(x.datum, '2000', '6950', a.betrag, 'Kursgewinn ' + r.nr, x.id);
+          else b(x.datum, '6950', '2000', -a.betrag, 'Kursverlust ' + r.nr, x.id);
+        }
+      }
+    }
     else if (t === 'karten') b(x.datum, '1020', '1091', x.betrag, x.text, x.id);
     else if (t === 'spesen') b(x.datum, '6800', '1020', -x.betrag, x.text, x.id);
     else if (t === 'lohn') b(x.datum, '2270', '1020', -x.betrag, x.text, x.id);
@@ -969,8 +1084,9 @@ function mwstQuartal(q, jahr = 2026, B) {
     const m = x.mwst;
     if (m.art === 'umsatz') { r.umsatz += m.basis; r.steuerUmsatz += x.betrag; }
     else if (m.art === 'bezug') { r.bezug += x.betrag; r.bezugBasis += m.basis; }
-    else if (m.art === 'vst-material') { r.vstMaterial += x.betrag; r.basisMaterial += m.basis; }
-    else if (m.art === 'vst-betrieb') { r.vstBetrieb += x.betrag; r.basisBetrieb += m.basis; }
+    // a correction (Skonto) posts on the credit side of 1170 and reduces the claim
+    else if (m.art === 'vst-material') { r.vstMaterial += m.minus ? -x.betrag : x.betrag; r.basisMaterial += m.basis; }
+    else if (m.art === 'vst-betrieb') { r.vstBetrieb += m.minus ? -x.betrag : x.betrag; r.basisBetrieb += m.basis; }
   });
   // Bezugsteuer is owed AND reclaimable: it raises both sides
   r.geschuldet = r2(r.steuerUmsatz + r.bezug);
@@ -1180,7 +1296,7 @@ VIEWS.uebersicht = () => {
   const o = offen(), B = buchungen();
   const R = DB.rechnungen.filter(r => !r.geloescht);
   const zuZahlen = R.filter(r => r.stufe === 'kontiert' && !r.auto);
-  const summeZahlen = zuZahlen.reduce((s, r) => s + summen(r).chf, 0);
+  const summeZahlen = zuZahlen.reduce((s, r) => s + nochZuZahlen(r), 0);
   const okt = monatsZahlen('2026-10', B), sep = monatsZahlen('2026-09', B);
   const bank = kontoStand('1020', null, null, B).saldo;
   const debOffen = DB.debitoren.filter(d => d.stufe === 'versendet').reduce((s, d) => s + debSummen(d).offen, 0);
@@ -1253,6 +1369,9 @@ const RFILTER_DEF = {
   bank: { name: 'Wartet auf Bank', f: r => r.stufe === 'bezahlt' },
   fertig: { name: 'Erledigt', f: r => r.stufe === 'abgeglichen' },
   alle: { name: 'Alle', f: () => true },
+  // reached from the figures above the list; shown as a chip only while open
+  auto: { name: 'Läuft automatisch', f: r => r.auto && r.stufe !== 'abgeglichen', versteckt: true },
+  fragen: { name: 'Offene Fragen', f: r => !!(r.klaerung || r.duplikatVon), versteckt: true },
 };
 function rechnungsListe() {
   const q = RSUCHE.trim().toLowerCase();
@@ -1267,9 +1386,9 @@ VIEWS.rechnungen = () => {
   if (r && !liste.includes(r)) { RFILTER = Object.keys(RFILTER_DEF).find(k => k !== 'alle' && RFILTER_DEF[k].f(r)) || 'alle'; liste = rechnungsListe(); }
   if (!r) r = liste[0];
   const n = k => DB.rechnungen.filter(x => !x.geloescht && RFILTER_DEF[k].f(x)).length;
-  return `<div class="split">
+  return rechnungenKopf() + `<div class="split">
     <div class="col"><div class="liste">
-      <div class="lh"><div class="chips">${Object.entries(RFILTER_DEF).map(([k, d]) => `<button class="chip${k === RFILTER ? ' on' : ''}" data-rfilter="${k}">${d.name}<span class="n">${n(k)}</span></button>`).join('')}</div>
+      <div class="lh"><div class="chips">${Object.entries(RFILTER_DEF).filter(([k, d]) => !d.versteckt || k === RFILTER).map(([k, d]) => `<button class="chip${k === RFILTER ? ' on' : ''}" data-rfilter="${k}">${d.name}<span class="n">${n(k)}</span></button>`).join('')}</div>
         <input class="in" id="rsuche" type="search" placeholder="Lieferant, Nummer, Betrag" value="${esc(RSUCHE)}" style="margin-top:10px"></div>
       <div class="items">${liste.length ? liste.map(x => {
         const s = summen(x);
@@ -1285,6 +1404,24 @@ VIEWS.rechnungen = () => {
       : `<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links eine Rechnung.</div></div>`}
   </div>`;
 };
+/* The four figures above the list — what the work in here amounts to. Each
+   one opens the list that makes it up. */
+function rechnungenKopf() {
+  const R = DB.rechnungen.filter(r => !r.geloescht);
+  const sum = L => L.reduce((s, r) => s + r, 0);
+  const pruef = R.filter(r => r.stufe === 'eingang');
+  const zahl = R.filter(r => (r.stufe === 'kontiert' || r.raten && r.stufe !== 'abgeglichen') && !r.auto && nochZuZahlen(r) > 0);
+  const ueber = zahl.filter(r => tageBis(faellig(r)) < 0);
+  const auto = R.filter(r => RFILTER_DEF.auto.f(r));
+  const fragen = R.filter(r => RFILTER_DEF.fragen.f(r));
+  const k = (f, cls, titel, wert, unter) => `<button class="kpi kl ${cls}${RFILTER === f ? ' on' : ''}" data-rfilter="${f}"><div class="k">${titel}</div><div class="v">${wert}</div><div class="s">${unter}</div></button>`;
+  return `<div class="grid g4 rkopf">
+    ${k('pruefen', pruef.length ? 's2' : 's1', 'Zu prüfen', pruef.length, pruef.length ? chf(sum(pruef.map(r => summen(r).chf)), 0) : 'nichts offen')}
+    ${k('zahlen', ueber.length ? 's3' : '', 'Zu bezahlen', chf(sum(zahl.map(nochZuZahlen)), 0), `${zahl.length} Rechnung${zahl.length === 1 ? '' : 'en'}${ueber.length ? ` · <b style="color:var(--bad)">${ueber.length} überfällig</b>` : ''}`)}
+    ${k('auto', '', 'Läuft automatisch', chf(sum(auto.map(r => summen(r).chf)), 0), `${auto.length} per LSV / Dauerauftrag · nichts zu tun`)}
+    ${k('fragen', fragen.length ? 's2' : 's1', 'Offene Fragen', fragen.length, fragen.length ? 'Klärung oder vermutlich doppelt' : 'keine')}
+  </div>`;
+}
 VIEWS.rechnungen_nach = () => {
   if (PARAM && innerWidth <= 900) { const p = document.querySelector('.split>.col:last-child'); if (p) setTimeout(() => p.scrollIntoView({ block: 'start' }), 0); }
   const s = $('#rsuche'); if (s) s.addEventListener('input', () => { RSUCHE = s.value; const p = s.selectionStart; render(); const n = $('#rsuche'); n.focus(); n.setSelectionRange(p, p); });
@@ -1335,31 +1472,75 @@ function entscheidung(r, liste) {
     const t = tageBis(faellig(r));
     body = r.auto
       ? `<div class="step done"><i>✓</i>Geprüft</div><div class="box i">Läuft per <b>${esc(l.auto)}</b>. Die Bank belastet den Betrag selbst — die Buchung wird zugeordnet, sobald sie kommt.</div>`
+      : r.raten ? ratenPlan(r)
       : `<div class="step"><i>2</i>Bezahlen</div>
       <div class="sum"><span>Fällig</span><span class="num" style="${t < 0 ? 'color:var(--bad);font-weight:700' : ''}">${dt(faellig(r))}${t < 0 ? ' · ' + (-t) + ' Tage überfällig' : t === 0 ? ' · heute' : ' · in ' + t + ' Tagen'}</span></div>
-      <div class="sum"><span>Betrag</span><span class="num">${chf(s.chf)}</span></div>
-      <div class="sum"><span>Gebucht auf</span><span>${esc(kname(r.konto))}</span></div>
-      ${r.raten ? `<div class="box i" style="margin-top:8px">In ${r.raten.anzahl} Raten: ${r.raten.bezahlt} von ${r.raten.anzahl} bezahlt · nächste Rate ${chf(r2(s.chf / r.raten.anzahl))}</div>` : ''}
+      ${gedeckt(r) ? `<div class="sum"><span>Rechnung</span><span class="num">${chf(s.chf)}</span></div><div class="sum"><span>Schon bezahlt</span><span class="num">${chf(gedeckt(r))}</span></div><div class="sum"><span><b>Noch offen</b></span><span class="num"><b>${chf(restOffen(r))}</b></span></div>`
+        : `<div class="sum"><span>Betrag</span><span class="num">${chf(s.chf)}</span></div>`}
+      ${skontoHinweis(r)}
+      <div class="sum"><span>Gebucht auf</span><span>${kontenText(r)}</span></div>
       <div class="fld" style="margin-top:12px"><span>Im E-Banking bezahlt am</span><input type="date" id="bezahltam" value="${HEUTE}"></div>
-      <div class="row" style="margin-top:12px"><button class="btn acc" data-bezahlt="${r.id}">✓ Als bezahlt markieren</button>${r.raten ? '' : `<button class="btn" data-raten="${r.id}">In Raten zahlen</button>`}</div>
+      <div class="row" style="margin-top:12px"><button class="btn acc" data-bezahlt="${r.id}">✓ Als bezahlt markieren</button>${gedeckt(r) ? '' : `<button class="btn" data-raten="${r.id}">In Raten zahlen</button>`}</div>
       <p class="dim" style="font-size:12px;margin-top:10px">«Bezahlt» hält nur fest, dass die Zahlung ausgelöst ist. Erledigt ist die Rechnung, wenn die Bankbuchung zugeordnet ist.</p>`;
+    if (!r.auto && unterwegs(r) > 0.004) body += bankAbgleich(r);
   } else if (st === 'bezahlt') {
-    const kand = DB.bank.filter(b => !b.zu && Math.abs(-b.betrag - s.chf) < 0.01);
     body = `<div class="step"><i>3</i>Bankbuchung zuordnen</div>
-      <p style="font-size:13px">Bezahlt am ${dt(r.bezahltAm || HEUTE)}. Sobald die Belastung auf dem Konto ist, gehört sie hierher.</p>
-      ${kand.length ? kand.map(b => `<div class="box s1" style="margin-top:10px"><b>Passende Bankbuchung gefunden</b><br><span class="num">${dt(b.datum)} · ${chf(-b.betrag)}</span><br><span style="font-size:12.5px">${esc(b.text)}</span><br><button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${r.id}">Zuordnen</button></div>`).join('')
-        : '<div class="box i" style="margin-top:10px">Noch keine Bankbuchung mit genau diesem Betrag. Laden Sie den Kontoauszug hoch, oder warten Sie auf die nächste Bankmeldung.</div>'}`;
+      <p style="font-size:13px">Bezahlt am ${dt(r.bezahltAm || HEUTE)}. Sobald die Belastung auf dem Konto ist, gehört sie hierher.</p>` + bankAbgleich(r, true);
   } else {
-    const b = bankZu('kreditor', r.id);
     body = `<div class="step done"><i>✓</i>${st === 'abgeschlossen' ? 'Abgeschlossen' : 'Abgeglichen'}</div>
-      ${b ? `<div class="sum"><span>Bankbuchung</span><span class="num">${dt(b.datum)} · ${chf(-b.betrag)}</span></div><div class="dim" style="font-size:12px">${esc(b.text)}</div>` : ''}
-      <div class="sum"><span>Gebucht auf</span><span>${esc(kname(r.konto))}</span></div>
+      ${zahlungenVon(r).map(b => `<div class="sum"><span>Bankbuchung</span><span class="num">${dt(b.datum)} · ${chf(-b.betrag)}</span></div><div class="dim" style="font-size:12px">${esc(b.text)}</div>${b.zu.abw ? `<div class="dim" style="font-size:12px">${esc(ABWEICHUNG[b.zu.abw.grund])}${b.zu.abw.betrag ? ' ' + chf(Math.abs(b.zu.abw.betrag)) : ''} — ${esc(b.zu.abw.notiz)}</div>` : ''}`).join('')}
+      <div class="sum"><span>Gebucht auf</span><span>${kontenText(r)}</span></div>
       ${st === 'abgeglichen' ? '<p class="dim" style="font-size:12px;margin-top:8px">Wird beim Monatsabschluss im Bankabgleich abgeschlossen.</p>' : ''}`;
   }
   const prot = (r.protokoll || []).slice().reverse();
   return kopf + body + `</div>
     ${prot.length ? `<div class="card" style="margin-top:12px"><h2>Protokoll</h2><div class="log" style="margin-top:6px">${prot.map(p => `<div><span class="dim">${esc(p[0])}</span><span>${esc(p[1])}</span></div>`).join('')}</div></div>` : ''}
     <div class="row noprint" style="margin-top:10px;justify-content:flex-end">${st === 'eingang' && !r.klaerung ? `<button class="btn sm" data-frage="${r.id}">Frage notieren</button>` : ''}<button class="btn sm bad" data-loeschen="${r.id}">Löschen</button></div>`;
+}
+
+function kontenText(r) {
+  const K = kontenVon(r);
+  return K.length > 1 ? K.map(k => `${esc(kname(k.konto))} <span class="dim num">${fmt(k.netto)}</span>`).join('<br>') : esc(kname(r.konto));
+}
+function skontoHinweis(r) {
+  const l = lief(r.lief); if (!l.skonto || gedeckt(r)) return '';
+  const [p, tage] = l.skonto, bis = plusTage(r.datum, tage), t = tageBis(bis);
+  const betrag = r2(summen(r).chf * (1 - p / 100));
+  return t >= 0 ? `<div class="box s1" style="margin-top:8px">${p} % Skonto bis ${dt(bis)}${t === 0 ? ' (heute)' : ' (noch ' + t + ' T.)'}: <b class="num">${chf(betrag)}</b> statt ${chf(summen(r).chf)}</div>`
+    : `<div class="dim" style="font-size:12px;margin-top:6px">${p} % Skonto nur bis ${dt(bis)} — vorbei.</div>`;
+}
+
+/* Instalments: each with its amount and date, paid one at a time. */
+function ratenPlan(r) {
+  const naechste = r.raten.find(x => !x.bezahltAm);
+  return `<div class="step"><i>2</i>Bezahlen <small class="dim" style="font-weight:500;font-size:12px;margin-left:auto">in ${r.raten.length} Raten</small></div>
+    <div class="raten">${r.raten.map((x, i) => {
+      const t = tageBis(x.faellig), b = x.bank && DB.bank.find(y => y.id === x.bank);
+      const stand = x.bezahltAm ? (b ? `<span class="pill s1">abgeglichen</span>` : `<span class="pill g">bezahlt ${dtk(x.bezahltAm)}</span>`)
+        : t < 0 ? `<span class="pill s3">${-t} T. überfällig</span>` : `<span class="pill ${x === naechste ? 's2' : 'g'}">fällig ${dtk(x.faellig)}</span>`;
+      return `<div class="rate${x === naechste ? ' jetzt' : ''}"><span class="nr">${i + 1}</span><span class="num">${dt(x.faellig)}</span><span class="num r">${chf(x.betrag)}</span>${stand}</div>`;
+    }).join('')}</div>
+    <div class="sum"><span>Noch offen</span><span class="num"><b>${chf(nochZuZahlen(r))}</b></span></div>
+    <div class="sum"><span>Gebucht auf</span><span>${kontenText(r)}</span></div>
+    ${naechste ? `<div class="fld" style="margin-top:12px"><span>Rate ${r.raten.indexOf(naechste) + 1} im E-Banking bezahlt am</span><input type="date" id="bezahltam" value="${HEUTE}"></div>
+    <div class="row" style="margin-top:12px"><button class="btn acc" data-bezahlt="${r.id}">✓ Rate ${r.raten.indexOf(naechste) + 1} bezahlt · ${chf(naechste.betrag)}</button>${r.raten.some(x => x.bezahltAm) ? '' : `<button class="btn" data-raten="${r.id}">Plan ändern</button>`}</div>` : ''}`;
+}
+
+/* Matching the bank: exact amounts first, then lines that name this supplier
+   or invoice — and any other outgoing line, with the difference explained. */
+function bankAbgleich(r, voll) {
+  const soll = unterwegs(r), l = lief(r.lief);
+  const frei = DB.bank.filter(b => !b.zu && b.betrag < 0);
+  const wort = l.name.split(/\s+/).find(w => w.length >= 4) || l.name;
+  const genau = frei.filter(b => Math.abs(-b.betrag - soll) < 0.01);
+  const nah = frei.filter(b => !genau.includes(b) && (b.text.includes(r.nr) || b.text.toLowerCase().includes(wort.toLowerCase())));
+  const box = (b, titel, cls) => { const diff = r2(soll + b.betrag);
+    return `<div class="box ${cls}" style="margin-top:10px"><b>${titel}</b><br><span class="num">${dt(b.datum)} · ${chf(-b.betrag)}</span>${Math.abs(diff) >= 0.01 ? ` <span class="pill s2">${diff > 0 ? fmt(diff) + ' weniger' : fmt(-diff) + ' mehr'}</span>` : ''}<br><span style="font-size:12.5px">${esc(b.text)}</span><br><button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${r.id}">Zuordnen</button></div>`; };
+  return `${voll ? '' : `<div class="step" style="margin-top:16px"><i>3</i>Bankbuchung zuordnen <small class="dim" style="font-weight:500;font-size:12px;margin-left:auto">${chf(soll)} unterwegs</small></div>`}
+    ${genau.map(b => box(b, 'Passende Bankbuchung gefunden', 's1')).join('')}
+    ${nah.map(b => box(b, 'Gleicher Lieferant, anderer Betrag', 'i')).join('')}
+    ${genau.length || nah.length ? '' : '<div class="box i" style="margin-top:10px">Noch keine passende Bankbuchung. Laden Sie den Kontoauszug hoch, oder warten Sie auf die nächste Bankmeldung.</div>'}
+    ${frei.length ? `<button class="btn sm link" data-andere="${r.id}" style="margin-top:8px">Andere Bankbuchung wählen…</button>` : ''}`;
 }
 
 /* Kontierung: the account (with the suggestion and WHY), the tax treatment,
@@ -1379,6 +1560,7 @@ function kontierFormular(r) {
         <option value="bezug"${steuerart === 'bezug' ? ' selected' : ''}>Ausland — Bezugsteuer</option>
         <option value="ohne"${steuerart === 'ohne' ? ' selected' : ''}>Ohne MWST</option></select></label>
     </div>
+    ${posBlock(r)}
     ${r.waehrung && r.waehrung !== 'CHF' ? `<label class="fld" style="margin-top:10px"><span>Kurs ${r.waehrung} → CHF am ${dt(r.datum)}</span><input id="kt-kurs" inputmode="decimal" value="${r.kurs}"></label>` : ''}
     <div class="step"><i>2</i>MWST-Zeilen <small class="dim" style="font-weight:500;font-size:12px;margin-left:auto">wie auf dem Beleg</small></div>
     <div class="vatrow dim" style="font-size:11px;font-weight:600"><span>Satz</span><span>Netto ${r.waehrung || 'CHF'}</span><span class="mw">MWST</span><span>Brutto</span><span></span></div>
@@ -1388,6 +1570,17 @@ function kontierFormular(r) {
     <div class="step"><i>3</i>Bestätigen</div>
     <label class="check"><input type="checkbox" id="kt-ok"> Konto und MWST-Zeilen mit dem Beleg verglichen</label>
     <div class="row" style="margin-top:12px"><button class="btn acc" data-kontieren="${r.id}">Geprüft — weiter zur nächsten</button></div>`;
+}
+// «Je Position»: open when it was used or suggested, otherwise one tap away
+function posBlock(r) {
+  const l = lief(r.lief), pk = r.posKonto || r.posVorschlag, offen = !!pk;
+  const opts = sel => KONTEN.filter(k => k.typ === 'K').map(k => `<option value="${k.nr}"${k.nr === sel ? ' selected' : ''}>${k.nr} ${esc(k.name)}</option>`).join('');
+  return `<div class="posk${offen ? ' on' : ''}" id="kt-posk">
+    <label class="check" style="margin-top:10px"><input type="checkbox" id="kt-jepos"${offen ? ' checked' : ''}> <span>Je Position kontieren<small class="dim" style="display:block;font-size:12px">wenn eine Rechnung mehrere Konten betrifft</small></span></label>
+    <div class="posl">${(r.pos || []).map((p, i) => {
+      const k = (pk && pk[i]) || r.konto, satz = p[3] != null ? p[3] : (r.bezug ? 0 : l.satz);
+      return `<div class="posz"><div class="pt"><span>${esc(p[0])}</span><span class="dim num">${fmt(p[1] * p[2])} · ${satz} %</span></div><select class="in kt-pk" data-i="${i}" aria-label="Konto für ${esc(p[0])}">${opts(k)}</select></div>`;
+    }).join('')}</div></div>`;
 }
 const vatZeile = (z, i) => `<div class="vatrow" data-i="${i}">
   <select class="in kt-satz">${SAETZE.map(x => `<option value="${x.satz}"${x.satz === z.satz ? ' selected' : ''}>${x.satz} %</option>`).join('')}</select>
@@ -1930,7 +2123,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -1983,15 +2176,18 @@ document.addEventListener('click', e => {
     if (!$('#kt-check').dataset.ok) { toast('Die MWST-Zeilen ergeben nicht den Betrag des Belegs.', 3); return; }
     const zeilen = vatLesen(), steuer = $('#kt-steuer').value, alt = r.konto;
     r.konto = $('#kt-konto').value; r.bezug = steuer === 'bezug';
+    const pk = {};
+    if ($('#kt-jepos').checked) document.querySelectorAll('.kt-pk').forEach(x => { if (x.value !== r.konto) pk[x.dataset.i] = x.value; });
+    r.posKonto = Object.keys(pk).length ? pk : null;
     if ($('#kt-kurs')) r.kurs = zahl($('#kt-kurs').value, r.kurs);
     const orig = summen({ ...r, zeilenManuell: null }).zeilen;
     const gleich = zeilen.length === orig.length && zeilen.every((z, i) => z.satz === orig[i].satz && Math.abs(z.netto - orig[i].netto) < 0.005);
     r.zeilenManuell = gleich ? null : zeilen.filter(z => z.netto);
     r.stufe = r.auto ? 'kontiert' : 'kontiert';
-    prot(r, `Geprüft: ${kname(r.konto)}${alt !== r.konto ? ' (statt ' + alt + ')' : ''}, ${summen(r).zeilen.map(z => z.satz + ' %').join(' + ')}${r.bezug ? ', Bezugsteuer' : ''}`);
+    prot(r, `Geprüft: ${r.posKonto ? 'je Position — ' + kontenVon(r).map(k => k.konto + ' ' + fmt(k.netto)).join(', ') : kname(r.konto)}${alt !== r.konto ? ' (statt ' + alt + ')' : ''}, ${summen(r).zeilen.map(z => z.satz + ' %').join(' + ')}${r.bezug ? ', Bezugsteuer' : ''}`);
     neu();
     const rest = DB.rechnungen.filter(x => !x.geloescht && x.stufe === 'eingang');
-    if (rest.length) { RFILTER = 'pruefen'; go('rechnungen', rest[0].id); toast(`Geprüft und gebucht auf ${esc(kname(r.konto))}. Noch ${rest.length} zu prüfen.`, 1); }
+    if (rest.length) { RFILTER = 'pruefen'; go('rechnungen', rest[0].id); toast(`Geprüft und gebucht auf ${r.posKonto ? kontenVon(r).length + ' Konten' : esc(kname(r.konto))}. Noch ${rest.length} zu prüfen.`, 1); }
     else { RFILTER = 'zahlen'; go('rechnungen', r.id); toast('Alle Rechnungen geprüft. ✓', 1); }
     return;
   }
@@ -2001,17 +2197,59 @@ document.addEventListener('click', e => {
       () => { const g = $('#m-grund').value.trim(); if (!g) { $('#m-grund').closest('.fld').classList.add('err'); return; } r.geloescht = true; DB.papierkorb.push({ id: r.id, grund: g, zeit: jetzt() }); prot(r, 'Gelöscht: ' + g); modalZu(); neu(); go('rechnungen', ''); toast('In den Papierkorb gelegt.', 1); });
     return;
   }
-  if (d.bezahlt) { const r = R_(d.bezahlt); r.stufe = 'bezahlt'; r.bezahltAm = $('#bezahltam').value || HEUTE; prot(r, 'Im E-Banking bezahlt am ' + dt(r.bezahltAm)); neu(); toast('Als bezahlt markiert. Sobald die Bankbuchung kommt, wird sie zugeordnet.', 1); return; }
+  if (d.bezahlt) {
+    const r = R_(d.bezahlt), am = $('#bezahltam').value || HEUTE;
+    if (r.raten) {
+      const x = r.raten.find(y => !y.bezahltAm), n = r.raten.indexOf(x) + 1;
+      x.bezahltAm = am; r.bezahltAm = am;
+      if (r.raten.every(y => y.bezahltAm)) r.stufe = 'bezahlt';
+      prot(r, `Rate ${n}/${r.raten.length} (${chf(x.betrag)}) im E-Banking bezahlt am ${dt(am)}`); neu();
+      toast(`Rate ${n} als bezahlt markiert.${r.stufe === 'bezahlt' ? ' Alle Raten bezahlt.' : ''}`, 1); return;
+    }
+    const rest = restOffen(r);
+    r.stufe = 'bezahlt'; r.bezahltAm = am; prot(r, `Im E-Banking bezahlt am ${dt(am)}${gedeckt(r) ? ' (Rest ' + chf(rest) + ')' : ''}`); neu();
+    toast('Als bezahlt markiert. Sobald die Bankbuchung kommt, wird sie zugeordnet.', 1); return;
+  }
   if (d.raten) {
-    const r = R_(d.raten);
-    modal(`<h3>In Raten zahlen</h3><p class="dim" style="font-size:13px">${chf(summen(r).chf)} an ${esc(lief(r.lief).name)} — vorher mit dem Lieferanten vereinbaren.</p><label class="fld" style="margin-top:10px"><span>Anzahl Raten</span><select id="m-raten"><option>2</option><option selected>3</option><option>4</option><option>6</option></select></label><div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Raten festlegen</button></div>`,
-      () => { const n = +$('#m-raten').value; r.raten = { anzahl: n, bezahlt: 0 }; prot(r, 'In ' + n + ' Raten aufgeteilt'); modalZu(); neu(); });
+    const r = R_(d.raten), total = restOffen(r);
+    const plan = (n, erste) => Array.from({ length: n }, (_, i) => {
+      const f = new Date(erste + 'T12:00:00'); f.setMonth(f.getMonth() + i);
+      const teil = r2(Math.floor(total / n * 100) / 100);
+      return { betrag: i === n - 1 ? r2(total - teil * (n - 1)) : teil, faellig: f.toISOString().slice(0, 10) };
+    });
+    const zeigen = P => { $('#m-plan').innerHTML = P.map((x, i) => `<div class="vatrow" style="grid-template-columns:28px 1fr 1fr"><span class="dim">${i + 1}.</span><input class="in" type="date" data-ratefeld="d" value="${x.faellig}" aria-label="Rate ${i + 1} fällig"><input class="in num" inputmode="decimal" data-ratefeld="b" value="${x.betrag.toFixed(2)}" aria-label="Rate ${i + 1} Betrag"></div>`).join(''); ratenCheck(total); };
+    const alt = r.raten && r.raten.length;
+    modal(`<h3>In Raten zahlen</h3><p class="dim" style="font-size:13px">${chf(total)} an ${esc(lief(r.lief).name)} — vorher mit dem Lieferanten vereinbaren.</p>
+      <div class="grid g2" style="gap:10px;margin-top:10px"><label class="fld"><span>Anzahl Raten</span><select id="m-raten">${[2, 3, 4, 6].map(n => `<option${n === (alt || 3) ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label class="fld"><span>Erste Rate fällig</span><input type="date" id="m-erste" value="${r.raten ? r.raten[0].faellig : faellig(r)}"></label></div>
+      <div class="dim" style="font-size:11px;font-weight:600;margin-top:12px">Fällig · Betrag (monatlich, anpassbar)</div><div id="m-plan"></div><div id="m-plancheck" style="margin-top:8px"></div>
+      <div class="acts">${r.raten ? '<button class="btn" data-ratefeld="weg">Plan entfernen</button>' : ''}<button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Plan speichern</button></div>`,
+      () => {
+        const P = ratenLesen();
+        if (Math.abs(r2(P.reduce((s, x) => s + x.betrag, 0)) - total) >= 0.01 || P.some(x => !x.faellig || x.betrag <= 0)) { toast('Die Raten müssen zusammen ' + chf(total) + ' ergeben.', 3); return; }
+        r.raten = P; r.stufe = 'kontiert';
+        prot(r, `Ratenplan: ${P.length} Raten, ${P.map(x => dtk(x.faellig) + ' ' + fmt(x.betrag)).join(' · ')}`); modalZu(); neu(); toast('Ratenplan gespeichert.', 1);
+      });
+    zeigen(r.raten && r.raten.length ? r.raten : plan(3, faellig(r)));
+    const neuPlan = () => zeigen(plan(+$('#m-raten').value, $('#m-erste').value || HEUTE));
+    $('#m-raten').addEventListener('change', neuPlan); $('#m-erste').addEventListener('change', neuPlan);
+    $('#m-plan').addEventListener('input', () => ratenCheck(total));
+    RATEN_WEG = () => { delete r.raten; prot(r, 'Ratenplan entfernt'); modalZu(); neu(); toast('Ratenplan entfernt.', 1); };
+    return;
+  }
+  if (d.ratefeld === 'weg') { if (RATEN_WEG) RATEN_WEG(); return; }
+  if (d.andere) {
+    const r = R_(d.andere), soll = unterwegs(r) || restOffen(r);
+    const frei = DB.bank.filter(b => !b.zu && b.betrag < 0).sort((a, b) => Math.abs(-a.betrag - soll) - Math.abs(-b.betrag - soll));
+    modal(`<h3>Bankbuchung wählen</h3><p class="dim" style="font-size:13px">Für ${esc(lief(r.lief).name)} ${esc(r.nr)} · ${chf(soll)} — nächstliegende Beträge zuerst.</p>
+      <div style="margin-top:10px;max-height:50vh;overflow:auto">${frei.map(b => `<button class="todo" style="width:100%;text-align:left;border:0;background:none" data-zuordnen="${b.id}" data-ref="${r.id}"><span class="dot s1"></span><div><div class="t num">${chf(-b.betrag)} <span class="dim" style="font-weight:400">· ${dt(b.datum)}</span></div><div class="d">${esc(b.text)}</div></div><span class="n">›</span></button>`).join('')}</div>
+      <div class="acts"><button class="btn" data-zu>Abbrechen</button></div>`);
     return;
   }
   if (d.zuordnen) {
     const b = DB.bank.find(x => x.id === d.zuordnen);
     const r = R_(d.ref), deb = D_(d.ref);
-    if (r) { b.zu = { typ: 'kreditor', ref: r.id }; r.stufe = 'abgeglichen'; if (!r.bezahltAm) r.bezahltAm = b.datum; prot(r, 'Bankbuchung ' + b.id + ' vom ' + dt(b.datum) + ' zugeordnet'); }
+    if (r) { modalZu(); kreditorZuordnen(b, r); return; }
     else if (deb) { b.zu = { typ: 'debitor', ref: deb.id }; deb.zahlungen.push({ datum: b.datum, betrag: b.betrag, weg: 'Bank', bank: b.id, notiz: 'Zahlung' }); prot(deb, 'Zahlung ' + chf(b.betrag) + ' über Bank (' + b.id + ') zugeordnet'); if (debSummen(deb).offen <= 0.004) { deb.stufe = 'bezahlt'; prot(deb, 'Vollständig bezahlt'); } }
     logge('Bankbuchung ' + b.id + ' zugeordnet'); neu(); toast('Zugeordnet. ✓', 1); return;
   }
@@ -2144,6 +2382,13 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.matches('.kt-satz')) vatLive();
+  if (e.target.id === 'kt-jepos') $('#kt-posk').classList.toggle('on', e.target.checked);
+  // a new main account carries along every position that still had the old one
+  if (e.target.id === 'kt-konto') {
+    const alt = e.target.dataset.alt || e.target.defaultValue || [...e.target.options].find(o => o.defaultSelected)?.value;
+    document.querySelectorAll('.kt-pk').forEach(x => { if (x.value === alt) x.value = e.target.value; });
+    e.target.dataset.alt = e.target.value;
+  }
   if (e.target.id === 'belegdatei' && e.target.files[0]) {
     const file = e.target.files[0], b = DB.bank.find(x => x.id === e.target.dataset.bank), h = BANK_HINWEIS[b.id] || {};
     const url = URL.createObjectURL(file);
@@ -2179,6 +2424,49 @@ document.addEventListener('keydown', e => {
     const b = document.querySelector(`.panel [aria-label="${e.key === 'ArrowLeft' ? 'Vorherige' : 'Nächste'}"]`); if (b && !b.disabled) b.click();
   }
 });
+/* A bank line for a supplier invoice. Same amount → matched at once. Any
+   other amount needs a reason, and the reason decides the booking. */
+let RATEN_WEG = null;
+function ratenLesen() {
+  const D = [...document.querySelectorAll('#m-plan [data-ratefeld="d"]')], B = [...document.querySelectorAll('#m-plan [data-ratefeld="b"]')];
+  return D.map((x, i) => ({ faellig: x.value, betrag: r2(zahl(B[i].value)) }));
+}
+function ratenCheck(total) {
+  const sum = r2(ratenLesen().reduce((s, x) => s + x.betrag, 0)), diff = r2(sum - total);
+  $('#m-plancheck').innerHTML = Math.abs(diff) < 0.01 ? `<div class="box s1">✓ Zusammen ${chf(total)}</div>` : `<div class="box s3">Zusammen ${chf(sum)} — ${diff > 0 ? fmt(diff) + ' zu viel' : fmt(-diff) + ' zu wenig'}</div>`;
+}
+function kreditorZuordnen(b, r) {
+  const soll = unterwegs(r) || restOffen(r), ist = -b.betrag, diff = r2(soll - ist);
+  const fertig = abw => {
+    b.zu = { typ: 'kreditor', ref: r.id }; if (abw) b.zu.abw = abw;
+    if (!r.bezahltAm) r.bezahltAm = b.datum;
+    // an instalment paid straight from the bank counts as paid
+    if (r.raten) { let rest = ist; r.raten.forEach(x => { if (rest > 0.004 && !x.bank) { if (!x.bezahltAm) x.bezahltAm = b.datum; x.bank = b.id; rest = r2(rest - x.betrag); } }); }
+    zahlstandPruefen(r);
+    prot(r, `Bankbuchung ${b.id} vom ${dt(b.datum)} zugeordnet (${chf(ist)})${abw ? ' — ' + ABWEICHUNG[abw.grund] + (abw.betrag ? ' ' + chf(Math.abs(abw.betrag)) : '') + ': ' + abw.notiz : ''}`);
+    logge('Bankbuchung ' + b.id + ' zu ' + r.id); modalZu(); neu();
+    toast(r.stufe === 'abgeglichen' ? 'Zugeordnet — Rechnung erledigt. ✓' : `Zugeordnet. Noch offen: ${chf(restOffen(r))}.`, 1);
+  };
+  if (Math.abs(diff) < 0.01) return fertig(null);
+  const fremd = r.waehrung && r.waehrung !== 'CHF';
+  const gruende = diff > 0 ? ['skonto', 'teil', ...(fremd ? ['kurs'] : [])] : ['gebuehr', ...(fremd ? ['kurs'] : [])];
+  const l = lief(r.lief), sk = l.skonto && Math.abs(diff - r2(summen(r).chf * l.skonto[0] / 100)) < 0.06;
+  const erkl = { skonto: 'Die Differenz mindert Aufwand und Vorsteuer.', teil: 'Die Rechnung bleibt mit dem Rest offen.', gebuehr: 'Die Differenz geht auf 6800 Bankspesen.', kurs: 'Die Differenz geht auf 6950 Kursdifferenzen.' };
+  const vor = sk ? 'skonto' : gruende[0];
+  modal(`<h3>Betrag weicht ab</h3>
+    <div class="sum" style="margin-top:10px"><span>${unterwegs(r) ? 'Bezahlt laut Rechnung' : 'Offen laut Rechnung'}</span><span class="num">${chf(soll)}</span></div>
+    <div class="sum"><span>Bankbuchung ${dt(b.datum)}</span><span class="num">${chf(ist)}</span></div>
+    <div class="sum"><span><b>Differenz</b></span><span class="num"><b>${diff > 0 ? fmt(diff) + ' weniger' : fmt(-diff) + ' mehr'}</b></span></div>
+    ${sk ? `<div class="box s1" style="margin-top:8px">Entspricht genau ${l.skonto[0]} % Skonto — laut Konditionen von ${esc(l.name)}.</div>` : ''}
+    <div class="abw" role="radiogroup" aria-label="Grund">${gruende.map(g => `<label><input type="radio" name="m-abw" value="${g}"${g === vor ? ' checked' : ''}><span>${ABWEICHUNG[g]}<small>${erkl[g]}</small></span></label>`).join('')}</div>
+    <label class="fld" style="margin-top:10px"><span>Begründung (Pflicht)</span><input id="m-abwnotiz" value="${sk ? esc(l.skonto[0] + ' % Skonto innert ' + l.skonto[1] + ' Tagen') : ''}" placeholder="z.B. telefonisch vereinbart mit …"></label>
+    <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Zuordnen</button></div>`,
+    () => {
+      const g = (document.querySelector('input[name="m-abw"]:checked') || {}).value, notiz = $('#m-abwnotiz').value.trim();
+      if (!notiz) { $('#m-abwnotiz').closest('.fld').classList.add('err'); return; }
+      fertig({ grund: g, notiz, betrag: g === 'teil' ? 0 : diff });
+    });
+}
 window.addEventListener('hashchange', render);
 // turning a tablet or resizing a window can cross into another Ansicht
 [MQ_HANDY, MQ_TABLET].forEach(q => q.addEventListener('change', render));
