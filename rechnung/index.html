@@ -156,15 +156,7 @@ table.t tr.sel td{background:var(--wash)}
 table.t td.r,table.t th.r{text-align:right}
 .pill.pl{border:0;cursor:pointer;font-family:inherit}
 .chip.ku{margin-left:auto}
-.alter .abar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--soft);margin-top:10px}
-.alter .abar span{display:block;height:100%}
-.alter .g{background:#c9ced3} .alter .s2{background:#e08a00} .alter .s3{background:var(--bad)} .alter .s3.tief{background:#7a1610}
-.alter .agrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;font-size:12.5px}
-.alter .agrid>div{display:grid;grid-template-columns:auto 1fr;gap:1px 6px;align-items:center}
-.alter .agrid .dot{width:9px;height:9px;border-radius:50%;grid-row:span 3;align-self:start;margin-top:4px}
-.alter .agrid .num{font-weight:700;font-size:14px}
 details.bar summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--acci)}
-@media (max-width:760px){.alter .agrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 table.kb tr.anf td{color:var(--dim)}
 .btn.link.fr{color:var(--dim);font-size:12px;font-weight:500;padding:2px 0}
 /* bank lines on a phone: one card per line instead of a squeezed table */
@@ -2349,16 +2341,6 @@ function kundenKopf() {
     ${k('ueber', ueb.length ? 's3' : 's1', 'Überfällig', ueb.length ? chf(sum(ueb.map(d => debSummen(d).offen)), 0) : 'keine', ueb.length ? `${rg(ueb.length)} · älteste ${alt} T.` : 'alles im Ziel')}
   </div>`;
 }
-/* How old the open amount is — who to chase first. */
-function altersstruktur() {
-  const off = DB.debitoren.filter(DTABS.offen.f);
-  const B = [['Nicht fällig', t => t >= 0, 'g'], ['1–30 Tage', t => t < 0 && t >= -30, 's2'], ['31–60 Tage', t => t < -30 && t >= -60, 's3'], ['über 60 Tage', t => t < -60, 's3 tief']]
-    .map(([name, f, c]) => { const L = off.filter(d => f(tageBis(d.faellig))); return { name, c, n: L.length, chf: L.reduce((s, d) => s + debSummen(d).offen, 0) }; });
-  const tot = B.reduce((s, b) => s + b.chf, 0) || 1;
-  return `<div class="card alter" style="margin-top:16px"><h2>Altersstruktur</h2><div class="lead">Offene Rechnungen nach Tagen über der Zahlungsfrist</div>
-    <div class="abar">${B.filter(b => b.chf).map(b => `<span class="${b.c}" style="width:${(b.chf / tot * 100).toFixed(2)}%" title="${b.name}: ${chf(b.chf)}"></span>`).join('')}</div>
-    <div class="agrid">${B.map(b => `<div><span class="dot ${b.c}"></span><b>${b.name}</b><span class="num">${chf(b.chf, 0)}</span><span class="dim">${b.n} Rechnung${b.n === 1 ? '' : 'en'}</span></div>`).join('')}</div></div>`;
-}
 VIEWS.kunden = () => {
   if (DTABS[PARAM]) { DTAB = PARAM; PARAM = ''; DZEIGE = ''; }
   const id = PARAM || DZEIGE;
@@ -2373,7 +2355,7 @@ VIEWS.kunden = () => {
   const ids = [...belege.map(x => x.id), ...liste.map(x => x.id)];
   const item = x => `<button class="li${d && x.id === d.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>${esc((kunde(x.kunde) || {}).name || '—')}</span><span class="num">${fmt(x.stufe === 'versendet' ? debSummen(x).offen : debSummen(x).brutto)}</span></div><div class="b"><span>${esc(x.id.slice(1))} · ${dt(x.datum)}</span>${debSummen(x).bezahlt && x.stufe === 'versendet' ? '<span>Rest</span>' : ''}</div><div class="c">${dStatus(x)}</div><div style="margin-top:7px">${dBalken(x, true)}</div></button>`;
   const beleg = x => `<button class="li${q && x.id === q.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>Rapport ${esc(x.id)}</span><span class="num">${fmt(belegSumme(x))}</span></div><div class="b"><span>${dt(x.datum)} · ${esc(x.auftrag)}</span></div><div class="c">${pill('i', 'Rechnung erstellen', null, DLEGENDE)}</div></button>`;
-  return kundenKopf() + (DTAB === 'offen' || DTAB === 'ueber' ? altersstruktur() : '') + `<div class="split deb" style="margin-top:16px">
+  return kundenKopf() + `<div class="split deb" style="margin-top:16px">
     <div class="col"><div class="liste">
       <div class="lh">${dChips()}<input class="in" id="dlsuche" type="search" placeholder="Kunde, Nummer, Betrag" value="${esc(DLSUCHE)}" style="margin-top:10px"></div>
       <div class="items">${belege.map(beleg).join('')}${liste.map(item).join('')}
