@@ -121,6 +121,12 @@ button.kpi:hover{border-color:var(--line);box-shadow:0 2px 10px rgba(0,0,0,.04)}
 .pill.s1{background:var(--okbg);color:var(--ok)}
 .pill.i{background:var(--infobg);color:var(--info)}
 .pill.g{background:rgba(0,0,0,.06);color:var(--dim)}
+.leg{margin-top:14px;padding:10px 12px;border:1px solid var(--soft);border-radius:10px}
+.leg.on{border-color:var(--ink)}
+.legk{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.legz{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:start;font-size:13px;line-height:1.45;margin-top:8px}
+.legz>span:first-child{padding-top:1px}
+.legz .stufen.mini .st{height:8px;margin-top:5px}
 
 /* the workflow: the same five steps on every document */
 .stufen{display:flex;gap:4px;align-items:stretch;margin:2px 0}
@@ -922,18 +928,55 @@ function stufenBalken(r, mini) {
   return `<div class="stufen${mini ? ' mini' : ''}" aria-label="Stand: ${esc(STUFEN[i].name)}">` + STUFEN.map((s, j) =>
     `<div class="st ${j < i ? 'done' : j === i ? (r.klaerung ? 'hold' : 'now') : ''}" title="${esc(s.name)}">${esc(s.name)}</div>`).join('') + '</div>';
 }
+/* What each marker in the invoice list means — one table for the Legende
+   and for the tooltip on the marker itself, so the two can't drift apart. */
+const LEGENDE = [
+  { tab: 'pruefen', name: 'Zu prüfen', zeilen: [
+    ['i', 'Zu prüfen', 'Neu eingegangen, noch nicht angeschaut. Prüfen, ob sie stimmt, Konto und MWST wählen, bestätigen.'],
+    ['s2', 'Klärung', 'Beim Prüfen ist eine Frage aufgetaucht, z.B. die Menge stimmt nicht mit dem Lieferschein. Sie bleibt stehen, bis Sie «Geklärt» drücken.'],
+    ['s3', 'Doppelt?', 'Gleiche Nummer und gleicher Betrag wie eine Rechnung, die schon da ist, oft einmal per Mail und einmal per Post. Sie entscheiden: Papierkorb oder eigene Rechnung.'],
+  ] },
+  { tab: 'zahlen', name: 'Zu bezahlen', zeilen: [
+    ['g', 'fällig 14.11.', 'Geprüft und freigegeben. Die Zahlung ist noch nicht fällig.'],
+    ['s2', 'fällig in 3 T.', 'Heute oder in den nächsten 5 Tagen fällig. Jetzt bezahlen.'],
+    ['s3', '4 T. überfällig', 'Die Zahlungsfrist ist verpasst.'],
+    ['g', 'läuft automatisch', 'Lastschrift (LSV) oder Dauerauftrag: Der Betrag wird von selbst belastet. Nichts zu tun.'],
+  ] },
+  { tab: 'bank', name: 'Wartet auf Bank', zeilen: [
+    ['g', 'wartet auf Bank', 'Bezahlt, aber die Zahlung ist auf dem Bankauszug noch nicht aufgetaucht. Meist ein bis zwei Tage.'],
+  ] },
+  { tab: 'fertig', name: 'Erledigt', zeilen: [
+    ['s1', 'abgeglichen', 'Die Bankbuchung ist da und passt zur Rechnung.'],
+    ['s1', 'abgeschlossen', 'Auch die Bankbuchung ist abgeschlossen. Hier ist nichts mehr zu tun.'],
+  ] },
+];
+function pill(cls, text, legText) {
+  const z = LEGENDE.flatMap(g => g.zeilen).find(x => x[1] === (legText || text));
+  return `<span class="pill ${cls}"${z ? ` title="${esc(z[2])}"` : ''}>${text}</span>`;
+}
 function statusPill(r) {
-  if (r.duplikatVon) return '<span class="pill s3">Doppelt?</span>';
-  if (r.klaerung) return '<span class="pill s2">Klärung</span>';
+  if (r.duplikatVon) return pill('s3', 'Doppelt?');
+  if (r.klaerung) return pill('s2', 'Klärung');
   const s = stufeVon(r);
-  if (s === 'eingang') return '<span class="pill i">Zu prüfen</span>';
+  if (s === 'eingang') return pill('i', 'Zu prüfen');
   if (s === 'kontiert') {
     const t = tageBis(faellig(r));
-    if (r.auto) return '<span class="pill g">läuft automatisch</span>';
-    return t < 0 ? `<span class="pill s3">${-t} T. überfällig</span>` : t <= 5 ? `<span class="pill s2">fällig in ${t} T.</span>` : `<span class="pill g">fällig ${dtk(faellig(r))}</span>`;
+    if (r.auto) return pill('g', 'läuft automatisch');
+    return t < 0 ? pill('s3', `${-t} T. überfällig`, '4 T. überfällig') : t <= 5 ? pill('s2', t ? `fällig in ${t} T.` : 'heute fällig', 'fällig in 3 T.') : pill('g', `fällig ${dtk(faellig(r))}`, 'fällig 14.11.');
   }
-  if (s === 'bezahlt') return '<span class="pill g">wartet auf Bank</span>';
-  return '<span class="pill s1">' + (s === 'abgeschlossen' ? 'abgeschlossen' : 'abgeglichen') + '</span>';
+  if (s === 'bezahlt') return pill('g', 'wartet auf Bank');
+  return pill('s1', s === 'abgeschlossen' ? 'abgeschlossen' : 'abgeglichen');
+}
+function legende(aktiv) {
+  const balken = (i, hold) => `<div class="stufen mini" style="width:92px;flex:none">${STUFEN.map((_, j) => `<div class="st ${j < i ? 'done' : j === i ? (hold ? 'hold' : 'now') : ''}"></div>`).join('')}</div>`;
+  return `<h3>Legende</h3><p class="dim" style="font-size:13px">Was die Markierungen in der Liste bedeuten, nach Schritt geordnet.</p>
+    ${LEGENDE.map(g => `<div class="leg${g.tab === aktiv ? ' on' : ''}"><div class="legk">${esc(g.name)}${g.tab === aktiv ? ' <span class="dim">· diese Ansicht</span>' : ''}</div>
+      ${g.zeilen.map(([c, t, x]) => `<div class="legz"><span><span class="pill ${c}">${esc(t)}</span></span><span>${esc(x)}</span></div>`).join('')}</div>`).join('')}
+    <div class="leg"><div class="legk">Der Balken darunter</div>
+      <p style="font-size:13px;margin:4px 0 8px">Fünf Schritte: ${STUFEN.map(s => esc(s.name)).join(' → ')}.</p>
+      <div class="legz"><span>${balken(1)}</span><span>Grün ist erledigt, schwarz ist der Schritt, auf dem sie gerade steht.</span></div>
+      <div class="legz"><span>${balken(0, true)}</span><span>Orange: angehalten, bis eine offene Frage geklärt ist.</span></div></div>
+    <div class="acts"><button class="btn" data-zu>Schliessen</button></div>`;
 }
 
 /* ── the books ────────────────────────────────────────────────────────────
@@ -1668,7 +1711,7 @@ VIEWS.rechnungen = () => {
           <div class="c">${statusPill(x)}${x.auto ? '' : ''}</div>
           <div style="margin-top:7px">${stufenBalken(x, true)}</div></button>`;
       }).join('') : `<div class="leer">${RSUCHE ? 'Nichts gefunden.' : RFILTER === 'pruefen' ? 'Alles geprüft. Neue Rechnungen erscheinen hier, sobald sie per Mail oder Upload ankommen.' : 'Keine Rechnungen in dieser Ansicht.'}</div>`}</div>
-      <div class="lh" style="border-top:1px solid var(--soft);border-bottom:0;font-size:12px"><button class="btn link" data-papierkorb>Papierkorb (${DB.papierkorb.length})</button></div>
+      <div class="lh row" style="border-top:1px solid var(--soft);border-bottom:0;font-size:12px;justify-content:space-between"><button class="btn link" data-papierkorb>Papierkorb (${DB.papierkorb.length})</button><button class="btn link" data-legende>Legende</button></div>
     </div></div>
     ${r ? `<div class="col doc">${belegPapier(r)}</div><div class="col"><div class="panel">${entscheidung(r, liste)}</div></div>`
       : `<div class="col" style="grid-column:span 2"><div class="card leer">Wählen Sie links eine Rechnung.</div></div>`}
@@ -2380,7 +2423,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-abschliessen],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-dtab],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -2419,6 +2462,7 @@ document.addEventListener('click', e => {
   if (d.pdf) { belegOeffnen(R_(d.r), d.pdf === 'laden'); return; }
   // ── Rechnungen ──
   if (d.rfilter) { RFILTER = d.rfilter; PARAM = ''; location.hash = '#rechnungen'; render(); return; }
+  if ('legende' in d) { modal(legende(RFILTER)); return; }
   if ('papierkorb' in d) {
     modal(`<h3>Papierkorb</h3><p class="dim" style="font-size:13px">Gelöschte Rechnungen bleiben hier und lassen sich wiederherstellen.</p>
       ${DB.papierkorb.length ? DB.papierkorb.map(p => { const r = R_(p.id); return `<div class="sum" style="align-items:center"><span><b>${esc(lief(r.lief).name)}</b> ${esc(r.nr)}<br><span class="dim" style="font-size:12px">${esc(p.grund)} · ${esc(p.zeit)}</span></span><button class="btn sm" data-wiederher="${r.id}">Wiederherstellen</button></div>`; }).join('') : '<div class="leer">Leer.</div>'}
