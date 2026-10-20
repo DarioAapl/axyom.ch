@@ -1123,7 +1123,7 @@ function buchungen() {
       if (e.betrag > 0) b(e.datum, '1000', '6960', e.betrag, 'Kassendifferenz, Überschuss · ' + e.notiz, e.id);
       else b(e.datum, '6960', '1000', -e.betrag, 'Kassendifferenz, Fehlbetrag · ' + e.notiz, e.id);
     }
-    else b(e.datum, '1020', '1000', e.betrag, (e.art === 'bancomat' ? 'Bareinzahlung Bancomat' : 'Bareinzahlung Überweisung') + (e.notiz ? ' · ' + e.notiz : ''), e.id);
+    else b(e.datum, '1020', '1000', e.betrag, 'Bareinzahlung' + (e.notiz ? ' · ' + e.notiz : ''), e.id);
   });
   DB.debitoren.forEach(d => {
     if (stufeIdx2(d.stufe) < 2 || d.storniert) return;
@@ -2107,7 +2107,7 @@ VIEWS.kasse = () => {
   const tip = DB.kasseTage.reduce((s, t) => s + t.tip, 0);
   const gezaehlt = DB.kasse.filter(e => e.art === 'zaehlung').sort((a, b) => a.datum < b.datum ? 1 : -1)[0];
   const minus = Z.find(z => z.saldo < 0);
-  const ART = { bancomat: 'Bancomat-Einzahlung', ueberweisung: 'Einzahlung am Bankschalter', auszahlung: 'Barauslage', zaehlung: 'Kasse gezählt' };
+  const ART = { bancomat: 'Einzahlung auf die Bank', ueberweisung: 'Einzahlung auf die Bank', auszahlung: 'Barauslage', zaehlung: 'Kasse gezählt' };
   const tag = d => ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(d + 'T12:00').getDay()] + ' ' + dt(d);
   return `
   <div class="grid g4 rkopf">
@@ -2120,8 +2120,7 @@ VIEWS.kasse = () => {
   <div class="grid g2" style="margin-top:16px;align-items:start">
     <div class="card" id="ks-form"><h2>Kassenbewegung erfassen</h2><div class="lead">Was aus der Kasse genommen wurde: auf die Bank oder für eine Barauslage.</div>
       <div class="chips" id="ks-art" role="radiogroup">
-        <button class="chip on" data-ksart="bancomat" role="radio" aria-checked="true">Bancomat-Einzahlung</button>
-        <button class="chip" data-ksart="ueberweisung" role="radio" aria-checked="false">Bankschalter</button>
+        <button class="chip on" data-ksart="bancomat" role="radio" aria-checked="true">Einzahlung</button>
         <button class="chip" data-ksart="auszahlung" role="radio" aria-checked="false">Barauslage</button></div>
       <div class="grid g2" style="gap:10px;margin-top:12px">
         <label class="fld"><span>Datum</span><input type="date" id="ks-datum" value="${HEUTE}"></label>
