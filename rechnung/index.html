@@ -81,6 +81,14 @@ header .tools{position:relative}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bkopf{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr)}
+.bkopf .kpi{display:flex;flex-direction:column;justify-content:flex-start}
+.kpi.ks .ksz{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:4px}
+.kpi.ks .ksz b{font-size:15px}
+.kpi.ks .ksz.d{border-top:1px solid var(--soft);padding-top:5px;margin-top:6px}
+.kpi.ks.s2 .ksz.d b{color:var(--warn)}
+.kpi.ks.s1 .ksz.d b{color:var(--ok)}
+@media (max-width:1100px){.bkopf{grid-template-columns:repeat(2,minmax(0,1fr))}.bkopf .ks{grid-column:1/-1}}
 .stack>*+*{margin-top:16px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .spacer{flex:1}
@@ -1977,26 +1985,37 @@ const BFILTER_DEF = {
   abschluss: { name: 'Zur Freigabe', f: b => b.zu && !b.abgeschlossen },
   frei: { name: 'Freigegeben', f: b => b.zu && b.abgeschlossen },
   alle: { name: 'Alle', f: () => true },
-  // reached from the figures above the table; a chip only while open
-  ein: { name: 'Eingänge', f: b => b.betrag > 0, versteckt: true },
-  aus: { name: 'Ausgänge', f: b => b.betrag < 0, versteckt: true },
 };
 let BSUCHE = '';
+/* The proof of a Bankabgleich: the balance the bank reports against the
+   balance the books show. The difference is what is not yet explained —
+   bank lines without a match, and money booked but not yet on the bank. */
+function kontostand() {
+  const B = buchungen(), s1020 = L => L.reduce((t, x) => t + (x.soll === '1020' ? x.betrag : 0) - (x.haben === '1020' ? x.betrag : 0), 0);
+  const start = s1020(B.filter(x => x.datum < '2026-10-01'));
+  const bank = r2(start + DB.bank.reduce((t, b) => t + b.betrag, 0)), buch = r2(s1020(B));
+  const offen = DB.bank.filter(b => !b.zu), offenSum = r2(offen.reduce((t, b) => t + b.betrag, 0));
+  const diff = r2(bank - buch);
+  return { bank, buch, diff, offen, offenSum, unterwegs: r2(offenSum - diff), per: DB.bank.map(b => b.datum).sort().pop() };
+}
 VIEWS.bank = () => {
   if (PARAM === 'abschluss') { BFILTER = 'abschluss'; PARAM = ''; }
   const alle = DB.bank.slice().sort((a, b) => a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : a.id < b.id ? 1 : -1);
   const n = k => alle.filter(BFILTER_DEF[k].f);
   const q = BSUCHE.trim().toLowerCase();
   const liste = n(BFILTER).filter(b => !q || (b.text + ' ' + b.id + ' ' + fmt(b.betrag) + ' ' + Math.abs(b.betrag).toFixed(2) + ' ' + zuText(b) + ' ' + (b.klaerung || '')).toLowerCase().includes(q));
-  const offenL = n('offen'), abschl = n('abschluss'), einL = n('ein'), ausL = n('aus');
+  const offenL = n('offen'), abschl = n('abschluss'), ks = kontostand();
   const sum = L => L.reduce((s, b) => s + Math.abs(b.betrag), 0);
   const k = (f, cls, titel, wert, unter) => `<button class="kpi kl ${cls}${BFILTER === f ? ' on' : ''}" data-bfilter="${f}"><div class="k">${titel}</div><div class="v num">${wert}</div><div class="s">${unter}</div></button>`;
   return `
-  <div class="grid g4 rkopf">
+  <div class="grid rkopf bkopf">
     ${k('offen', offenL.length ? 's2' : 's1', 'Ohne Beleg oder Zuordnung', offenL.length, offenL.length ? chf(sum(offenL)) + ' betroffen' : 'nichts offen')}
     ${k('abschluss', '', 'Bereit zur Freigabe', abschl.length, 'vollständig, für den Treuhänder')}
-    ${k('ein', '', 'Eingänge Oktober', chf(sum(einL), 0), einL.length + ' Buchungen')}
-    ${k('aus', '', 'Ausgänge Oktober', chf(sum(ausL), 0), ausL.length + ' Buchungen')}
+    <button class="kpi kl ks ${ks.diff ? 's2' : 's1'}" data-bfilter="offen"><div class="k">Kontostand per ${dt(ks.per)}</div>
+      <div class="ksz"><span>Laut Bank</span><b class="num">${chf(ks.bank)}</b></div>
+      <div class="ksz"><span>Laut Buchhaltung</span><b class="num">${chf(ks.buch)}</b></div>
+      <div class="ksz d"><span>Differenz</span><b class="num">${ks.diff ? chf(ks.diff) : '0.00 ✓'}</b></div>
+      <div class="s">${!ks.diff ? 'Bank und Buchhaltung stimmen überein.' : `Erklärt durch ${ks.offen.length} offene Bankbuchung${ks.offen.length === 1 ? '' : 'en'}${ks.unterwegs ? ` und ${chf(Math.abs(ks.unterwegs))} gebucht, aber noch nicht auf der Bank` : ''}.`}</div></button>
   </div>
   <div class="card" style="margin-top:16px">
     <div class="row" style="justify-content:space-between">
