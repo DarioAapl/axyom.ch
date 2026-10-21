@@ -285,6 +285,17 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 #modal{position:fixed;inset:0;background:rgba(10,12,16,.42);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
 #modal.on{display:flex}
 #modal .m{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+#modal .m.breit{max-width:1000px}
+.dnpdf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;margin-top:12px;align-items:start}
+.dnv{border:1px solid var(--line);border-radius:8px;overflow:auto;max-height:70vh;background:#fafafa}
+.dnv .leer{padding:40px;text-align:center}
+.erk{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12.5px}
+.erz{display:grid;grid-template-columns:10px 130px 1fr;gap:8px;align-items:baseline;padding:4px 0}
+.erz .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.erz .dot.s1{background:var(--ok,#1a7f4b)} .erz .dot.s2{background:#e08a00} .erz .dot.s3{background:var(--bad)}
+.oder{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12px;color:var(--dim)}
+.oder::before,.oder::after{content:'';flex:1;border-top:1px solid var(--line)}
+@media (max-width:760px){.dnpdf{grid-template-columns:1fr}.dnv{max-height:260px}.erz{grid-template-columns:10px 1fr;}.erz>span:last-child{grid-column:2}}
 #modal .m h3{font-size:17px;margin-bottom:4px}
 #modal .m .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
 
@@ -1454,7 +1465,7 @@ function toast(html, s) {
 }
 let MODAL_OK = null;
 function modal(html, ok) {
-  $('#modal-in').innerHTML = html; $('#modal').classList.add('on'); MODAL_OK = ok || null;
+  $('#modal-in').innerHTML = html; $('#modal-in').classList.remove('breit'); $('#modal').classList.add('on'); MODAL_OK = ok || null;
   const f = $('#modal-in').querySelector('input,select,textarea,button.acc,button.dark'); if (f) setTimeout(() => f.focus(), 30);
 }
 function modalZu() { $('#modal').classList.remove('on'); MODAL_OK = null; }
@@ -2340,7 +2351,7 @@ function dBalken(d, mini) {
 function dListe() {
   const q = DLSUCHE.trim().toLowerCase(), f = DTABS[DTAB].f;
   const passt = t => !q || t.toLowerCase().includes(q);
-  const liste = DB.debitoren.filter(d => f(d) && passt(((kunde(d.kunde) || {}).name || '') + ' ' + d.id.slice(1) + ' ' + fmt(debSummen(d).brutto) + ' ' + debSummen(d).brutto.toFixed(2)))
+  const liste = DB.debitoren.filter(d => f(d) && passt(((kunde(d.kunde) || {}).name || '') + ' ' + d.id.slice(1) + ' ' + (d.belegNr || '') + ' ' + fmt(debSummen(d).brutto) + ' ' + debSummen(d).brutto.toFixed(2)))
     .sort((a, b) => DTAB === 'offen' || DTAB === 'ueber' ? (a.faellig < b.faellig ? -1 : 1) : (a.datum < b.datum ? 1 : -1));
   const belege = DTAB === 'entwurf' || DTAB === 'alle' ? DB.rapporte.filter(x => passt('Rapport ' + x.id + ' ' + x.auftrag + ' ' + (x.notiz || '') + ' ' + fmt(belegSumme(x)))) : [];
   return { liste, belege };
@@ -2426,7 +2437,7 @@ function debBankAbgleich(d) {
   const frei = DB.bank.filter(b => !b.zu && b.betrag > 0);
   const wort = (k.name || '').split(/\s+/).find(w => w.length >= 4) || '';
   const genau = frei.filter(b => Math.abs(b.betrag - s.offen) < 0.01);
-  const nah = frei.filter(b => !genau.includes(b) && (b.text.includes(nr) || (wort && b.text.toLowerCase().includes(wort.toLowerCase()))));
+  const nah = frei.filter(b => !genau.includes(b) && (b.text.includes(nr) || (d.belegNr && b.text.includes(d.belegNr)) || (wort && b.text.toLowerCase().includes(wort.toLowerCase()))));
   const box = (b, titel, cls) => { const rest = r2(s.offen - b.betrag);
     return `<div class="box ${cls}" style="margin-top:10px"><b>${titel}</b><br><span class="num">${dt(b.datum)} · ${chf(b.betrag)}</span>${rest > 0.004 ? ` <span class="pill s2">Teilzahlung, Rest ${fmt(rest)}</span>` : rest < -0.004 ? ` <span class="pill s3">${fmt(-rest)} mehr als offen</span>` : ''}<br><span style="font-size:12.5px">${esc(b.text)}</span><br><button class="btn acc sm" data-zuordnen="${b.id}" data-ref="${d.id}"${rest < -0.004 ? ' disabled' : ''}>Zuordnen</button></div>`; };
   return `${genau.map(b => box(b, 'Passende Bankbuchung gefunden', 's1')).join('')}
@@ -2438,7 +2449,7 @@ function debAktionen(d, ids) {
   const k = kunde(d.kunde) || {}, s = debSummen(d);
   let body = '';
   if (d.storniert) body = `<div class="box i" style="margin-top:12px">Storniert: ${esc(d.storniert)}</div>`;
-  else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">${d.vonHand ? 'Die Rechnung ist von Hand erfasst.' : 'Die Rechnung ist aus dem Arbeitsrapport gebaut.'} Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
+  else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">${d.quelle ? 'Die Rechnung ist aus dem PDF ' + esc(d.quelle) + ' übernommen.' : d.vonHand ? 'Die Rechnung ist von Hand erfasst.' : 'Die Rechnung ist aus dem Arbeitsrapport gebaut.'} Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
   else if (d.stufe === 'freigabe') body = `<div class="step"><i>2</i>Freigeben und senden</div>
     <label class="fld"><span>An</span><input id="mail-an" value="${esc(k.mail || '')}"></label>
     <label class="fld" style="margin-top:8px"><span>Begleittext</span><textarea id="mail-text">${esc((k.anrede === 'du' ? 'Hallo ' + (k.kontakt || '').split(' ')[0] : 'Guten Tag ' + (k.kontakt || '')) + '\n\n' + DB.texte['einleitung_' + (k.anrede || 'sie')] + '\n\nDie Rechnung mit QR-Zahlteil ist angehängt.\n\nFreundliche Grüsse\n' + DB.firma.marke)}</textarea></label>
@@ -2693,6 +2704,249 @@ VIEWS.einstellungen = () => {
   <div class="card" style="margin-top:16px"><h2>Demo</h2><p class="lead">Alle erfundenen Daten wieder wie am Anfang. Die Darstellung bleibt, wie Sie sie gewählt haben.</p>
     <button class="btn" data-reset>Demo zurücksetzen</button></div>`;
 };
+
+/* ══════════════════════════════════════════════════════════════════════
+   RECHNUNG AUS PDF — «Neue Rechnung» reads an invoice written elsewhere
+   (Word, the old program) and fills customer and positions from it.
+   pdf.js pulls the text with its position on the page; the rules below
+   find the recipient, the number, the lines and the total, and check that
+   the lines add up to the total. Everything stays in this browser.
+   A scan has no text layer — that needs the text recognition of the full
+   product and is refused here with a plain message.
+   ══════════════════════════════════════════════════════════════════════ */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let PDFJS_LADEN = null;
+function pdfjsLaden() {
+  if (window.pdfjsLib) return Promise.resolve();
+  return PDFJS_LADEN ||= new Promise((ok, nein) => {
+    const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(); };
+    s.onerror = () => { PDFJS_LADEN = null; nein(new Error('Der PDF-Leser liess sich nicht laden. Ist das Internet da?')); };
+    document.head.appendChild(s);
+  });
+}
+// every text piece with its place in mm from the top left, grouped into lines
+async function pdfLesen(buf) {
+  await pdfjsLaden();
+  const doc = await pdfjsLib.getDocument({ data: buf }).promise, zeilen = [];
+  for (let n = 1; n <= Math.min(doc.numPages, 3); n++) {
+    const s = await doc.getPage(n), H = s.getViewport({ scale: 1 }).height, mm = v => v * 25.4 / 72;
+    const teile = (await s.getTextContent()).items.filter(t => t.str.trim())
+      .map(t => ({ s: t.str.trim(), x: mm(t.transform[4]), x2: mm(t.transform[4] + t.width), y: mm(H - t.transform[5]), p: n }))
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+    teile.forEach(t => {
+      const z = zeilen.find(z => z.p === n && Math.abs(z.y - t.y) < 1.2);
+      if (z) z.zellen.push(t); else zeilen.push({ p: n, y: t.y, zellen: [t] });
+    });
+  }
+  zeilen.forEach(z => {
+    z.zellen.sort((a, b) => a.x - b.x);
+    // pieces that touch belong to one cell
+    z.zellen = z.zellen.reduce((L, t) => { const v = L[L.length - 1]; if (v && t.x - v.x2 < 1.6) { v.s += (t.x - v.x2 > .4 ? ' ' : '') + t.s; v.x2 = t.x2; } else L.push({ ...t }); return L; }, []);
+    z.text = z.zellen.map(c => c.s).join('  ');
+  });
+  return { doc, zeilen, seiten: doc.numPages };
+}
+
+// «1’290.00», «1'290.00», «1 290,00», «1.290,00», «CHF 429.00»
+const istBetrag = s => /^[-−]?\s*(CHF|Fr\.|EUR)?\s*\d[\d’'., ]*$/.test(s.trim()) && /\d$/.test(s.trim());
+function betragLesen(s) {
+  let t = String(s).replace(/CHF|Fr\.|EUR|\s/g, '').replace(/[’']/g, '').replace('−', '-');
+  t = /,\d{1,2}$/.test(t) ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '');
+  return parseFloat(t);
+}
+const EINHEIT = /\s*(Std\.?|h|Stk\.?|Stück|x|×|pce|Psch\.?)$/i;
+const DATUM = /\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/;
+const isoAus = m => `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+
+function rechnungErkennen(zeilen) {
+  const f = DB.firma, voll = zeilen.map(z => z.text).join('\n'), klein = voll.toLowerCase();
+  const E = { pos: [], text: voll };
+  E.absenderOk = klein.includes(f.marke.toLowerCase()) || klein.includes(f.name.toLowerCase());
+
+  // the lines: description, then quantity × price = amount, checked
+  let letzte = null;
+  zeilen.forEach(z => {
+    const c = z.zellen.map(x => istBetrag(x.s.replace(EINHEIT, '')) ? { ...x, s: x.s.replace(EINHEIT, '') } : x).filter(x => !/^\d+([.,]\d+)?\s*%$/.test(x.s));
+    const n = c.length;
+    if (n >= 4 && [1, 2, 3].every(i => istBetrag(c[n - i].s))) {
+      const [m, p, b] = [c[n - 3], c[n - 2], c[n - 1]].map(x => betragLesen(x.s));
+      let txt = c.slice(0, n - 3);
+      if (txt.length > 1 && /^\d{1,3}$/.test(txt[0].s)) txt = txt.slice(1);
+      const t = txt.map(x => x.s).join(' ');
+      if (/\p{L}/u.test(t) && m > 0 && Math.abs(m * p - b) <= Math.max(.06, Math.abs(b) * .002)) {
+        letzte = { z, x: txt[0].x }; E.pos.push([t, m, p]); return;
+      }
+    }
+    // a description that ran onto a second line
+    if (letzte && n === 1 && !istBetrag(c[0].s) && Math.abs(c[0].x - letzte.x) < 2 && z.p === letzte.z.p && z.y - letzte.z.y < 6
+      && !/total|mwst|zahlbar|betrag|summe/i.test(c[0].s)) { E.pos[E.pos.length - 1][0] += ' ' + c[0].s; letzte = { z, x: letzte.x }; return; }
+    letzte = null;
+  });
+
+  // the total: «Zu bezahlen» and «inkl.» beat a plain «Total», «netto» loses
+  const kand = zeilen.map(z => {
+    const l = z.text.toLowerCase(), ende = z.text.match(/(?:CHF|Fr\.)?\s*([-−]?\d(?:[\d’'.,]| (?=\d{3}(?:\D|$)))*\d)\s*$/), zahl = ende && /[.,]\d{2}$/.test(ende[1]) ? { s: ende[1] } : null;
+    if (!zahl || !/total|zu bezahlen|rechnungsbetrag|betrag inkl|gesamtbetrag|endbetrag/.test(l)) return null;
+    const rang = /zu bezahlen|rechnungsbetrag|endbetrag/.test(l) ? 3 : /inkl/.test(l) ? 2 : /netto|exkl|zwischen/.test(l) ? 0 : 1;
+    return { rang, b: betragLesen(zahl.s) };
+  }).filter(Boolean).sort((a, b) => b.rang - a.rang);
+  if (kand.length) E.total = kand[0].b;
+  const nettoTotal = zeilen.find(z => /total netto|netto total|zwischentotal|total exkl/i.test(z.text));
+
+  // VAT rate, and whether the line prices were without it
+  const s = [...voll.matchAll(/(\d{1,2}[.,]\d)\s*%/g)].map(m => +m[1].replace(',', '.')).find(v => [8.1, 2.6, 3.8, 7.7, 2.5, 3.7].includes(v));
+  E.satz = s || 8.1;
+  const summe = E.pos.reduce((a, p) => a + p[1] * p[2], 0);
+  if (E.total != null && E.pos.length) {
+    if (Math.abs(summe - E.total) < .06) E.preise = 'inkl';
+    else if (Math.abs(summe * (1 + E.satz / 100) - E.total) < .06 + E.pos.length * .01 || (nettoTotal && /zzgl|exkl|zuzüglich/i.test(voll))) {
+      E.preise = 'exkl'; E.pos = E.pos.map(p => [p[0], p[1], r2(p[2] * (1 + E.satz / 100))]);
+    }
+  }
+  E.summe = E.pos.reduce((a, p) => a + p[1] * p[2], 0);
+
+  // the number printed on it
+  for (const z of zeilen) {
+    const m = z.text.match(/(?:Rechnungs?-?(?:nr|nummer)|Re\.?-?Nr)\.?\s*:?\s*([A-Z0-9][\w\-\/]{2,})/i) || z.text.match(/^Rechnung\s+(?:Nr\.?\s*)?([A-Z]{0,5}[-\/]?\d[\w\-\/]{2,})/i);
+    if (m && !DATUM.test(m[1])) { E.nr = m[1]; break; }
+  }
+  const dz = zeilen.find(z => /datum/i.test(z.text) && DATUM.test(z.text)); if (dz) E.datum = isoAus(dz.text.match(DATUM));
+
+  // the customer: a known name first, then the «Zahlbar durch» block of the
+  // QR-bill, then the address in the envelope window
+  const bekannt = DB.kunden.map(k => ({ k, i: klein.indexOf(k.name.toLowerCase()) })).filter(x => x.i >= 0).sort((a, b) => a.i - b.i)[0];
+  if (bekannt) E.kunde = bekannt.k.id;
+  else {
+    const spalte = (start, bis) => {   // the cells under «start» in the same column, line by line
+      const out = []; let y = start.y;
+      zeilen.filter(z => z.p === start.p && z.y > start.y && z.y < bis).forEach(z => {
+        const c = z.zellen.find(c => Math.abs(c.x - start.x) < 1.5);
+        if (c && z.y - y < 6 && out.length < 5) { out.push(c.s); y = z.y; }
+      });
+      return out;
+    };
+    let block = null;
+    const zd = zeilen.flatMap(z => z.zellen.map(c => ({ ...c, p: z.p, y: z.y }))).filter(c => /^zahlbar durch/i.test(c.s)).sort((a, b) => b.x - a.x)[0];
+    if (zd) block = spalte(zd, zd.y + 30);
+    if (!block || !block.length) {
+      const plz = zeilen.filter(z => z.p === 1 && z.y > 35 && z.y < 85).flatMap(z => z.zellen.map(c => ({ ...c, y: z.y })))
+        .find(c => c.x < 100 && /^(CH-|FL-|LI-)?\d{4}\s+\p{L}/u.test(c.s) && !c.s.includes(f.ort));
+      if (plz) {
+        const ueber = []; let y = plz.y;
+        zeilen.filter(z => z.p === 1 && z.y < plz.y).reverse().forEach(z => {
+          const c = z.zellen.find(c => Math.abs(c.x - plz.x) < 1.5);
+          if (c && y - z.y < 6 && ueber.length < 4) { ueber.unshift(c.s); y = z.y; }
+        });
+        block = [...ueber, plz.s];
+      }
+    }
+    if (block && block.length >= 2 && !block[0].toLowerCase().includes(f.marke.toLowerCase())) {
+      const ort = block[block.length - 1], strasse = block.length >= 3 ? block[block.length - 2] : '';
+      const neu = { name: block[0], kontakt: block.length >= 4 ? block[1] : '', strasse, ort };
+      // a known customer written a little differently
+      const wort = neu.name.split(/\s+/).find(w => w.length >= 5);
+      const k = wort && DB.kunden.find(k => k.name.toLowerCase().includes(wort.toLowerCase()) && (!ort || k.ort === ort));
+      if (k) E.kunde = k.id; else E.neu = neu;
+    }
+  }
+
+  // already here? the same number, or the same customer with the same total
+  E.doppelt = DB.debitoren.find(d => !d.storniert && ((E.nr && (d.id.slice(1) === E.nr || d.belegNr === E.nr)) || (E.kunde && d.kunde === E.kunde && E.total != null && Math.abs(debSummen(d).brutto - E.total) < .01)));
+  return E;
+}
+
+/* Two invoices from the old Word template, to try the upload without a
+   file of one's own: a known customer with prices before VAT, and a new
+   customer with VAT-inclusive prices and a QR-bill. */
+const MUSTER_PDF = [
+  { kunde: { name: 'Weingut Sonnenrain', kontakt: 'Frau A. Hunger', strasse: 'Sonnenrain 1', ort: '7997 Rebstal' }, nr: 'RE-26-0412', datum: '2026-10-02', netto: true,
+    pos: [['Kassensystem Hofladen: Einrichtung und Schulung des Personals vor Ort, inkl. Belegdrucker', 1, 620.0], ['Arbeit Systemtechniker, Std.', 2.5, 118.4], ['Belegdrucker Thermo USB', 1, 249.0]] },
+  { kunde: { name: 'Bäckerei Tscharner AG', kontakt: 'Frau L. Tscharner', strasse: 'Hauptstrasse 21', ort: '7998 Obertal' }, nr: 'RE-26-0415', datum: '2026-10-09', netto: false,
+    pos: [['Arbeit Netzwerktechniker, Std.', 3, 128.0], ['Router mit Firewall', 1, 389.0], ['Patchkabel Cat6, Stk.', 6, 6.5], ['Anfahrt Pauschale', 1, 45.0]] },
+];
+function musterLayout(m) {
+  const f = DB.firma, pages = [[]], P = pages[0];
+  const T = (x, y, str, o = {}) => P.push({ t: 'text', x, y, s: String(str), pt: o.pt || 9, b: !!o.b, a: o.a || 'l', c: o.c || SCHWARZ });
+  const L = (x1, y1, x2, y2, o = {}) => P.push({ t: 'line', x1, y1, x2, y2, w: o.w || .25, c: o.c || SCHWARZ, dash: o.dash });
+  const R = (x, y, wd, ht, c) => P.push({ t: 'rect', x, y, w: wd, h: ht, c: c || SCHWARZ });
+  // the old template: sender top left, recipient on the right
+  T(20, 22, f.name.toUpperCase(), { pt: 14, b: true });
+  T(20, 28, `${f.strasse} · ${f.plz} ${f.ort} · ${f.email}`, { pt: 8, c: GRAU });
+  const k = m.kunde;
+  [k.name, k.kontakt, k.strasse, k.ort].forEach((z, i) => T(118, 50 + i * 4.6, z, { pt: 10 }));
+  T(20, 80, 'RECHNUNG', { pt: 16, b: true });
+  T(20, 88, 'Rechnungsnummer:', { pt: 9 }); T(55, 88, m.nr, { pt: 9, b: true });
+  T(20, 93, 'Rechnungsdatum:', { pt: 9 }); T(55, 93, dt(m.datum), { pt: 9 });
+  T(20, 98, 'MWST-Nr.:', { pt: 9 }); T(55, 98, f.mwst, { pt: 9 });
+  let y = 112;
+  [['Bezeichnung', 20, 'l'], ['Anzahl', 128, 'r'], ['Ansatz', 154, 'r'], ['Betrag', 190, 'r']].forEach(([t, x, a]) => T(x, y, t, { pt: 9, b: true, a }));
+  L(20, y + 2, 190, y + 2, { w: .4 }); y += 8;
+  m.pos.forEach(p => {
+    const z = umbrechen(p[0], 90, 9.5);
+    z.forEach((s, j) => T(20, y + j * 4.4, s, { pt: 9.5 }));
+    T(128, y, String(p[1]).replace('.', ','), { pt: 9.5, a: 'r' }); T(154, y, fmt(p[2]).replace(/’/g, "'"), { pt: 9.5, a: 'r' }); T(190, y, fmt(p[1] * p[2]).replace(/’/g, "'"), { pt: 9.5, a: 'r' });
+    y += 6 + (z.length - 1) * 4.4;
+  });
+  L(20, y - 2, 190, y - 2); y += 4;
+  const sum = r2(m.pos.reduce((a, p) => a + r2(p[1] * p[2]), 0));
+  const zeile = (t, b, fett) => { T(118, y, t, { pt: 9.5, b: fett }); T(190, y, b, { pt: 9.5, b: fett, a: 'r' }); y += 5.5; };
+  let brutto = sum;
+  if (m.netto) { const mw = r2(sum * .081); brutto = r2(sum + mw); zeile('Total netto', fmt(sum).replace(/’/g, "'")); zeile('zzgl. MWST 8.1 %', fmt(mw).replace(/’/g, "'")); }
+  else zeile('MWST 8.1 % inbegriffen', fmt(r2(sum - sum / 1.081)).replace(/’/g, "'"));
+  L(118, y - 3.5, 190, y - 3.5); zeile('Rechnungsbetrag CHF', fmt(brutto).replace(/’/g, "'"), true);
+  y += 6;
+  T(20, y, 'Zahlbar innert 30 Tagen netto. Besten Dank für Ihren Auftrag.', { pt: 9.5 });
+  if (!m.netto) qrRechnung({ seed: m.nr, an: [f.iban, f.name, f.strasse, f.plz + ' ' + f.ort], von: [k.name, k.strasse, k.ort], betrag: brutto, ref: m.nr, info: 'Rechnung ' + m.nr }, T, L, R);
+  else T(20, y + 6, `Bankverbindung: ${f.iban}`, { pt: 9.5 });
+  return { pages, name: `Rechnung_${m.nr}_${k.name.split(/\s+/)[0]}.pdf`.replace(/[^\w.\-äöüÄÖÜ]+/g, '-') };
+}
+function musterLaden() {
+  const n = DB.musterN || 0, lay = musterLayout(MUSTER_PDF[n % MUSTER_PDF.length]); DB.musterN = n + 1; speichern();
+  const url = URL.createObjectURL(new Blob([belegPDF(lay, lay.name)], { type: 'application/pdf' }));
+  const a = document.createElement('a'); a.href = url; a.download = lay.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast(`${esc(lay.name)} heruntergeladen. Jetzt hier hochladen.`, 1);
+}
+
+// the uploaded file: read, recognise, then the form comes back filled in
+async function dnPdf(file) {
+  const zone = $('#drop-dn');
+  if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { toast('Bitte ein PDF. Fotos und Scans liest erst die Texterkennung im fertigen Produkt.', 2); return; }
+  if (zone) zone.innerHTML = '<b>PDF wird gelesen…</b>Kunde, Positionen und Beträge werden erkannt';
+  try {
+    const buf = new Uint8Array(await file.arrayBuffer()), { doc, zeilen, seiten } = await pdfLesen(buf.slice());
+    if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) throw new Error('In diesem PDF ist kein Text, es ist wohl ein Scan. Den liest erst die Texterkennung im fertigen Produkt.');
+    const E = rechnungErkennen(zeilen);
+    E.datei = file.name; E.seiten = seiten;
+    neueRechnung({ kunde: E.kunde || (E.neu ? '__pdf' : ''), pos: E.pos.length ? E.pos : [['', 1, '']], erk: E });
+    pdfVorschau(doc);
+  } catch (err) {
+    console.warn(err);
+    neueRechnung(); toast(esc(err.message || 'Das PDF liess sich nicht lesen.'), 3);
+  }
+}
+async function pdfVorschau(doc) {
+  const box = $('#dn-vorschau'); if (!box) return;
+  const s = await doc.getPage(1), w = box.clientWidth || 360, v1 = s.getViewport({ scale: 1 });
+  const v = s.getViewport({ scale: w / v1.width * (window.devicePixelRatio || 1) });
+  const c = document.createElement('canvas'); c.width = v.width; c.height = v.height; c.style.width = '100%';
+  await s.render({ canvasContext: c.getContext('2d'), viewport: v }).promise;
+  if ($('#dn-vorschau') === box) box.replaceChildren(c);
+}
+// what was found, line by line, so nothing is taken on trust
+function erkanntBox(E) {
+  const k = kunde(E.kunde), z = [];
+  const Z = (ok, titel, text) => z.push(`<div class="erz"><span class="dot ${ok === true ? 's1' : ok === false ? 's3' : 's2'}"></span><span class="dim">${titel}</span><span>${text}</span></div>`);
+  Z(!!(k || E.neu), 'Kunde', k ? esc(k.name) + ' <span class="dim">· bekannt</span>' : E.neu ? esc(E.neu.name) + ' <span class="dim">· neu, wird angelegt</span>' : 'nicht erkannt, bitte wählen');
+  Z(E.nr ? true : null, 'Nummer auf dem PDF', E.nr ? esc(E.nr) : 'keine gefunden');
+  Z(E.pos.length ? true : false, 'Positionen', E.pos.length ? E.pos.length + ' erkannt' + (E.preise === 'exkl' ? ` <span class="dim">· waren ohne MWST, auf inkl. ${E.satz} % umgerechnet</span>` : '') : 'keine erkannt, bitte eintragen');
+  if (E.total != null) Z(Math.abs(E.summe - E.total) < .06 ? true : null, 'Total auf dem PDF', chf(E.total) + (Math.abs(E.summe - E.total) < .06 ? ' <span class="dim">· stimmt mit den Positionen</span>' : ` <span class="dim">· Positionen ergeben ${chf(E.summe)}</span>`));
+  else Z(null, 'Total auf dem PDF', 'nicht gefunden');
+  return `<div class="erk">${z.join('')}</div>
+    ${E.doppelt ? `<div class="box s3" style="margin-top:10px"><b>Diese Rechnung gibt es schon:</b> ${esc(E.doppelt.id.slice(1))} · ${esc((kunde(E.doppelt.kunde) || {}).name || '')} · ${chf(debSummen(E.doppelt).brutto)}<br><button class="btn sm" data-go="kunden" data-p="${E.doppelt.id}" style="margin-top:6px">Zur Rechnung ${esc(E.doppelt.id.slice(1))}</button></div>` : ''}
+    ${E.absenderOk ? '' : `<div class="box s2" style="margin-top:10px">Auf dem PDF steht nicht ${esc(DB.firma.marke)} als Absender. Eine Rechnung, die Sie bekommen haben, gehört unter <b>Rechnungen</b>.</div>`}`;
+}
 /* ══════════════════════════════════════════════════════════════════════
    EVENTS — one delegated listener for every view. Views are plain HTML
    strings; behaviour lives here, keyed on data-attributes.
@@ -2774,7 +3028,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-dlegende],[data-dandere],[data-ausbeleg],[data-dneu],[data-beispielrapport],[data-dnzeile],[data-dnweg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-dlegende],[data-dandere],[data-ausbeleg],[data-dneu],[data-beispielrapport],[data-dnzeile],[data-dnweg],[data-dnmuster],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -3024,6 +3278,7 @@ document.addEventListener('click', e => {
     toast(`Rapport ${q.id} ist da — ${esc(q.auftrag)}. Jetzt die Rechnung daraus erstellen.`, 1); return;
   }
   if ('dneu' in d) { neueRechnung(); return; }
+  if ('dnmuster' in d) { musterLaden(); return; }
   if ('dnzeile' in d) { $('#dn-pos').insertAdjacentHTML('beforeend', dnZeile(['', 1, ''])); $('#dn-pos .dnz:last-child input').focus(); dnSumme(); return; }
   if ('dnweg' in d) { const z = t.closest('.dnz'); if ($('#dn-pos').children.length > 1) z.remove(); else z.querySelectorAll('input').forEach((i, j) => i.value = j === 1 ? 1 : ''); dnSumme(); return; }
   if (d.vorlegen) { const x = D_(d.vorlegen); x.stufe = 'freigabe'; prot(x, 'Zur Freigabe an ' + DB.firma.inhaber + ' vorgelegt'); neu(); toast('Zur Freigabe vorgelegt.', 1); return; }
@@ -3109,24 +3364,37 @@ function dnLesen() {
 }
 function dnSumme() { const el = $('#dn-summe'); if (el) el.textContent = chf(dnLesen().reduce((s, p) => s + p[1] * p[2], 0)); }
 function neueRechnung(stand = { kunde: '', pos: [['', 1, '']] }) {
-  const A = dnArtikel();
-  modal(`<h3>Neue Rechnung</h3><p class="dim" style="font-size:13px">Ohne Rapport, zum Beispiel ein Verkauf am Ladentisch. Preise inkl. MWST. Die Rechnung wird als Entwurf angelegt und vor dem Versand freigegeben.</p>
-    <label class="fld" style="margin-top:10px"><span>Rechnung an</span><select id="dn-kunde"><option value="">— Kunde wählen —</option>${DB.kunden.map(k => `<option value="${k.id}"${k.id === stand.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
+  const A = dnArtikel(), E = stand.erk;
+  const formular = `<label class="fld" style="margin-top:10px"><span>Rechnung an</span><select id="dn-kunde"><option value="">— Kunde wählen —</option>${E && E.neu ? `<option value="__pdf"${stand.kunde === '__pdf' ? ' selected' : ''}>${esc(E.neu.name)} (neu, aus dem PDF)</option>` : ''}${DB.kunden.map(k => `<option value="${k.id}"${k.id === stand.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
     <div class="dnz dnk dim"><span>Leistung / Artikel</span><span>Menge</span><span>Preis CHF</span><span></span></div>
     <div id="dn-pos">${stand.pos.map(dnZeile).join('')}</div>
     <datalist id="dn-artikel">${[...A.keys()].map(n => `<option value="${esc(n)}">`).join('')}</datalist>
-    <div class="row" style="justify-content:space-between;margin-top:6px"><button class="btn sm" data-dnzeile>+ Zeile</button><span>Total <b class="num" id="dn-summe"></b></span></div>
-    <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Als Entwurf anlegen</button></div>`,
+    <div class="row" style="justify-content:space-between;margin-top:6px"><button class="btn sm" data-dnzeile>+ Zeile</button><span>Total <b class="num" id="dn-summe"></b></span></div>`;
+  const acts = `<div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Als Entwurf anlegen</button></div>`;
+  modal(E ? `<h3>Neue Rechnung aus PDF</h3><p class="dim" style="font-size:13px">Aus ${esc(E.datei)} gelesen. Bitte prüfen, was erkannt wurde. Die Rechnung wird als Entwurf angelegt und bekommt die nächste Nummer.</p>
+      <div class="dnpdf"><div class="dnv" id="dn-vorschau"><div class="leer">Vorschau…</div></div><div>${erkanntBox(E)}${formular}</div></div>${acts}`
+    : `<h3>Neue Rechnung</h3><p class="dim" style="font-size:13px">Die Rechnung wird als Entwurf angelegt und vor dem Versand freigegeben.</p>
+      <label class="drop" id="drop-dn" style="margin-top:12px;padding:18px"><b>PDF einer Rechnung hochladen</b>Kunde, Positionen und Beträge werden erkannt. Die Datei verlässt diesen Browser nicht.<input type="file" id="dn-pdf" accept=".pdf,application/pdf" hidden></label>
+      <div class="row" style="margin-top:6px;font-size:12px"><button class="btn link sm" data-dnmuster style="padding:0">Beispiel-PDF herunterladen</button><span class="dim">zum Ausprobieren</span></div>
+      <div class="oder"><span>oder von Hand, Preise inkl. MWST</span></div>${formular}${acts}`,
     () => {
       const sel = $('#dn-kunde').value, P = dnLesen().filter(p => p[0] || p[2]);
       if (!sel) { $('#dn-kunde').closest('.fld').classList.add('err'); toast('An wen geht die Rechnung?', 2); return; }
+      if (E && E.doppelt) { toast('Diese Rechnung gibt es schon: ' + esc(E.doppelt.id.slice(1)) + '.', 2); return; }
       const schlecht = P.findIndex(p => !p[0] || p[1] <= 0 || p[2] <= 0);
       if (!P.length || schlecht >= 0) { toast(P.length ? `Zeile ${schlecht + 1}: Text, Menge und Preis ausfüllen.` : 'Mindestens eine Position.', 2); return; }
-      const k = kunde(sel), id = naechsteNr();
-      const dneu = { id, kunde: sel, datum: HEUTE, faellig: plusTage(HEUTE, k.ziel || 30), stufe: 'entwurf', satz: 8.1, pos: P, vonHand: true, zahlungen: [], protokoll: [] };
-      prot(dneu, 'Von Hand erstellt (' + P.length + ' Position' + (P.length === 1 ? '' : 'en') + ')');
+      let kid = sel;
+      if (sel === '__pdf') {
+        kid = 'C' + (Math.max(...DB.kunden.map(k => +k.id.slice(1))) + 1);
+        DB.kunden.push({ id: kid, ...E.neu, anrede: 'sie', mail: '', ziel: 30 }); logge('Kunde aus PDF angelegt: ' + E.neu.name);
+      }
+      const k = kunde(kid), id = naechsteNr();
+      const dneu = { id, kunde: kid, datum: HEUTE, faellig: plusTage(HEUTE, k.ziel || 30), stufe: 'entwurf', satz: 8.1, pos: P, zahlungen: [], protokoll: [] };
+      if (E) { dneu.quelle = E.datei; if (E.nr) dneu.belegNr = E.nr; prot(dneu, `Aus PDF übernommen: ${E.datei}${E.nr ? ' (Nr. ' + E.nr + ' auf dem Beleg)' : ''}, ${P.length} Position${P.length === 1 ? '' : 'en'}`); }
+      else { dneu.vonHand = true; prot(dneu, 'Von Hand erstellt (' + P.length + ' Position' + (P.length === 1 ? '' : 'en') + ')'); }
       DB.debitoren.push(dneu); modalZu(); neu(); go('kunden', id); toast('Rechnung ' + id.slice(1) + ' als Entwurf angelegt.', 1);
     });
+  $('#modal-in').classList.toggle('breit', !!E);
   dnSumme();
 }
 
@@ -3144,6 +3412,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   if (e.target.matches('.kt-satz')) vatLive();
   if (e.target.id === 'dn-kunde' && e.target.value === 'neu') { const pos = dnLesen(); kundeNeu(id => neueRechnung({ kunde: id, pos: pos.length ? pos : [['', 1, '']] })); }
+  if (e.target.id === 'dn-pdf' && e.target.files[0]) dnPdf(e.target.files[0]);
   if (e.target.id === 'kt-jepos') $('#kt-posk').classList.toggle('on', e.target.checked);
   // a new main account carries along every position that still had the old one
   if (e.target.id === 'kt-konto') {
@@ -3183,7 +3452,7 @@ function camtHoch(file) {
   const z = e.target.closest && e.target.closest('.drop'); if (!z) return;
   e.preventDefault();
   z.classList.toggle('over', ev === 'dragover');
-  if (ev === 'drop' && e.dataTransfer.files.length) { if (z.id === 'drop-camt') camtHoch(e.dataTransfer.files[0]); else belegeHoch(e.dataTransfer.files); }
+  if (ev === 'drop' && e.dataTransfer.files.length) { if (z.id === 'drop-camt') camtHoch(e.dataTransfer.files[0]); else if (z.id === 'drop-dn') dnPdf(e.dataTransfer.files[0]); else belegeHoch(e.dataTransfer.files); }
 }));
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if (document.documentElement.classList.contains('nav-offen')) { menu(false); $('#rail .menu').focus(); } if ($('#modal').classList.contains('on')) modalZu(); const b = $('#treffer'); if (b) b.remove(); }
