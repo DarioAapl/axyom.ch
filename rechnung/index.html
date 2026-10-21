@@ -2812,6 +2812,17 @@ function rechnungErkennen(zeilen, ocr) {
     return { rang, b: betragLesen(zahl.s) };
   }).filter(Boolean).sort((a, b) => b.rang - a.rang);
   if (kand.length) E.total = kand[0].b;
+  // no total line (a reminder, a short letter): the QR-bill always carries
+  // the amount — under «Betrag» in the Zahlteil, the rightmost of the two
+  if (E.total == null) {
+    const ENDE = /(?:CHF|EUR)?\s*(\d(?:[\d’'.,]| (?=\d{3}(?:\D|$)))*[.,]\d{2})\s*$/;
+    const koepfe = zeilen.flatMap(z => z.zellen.filter(c => /(^|\s)Betrag$/i.test(c.s)).map(c => ({ c, z }))).sort((a, b) => b.c.x - a.c.x);
+    for (const { c, z } of koepfe) {
+      const unten = zeilen.filter(u => u.p === z.p && u.y > z.y && u.y - z.y < TZ * 1.5)
+        .flatMap(u => u.zellen).find(u => u.x2 > c.x - TS && u.x < c.x2 + TS && ENDE.test(u.s));
+      if (unten) { E.total = betragLesen(unten.s.match(ENDE)[1]); E.totalAusQr = true; break; }
+    }
+  }
   const nettoTotal = zeilen.find(z => /total netto|netto total|zwischentotal|total exkl/i.test(z.text));
 
   // VAT rate, and whether the line prices were without it
@@ -2847,9 +2858,17 @@ function rechnungErkennen(zeilen, ocr) {
       if (!b || !weiter) bloecke.push(b = []);
       b.push(e); vor = z;
     });
-    const passt = bloecke.filter(L => Math.abs(L.reduce((a, p) => a + p[2], 0) - E.total) < .06).sort((a, b) => (b.length > 1) - (a.length > 1))[0];
+    const passt = bloecke.find(L => L.length > 1 && Math.abs(L.reduce((a, p) => a + p[2], 0) - E.total) < .06);
     if (passt) { E.einzelposten = E.pos.length; E.pos = passt; E.preise = 'inkl'; E.uebersicht = true; E.summe = E.total; }
   }
+
+  // nothing itemised at all (a reminder, a monthly bill): one line for the total,
+  // named after the invoice it is for
+  if (!E.pos.length && E.total > 0) {
+    const titel = zeilen.map(z => (z.zellen[0].s.match(/^(Rechnung|Abrechnung|Faktura)\s+\p{L}+\s+\d{4}/u) || [])[0]).find(Boolean);
+    E.pos = [[titel || 'Gemäss Beleg', 1, E.total]]; E.summe = E.total; E.pauschal = true;
+  }
+  E.erinnerung = /zahlungserinnerung|mahnung/i.test(voll);
 
   // the number printed on it
   for (const z of zeilen) {
@@ -2888,6 +2907,7 @@ function rechnungErkennen(zeilen, ocr) {
     }
     if (block && block.length >= 2 && !block[0].toLowerCase().includes(f.marke.toLowerCase())) {
       const ort = block[block.length - 1], strasse = block.length >= 3 ? block[block.length - 2] : '';
+      block[0] = block[0].replace(/^(Herrn?|Frau|Familie)\s+/i, m => /familie/i.test(m) ? m : '');
       const neu = { name: block[0], kontakt: block.length >= 4 ? block[1] : '', strasse, ort };
       // a known customer written a little differently
       const wort = neu.name.split(/\s+/).find(w => w.length >= 5);
@@ -3048,14 +3068,15 @@ function erkanntBox(E) {
   const Z = (ok, titel, text) => z.push(`<div class="erz"><span class="dot ${ok === true ? 's1' : ok === false ? 's3' : 's2'}"></span><span class="dim">${titel}</span><span>${text}</span></div>`);
   Z(!!(k || E.neu), 'Kunde', k ? esc(k.name) + ' <span class="dim">· bekannt</span>' : E.neu ? esc(E.neu.name) + ' <span class="dim">· neu, wird angelegt</span>' : 'nicht erkannt, bitte wählen');
   Z(E.nr ? true : null, 'Nummer auf dem Beleg', E.nr ? esc(E.nr) : 'keine gefunden');
-  Z(E.pos.length ? true : false, 'Positionen', E.uebersicht ? `${E.pos.length} aus der Übersicht <span class="dim">· die ${E.einzelposten || ''} Einzelposten ergaben nicht das Total</span>` : E.pos.length ? E.pos.length + ' erkannt' + (E.preise === 'exkl' ? ` <span class="dim">· waren ohne MWST, auf inkl. ${E.satz} % umgerechnet</span>` : '') : 'keine erkannt, bitte eintragen');
-  if (E.total != null) Z(Math.abs(E.summe - E.total) < .06 ? true : null, 'Total auf dem Beleg', chf(E.total) + (Math.abs(E.summe - E.total) < .06 ? ' <span class="dim">· stimmt mit den Positionen</span>' : ` <span class="dim">· Positionen ergeben ${chf(E.summe)}</span>`));
+  if (E.erinnerung) Z(null, 'Art', 'Zahlungserinnerung' + (E.nr ? ' zur Rechnung ' + esc(E.nr) : '') + ' <span class="dim">· keine neue Rechnung, nur der offene Betrag</span>');
+  Z(E.pos.length ? (E.pauschal ? null : true) : false, 'Positionen', E.pauschal ? `1 Zeile über das Total <span class="dim">· keine Einzelposten auf dem Beleg</span>` : E.uebersicht ? `${E.pos.length} aus der Übersicht <span class="dim">· die ${E.einzelposten || ''} Einzelposten ergaben nicht das Total</span>` : E.pos.length ? E.pos.length + ' erkannt' + (E.preise === 'exkl' ? ` <span class="dim">· waren ohne MWST, auf inkl. ${E.satz} % umgerechnet</span>` : '') : 'keine erkannt, bitte eintragen');
+  if (E.total != null) Z(Math.abs(E.summe - E.total) < .06 ? true : null, 'Total auf dem Beleg', chf(E.total) + (E.totalAusQr ? ' <span class="dim">· aus dem QR-Zahlteil</span>' : '') + (Math.abs(E.summe - E.total) < .06 ? ' <span class="dim">· stimmt mit den Positionen</span>' : ` <span class="dim">· Positionen ergeben ${chf(E.summe)}</span>`));
   else Z(null, 'Total auf dem Beleg', 'nicht gefunden');
   if (E.korrigiert) Z(null, 'Ergänzt', `${E.korrigiert} Menge${E.korrigiert > 1 ? 'n' : ''} aus Preis und Betrag, die Ziffer war unleserlich`);
   if (E.ocr) Z(null, 'Gelesen', 'per Texterkennung aus dem Bild. Zahlen bitte mit dem Beleg vergleichen');
   return `<div class="erk">${z.join('')}</div>
     ${E.doppelt ? `<div class="box s3" style="margin-top:10px"><b>Diese Rechnung gibt es schon:</b> ${esc(E.doppelt.id.slice(1))} · ${esc((kunde(E.doppelt.kunde) || {}).name || '')} · ${chf(debSummen(E.doppelt).brutto)}<br><button class="btn sm" data-go="kunden" data-p="${E.doppelt.id}" style="margin-top:6px">Zur Rechnung ${esc(E.doppelt.id.slice(1))}</button></div>` : ''}
-    ${E.absenderOk ? '' : `<div class="box s2" style="margin-top:10px">Auf dem PDF steht nicht ${esc(DB.firma.marke)} als Absender. Eine Rechnung, die Sie bekommen haben, gehört unter <b>Rechnungen</b>.</div>`}`;
+    ${E.absenderOk ? '' : `<div class="box s2" style="margin-top:10px">Auf dem Beleg steht nicht ${esc(DB.firma.marke)} als Absender. Eine Rechnung, die Sie bekommen haben, gehört unter <b>Rechnungen</b>.</div>`}`;
 }
 /* ══════════════════════════════════════════════════════════════════════
    EVENTS — one delegated listener for every view. Views are plain HTML
