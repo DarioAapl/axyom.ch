@@ -2729,7 +2729,7 @@ function pdfjsLaden() {
 async function pdfLesen(buf) {
   await pdfjsLaden();
   const doc = await pdfjsLib.getDocument({ data: buf }).promise, zeilen = [];
-  for (let n = 1; n <= Math.min(doc.numPages, 3); n++) {
+  for (let n = 1; n <= Math.min(doc.numPages, 12); n++) {
     const s = await doc.getPage(n), H = s.getViewport({ scale: 1 }).height, mm = v => v * 25.4 / 72;
     const teile = (await s.getTextContent()).items.filter(t => t.str.trim())
       .map(t => ({ s: t.str.trim(), x: mm(t.transform[4]), x2: mm(t.transform[4] + t.width), y: mm(H - t.transform[5]), p: n }))
@@ -2825,6 +2825,31 @@ function rechnungErkennen(zeilen, ocr) {
     }
   }
   E.summe = E.pos.reduce((a, p) => a + p[1] * p[2], 0);
+
+  // the lines don't add up (a phone bill lists hundreds of items over many
+  // pages, some only as an amount): take the overview table instead — text
+  // and one amount per line, whose amounts add up to the total. A total line
+  // inside it is skipped, a rounding line counts.
+  if (E.total != null && Math.abs(E.summe - E.total) >= .06) {
+    const SUMME = /total|zu bezahlen|rechnungsbetrag|betrag inkl|gesamt|summe|saldo|übertrag/i;
+    const einzel = z => {
+      const c = z.zellen, last = c[c.length - 1];
+      if (c.length < 2 || !istBetrag(last.s) || !/[.,]\d{2}$/.test(last.s.trim()) || DATUM.test(z.text)) return null;
+      if (c.slice(0, -1).some(x => istBetrag(x.s))) return null;
+      const t = c.slice(0, -1).map(x => x.s).join(' ');
+      return /\p{L}{3}/u.test(t) && !/^(CHF|EUR|Fr\.?|Betrag|Währung)$/i.test(t) ? [t, 1, betragLesen(last.s)] : null;
+    };
+    const bloecke = []; let b = null, vor = null;
+    zeilen.forEach(z => {
+      const e = einzel(z), weiter = vor && z.p === vor.p && z.y - vor.y < TZ * 1.6;
+      if (e && SUMME.test(e[0])) { if (b && weiter) vor = z; return; }   // a subtotal inside the table
+      if (!e) { b = null; vor = null; return; }
+      if (!b || !weiter) bloecke.push(b = []);
+      b.push(e); vor = z;
+    });
+    const passt = bloecke.filter(L => Math.abs(L.reduce((a, p) => a + p[2], 0) - E.total) < .06).sort((a, b) => (b.length > 1) - (a.length > 1))[0];
+    if (passt) { E.einzelposten = E.pos.length; E.pos = passt; E.preise = 'inkl'; E.uebersicht = true; E.summe = E.total; }
+  }
 
   // the number printed on it
   for (const z of zeilen) {
@@ -3023,7 +3048,7 @@ function erkanntBox(E) {
   const Z = (ok, titel, text) => z.push(`<div class="erz"><span class="dot ${ok === true ? 's1' : ok === false ? 's3' : 's2'}"></span><span class="dim">${titel}</span><span>${text}</span></div>`);
   Z(!!(k || E.neu), 'Kunde', k ? esc(k.name) + ' <span class="dim">· bekannt</span>' : E.neu ? esc(E.neu.name) + ' <span class="dim">· neu, wird angelegt</span>' : 'nicht erkannt, bitte wählen');
   Z(E.nr ? true : null, 'Nummer auf dem Beleg', E.nr ? esc(E.nr) : 'keine gefunden');
-  Z(E.pos.length ? true : false, 'Positionen', E.pos.length ? E.pos.length + ' erkannt' + (E.preise === 'exkl' ? ` <span class="dim">· waren ohne MWST, auf inkl. ${E.satz} % umgerechnet</span>` : '') : 'keine erkannt, bitte eintragen');
+  Z(E.pos.length ? true : false, 'Positionen', E.uebersicht ? `${E.pos.length} aus der Übersicht <span class="dim">· die ${E.einzelposten || ''} Einzelposten ergaben nicht das Total</span>` : E.pos.length ? E.pos.length + ' erkannt' + (E.preise === 'exkl' ? ` <span class="dim">· waren ohne MWST, auf inkl. ${E.satz} % umgerechnet</span>` : '') : 'keine erkannt, bitte eintragen');
   if (E.total != null) Z(Math.abs(E.summe - E.total) < .06 ? true : null, 'Total auf dem Beleg', chf(E.total) + (Math.abs(E.summe - E.total) < .06 ? ' <span class="dim">· stimmt mit den Positionen</span>' : ` <span class="dim">· Positionen ergeben ${chf(E.summe)}</span>`));
   else Z(null, 'Total auf dem Beleg', 'nicht gefunden');
   if (E.korrigiert) Z(null, 'Ergänzt', `${E.korrigiert} Menge${E.korrigiert > 1 ? 'n' : ''} aus Preis und Betrag, die Ziffer war unleserlich`);
@@ -3466,8 +3491,10 @@ function neueRechnung(stand = { kunde: '', pos: [['', 1, '']] }) {
       const sel = $('#dn-kunde').value, P = dnLesen().filter(p => p[0] || p[2]);
       if (!sel) { $('#dn-kunde').closest('.fld').classList.add('err'); toast('An wen geht die Rechnung?', 2); return; }
       if (E && E.doppelt) { toast('Diese Rechnung gibt es schon: ' + esc(E.doppelt.id.slice(1)) + '.', 2); return; }
-      const schlecht = P.findIndex(p => !p[0] || p[1] <= 0 || p[2] <= 0);
+      // a negative price is a discount; the invoice as a whole must still be owed
+      const schlecht = P.findIndex(p => !p[0] || p[1] <= 0 || !p[2]);
       if (!P.length || schlecht >= 0) { toast(P.length ? `Zeile ${schlecht + 1}: Text, Menge und Preis ausfüllen.` : 'Mindestens eine Position.', 2); return; }
+      if (P.reduce((a, p) => a + p[1] * p[2], 0) <= 0) { toast('Das Total muss über null liegen. Eine Gutschrift ist keine Rechnung.', 2); return; }
       let kid = sel;
       if (sel === '__pdf') {
         kid = 'C' + (Math.max(...DB.kunden.map(k => +k.id.slice(1))) + 1);
