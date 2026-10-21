@@ -156,6 +156,10 @@ table.t tr.sel td{background:var(--wash)}
 table.t td.r,table.t th.r{text-align:right}
 .pill.pl{border:0;cursor:pointer;font-family:inherit}
 .chip.ku{margin-left:auto}
+.dnz{display:grid;grid-template-columns:1fr 64px 92px 32px;gap:6px;margin-top:6px;align-items:center}
+.dnz.dnk{font-size:11.5px;margin-top:12px}
+.dnz .btn{padding:6px 0}
+@media (max-width:520px){.dnz{grid-template-columns:1fr 52px 76px 30px}}
 details.bar summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--acci)}
 table.kb tr.anf td{color:var(--dim)}
 .btn.link.fr{color:var(--dim);font-size:12px;font-weight:500;padding:2px 0}
@@ -718,6 +722,24 @@ const RAPPORTE = [
     pos: [['Arbeit Netzwerktechniker, Std.', 9, 128.0], ['Switch 24 Port PoE', 2, 489.0], ['Patchkabel Cat6, Stk.', 30, 6.5], ['Anfahrt Pauschale', 2, 45.0]] },
   { id: 'R-4126', datum: '2026-10-15', auftrag: 'Druckerstörung behoben', techniker: 'Anna Gartmann', kunde: null, notiz: 'Kunde bittet um Rechnung an seine Firma — Adresse fehlt noch',
     pos: [['Arbeit Supporttechniker, Std.', 1.5, 118.0], ['Fixiereinheit Ersatzteil', 1, 186.0], ['Anfahrt Pauschale', 1, 45.0]] },
+];
+
+/* «Beispielrapport laden» on Kundenrechnungen hands these out in turn, so
+   the whole path Rapport → Rechnung → Freigabe → Zahlung can be tried as
+   often as wanted. Same shape as RAPPORTE, without id and date. */
+const BEISPIEL_RAPPORTE = [
+  { auftrag: 'Neuer Arbeitsplatz eingerichtet', techniker: 'Luca Derungs', kunde: 'C4', notiz: 'Arbeitsplatz für die neue MPA, Drucker eingebunden',
+    pos: [['Arbeit Systemtechniker, Std.', 3.5, 128.0], ['Monitor 27" USB-C', 1, 349.0], ['Dockingstation USB-C', 1, 189.0], ['Anfahrt Pauschale', 1, 45.0]] },
+  { auftrag: 'WLAN in der Werkstatt ausgebaut', techniker: 'Anna Gartmann', kunde: 'C6', notiz: 'Empfang jetzt auch in der Lackierbox',
+    pos: [['Arbeit Netzwerktechniker, Std.', 4, 128.0], ['Access Point WiFi 6', 2, 229.0], ['Patchkabel Cat6, Stk.', 4, 6.5], ['Anfahrt Pauschale', 1, 45.0]] },
+  { auftrag: 'Datensicherung eingerichtet', techniker: 'Luca Derungs', kunde: 'C7', notiz: 'Tägliche Sicherung auf NAS, wöchentlich in die Cloud',
+    pos: [['Arbeit Systemtechniker, Std.', 2.5, 128.0], ['NAS 2-Bay inkl. 2 × 4 TB', 1, 689.0], ['Cloud-Backup 500 GB, 1 Jahr', 1, 240.0]] },
+  { auftrag: 'Notebook-Display ersetzt', techniker: 'Anna Gartmann', kunde: 'C5', notiz: 'In der Werkstatt repariert, abgeholt und bar noch nicht bezahlt',
+    pos: [['Arbeit Supporttechniker, Std.', 1, 118.0], ['Display 15.6" Ersatzteil', 1, 214.0]] },
+  { auftrag: 'Kassensystem fürs Vereinsfest', techniker: 'Luca Derungs', kunde: 'C9', notiz: 'Zwei Kassen und Router fürs Wochenende vermietet',
+    pos: [['Miete Kassensystem, Tag', 2, 90.0], ['Miete Router LTE, Tag', 2, 25.0], ['Auf- und Abbau, Std.', 2, 98.0]] },
+  { auftrag: 'Server-Update am Wochenende', techniker: 'Anna Gartmann', kunde: 'C1', notiz: 'Ausserhalb der Bürozeit, wie vereinbart',
+    pos: [['Arbeit Systemtechniker, Std.', 3, 128.0], ['Zuschlag Wochenende, Std.', 3, 40.0], ['Anfahrt Pauschale', 1, 45.0]] },
 ];
 
 /* Kundenrechnungen. Stages, in order:
@@ -2357,7 +2379,8 @@ VIEWS.kunden = () => {
   const beleg = x => `<button class="li${q && x.id === q.id ? ' on' : ''}" data-go="kunden" data-p="${x.id}"><div class="a"><span>Rapport ${esc(x.id)}</span><span class="num">${fmt(belegSumme(x))}</span></div><div class="b"><span>${dt(x.datum)} · ${esc(x.auftrag)}</span></div><div class="c">${pill('i', 'Rechnung erstellen', null, DLEGENDE)}</div></button>`;
   return kundenKopf() + `<div class="split deb" style="margin-top:16px">
     <div class="col"><div class="liste">
-      <div class="lh">${dChips()}<input class="in" id="dlsuche" type="search" placeholder="Kunde, Nummer, Betrag" value="${esc(DLSUCHE)}" style="margin-top:10px"></div>
+      <div class="lh">${dChips()}<input class="in" id="dlsuche" type="search" placeholder="Kunde, Nummer, Betrag" value="${esc(DLSUCHE)}" style="margin-top:10px">
+        <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm acc" data-dneu>+ Neue Rechnung</button><button class="btn sm" data-beispielrapport>Beispielrapport laden</button></div></div>
       <div class="items">${belege.map(beleg).join('')}${liste.map(item).join('')}
         ${!belege.length && !liste.length ? `<div class="leer">${DLSUCHE ? 'Nichts gefunden.' : 'Nichts in dieser Ansicht.'}</div>` : ''}</div>
       <div class="lh row" style="border-top:1px solid var(--soft);border-bottom:0;font-size:12px;justify-content:flex-end"><button class="btn link" data-dlegende>Legende</button></div>
@@ -2415,7 +2438,7 @@ function debAktionen(d, ids) {
   const k = kunde(d.kunde) || {}, s = debSummen(d);
   let body = '';
   if (d.storniert) body = `<div class="box i" style="margin-top:12px">Storniert: ${esc(d.storniert)}</div>`;
-  else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">Die Rechnung ist aus dem Arbeitsrapport gebaut. Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
+  else if (d.stufe === 'entwurf') body = `<div class="step"><i>1</i>Prüfen und vorlegen</div><p style="font-size:13px">${d.vonHand ? 'Die Rechnung ist von Hand erfasst.' : 'Die Rechnung ist aus dem Arbeitsrapport gebaut.'} Vor dem Versand gibt ${esc(DB.firma.inhaber)} sie frei.</p><div class="row" style="margin-top:12px"><button class="btn acc" data-vorlegen="${d.id}">Zur Freigabe vorlegen</button></div>`;
   else if (d.stufe === 'freigabe') body = `<div class="step"><i>2</i>Freigeben und senden</div>
     <label class="fld"><span>An</span><input id="mail-an" value="${esc(k.mail || '')}"></label>
     <label class="fld" style="margin-top:8px"><span>Begleittext</span><textarea id="mail-text">${esc((k.anrede === 'du' ? 'Hallo ' + (k.kontakt || '').split(' ')[0] : 'Guten Tag ' + (k.kontakt || '')) + '\n\n' + DB.texte['einleitung_' + (k.anrede || 'sie')] + '\n\nDie Rechnung mit QR-Zahlteil ist angehängt.\n\nFreundliche Grüsse\n' + DB.firma.marke)}</textarea></label>
@@ -2751,7 +2774,7 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-dlegende],[data-dandere],[data-ausbeleg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-dlegende],[data-dandere],[data-ausbeleg],[data-dneu],[data-beispielrapport],[data-dnzeile],[data-dnweg],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
@@ -2992,6 +3015,17 @@ document.addEventListener('click', e => {
     DB.debitoren.push(dneu); DB.rapporte = DB.rapporte.filter(x => x !== q);
     neu(); go('kunden', id); toast('Rechnung ' + id.slice(1) + ' erstellt.', 1); return;
   }
+  if ('beispielrapport' in d) {
+    const n = DB.beispielN || 0, v = BEISPIEL_RAPPORTE[n % BEISPIEL_RAPPORTE.length];
+    const nr = Math.max(DB.rapportNr || 0, ...DB.rapporte.map(x => +x.id.slice(2)), 4126) + 1;
+    const q = { ...v, id: 'R-' + nr, datum: HEUTE, pos: v.pos.map(p => p.slice()) };
+    DB.rapporte.push(q); DB.rapportNr = nr; DB.beispielN = n + 1;
+    logge('Beispielrapport ' + q.id + ' geladen'); neu(); go('kunden', q.id);
+    toast(`Rapport ${q.id} ist da — ${esc(q.auftrag)}. Jetzt die Rechnung daraus erstellen.`, 1); return;
+  }
+  if ('dneu' in d) { neueRechnung(); return; }
+  if ('dnzeile' in d) { $('#dn-pos').insertAdjacentHTML('beforeend', dnZeile(['', 1, ''])); $('#dn-pos .dnz:last-child input').focus(); dnSumme(); return; }
+  if ('dnweg' in d) { const z = t.closest('.dnz'); if ($('#dn-pos').children.length > 1) z.remove(); else z.querySelectorAll('input').forEach((i, j) => i.value = j === 1 ? 1 : ''); dnSumme(); return; }
   if (d.vorlegen) { const x = D_(d.vorlegen); x.stufe = 'freigabe'; prot(x, 'Zur Freigabe an ' + DB.firma.inhaber + ' vorgelegt'); neu(); toast('Zur Freigabe vorgelegt.', 1); return; }
   if (d.zurueck) { const x = D_(d.zurueck); x.stufe = 'entwurf'; prot(x, 'Zurück zum Entwurf'); neu(); return; }
   if (d.freigeben) {
@@ -3061,14 +3095,55 @@ function kundeNeu(fertig) {
       logge('Kunde angelegt: ' + name); modalZu(); fertig(id); toast('Kunde angelegt.', 1); });
 }
 
+/* «Neue Rechnung» without a work report: a one-off sale or advice billed
+   later. Prices include VAT, like on the Rapport. A known article fills its
+   usual price. Lands as a draft and goes through the same release. */
+const dnZeile = p => `<div class="dnz"><input class="in" list="dn-artikel" placeholder="Leistung oder Artikel" value="${esc(p[0])}"><input class="in num" inputmode="decimal" placeholder="Menge" value="${p[1]}"><input class="in num" inputmode="decimal" placeholder="Preis" value="${p[2] === '' ? '' : (+p[2]).toFixed(2)}"><button class="btn sm" data-dnweg aria-label="Zeile entfernen">✕</button></div>`;
+function dnArtikel() {
+  const m = new Map();
+  [...BEISPIEL_RAPPORTE, ...RAPPORTE, ...DB.rapporte, ...DB.debitoren].forEach(x => x.pos.forEach(p => { if (!m.has(p[0])) m.set(p[0], p[2]); }));
+  return m;
+}
+function dnLesen() {
+  return [...document.querySelectorAll('#dn-pos .dnz')].map(z => { const [a, b, c] = z.querySelectorAll('input'); return [a.value.trim(), zahl(b.value, 0), zahl(c.value, 0)]; });
+}
+function dnSumme() { const el = $('#dn-summe'); if (el) el.textContent = chf(dnLesen().reduce((s, p) => s + p[1] * p[2], 0)); }
+function neueRechnung(stand = { kunde: '', pos: [['', 1, '']] }) {
+  const A = dnArtikel();
+  modal(`<h3>Neue Rechnung</h3><p class="dim" style="font-size:13px">Ohne Rapport, zum Beispiel ein Verkauf am Ladentisch. Preise inkl. MWST. Die Rechnung wird als Entwurf angelegt und vor dem Versand freigegeben.</p>
+    <label class="fld" style="margin-top:10px"><span>Rechnung an</span><select id="dn-kunde"><option value="">— Kunde wählen —</option>${DB.kunden.map(k => `<option value="${k.id}"${k.id === stand.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
+    <div class="dnz dnk dim"><span>Leistung / Artikel</span><span>Menge</span><span>Preis CHF</span><span></span></div>
+    <div id="dn-pos">${stand.pos.map(dnZeile).join('')}</div>
+    <datalist id="dn-artikel">${[...A.keys()].map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+    <div class="row" style="justify-content:space-between;margin-top:6px"><button class="btn sm" data-dnzeile>+ Zeile</button><span>Total <b class="num" id="dn-summe"></b></span></div>
+    <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Als Entwurf anlegen</button></div>`,
+    () => {
+      const sel = $('#dn-kunde').value, P = dnLesen().filter(p => p[0] || p[2]);
+      if (!sel) { $('#dn-kunde').closest('.fld').classList.add('err'); toast('An wen geht die Rechnung?', 2); return; }
+      const schlecht = P.findIndex(p => !p[0] || p[1] <= 0 || p[2] <= 0);
+      if (!P.length || schlecht >= 0) { toast(P.length ? `Zeile ${schlecht + 1}: Text, Menge und Preis ausfüllen.` : 'Mindestens eine Position.', 2); return; }
+      const k = kunde(sel), id = naechsteNr();
+      const dneu = { id, kunde: sel, datum: HEUTE, faellig: plusTage(HEUTE, k.ziel || 30), stufe: 'entwurf', satz: 8.1, pos: P, vonHand: true, zahlungen: [], protokoll: [] };
+      prot(dneu, 'Von Hand erstellt (' + P.length + ' Position' + (P.length === 1 ? '' : 'en') + ')');
+      DB.debitoren.push(dneu); modalZu(); neu(); go('kunden', id); toast('Rechnung ' + id.slice(1) + ' als Entwurf angelegt.', 1);
+    });
+  dnSumme();
+}
+
 // typing in the VAT lines recomputes them live
 document.addEventListener('input', e => {
   if (e.target.matches('.kt-netto')) vatLive();
   if (e.target.id === 'suche') sucheZeigen();
+  if (e.target.closest('#dn-pos')) {
+    const z = e.target.closest('.dnz'), [a, , c] = z.querySelectorAll('input');
+    if (e.target === a && !c.value) { const pr = dnArtikel().get(a.value.trim()); if (pr != null) c.value = (+pr).toFixed(2); }
+    dnSumme();
+  }
   const f = e.target.closest('.fld.err'); if (f) f.classList.remove('err');
 });
 document.addEventListener('change', e => {
   if (e.target.matches('.kt-satz')) vatLive();
+  if (e.target.id === 'dn-kunde' && e.target.value === 'neu') { const pos = dnLesen(); kundeNeu(id => neueRechnung({ kunde: id, pos: pos.length ? pos : [['', 1, '']] })); }
   if (e.target.id === 'kt-jepos') $('#kt-posk').classList.toggle('on', e.target.checked);
   // a new main account carries along every position that still had the old one
   if (e.target.id === 'kt-konto') {
