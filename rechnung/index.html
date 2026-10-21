@@ -833,7 +833,7 @@ function zahl(v, alt = 0) {
 }
 const konto = nr => KONTEN.find(k => k.nr === nr) || { nr, name: '?' };
 const kname = nr => nr + ' ' + konto(nr).name;
-const lief = id => LIEFERANTEN.find(l => l.id === id);
+const lief = id => LIEFERANTEN.find(l => l.id === id) || (DB.lieferanten || []).find(l => l.id === id);   // + those created from an upload
 const kunde = id => DB.kunden.find(k => k.id === id);
 const jetzt = () => {
   const d = new Date();
@@ -849,7 +849,7 @@ const SPEICHER = 'axyom-rechnungswesen-v1';
 const SEED = () => JSON.parse(JSON.stringify({
   rechnungen: RECHNUNGEN, bank: BANK, kasseTage: KASSE_TAGE, kasse: KASSE_BEWEGUNGEN,
   kunden: KUNDEN, rapporte: RAPPORTE, debitoren: DEBITOREN, firma: FIRMA,
-  freigaben: FREIGABEN, papierkorb: [], abgerechnet: ['2026-Q2'], log: [],
+  freigaben: FREIGABEN, lieferanten: [], papierkorb: [], abgerechnet: ['2026-Q2'], log: [],
   texte: {
     einleitung_sie: 'Vielen Dank für Ihren Auftrag. Gerne stellen wir Ihnen Folgendes in Rechnung:',
     einleitung_du: 'Merci für den Auftrag! Hier die Rechnung dazu:',
@@ -875,6 +875,7 @@ function speichern() {
 }
 function zuruecksetzen() {
   try { localStorage.removeItem(SPEICHER); } catch (e) { }
+  if (typeof originaleLoeschen === 'function') originaleLoeschen();
   laden();
 }
 function logge(text) { DB.log.unshift({ zeit: jetzt(), text }); if (DB.log.length > 200) DB.log.length = 200; }
@@ -1795,6 +1796,7 @@ function dokument(id) {
   return { lay: debLayout(d), kopf: 'Rechnung als PDF', titel: 'Rechnung ' + d.id.slice(1) + ' · ' + ((kunde(d.kunde) || {}).name || '') };
 }
 function belegViewer(r) {
+  if (r.upload) return originalViewer(r);   // an uploaded invoice shows the file itself
   const dok = dokument(r.id), lay = dok.lay, n = lay.pages.length;
   return `<div class="pdfv" aria-label="${dok.kopf}">
     <div class="pdfbar">
@@ -1809,6 +1811,7 @@ function belegViewer(r) {
   </div>`;
 }
 function belegOeffnen(id, laden) {
+  const up = DB.rechnungen.find(x => x.id === id && x.upload); if (up) { originalOeffnen(id, laden); return; }
   const dok = dokument(id), lay = dok.lay;
   const url = URL.createObjectURL(new Blob([belegPDF(lay, dok.titel)], { type: 'application/pdf' }));
   if (laden) {
@@ -1924,7 +1927,8 @@ VIEWS.rechnungen = () => {
   return rechnungenKopf() + `<div class="split">
     <div class="col"><div class="liste">
       <div class="lh"><div class="chips">${Object.entries(RFILTER_DEF).filter(([k, d]) => !d.versteckt || k === RFILTER).map(([k, d]) => `<button class="chip${k === RFILTER ? ' on' : ''}" data-rfilter="${k}">${d.name}<span class="n">${n(k)}</span></button>`).join('')}</div>
-        <input class="in" id="rsuche" type="search" placeholder="Lieferant, Nummer, Betrag" value="${esc(RSUCHE)}" style="margin-top:10px"></div>
+        <input class="in" id="rsuche" type="search" placeholder="Lieferant, Nummer, Betrag" value="${esc(RSUCHE)}" style="margin-top:10px">
+        <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm acc" data-krneu>+ Rechnung hochladen</button></div></div>
       <div class="items">${liste.length ? liste.map(x => {
         const s = summen(x);
         return `<button class="li${r && x.id === r.id ? ' on' : ''}" data-go="rechnungen" data-p="${x.id}">
@@ -2638,7 +2642,7 @@ const UPLOADS = [];       // object URLs only live as long as the tab
 VIEWS.austausch = () => `
   <div class="grid g2" style="align-items:start">
     <div class="stack">
-      <div class="card"><h2>Rechnungen & Belege hochladen</h2><p class="lead">PDF oder Foto. Im Betrieb liest Axyom Lieferant, Datum, Positionen und MWST aus und legt die Rechnung unter «Zu prüfen» ab.</p>
+      <div class="card"><h2>Rechnungen & Belege hochladen</h2><p class="lead">PDF oder Foto. Eine Lieferantenrechnung laden Sie am besten unter <a href="#rechnungen">Rechnungen → «Rechnung hochladen»</a>: dort werden Lieferant, Datum, Positionen und MWST ausgelesen.</p>
         <label class="drop" id="drop-belege"><b>Dateien hierher ziehen</b>oder klicken zum Auswählen<input type="file" id="up-belege" accept=".pdf,image/*" multiple hidden></label>
         ${UPLOADS.length ? `<div style="margin-top:12px">${UPLOADS.map(u => `<div class="sum"><span>📄 <a href="${u.url}" target="_blank" rel="noopener">${esc(u.name)}</a> <span class="dim">· ${(u.size / 1024).toFixed(0)} KB</span></span><span class="pill g">in der Demo nicht ausgelesen</span></div>`).join('')}</div>` : ''}
       </div>
@@ -2699,7 +2703,7 @@ VIEWS.einstellungen = () => {
   </div>
   <div class="card" style="margin-top:16px"><h2>Lieferanten <small>Standard für Konto, MWST und Zahlungsziel</small></h2><p class="lead">Daraus kommen die Vorschläge beim Prüfen.</p>
     <div class="tw"><table class="t"><thead><tr><th>Lieferant</th><th>Ort</th><th>Konto</th><th class="r">MWST</th><th class="r">Ziel</th><th>Zahlung</th></tr></thead><tbody>
-    ${LIEFERANTEN.map(l => `<tr><td><b>${esc(l.name)}</b></td><td>${esc(l.ort)}</td><td>${esc(kname(l.konto))}</td><td class="r">${l.satz} %</td><td class="r">${l.ziel ? l.ziel + ' T.' : 'sofort'}</td><td>${l.auto ? '<span class="pill g">' + esc(l.auto) + '</span>' : l.waehrung ? '<span class="pill i">' + l.waehrung + '</span>' : 'E-Banking'}</td></tr>`).join('')}
+    ${alleLieferanten().map(l => `<tr><td><b>${esc(l.name)}</b></td><td>${esc(l.ort)}</td><td>${esc(kname(l.konto))}</td><td class="r">${l.satz} %</td><td class="r">${l.ziel ? l.ziel + ' T.' : 'sofort'}</td><td>${l.auto ? '<span class="pill g">' + esc(l.auto) + '</span>' : l.waehrung ? '<span class="pill i">' + l.waehrung + '</span>' : 'E-Banking'}</td></tr>`).join('')}
     </tbody></table></div></div>
   <div class="card" style="margin-top:16px"><h2>Demo</h2><p class="lead">Alle erfundenen Daten wieder wie am Anfang. Die Darstellung bleibt, wie Sie sie gewählt haben.</p>
     <button class="btn" data-reset>Demo zurücksetzen</button></div>`;
@@ -2717,18 +2721,24 @@ VIEWS.einstellungen = () => {
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
 let PDFJS_LADEN = null;
 function pdfjsLaden() {
-  if (window.pdfjsLib) return Promise.resolve();
-  return PDFJS_LADEN ||= new Promise((ok, nein) => {
-    const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
-    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(); };
-    s.onerror = () => { PDFJS_LADEN = null; nein(new Error('Der PDF-Leser liess sich nicht laden. Ist das Internet da?')); };
-    document.head.appendChild(s);
-  });
+  if (window.pdfjsLib && window.pdfjsWorker) return Promise.resolve();
+  // pdf.js and its worker code as two plain scripts: with «pdfjsWorker» on the
+  // page pdf.js parses on the main thread and starts no Worker — a worker from
+  // another origin is what Safari refuses after a reload. Invoices are small.
+  const laden = src => new Promise((ok, nein) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = nein; document.head.appendChild(s); });
+  return PDFJS_LADEN ||= laden(PDFJS + 'pdf.min.js').then(() => laden(PDFJS + 'pdf.worker.min.js'))
+    .then(() => { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; })
+    .catch(() => { PDFJS_LADEN = null; throw new Error('Der PDF-Leser liess sich nicht laden. Ist das Internet da?'); });
+}
+// Safari can refuse pdf.js's worker right after a page load; a second try works
+async function pdfOeffnen(bytes) {
+  await pdfjsLaden();
+  try { return await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise; }
+  catch (e) { await new Promise(r => setTimeout(r, 600)); return pdfjsLib.getDocument({ data: bytes.slice(0) }).promise; }
 }
 // every text piece with its place in mm from the top left, grouped into lines
 async function pdfLesen(buf) {
-  await pdfjsLaden();
-  const doc = await pdfjsLib.getDocument({ data: buf }).promise, zeilen = [];
+  const doc = await pdfOeffnen(buf), zeilen = [];
   for (let n = 1; n <= Math.min(doc.numPages, 12); n++) {
     const s = await doc.getPage(n), H = s.getViewport({ scale: 1 }).height, mm = v => v * 25.4 / 72;
     const teile = (await s.getTextContent()).items.filter(t => t.str.trim())
@@ -2757,13 +2767,20 @@ function betragLesen(s) {
 }
 const EINHEIT = /\s*(Std\.?|h|Stk\.?|Stück|x|×|pce|Psch\.?)$/i;
 const DATUM = /\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/;
+const MONATE_LANG = ['januar', 'februar', 'märz', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'dezember'];
+// «19.10.2026», «19.10.26» or «19. Oktober 2026»
+function datumLesen(t) {
+  const m = String(t).match(DATUM); if (m) return isoAus(m);
+  const l = String(t).match(/\b(\d{1,2})\.?\s+(Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)\s+(\d{4})\b/i);
+  return l ? `${l[3]}-${String(MONATE_LANG.indexOf(l[2].toLowerCase().replace('maerz', 'märz')) + 1).padStart(2, '0')}-${l[1].padStart(2, '0')}` : null;
+}
 const isoAus = m => `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
 
 function rechnungErkennen(zeilen, ocr) {
   // read from pixels, positions wobble: wider tolerances
   const TS = ocr ? 4 : 1.5, TZ = ocr ? 10 : 6;
   const f = DB.firma, voll = zeilen.map(z => z.text).join('\n'), klein = voll.toLowerCase();
-  const E = { pos: [], text: voll };
+  const E = { pos: [], posZeile: [], text: voll };
   E.absenderOk = klein.includes(f.marke.toLowerCase()) || klein.includes(f.name.toLowerCase());
 
   // the lines: description, then quantity × price = amount, checked
@@ -2779,12 +2796,12 @@ function rechnungErkennen(zeilen, ocr) {
       // specks on a photo come out as a stray «A» or «—» after the text
       if (ocr) t = t.replace(/(\s+([^\s\p{L}\d]+|(\p{L})\3?))+$/u, '');
       const passt = (m, p) => m > 0 && Math.abs(m * p - b) <= Math.max(.06, Math.abs(b) * .002);
-      if (/\p{L}/u.test(t) && passt(m, p)) { letzte = { z, x: txt[0].x }; E.pos.push([t, m, p]); return; }
+      if (/\p{L}/u.test(t) && passt(m, p)) { letzte = { z, x: txt[0].x }; E.pos.push([t, m, p]); E.posZeile.push(z); return; }
       // read from pixels, one figure can be wrong (a 1 seen as 4): two that
       // agree decide the third — amount ÷ price gives a plain quantity
       const mq = p > 0 ? r2(b / p) : 0;
       if (ocr && /\p{L}/u.test(t) && mq > 0 && Math.abs(mq * 4 - Math.round(mq * 4)) < .01 && passt(mq, p)) {
-        letzte = { z, x: txt[0].x }; E.pos.push([t, mq, p]); E.korrigiert = (E.korrigiert || 0) + 1; return;
+        letzte = { z, x: txt[0].x }; E.pos.push([t, mq, p]); E.posZeile.push(z); z.korrigiert = true; return;
       }
     }
     // from pixels, the quantity can come out as a letter («a» for 1) or be
@@ -2794,8 +2811,8 @@ function rechnungErkennen(zeilen, ocr) {
       let txt = c.slice(0, n - 2); if (txt.length > 1 && txt[txt.length - 1].s.length <= 2) txt = txt.slice(0, -1);
       if (txt.length > 1 && /^\d{1,3}$/.test(txt[0].s)) txt = txt.slice(1);
       const t = txt.map(x => x.s).join(' ').replace(/(\s+([^\s\p{L}\d]+|(\p{L})\3?))+$/u, '');
-      if (/\p{L}{3}/u.test(t) && !/total|mwst|betrag|summe/i.test(t) && mq > 0 && Math.abs(mq * 4 - Math.round(mq * 4)) < .01 && Math.abs(mq * p - b) <= .06) {
-        letzte = { z, x: txt[0].x }; E.pos.push([t, mq, p]); E.korrigiert = (E.korrigiert || 0) + 1; return;
+      if (/\p{L}{3}/u.test(t) && !/total|mwst|betrag|summe|zahlbar|konto|referenz|währung|zahlteil|empfangsschein/i.test(t) && mq > 0 && Math.abs(mq * 4 - Math.round(mq * 4)) < .01 && Math.abs(mq * p - b) <= .06) {
+        letzte = { z, x: txt[0].x }; E.pos.push([t, mq, p]); E.posZeile.push(z); z.korrigiert = true; return;
       }
     }
     // a description that ran onto a second line
@@ -2809,9 +2826,14 @@ function rechnungErkennen(zeilen, ocr) {
     const l = z.text.toLowerCase(), ende = z.text.match(/(?:CHF|Fr\.)?\s*([-−]?\d(?:[\d’'.,]| (?=\d{3}(?:\D|$)))*\d)\s*$/), zahl = ende && /[.,]\d{2}$/.test(ende[1]) ? { s: ende[1] } : null;
     if (!zahl || !/total|zu bezahlen|rechnungsbetrag|betrag inkl|gesamtbetrag|endbetrag/.test(l)) return null;
     const rang = /zu bezahlen|rechnungsbetrag|endbetrag/.test(l) ? 3 : /inkl/.test(l) ? 2 : /netto|exkl|zwischen/.test(l) ? 0 : 1;
-    return { rang, b: betragLesen(zahl.s) };
+    return { rang, b: betragLesen(zahl.s), z };
   }).filter(Boolean).sort((a, b) => b.rang - a.rang);
-  if (kand.length) E.total = kand[0].b;
+  if (kand.length) {
+    E.total = kand[0].b;
+    // lines below the total (the QR-bill, the footer) are never positions — on a photo they can look like one
+    const tz = kand[0].z, nach = z => z.p > tz.p || (z.p === tz.p && z.y > tz.y);
+    if (ocr) { const weg = E.posZeile.map(nach); E.pos = E.pos.filter((p, i) => !weg[i]); E.posZeile = E.posZeile.filter((z, i) => !weg[i]); }
+  }
   // no total line (a reminder, a short letter): the QR-bill always carries
   // the amount — under «Betrag» in the Zahlteil, the rightmost of the two
   if (E.total == null) {
@@ -2825,6 +2847,8 @@ function rechnungErkennen(zeilen, ocr) {
   }
   const nettoTotal = zeilen.find(z => /total netto|netto total|zwischentotal|total exkl/i.test(z.text));
 
+  E.korrigiert = E.posZeile.filter(z => z.korrigiert).length;   // quantities worked out from price and amount
+  E.posRoh = E.pos.map(p => p.slice());   // as printed, before any VAT conversion
   // VAT rate, and whether the line prices were without it
   const s = [...voll.matchAll(/(\d{1,2}[.,]\d)\s*%/g)].map(m => +m[1].replace(',', '.')).find(v => [8.1, 2.6, 3.8, 7.7, 2.5, 3.7].includes(v));
   E.satz = s || 8.1;
@@ -2859,23 +2883,31 @@ function rechnungErkennen(zeilen, ocr) {
       b.push(e); vor = z;
     });
     const passt = bloecke.find(L => L.length > 1 && Math.abs(L.reduce((a, p) => a + p[2], 0) - E.total) < .06);
-    if (passt) { E.einzelposten = E.pos.length; E.pos = passt; E.preise = 'inkl'; E.uebersicht = true; E.summe = E.total; }
+    if (passt) { E.einzelposten = E.pos.length; E.pos = passt; E.posRoh = passt.map(p => p.slice()); E.preise = 'inkl'; E.uebersicht = true; E.summe = E.total; }
   }
 
   // nothing itemised at all (a reminder, a monthly bill): one line for the total,
   // named after the invoice it is for
   if (!E.pos.length && E.total > 0) {
     const titel = zeilen.map(z => (z.zellen[0].s.match(/^(Rechnung|Abrechnung|Faktura)\s+\p{L}+\s+\d{4}/u) || [])[0]).find(Boolean);
-    E.pos = [[titel || 'Gemäss Beleg', 1, E.total]]; E.summe = E.total; E.pauschal = true;
+    E.pos = [[titel || 'Gemäss Beleg', 1, E.total]]; E.posRoh = E.pos.map(p => p.slice()); E.summe = E.total; E.pauschal = true; E.preise = 'inkl';
   }
   E.erinnerung = /zahlungserinnerung|mahnung/i.test(voll);
 
   // the number printed on it
   for (const z of zeilen) {
     const m = z.text.match(/(?:Rechnungs?-?(?:nr|nummer)|Re\.?-?Nr)\.?\s*:?\s*([A-Z0-9][\w\-\/]{2,})/i) || z.text.match(/^Rechnung\s+(?:Nr\.?\s*)?([A-Z]{0,5}[-\/]?\d[\w\-\/]{2,})/i);
-    if (m && !DATUM.test(m[1])) { E.nr = m[1]; break; }
+    if (m && !DATUM.test(m[1]) && !/^\d{1,2}\.$/.test(m[1])) { E.nr = m[1]; break; }
   }
-  const dz = zeilen.find(z => /datum/i.test(z.text) && DATUM.test(z.text)); if (dz) E.datum = isoAus(dz.text.match(DATUM));
+  // label and value side by side: «Datum: 14.10.2026   Zahlbar bis: 13.11.2026»
+  const nachLabel = re => { for (const z of zeilen) for (let i = 0; i < z.zellen.length; i++) {
+    if (!re.test(z.zellen[i].s)) continue;
+    const d = datumLesen(z.zellen[i].s.replace(re, '')) || (z.zellen[i + 1] && datumLesen(z.zellen[i + 1].s)); if (d) return d; } return null; };
+  E.datum = nachLabel(/^(rechnungs)?datum\s*:?/i);
+  const dz = !E.datum && zeilen.find(z => /datum/i.test(z.text) && !/fällig|zahlbar|liefer/i.test(z.text) && datumLesen(z.text)); if (dz) E.datum = datumLesen(dz.text);
+  const fz = zeilen.find(z => /zahlbar bis|fällig|zahlungsfrist|zahlbar am/i.test(z.text) && datumLesen(z.text.replace(/^.*?(zahlbar bis|fällig\w*|zahlungsfrist|zahlbar am)/i, '')));
+  if (fz) E.faellig = datumLesen(fz.text.replace(/^.*?(zahlbar bis|fällig\w*|zahlungsfrist|zahlbar am)/i, ''));
+  else { const t = voll.match(/innert\s+(\d{1,3})\s+Tag/i); if (t && E.datum) E.faellig = plusTage(E.datum, +t[1]); }
 
   // the customer: a known name first, then the «Zahlbar durch» block of the
   // QR-bill, then the address in the envelope window
@@ -2992,11 +3024,32 @@ async function tesseractBereit() {
     logger: m => TESS_FORTSCHRITT && TESS_FORTSCHRITT(m),
   }).catch(err => { TESS_WORKER = null; throw err; });
 }
-async function ocrZeilen(bilder, melden) {
+/* Before reading: black and white (Otsu's threshold, so shadows and the
+   table don't decide), and long horizontal rules wiped — a text line that
+   sits on a table rule is otherwise taken for part of the rule and lost. */
+function bildVorbereiten(c) {
+  const g = c.getContext('2d', { willReadFrequently: true }), W = c.width, H = c.height, d = g.getImageData(0, 0, W, H), px = d.data;
+  const grau = new Uint8Array(W * H), hist = new Array(256).fill(0);
+  for (let i = 0; i < W * H; i++) { const v = (px[i * 4] * 299 + px[i * 4 + 1] * 587 + px[i * 4 + 2] * 114) / 1000 | 0; grau[i] = v; hist[v]++; }
+  let sum = 0; for (let t = 0; t < 256; t++) sum += t * hist[t];
+  let sB = 0, wB = 0, best = 0, schwelle = 128;
+  for (let t = 0; t < 256; t++) { wB += hist[t]; if (!wB) continue; const wF = W * H - wB; if (!wF) break; sB += t * hist[t];
+    const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > best) { best = v; schwelle = t; } }
+  const sw = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) sw[i] = grau[i] < schwelle ? 1 : 0;
+  const lang = W * .12;
+  for (let y = 0; y < H; y++) { let start = -1;
+    for (let x = 0; x <= W; x++) { const an = x < W && sw[y * W + x];
+      if (an && start < 0) start = x;
+      if (!an && start >= 0) { if (x - start > lang) for (let k = start; k < x; k++) sw[y * W + k] = 0; start = -1; } } }
+  for (let i = 0; i < W * H; i++) { const v = sw[i] ? 0 : 255; px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = v; px[i * 4 + 3] = 255; }
+  const o = document.createElement('canvas'); o.width = W; o.height = H; o.getContext('2d').putImageData(d, 0, 0);
+  return o;
+}
+async function ocrZeilen(bilder, melden, vorbereitet) {
   const w = await tesseractBereit(), zeilen = [];
   for (let i = 0; i < bilder.length; i++) {
     TESS_FORTSCHRITT = m => m.status === 'recognizing text' && melden(`Seite ${i + 1}: ${Math.round(m.progress * 100)} %`);
-    const { data } = await w.recognize(bilder[i]);
+    const { data } = await w.recognize(vorbereitet ? bildVorbereiten(bilder[i]) : bilder[i]);
     const mm = 210 / bilder[i].width;
     (data.lines || []).forEach(l => {
       const hoehe = (l.bbox.y1 - l.bbox.y0) * mm;
@@ -3022,33 +3075,49 @@ async function fotoAlsBild(file) {
   return c;
 }
 
-// the uploaded file: read, recognise, then the form comes back filled in
-async function dnPdf(file) {
-  const zone = $('#drop-dn'), pdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name), bild = /^image\//.test(file.type) || /\.(jpe?g|png|heic|webp)$/i.test(file.name);
-  if (!pdf && !bild) { toast('Bitte ein PDF oder ein Foto der Rechnung.', 2); return; }
-  const melden = (titel, txt) => { const z = $('#drop-dn'); if (z) z.innerHTML = `<b>${titel}</b>${txt}`; };
-  melden(pdf ? 'PDF wird gelesen…' : 'Foto wird gelesen…', 'Kunde, Positionen und Beträge werden erkannt');
-  try {
-    let zeilen, vorschau, ocr = false, seiten = 1;
-    if (pdf) {
-      const buf = new Uint8Array(await file.arrayBuffer()), r = await pdfLesen(buf.slice());
-      zeilen = r.zeilen; seiten = r.seiten; vorschau = () => pdfVorschau(r.doc);
-      if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) {   // a scan: no text layer
-        ocr = true; melden('Gescanntes PDF — Texterkennung läuft…', 'Beim ersten Mal wird die Texterkennung geladen (ca. 5 MB).');
-        const bilder = []; for (let n = 1; n <= Math.min(seiten, 2); n++) bilder.push(await seiteAlsBild(r.doc, n));
-        zeilen = await ocrZeilen(bilder, t => melden('Texterkennung läuft…', t));
-      }
-    } else {
-      ocr = true; melden('Texterkennung läuft…', 'Beim ersten Mal wird die Texterkennung geladen (ca. 5 MB).');
-      let c; try { c = await fotoAlsBild(file); } catch { throw new Error('Dieses Bildformat kann der Browser nicht öffnen. Bitte als JPG oder PNG.'); }
-      zeilen = await ocrZeilen([c], t => melden('Texterkennung läuft…', t));
-      vorschau = () => { const box = $('#dn-vorschau'); if (box) { c.style.width = '100%'; box.replaceChildren(c); } };
+/* A file in, text lines out: a PDF with text is read directly, a scan or a
+   photo goes through text recognition. «melden» shows the progress. */
+async function belegLesen(file, melden) {
+  const pdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name), bild = /^image\//.test(file.type) || /\.(jpe?g|png|heic|webp)$/i.test(file.name);
+  if (!pdf && !bild) throw new Error('Bitte ein PDF oder ein Foto der Rechnung.');
+  melden(pdf ? 'PDF wird gelesen…' : 'Foto wird gelesen…', 'Absender, Positionen und Beträge werden erkannt');
+  let zeilen, vorschau, ocr = false, seiten = 1; const bilder = [];
+  if (pdf) {
+    const buf = new Uint8Array(await file.arrayBuffer()), r = await pdfLesen(buf.slice());
+    zeilen = r.zeilen; seiten = r.seiten; vorschau = () => pdfVorschau(r.doc);
+    if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) {   // a scan: no text layer
+      ocr = true; melden('Gescanntes PDF — Texterkennung läuft…', 'Beim ersten Mal wird die Texterkennung geladen (ca. 5 MB).');
+      for (let n = 1; n <= Math.min(seiten, 2); n++) bilder.push(await seiteAlsBild(r.doc, n));
+      zeilen = await ocrZeilen(bilder, t => melden('Texterkennung läuft…', t));
     }
-    if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) throw new Error('Auf diesem ' + (pdf ? 'PDF' : 'Bild') + ' liess sich kein Text erkennen. Ist es scharf und gerade?');
-    const E = rechnungErkennen(zeilen, ocr);
-    E.datei = file.name; E.seiten = seiten; E.ocr = ocr; E.art = pdf ? (ocr ? 'Scan' : 'PDF') : 'Foto';
+  } else {
+    ocr = true; melden('Texterkennung läuft…', 'Beim ersten Mal wird die Texterkennung geladen (ca. 5 MB).');
+    let c; try { c = await fotoAlsBild(file); } catch { throw new Error('Dieses Bildformat kann der Browser nicht öffnen. Bitte als JPG oder PNG.'); }
+    bilder.push(c); zeilen = await ocrZeilen(bilder, t => melden('Texterkennung läuft…', t));
+    vorschau = () => { const box = $('#dn-vorschau'); if (box) { c.style.width = '100%'; box.replaceChildren(c); } };
+  }
+  if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) throw new Error('Auf diesem ' + (pdf ? 'PDF' : 'Bild') + ' liess sich kein Text erkennen. Ist es scharf und gerade?');
+  return { zeilen, ocr, seiten, vorschau, art: pdf ? (ocr ? 'Scan' : 'PDF') : 'Foto',
+    nochmal: () => ocrZeilen(bilder, t => melden('Zweiter Durchgang, schwarz-weiss…', t), true) };
+}
+/* Recognise; if a photo's lines don't add up to its total, read it once more
+   in black and white with the table rules wiped (a line sitting on a rule
+   can vanish) and keep whichever reading adds up. */
+async function besteErkennung(L, erkennen) {
+  const E = erkennen(L.zeilen), stimmt = X => X.total != null && Math.abs(X.summe - X.total) < .06;
+  if (!L.ocr || E.total == null || stimmt(E)) return E;
+  const E2 = erkennen(await L.nochmal());
+  return stimmt(E2) ? Object.assign(E2, { zweiterDurchgang: true }) : E;
+}
+
+// Kundenrechnungen: the uploaded file, recognised, fills «Neue Rechnung»
+async function dnPdf(file) {
+  const melden = (titel, txt) => { const z = $('#drop-dn'); if (z) z.innerHTML = `<b>${titel}</b>${txt}`; };
+  try {
+    const L = await belegLesen(file, melden), E = await besteErkennung(L, z => rechnungErkennen(z, L.ocr));
+    Object.assign(E, { datei: file.name, seiten: L.seiten, ocr: L.ocr, art: L.art });
     neueRechnung({ kunde: E.kunde || (E.neu ? '__pdf' : ''), pos: E.pos.length ? E.pos : [['', 1, '']], erk: E });
-    vorschau();
+    L.vorschau();
   } catch (err) {
     console.warn(err);
     neueRechnung(); toast(esc(err.message || 'Die Datei liess sich nicht lesen.'), 3);
@@ -3078,6 +3147,294 @@ function erkanntBox(E) {
     ${E.doppelt ? `<div class="box s3" style="margin-top:10px"><b>Diese Rechnung gibt es schon:</b> ${esc(E.doppelt.id.slice(1))} · ${esc((kunde(E.doppelt.kunde) || {}).name || '')} · ${chf(debSummen(E.doppelt).brutto)}<br><button class="btn sm" data-go="kunden" data-p="${E.doppelt.id}" style="margin-top:6px">Zur Rechnung ${esc(E.doppelt.id.slice(1))}</button></div>` : ''}
     ${E.absenderOk ? '' : `<div class="box s2" style="margin-top:10px">Auf dem Beleg steht nicht ${esc(DB.firma.marke)} als Absender. Eine Rechnung, die Sie bekommen haben, gehört unter <b>Rechnungen</b>.</div>`}`;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RECHNUNGEN HOCHLADEN — a supplier invoice as PDF, scan or photo.
+   The same reading as on Kundenrechnungen, from the other side: the
+   sender is the supplier (known by name, or from «Konto / Zahlbar an» of
+   the QR-bill, or the letterhead), the recipient is the firm. It lands in
+   «Zu prüfen» with an account suggestion; the check itself is the usual one.
+   The file is kept in this browser (IndexedDB) and shown as Originalbeleg.
+   ══════════════════════════════════════════════════════════════════════ */
+const alleLieferanten = () => [...LIEFERANTEN, ...(DB.lieferanten || [])];
+
+// the cells under «start» in the same column, line by line
+function spalteUnter(zeilen, start, TS, TZ, max = 5) {
+  const out = []; let y = start.y;
+  zeilen.filter(z => z.p === start.p && z.y > start.y && z.y < start.y + 40).forEach(z => {
+    const c = z.zellen.find(c => Math.abs(c.x - start.x) < TS);
+    if (c && z.y - y < TZ && out.length < max) { out.push(c.s); y = z.y; }
+  });
+  return out;
+}
+const IBAN = /\b(?:CH|LI)\d{2}(?:\s?[0-9A-Z]{4}){4}\s?[0-9A-Z]\b/;
+
+/* What the account usually is, from words on the document. Only a
+   suggestion for a supplier seen for the first time — marked «bitte prüfen». */
+const KONTO_HINWEISE = [
+  ['6570', /mobile|internet|telefon|telecom|glasfaser|abo\b|abonnement|lizenz|cloud|software|hosting|domain/i],
+  ['6400', /strom|energie|erdgas|elektrizität|netznutzung/i], ['6300', /versicherung|prämie/i], ['6000', /mietzins|\bmiete\b/i],
+  ['6040', /reinigung/i], ['6200', /garage|fahrzeug|treibstoff|diesel|benzin|reifen/i], ['6600', /inserat|werbung|flyer|drucksache/i],
+  ['6100', /reparatur|unterhalt|wartung/i], ['6500', /büromaterial|papier|porto|toner/i],
+  ['4200', /notebook|monitor|switch|router|drucker|handelsware/i], ['4000', /kabel|stecker|schalter|material/i],
+];
+function kontoVorschlag(E) {
+  if (E.lief) { const l = lief(E.lief); return { konto: l.konto, sicher: 'hoch', grund: 'Wie bisher bei ' + l.name }; }
+  const text = [E.liefNeu && E.liefNeu.name, ...E.pos.map(p => p[0])].join(' ');
+  for (const [konto, re] of KONTO_HINWEISE) {
+    const m = text.match(re);
+    if (m) return { konto, sicher: 'mittel', grund: `Neuer Lieferant · auf dem Beleg steht «${m[0]}»` };
+  }
+  return { konto: '6500', sicher: 'tief', grund: 'Neuer Lieferant · nichts Eindeutiges auf dem Beleg, bitte Konto wählen' };
+}
+
+// the sender, the payment details
+function lieferantErkennen(zeilen, E, ocr) {
+  const TS = ocr ? 4 : 1.5, TZ = ocr ? 10 : 6, f = DB.firma, klein = E.text.toLowerCase();
+  const zellen = zeilen.flatMap(z => z.zellen.map(c => ({ ...c, p: z.p, y: z.y })));
+  const istFirma = s => { const t = String(s).toLowerCase(); return t.includes(f.marke.toLowerCase()) || t.includes(f.name.toLowerCase()); };
+  // QR-bill: «Konto / Zahlbar an» → IBAN, name, street, place; «Referenz» → the reference
+  const za = zellen.filter(c => /^konto\s*\/\s*zahlbar an/i.test(c.s)).sort((a, b) => b.x - a.x)[0];
+  let qr = za ? spalteUnter(zeilen, za, TS, TZ) : [];
+  if (qr.length && IBAN.test(qr[0].replace(/\s/g, ' '))) { E.iban = qr[0].match(IBAN)[0]; qr = qr.slice(1); }
+  const rf = zellen.filter(c => /^referenz$/i.test(c.s)).sort((a, b) => b.x - a.x)[0];
+  if (rf) { const r = spalteUnter(zeilen, rf, TS, TZ, 1)[0]; if (r && /\d{5}/.test(r)) E.referenz = r; }
+  if (!E.iban) { const m = E.text.replace(/\n/g, ' ').match(IBAN); if (m && m[0].replace(/\s/g, '') !== f.iban.replace(/\s/g, '')) E.iban = m[0]; }
+
+  E.eigene = qr.length ? istFirma(qr[0]) : (!E.absenderOk ? false : zellen.some(c => c.p === 1 && c.y < 45 && istFirma(c.s)) && !zellen.some(c => c.p === 1 && c.y < 45 && /\b(AG|GmbH|SA|Sàrl)\b/.test(c.s) && !istFirma(c.s)));
+  // a known supplier by name — or by its first word together with its town
+  const L = alleLieferanten();
+  const k = L.find(l => klein.includes(l.name.toLowerCase()))
+    || L.find(l => { const w = l.name.split(/\s+/).find(w => w.length >= 6); return w && klein.includes(w.toLowerCase()) && l.ort && klein.includes(l.ort.replace(/\s*\(.*\)$/, '').toLowerCase()); });
+  if (k) { E.lief = k.id; return; }
+  // new: the QR block, otherwise the first company name on the page that isn't the firm
+  let name = qr[0], strasse = qr.length >= 3 ? qr[1] : '', ortz = qr.length >= 2 ? qr[qr.length - 1] : '';
+  if (!name || istFirma(name)) {
+    const c = zellen.find(c => /\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(c.s) && !istFirma(c.s) && c.s.length < 60);
+    name = c ? c.s.replace(/^.*?,\s*(?=[^,]*\b(AG|GmbH|SA|Sàrl|KG)\b)/, '').replace(/,.*$/, '') : '';
+    strasse = ''; ortz = '';
+  }
+  if (name && !istFirma(name)) {
+    const m = ortz.match(/^(?:CH-|LI-|FL-)?(\d{4,5})\s+(.+)$/);
+    E.liefNeu = { name: name.trim(), strasse, plz: m ? m[1] : '', ort: m ? m[2] : ortz };
+  }
+}
+
+/* ── the original file, kept in this browser ─────────────────────────── */
+const BELEGE_DB = 'axyom-rechnungswesen-belege';
+function idb(modus, fn) {
+  return new Promise((ok, nein) => {
+    const q = indexedDB.open(BELEGE_DB, 1);
+    q.onupgradeneeded = () => q.result.createObjectStore('dateien');
+    q.onerror = () => nein(q.error);
+    q.onsuccess = () => { const t = q.result.transaction('dateien', modus), r = fn(t.objectStore('dateien')); t.oncomplete = () => { q.result.close(); ok(r && r.result); }; t.onerror = () => nein(t.error); };
+  });
+}
+const ORIGINALE = {}, GEZEICHNET = {};
+// raw bytes, not the Blob: Safari can refuse a Blob in IndexedDB, and fail to read one twice
+async function originalSpeichern(id, file, buf) {
+  ORIGINALE[id] = { url: URL.createObjectURL(file), typ: file.type, name: file.name, buf };
+  try { await idb('readwrite', s => s.put({ buf, typ: file.type, name: file.name }, id)); } catch (e) { /* private window: kept for this visit only */ }
+}
+async function originalHolen(id) {
+  if (ORIGINALE[id]) return ORIGINALE[id];
+  try { const v = await idb('readonly', s => s.get(id)); if (v) { const blob = new Blob([v.buf], { type: v.typ }); return ORIGINALE[id] = { url: URL.createObjectURL(blob), typ: v.typ, name: v.name, buf: v.buf }; } } catch (e) { }
+  return null;
+}
+function originaleLoeschen() { Object.keys(ORIGINALE).forEach(k => delete ORIGINALE[k]); Object.keys(GEZEICHNET).forEach(k => delete GEZEICHNET[k]); try { indexedDB.deleteDatabase(BELEGE_DB); } catch (e) { } }
+
+// the viewer for an uploaded invoice: the file itself, page by page
+function originalViewer(r) {
+  return `<div class="pdfv" aria-label="Originalbeleg">
+    <div class="pdfbar">
+      <div class="pt"><b>Originalbeleg</b><span>${esc(r.quelle || 'Hochgeladen')} · hochgeladen</span></div>
+      <div class="pa">
+        <span class="zoom"><button class="ib" data-zoom="-1" aria-label="Verkleinern"${BELEG_ZOOM === ZOOMS[0] ? ' disabled' : ''}>−</button><span class="zv">${Math.round(BELEG_ZOOM * 100)} %</span><button class="ib" data-zoom="1" aria-label="Vergrössern"${BELEG_ZOOM === ZOOMS[ZOOMS.length - 1] ? ' disabled' : ''}>+</button></span>
+        <button class="ib" data-pdf="laden" data-r="${r.id}" aria-label="Original herunterladen" title="Herunterladen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.8 7.5 8 10.7l3.2-3.2M3 13.5h10"/></svg></button>
+        <button class="lk" data-pdf="oeffnen" data-r="${r.id}">Separat öffnen ↗</button>
+      </div>
+    </div>
+    <div class="pdfscroll"><div class="pdfseiten" style="width:${BELEG_ZOOM * 100}%" data-original="${r.id}"><div class="leer" style="padding:40px;text-align:center;color:#fff">Original wird geladen…</div></div></div>
+  </div>`;
+}
+const IN_ARBEIT = {};
+async function originaleFuellen() {
+  for (const el of document.querySelectorAll('[data-original]')) {
+    const id = el.dataset.original;
+    if (GEZEICHNET[id]) { el.replaceChildren(...GEZEICHNET[id]); continue; }
+    if (IN_ARBEIT[id]) continue;   // already being drawn; it fills the viewer when done
+    IN_ARBEIT[id] = true; try { await originalZeichnen(id, el); } finally { delete IN_ARBEIT[id]; }
+  }
+}
+async function originalZeichnen(id, el) {
+  const o = await originalHolen(id), r = DB.rechnungen.find(x => x.id === id);
+  if (!r) return;
+  let teile;
+  if (!o) {   // uploaded in another browser, or site data cleared: show what was read
+    const lay = belegLayout(r), n = lay.pages.length;
+    const hinweis = document.createElement('div'); hinweis.className = 'box i'; hinweis.style.margin = '0 0 4px';
+    hinweis.textContent = 'Die Originaldatei ist nur im Browser gespeichert, in dem sie hochgeladen wurde. Hier die erkannten Angaben als Beleg.';
+    const t = document.createElement('div'); t.innerHTML = lay.pages.map((ops, i) => belegSVG(ops, i + 1, n)).join('');
+    teile = [hinweis, ...t.children];
+  } else if (/pdf/i.test(o.typ) || /\.pdf$/i.test(o.name)) {
+    let doc; try { doc = await pdfOeffnen(new Uint8Array(o.buf)); } catch (e) { console.warn(e); return; }   // stays «wird geladen», tried again on the next draw
+    teile = [];
+    for (let n = 1; n <= Math.min(doc.numPages, 6); n++) {
+      const s = await doc.getPage(n), v = s.getViewport({ scale: 1400 / s.getViewport({ scale: 1 }).width });
+      const c = document.createElement('canvas'); c.width = v.width; c.height = v.height; c.className = 'pdfseite';
+      await s.render({ canvasContext: c.getContext('2d'), viewport: v }).promise; teile.push(c);
+    }
+  } else { const img = new Image(); img.src = o.url; img.className = 'pdfseite'; img.alt = 'Originalbeleg'; teile = [img]; }
+  if (o) GEZEICHNET[id] = teile;   // the stand-in is not kept: the file may still arrive
+  const jetzt = document.querySelector(`[data-original="${id}"]`); if (jetzt) jetzt.replaceChildren(...teile);
+}
+async function originalOeffnen(id, laden) {
+  const o = await originalHolen(id);
+  if (!o) { toast('Die Originaldatei ist nur im Browser gespeichert, in dem sie hochgeladen wurde.', 2); return; }
+  if (laden) { const a = document.createElement('a'); a.href = o.url; a.download = o.name; document.body.appendChild(a); a.click(); a.remove(); }
+  else if (!window.open(o.url, '_blank')) toast('Der Browser hat das neue Fenster blockiert — <a href="' + o.url + '" target="_blank" rel="noopener">hier öffnen</a>.', 2);
+}
+
+/* ── two example invoices to try it with ─────────────────────────────── */
+// a known supplier, drawn by the app's own supplier layout
+const KR_MUSTER = [
+  () => belegLayout({ id: 'MUSTER-K1', lief: 'L1', nr: 'ER-89107', datum: '2026-10-15', pos: [['Installationskabel 3×1.5 mm², 100 m', 3, 86.5], ['Leitungsschutzschalter 16 A', 12, 10.4], ['Steckdosen T13 UP', 20, 7.5]] }),
+  // a telecom provider never seen before, prices with VAT, QR-bill
+  () => {
+    const f = DB.firma, pages = [[]], P = pages[0];
+    const T = (x, y, str, o = {}) => P.push({ t: 'text', x, y, s: String(str), pt: o.pt || 9, b: !!o.b, a: o.a || 'l', c: o.c || SCHWARZ });
+    const L = (x1, y1, x2, y2, o = {}) => P.push({ t: 'line', x1, y1, x2, y2, w: o.w || .25, c: o.c || SCHWARZ, dash: o.dash });
+    const R = (x, y, wd, ht, c) => P.push({ t: 'rect', x, y, w: wd, h: ht, c: c || SCHWARZ });
+    T(20, 24, 'talnet', { pt: 24, b: true, c: '#5b2a86' });
+    T(190, 22, 'Talnet Kommunikation AG', { pt: 8.5, b: true, a: 'r' }); T(190, 26.5, 'Netzweg 1 · 9490 Vaduz', { pt: 8.5, a: 'r' });
+    [f.name, 'Buchhaltung', f.strasse, f.plz + ' ' + f.ort].forEach((z, i) => T(20, 52 + i * 4.4, z, { pt: 9.5 }));
+    T(120, 52, 'Datum', { pt: 8.5 }); T(190, 52, '12. Oktober 2026', { pt: 8.5, a: 'r' });
+    T(120, 56.5, 'Rechnungsnummer', { pt: 8.5 }); T(190, 56.5, '2026-000140877', { pt: 8.5, a: 'r' });
+    T(120, 61, 'Zahlbar bis', { pt: 8.5 }); T(190, 61, '11. November 2026', { pt: 8.5, a: 'r' });
+    T(20, 84, 'Rechnung Oktober 2026', { pt: 13, b: true });
+    let y = 96;
+    [['Leistung', 20, 'l'], ['Anzahl', 138, 'r'], ['Preis', 160, 'r'], ['CHF', 190, 'r']].forEach(([t, x, a]) => T(x, y, t, { pt: 8.5, b: true, a }));
+    L(20, y + 2, 190, y + 2); y += 7.5;
+    const pos = [['Mobile Business M, Abo', 3, 45.0], ['Glasfaser Internet 10 Gbit/s', 1, 79.0], ['Festnetz-Nummer Laden', 1, 15.0]];
+    pos.forEach(p => { T(20, y, p[0], { pt: 9 }); T(138, y, p[1], { pt: 9, a: 'r' }); T(160, y, fmt(p[2]), { pt: 9, a: 'r' }); T(190, y, fmt(p[1] * p[2]), { pt: 9, a: 'r' }); y += 5.5; });
+    L(20, y - 3, 190, y - 3); y += 2;
+    const sum = pos.reduce((a, p) => a + p[1] * p[2], 0);
+    T(112, y, 'Rechnungsbetrag inkl. MWST', { pt: 9.5, b: true }); T(190, y, 'CHF ' + fmt(sum), { pt: 9.5, b: true, a: 'r' }); y += 5;
+    T(112, y, `enthält MWST 8.1 %`, { pt: 8.5, c: GRAU }); T(190, y, fmt(r2(sum - sum / 1.081)), { pt: 8.5, a: 'r', c: GRAU });
+    qrRechnung({ seed: 'talnet', an: ['CH44 3000 0001 9000 1694 9', 'Talnet Kommunikation AG', 'Netzweg 1', '9490 Vaduz'], von: [f.name, f.strasse, f.plz + ' ' + f.ort], betrag: sum, ref: '00 00000 00002 02600 01408 77', info: 'Rechnung Oktober 2026' }, T, L, R);
+    return { pages, name: 'Talnet_Rechnung_2026-000140877.pdf' };
+  },
+];
+function krMusterLaden() {
+  const n = DB.krMusterN || 0, lay = KR_MUSTER[n % KR_MUSTER.length](); DB.krMusterN = n + 1; speichern();
+  lay.name = n % KR_MUSTER.length === 0 ? 'Elektro-Rhein_ER-89107.pdf' : lay.name;
+  const url = URL.createObjectURL(new Blob([belegPDF(lay, lay.name)], { type: 'application/pdf' }));
+  const a = document.createElement('a'); a.href = url; a.download = lay.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast(`${esc(lay.name)} heruntergeladen. Jetzt hier hochladen.`, 1);
+}
+
+/* ── the window: upload, then check what was read ────────────────────── */
+let KR_DATEI = null;
+function krHochladen(stand) {
+  if (!stand) {
+    KR_DATEI = null;
+    modal(`<h3>Rechnung hochladen</h3><p class="dim" style="font-size:13px">Eine Rechnung, die Sie bekommen haben. Lieferant, Nummer, Datum, Positionen und MWST werden erkannt, dann liegt sie unter «Zu prüfen».</p>
+      <label class="drop" id="drop-kr" style="margin-top:12px;padding:18px"><b>PDF, Scan oder Foto hochladen</b>Hierher ziehen oder klicken. Die Datei verlässt diesen Browser nicht.<input type="file" id="kr-datei" accept=".pdf,application/pdf,image/*" hidden></label>
+      <div class="row" style="margin-top:6px;font-size:12px"><button class="btn link sm" data-krmuster style="padding:0">Beispiel-Rechnung herunterladen</button><span class="dim">zum Ausprobieren</span></div>
+      <div class="acts"><button class="btn" data-zu>Abbrechen</button></div>`);
+    return;
+  }
+  const E = stand.erk, v = E.vorschlag, sicher = { hoch: 's1', mittel: 's2', tief: 's3' };
+  const L = alleLieferanten().slice().sort((a, b) => a.name.localeCompare(b.name));
+  const sel = E.lief || (E.liefNeu ? '__beleg' : '__neu');
+  const z = [], Z = (ok, titel, text) => z.push(`<div class="erz"><span class="dot ${ok === true ? 's1' : ok === false ? 's3' : 's2'}"></span><span class="dim">${titel}</span><span>${text}</span></div>`);
+  Z(!!(E.lief || E.liefNeu), 'Lieferant', E.lief ? esc(lief(E.lief).name) + ' <span class="dim">· bekannt</span>' : E.liefNeu ? esc(E.liefNeu.name) + ' <span class="dim">· neu, wird angelegt</span>' : 'nicht erkannt, bitte eintragen');
+  Z(E.nr ? true : false, 'Rechnungsnummer', E.nr ? esc(E.nr) : 'keine gefunden');
+  Z(E.datum ? true : null, 'Datum', E.datum ? dt(E.datum) + (E.faellig ? ` <span class="dim">· zahlbar bis ${dt(E.faellig)}</span>` : '') : 'nicht gefunden, heute eingesetzt');
+  if (E.erinnerung) Z(null, 'Art', 'Zahlungserinnerung <span class="dim">· gehört zur ursprünglichen Rechnung, nicht doppelt bezahlen</span>');
+  Z(E.pos.length ? (E.pauschal ? null : true) : false, 'Positionen', E.pauschal ? '1 Zeile über das Total <span class="dim">· keine Einzelposten auf dem Beleg</span>' : E.uebersicht ? `${E.pos.length} aus der Übersicht` : E.pos.length ? E.pos.length + ' erkannt' : 'keine erkannt, bitte eintragen');
+  if (E.total != null) Z(Math.abs(E.summe - E.total) < .06 ? true : null, 'Total', chf(E.total) + (E.totalAusQr ? ' <span class="dim">· aus dem QR-Zahlteil</span>' : '') + (Math.abs(E.summe - E.total) < .06 ? ' <span class="dim">· stimmt mit den Positionen</span>' : ` <span class="dim">· Positionen ergeben ${chf(E.summe)}</span>`));
+  if (E.iban) Z(true, 'Zahlbar an', esc(E.iban) + (E.referenz ? ` <span class="dim">· Ref. ${esc(E.referenz)}</span>` : ''));
+  Z(v.sicher === 'hoch' ? true : null, 'Konto-Vorschlag', `${esc(kname(v.konto))} <span class="dim">· ${esc(v.grund)}</span>`);
+  if (E.korrigiert) Z(null, 'Ergänzt', `${E.korrigiert} Menge${E.korrigiert > 1 ? 'n' : ''} aus Preis und Betrag, die Ziffer war unleserlich`);
+  if (E.ocr) Z(null, 'Gelesen', 'per Texterkennung aus dem Bild. Zahlen bitte mit dem Beleg vergleichen');
+  const doppelt = E.doppeltK;
+  modal(`<h3>Rechnung aus ${E.art}</h3><p class="dim" style="font-size:13px">Aus ${esc(E.datei)} gelesen. Bitte prüfen, was erkannt wurde. Danach liegt die Rechnung unter «Zu prüfen».</p>
+    <div class="dnpdf"><div class="dnv" id="dn-vorschau"><div class="leer">Vorschau…</div></div><div>
+      <div class="erk">${z.join('')}</div>
+      ${doppelt ? `<div class="box s3" style="margin-top:10px"><b>Diese Rechnung ist schon da:</b> ${esc(lief(doppelt.lief).name)} · ${esc(doppelt.nr)} · ${chf(summen(doppelt).brutto)}<br><button class="btn sm" data-go="rechnungen" data-p="${doppelt.id}" style="margin-top:6px">Zur Rechnung</button></div>` : ''}
+      ${E.eigene ? `<div class="box s2" style="margin-top:10px">Das ist eine Rechnung von ${esc(DB.firma.marke)} selbst. Eine Rechnung, die Sie verschicken, gehört unter <b>Kundenrechnungen</b>.</div>` : ''}
+      <label class="fld" style="margin-top:10px"><span>Lieferant</span><select id="kr-lief">${E.liefNeu ? `<option value="__beleg"${sel === '__beleg' ? ' selected' : ''}>${esc(E.liefNeu.name)} (neu, vom Beleg)</option>` : ''}${L.map(l => `<option value="${l.id}"${l.id === sel ? ' selected' : ''}>${esc(l.name)}</option>`).join('')}<option value="__neu"${sel === '__neu' ? ' selected' : ''}>Anderer, neu…</option></select></label>
+      <label class="fld" id="kr-neuf" style="margin-top:8px${sel === '__neu' ? '' : ';display:none'}"><span>Name des Lieferanten</span><input id="kr-neuname"></label>
+      <div class="grid g3" style="gap:8px;margin-top:8px"><label class="fld"><span>Rechnungsnr.</span><input id="kr-nr" value="${esc(E.nr || '')}"></label>
+        <label class="fld"><span>Datum</span><input type="date" id="kr-datum" value="${E.datum || HEUTE}"></label>
+        <label class="fld"><span>Zahlbar bis</span><input type="date" id="kr-faellig" value="${E.faellig || ''}"></label></div>
+      <div class="grid g2" style="gap:8px;margin-top:8px"><label class="fld"><span>Preise auf dem Beleg</span><select id="kr-preise"><option value="exkl"${E.preise !== 'inkl' ? ' selected' : ''}>ohne MWST</option><option value="inkl"${E.preise === 'inkl' ? ' selected' : ''}>inkl. MWST</option></select></label>
+        <label class="fld"><span>MWST-Satz</span><select id="kr-satz">${[8.1, 2.6, 3.8, 0].map(s => `<option value="${s}"${s === E.satz ? ' selected' : ''}>${s} %</option>`).join('')}</select></label></div>
+      <div class="dnz dnk dim"><span>Position</span><span>Menge</span><span>Preis</span><span></span></div>
+      <div id="dn-pos">${(E.posRoh && E.posRoh.length ? E.posRoh : [['', 1, '']]).map(dnZeile).join('')}</div>
+      <div class="row" style="justify-content:space-between;margin-top:6px"><button class="btn sm" data-dnzeile>+ Zeile</button><span>Summe <b class="num" id="dn-summe"></b></span></div>
+    </div></div>
+    <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>In «Zu prüfen» legen</button></div>`,
+    () => {
+      if (doppelt) { toast('Diese Rechnung ist schon da — sie wird nicht doppelt erfasst.', 2); return; }
+      let lid = $('#kr-lief').value; const nr = $('#kr-nr').value.trim(), neuName = ($('#kr-neuname').value || '').trim();
+      if (lid === '__neu' && !neuName) { $('#kr-neuname').closest('.fld').classList.add('err'); toast('Von wem ist die Rechnung?', 2); return; }
+      if (!nr) { $('#kr-nr').closest('.fld').classList.add('err'); toast('Die Rechnungsnummer fehlt.', 2); return; }
+      const P = dnLesen().filter(p => p[0] || p[2]), schlecht = P.findIndex(p => !p[0] || p[1] <= 0 || !p[2]);
+      if (!P.length || schlecht >= 0) { toast(P.length ? `Zeile ${schlecht + 1}: Text, Menge und Preis ausfüllen.` : 'Mindestens eine Position.', 2); return; }
+      if (lid !== '__beleg' && lid !== '__neu' && DB.rechnungen.some(x => !x.geloescht && x.lief === lid && x.nr === nr)) { toast('Diese Rechnung ist schon da — sie wird nicht doppelt erfasst.', 2); return; }
+      const satz = +$('#kr-satz').value, inkl = $('#kr-preise').value === 'inkl', datum = $('#kr-datum').value || HEUTE;
+      if (lid === '__beleg' || lid === '__neu') {
+        const n = E.liefNeu && lid === '__beleg' ? E.liefNeu : { name: neuName, strasse: '', plz: '', ort: '' };
+        lid = 'L' + (Math.max(...alleLieferanten().map(l => +l.id.slice(1))) + 1);
+        const ziel = $('#kr-faellig').value ? Math.max(0, Math.round((new Date($('#kr-faellig').value) - new Date(datum)) / 864e5)) : 30;
+        (DB.lieferanten = DB.lieferanten || []).push({ id: lid, ...n, konto: v.konto, satz, ziel, ...(E.iban ? { iban: E.iban } : {}) });
+        logge('Lieferant angelegt: ' + n.name);
+      }
+      const id = 'K' + (Math.max(...DB.rechnungen.map(x => +x.id.slice(1))) + 1);
+      const r = { id, lief: lid, nr, datum, eingang: HEUTE, stufe: 'eingang', konto: v.konto, vorschlag: v, upload: true, quelle: E.datei,
+        pos: P.map(p => [p[0], p[1], inkl ? p[2] / (1 + satz / 100) : p[2], satz]), protokoll: [] };
+      if ($('#kr-faellig').value) r.faellig = $('#kr-faellig').value;
+      if (E.referenz) r.referenz = E.referenz;
+      prot(r, `Hochgeladen: ${E.datei} (${E.art}${E.ocr ? ', Texterkennung' : ''}), ${P.length} Position${P.length === 1 ? '' : 'en'} erkannt`);
+      DB.rechnungen.push(r);
+      if (KR_DATEI) originalSpeichern(id, KR_DATEI, KR_DATEI.buf);   // in memory at once, IndexedDB follows
+      modalZu(); RFILTER = 'pruefen'; neu(); go('rechnungen', id); toast('Rechnung liegt unter «Zu prüfen». Konto und MWST jetzt prüfen.', 1);
+    });
+  $('#modal-in').classList.add('breit');
+  dnSumme();
+}
+async function krDatei(datei) {
+  const melden = (titel, txt) => { const z = $('#drop-kr'); if (z) z.innerHTML = `<b>${titel}</b>${txt}`; };
+  try {
+    // a copy of the bytes now: Safari can no longer read the picked file once its input is gone
+    const buf = await datei.arrayBuffer(), file = KR_DATEI = new File([buf], datei.name, { type: datei.type }); KR_DATEI.buf = buf;
+    const L = await belegLesen(file, melden), E = await besteErkennung(L, z => { const X = rechnungErkennen(z, L.ocr); lieferantErkennen(z, X, L.ocr); return X; });
+    Object.assign(E, { datei: file.name, seiten: L.seiten, ocr: L.ocr, art: L.art });
+    E.vorschlag = kontoVorschlag(E);
+    E.doppeltK = E.nr && DB.rechnungen.find(x => !x.geloescht && x.nr === E.nr && (!E.lief || x.lief === E.lief));
+    krHochladen({ erk: E });
+    L.vorschau();
+  } catch (err) {
+    console.warn(err);
+    krHochladen(); toast(esc(err.message || 'Die Datei liess sich nicht lesen.'), 3);
+  }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-krneu],[data-krmuster]'); if (!t) return;
+  if ('krneu' in t.dataset) krHochladen();
+  if ('krmuster' in t.dataset) krMusterLaden();
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'kr-datei' && e.target.files[0]) krDatei(e.target.files[0]);
+  if (e.target.id === 'kr-lief') $('#kr-neuf').style.display = e.target.value === '__neu' ? '' : 'none';
+});
+// after the list has drawn, the uploaded originals are put into their viewer
+const RECHNUNGEN_NACH = VIEWS.rechnungen_nach;
+VIEWS.rechnungen_nach = () => { RECHNUNGEN_NACH(); originaleFuellen(); };
 /* ══════════════════════════════════════════════════════════════════════
    EVENTS — one delegated listener for every view. Views are plain HTML
    strings; behaviour lives here, keyed on data-attributes.
@@ -3585,7 +3942,7 @@ function camtHoch(file) {
   const z = e.target.closest && e.target.closest('.drop'); if (!z) return;
   e.preventDefault();
   z.classList.toggle('over', ev === 'dragover');
-  if (ev === 'drop' && e.dataTransfer.files.length) { if (z.id === 'drop-camt') camtHoch(e.dataTransfer.files[0]); else if (z.id === 'drop-dn') dnPdf(e.dataTransfer.files[0]); else belegeHoch(e.dataTransfer.files); }
+  if (ev === 'drop' && e.dataTransfer.files.length) { if (z.id === 'drop-camt') camtHoch(e.dataTransfer.files[0]); else if (z.id === 'drop-dn') dnPdf(e.dataTransfer.files[0]); else if (z.id === 'drop-kr') krDatei(e.dataTransfer.files[0]); else belegeHoch(e.dataTransfer.files); }
 }));
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if (document.documentElement.classList.contains('nav-offen')) { menu(false); $('#rail .menu').focus(); } if ($('#modal').classList.contains('on')) modalZu(); const b = $('#treffer'); if (b) b.remove(); }
