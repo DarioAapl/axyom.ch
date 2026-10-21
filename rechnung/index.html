@@ -2759,7 +2759,9 @@ const EINHEIT = /\s*(Std\.?|h|Stk\.?|Stück|x|×|pce|Psch\.?)$/i;
 const DATUM = /\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/;
 const isoAus = m => `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
 
-function rechnungErkennen(zeilen) {
+function rechnungErkennen(zeilen, ocr) {
+  // read from pixels, positions wobble: wider tolerances
+  const TS = ocr ? 4 : 1.5, TZ = ocr ? 10 : 6;
   const f = DB.firma, voll = zeilen.map(z => z.text).join('\n'), klein = voll.toLowerCase();
   const E = { pos: [], text: voll };
   E.absenderOk = klein.includes(f.marke.toLowerCase()) || klein.includes(f.name.toLowerCase());
@@ -2773,13 +2775,31 @@ function rechnungErkennen(zeilen) {
       const [m, p, b] = [c[n - 3], c[n - 2], c[n - 1]].map(x => betragLesen(x.s));
       let txt = c.slice(0, n - 3);
       if (txt.length > 1 && /^\d{1,3}$/.test(txt[0].s)) txt = txt.slice(1);
-      const t = txt.map(x => x.s).join(' ');
-      if (/\p{L}/u.test(t) && m > 0 && Math.abs(m * p - b) <= Math.max(.06, Math.abs(b) * .002)) {
-        letzte = { z, x: txt[0].x }; E.pos.push([t, m, p]); return;
+      let t = txt.map(x => x.s).join(' ');
+      // specks on a photo come out as a stray «A» or «—» after the text
+      if (ocr) t = t.replace(/(\s+([^\s\p{L}\d]+|(\p{L})\3?))+$/u, '');
+      const passt = (m, p) => m > 0 && Math.abs(m * p - b) <= Math.max(.06, Math.abs(b) * .002);
+      if (/\p{L}/u.test(t) && passt(m, p)) { letzte = { z, x: txt[0].x }; E.pos.push([t, m, p]); return; }
+      // read from pixels, one figure can be wrong (a 1 seen as 4): two that
+      // agree decide the third — amount ÷ price gives a plain quantity
+      const mq = p > 0 ? r2(b / p) : 0;
+      if (ocr && /\p{L}/u.test(t) && mq > 0 && Math.abs(mq * 4 - Math.round(mq * 4)) < .01 && passt(mq, p)) {
+        letzte = { z, x: txt[0].x }; E.pos.push([t, mq, p]); E.korrigiert = (E.korrigiert || 0) + 1; return;
+      }
+    }
+    // from pixels, the quantity can come out as a letter («a» for 1) or be
+    // missing: price and amount alone, when they give a plain quantity
+    if (ocr && n >= 3 && istBetrag(c[n - 1].s) && istBetrag(c[n - 2].s) && !istBetrag(c[n - 3].s)) {
+      const [p, b] = [betragLesen(c[n - 2].s), betragLesen(c[n - 1].s)], mq = p > 0 ? r2(b / p) : 0;
+      let txt = c.slice(0, n - 2); if (txt.length > 1 && txt[txt.length - 1].s.length <= 2) txt = txt.slice(0, -1);
+      if (txt.length > 1 && /^\d{1,3}$/.test(txt[0].s)) txt = txt.slice(1);
+      const t = txt.map(x => x.s).join(' ').replace(/(\s+([^\s\p{L}\d]+|(\p{L})\3?))+$/u, '');
+      if (/\p{L}{3}/u.test(t) && !/total|mwst|betrag|summe/i.test(t) && mq > 0 && Math.abs(mq * 4 - Math.round(mq * 4)) < .01 && Math.abs(mq * p - b) <= .06) {
+        letzte = { z, x: txt[0].x }; E.pos.push([t, mq, p]); E.korrigiert = (E.korrigiert || 0) + 1; return;
       }
     }
     // a description that ran onto a second line
-    if (letzte && n === 1 && !istBetrag(c[0].s) && Math.abs(c[0].x - letzte.x) < 2 && z.p === letzte.z.p && z.y - letzte.z.y < 6
+    if (letzte && n === 1 && !istBetrag(c[0].s) && Math.abs(c[0].x - letzte.x) < TS + .5 && z.p === letzte.z.p && z.y - letzte.z.y < TZ
       && !/total|mwst|zahlbar|betrag|summe/i.test(c[0].s)) { E.pos[E.pos.length - 1][0] += ' ' + c[0].s; letzte = { z, x: letzte.x }; return; }
     letzte = null;
   });
@@ -2821,8 +2841,8 @@ function rechnungErkennen(zeilen) {
     const spalte = (start, bis) => {   // the cells under «start» in the same column, line by line
       const out = []; let y = start.y;
       zeilen.filter(z => z.p === start.p && z.y > start.y && z.y < bis).forEach(z => {
-        const c = z.zellen.find(c => Math.abs(c.x - start.x) < 1.5);
-        if (c && z.y - y < 6 && out.length < 5) { out.push(c.s); y = z.y; }
+        const c = z.zellen.find(c => Math.abs(c.x - start.x) < TS);
+        if (c && z.y - y < TZ && out.length < 5) { out.push(c.s); y = z.y; }
       });
       return out;
     };
@@ -2830,13 +2850,13 @@ function rechnungErkennen(zeilen) {
     const zd = zeilen.flatMap(z => z.zellen.map(c => ({ ...c, p: z.p, y: z.y }))).filter(c => /^zahlbar durch/i.test(c.s)).sort((a, b) => b.x - a.x)[0];
     if (zd) block = spalte(zd, zd.y + 30);
     if (!block || !block.length) {
-      const plz = zeilen.filter(z => z.p === 1 && z.y > 35 && z.y < 85).flatMap(z => z.zellen.map(c => ({ ...c, y: z.y })))
-        .find(c => c.x < 100 && /^(CH-|FL-|LI-)?\d{4}\s+\p{L}/u.test(c.s) && !c.s.includes(f.ort));
+      const plz = zeilen.filter(z => z.p === 1 && z.y > (ocr ? 25 : 35) && z.y < (ocr ? 120 : 85)).flatMap(z => z.zellen.map(c => ({ ...c, y: z.y })))
+        .find(c => c.x < (ocr ? 126 : 100) && /^(CH-|FL-|LI-)?\d{4}\s+\p{L}/u.test(c.s) && !c.s.includes(f.ort));
       if (plz) {
         const ueber = []; let y = plz.y;
         zeilen.filter(z => z.p === 1 && z.y < plz.y).reverse().forEach(z => {
-          const c = z.zellen.find(c => Math.abs(c.x - plz.x) < 1.5);
-          if (c && y - z.y < 6 && ueber.length < 4) { ueber.unshift(c.s); y = z.y; }
+          const c = z.zellen.find(c => Math.abs(c.x - plz.x) < TS);
+          if (c && y - z.y < TZ && ueber.length < 4) { ueber.unshift(c.s); y = z.y; }
         });
         block = [...ueber, plz.s];
       }
@@ -2909,21 +2929,84 @@ function musterLaden() {
   toast(`${esc(lay.name)} heruntergeladen. Jetzt hier hochladen.`, 1);
 }
 
+/* Scans and photos: Tesseract reads the pixels (German model, about 5 MB
+   the first time, then cached by the browser). Its words come back with
+   their box in pixels; the page width is taken as 210 mm so the same rules
+   apply as to a text PDF. */
+const TESS = 'https://cdn.jsdelivr.net/npm/';
+let TESS_WORKER = null, TESS_FORTSCHRITT = null;
+async function tesseractBereit() {
+  if (!window.Tesseract) await new Promise((ok, nein) => {
+    const s = document.createElement('script'); s.src = TESS + 'tesseract.js@5.1.1/dist/tesseract.min.js';
+    s.onload = ok; s.onerror = () => nein(new Error('Die Texterkennung liess sich nicht laden. Ist das Internet da?'));
+    document.head.appendChild(s);
+  });
+  return TESS_WORKER ||= Tesseract.createWorker('deu', 1, {
+    workerPath: TESS + 'tesseract.js@5.1.1/dist/worker.min.js', corePath: TESS + 'tesseract.js-core@5.1.1',
+    langPath: TESS + '@tesseract.js-data/deu@1.0.0/4.0.0_best_int',
+    logger: m => TESS_FORTSCHRITT && TESS_FORTSCHRITT(m),
+  }).catch(err => { TESS_WORKER = null; throw err; });
+}
+async function ocrZeilen(bilder, melden) {
+  const w = await tesseractBereit(), zeilen = [];
+  for (let i = 0; i < bilder.length; i++) {
+    TESS_FORTSCHRITT = m => m.status === 'recognizing text' && melden(`Seite ${i + 1}: ${Math.round(m.progress * 100)} %`);
+    const { data } = await w.recognize(bilder[i]);
+    const mm = 210 / bilder[i].width;
+    (data.lines || []).forEach(l => {
+      const hoehe = (l.bbox.y1 - l.bbox.y0) * mm;
+      const zellen = l.words.filter(x => x.text.trim()).map(x => ({ s: x.text.trim(), x: x.bbox.x0 * mm, x2: x.bbox.x1 * mm }))
+        .reduce((L, t) => { const v = L[L.length - 1]; if (v && t.x - v.x2 < Math.max(1.6, hoehe * .9)) { v.s += ' ' + t.s; v.x2 = t.x2; } else L.push({ ...t }); return L; }, []);
+      if (zellen.length) zeilen.push({ p: i + 1, y: l.bbox.y1 * mm, zellen, text: zellen.map(c => c.s).join('  ') });
+    });
+  }
+  TESS_FORTSCHRITT = null;
+  return zeilen;
+}
+// a PDF page, or a photo, as a canvas about 2000 px wide — enough for 9 pt text
+async function seiteAlsBild(doc, n) {
+  const s = await doc.getPage(n), v1 = s.getViewport({ scale: 1 }), v = s.getViewport({ scale: 2000 / v1.width });
+  const c = document.createElement('canvas'); c.width = v.width; c.height = v.height;
+  await s.render({ canvasContext: c.getContext('2d'), viewport: v }).promise;
+  return c;
+}
+async function fotoAlsBild(file) {
+  const b = await createImageBitmap(file), k = Math.min(1, 2400 / b.width);
+  const c = document.createElement('canvas'); c.width = Math.round(b.width * k); c.height = Math.round(b.height * k);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(b, 0, 0, c.width, c.height);
+  return c;
+}
+
 // the uploaded file: read, recognise, then the form comes back filled in
 async function dnPdf(file) {
-  const zone = $('#drop-dn');
-  if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { toast('Bitte ein PDF. Fotos und Scans liest erst die Texterkennung im fertigen Produkt.', 2); return; }
-  if (zone) zone.innerHTML = '<b>PDF wird gelesen…</b>Kunde, Positionen und Beträge werden erkannt';
+  const zone = $('#drop-dn'), pdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name), bild = /^image\//.test(file.type) || /\.(jpe?g|png|heic|webp)$/i.test(file.name);
+  if (!pdf && !bild) { toast('Bitte ein PDF oder ein Foto der Rechnung.', 2); return; }
+  const melden = (titel, txt) => { const z = $('#drop-dn'); if (z) z.innerHTML = `<b>${titel}</b>${txt}`; };
+  melden(pdf ? 'PDF wird gelesen…' : 'Foto wird gelesen…', 'Kunde, Positionen und Beträge werden erkannt');
   try {
-    const buf = new Uint8Array(await file.arrayBuffer()), { doc, zeilen, seiten } = await pdfLesen(buf.slice());
-    if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) throw new Error('In diesem PDF ist kein Text, es ist wohl ein Scan. Den liest erst die Texterkennung im fertigen Produkt.');
-    const E = rechnungErkennen(zeilen);
-    E.datei = file.name; E.seiten = seiten;
+    let zeilen, vorschau, ocr = false, seiten = 1;
+    if (pdf) {
+      const buf = new Uint8Array(await file.arrayBuffer()), r = await pdfLesen(buf.slice());
+      zeilen = r.zeilen; seiten = r.seiten; vorschau = () => pdfVorschau(r.doc);
+      if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) {   // a scan: no text layer
+        ocr = true; melden('Gescanntes PDF — Texterkennung läuft…', 'Beim ersten Mal wird die Texterkennung geladen (ca. 5 MB).');
+        const bilder = []; for (let n = 1; n <= Math.min(seiten, 2); n++) bilder.push(await seiteAlsBild(r.doc, n));
+        zeilen = await ocrZeilen(bilder, t => melden('Texterkennung läuft…', t));
+      }
+    } else {
+      ocr = true; melden('Texterkennung läuft…', 'Beim ersten Mal wird die Texterkennung geladen (ca. 5 MB).');
+      let c; try { c = await fotoAlsBild(file); } catch { throw new Error('Dieses Bildformat kann der Browser nicht öffnen. Bitte als JPG oder PNG.'); }
+      zeilen = await ocrZeilen([c], t => melden('Texterkennung läuft…', t));
+      vorschau = () => { const box = $('#dn-vorschau'); if (box) { c.style.width = '100%'; box.replaceChildren(c); } };
+    }
+    if (zeilen.reduce((a, z) => a + z.text.length, 0) < 30) throw new Error('Auf diesem ' + (pdf ? 'PDF' : 'Bild') + ' liess sich kein Text erkennen. Ist es scharf und gerade?');
+    const E = rechnungErkennen(zeilen, ocr);
+    E.datei = file.name; E.seiten = seiten; E.ocr = ocr; E.art = pdf ? (ocr ? 'Scan' : 'PDF') : 'Foto';
     neueRechnung({ kunde: E.kunde || (E.neu ? '__pdf' : ''), pos: E.pos.length ? E.pos : [['', 1, '']], erk: E });
-    pdfVorschau(doc);
+    vorschau();
   } catch (err) {
     console.warn(err);
-    neueRechnung(); toast(esc(err.message || 'Das PDF liess sich nicht lesen.'), 3);
+    neueRechnung(); toast(esc(err.message || 'Die Datei liess sich nicht lesen.'), 3);
   }
 }
 async function pdfVorschau(doc) {
@@ -2939,10 +3022,12 @@ function erkanntBox(E) {
   const k = kunde(E.kunde), z = [];
   const Z = (ok, titel, text) => z.push(`<div class="erz"><span class="dot ${ok === true ? 's1' : ok === false ? 's3' : 's2'}"></span><span class="dim">${titel}</span><span>${text}</span></div>`);
   Z(!!(k || E.neu), 'Kunde', k ? esc(k.name) + ' <span class="dim">· bekannt</span>' : E.neu ? esc(E.neu.name) + ' <span class="dim">· neu, wird angelegt</span>' : 'nicht erkannt, bitte wählen');
-  Z(E.nr ? true : null, 'Nummer auf dem PDF', E.nr ? esc(E.nr) : 'keine gefunden');
+  Z(E.nr ? true : null, 'Nummer auf dem Beleg', E.nr ? esc(E.nr) : 'keine gefunden');
   Z(E.pos.length ? true : false, 'Positionen', E.pos.length ? E.pos.length + ' erkannt' + (E.preise === 'exkl' ? ` <span class="dim">· waren ohne MWST, auf inkl. ${E.satz} % umgerechnet</span>` : '') : 'keine erkannt, bitte eintragen');
-  if (E.total != null) Z(Math.abs(E.summe - E.total) < .06 ? true : null, 'Total auf dem PDF', chf(E.total) + (Math.abs(E.summe - E.total) < .06 ? ' <span class="dim">· stimmt mit den Positionen</span>' : ` <span class="dim">· Positionen ergeben ${chf(E.summe)}</span>`));
-  else Z(null, 'Total auf dem PDF', 'nicht gefunden');
+  if (E.total != null) Z(Math.abs(E.summe - E.total) < .06 ? true : null, 'Total auf dem Beleg', chf(E.total) + (Math.abs(E.summe - E.total) < .06 ? ' <span class="dim">· stimmt mit den Positionen</span>' : ` <span class="dim">· Positionen ergeben ${chf(E.summe)}</span>`));
+  else Z(null, 'Total auf dem Beleg', 'nicht gefunden');
+  if (E.korrigiert) Z(null, 'Ergänzt', `${E.korrigiert} Menge${E.korrigiert > 1 ? 'n' : ''} aus Preis und Betrag, die Ziffer war unleserlich`);
+  if (E.ocr) Z(null, 'Gelesen', 'per Texterkennung aus dem Bild. Zahlen bitte mit dem Beleg vergleichen');
   return `<div class="erk">${z.join('')}</div>
     ${E.doppelt ? `<div class="box s3" style="margin-top:10px"><b>Diese Rechnung gibt es schon:</b> ${esc(E.doppelt.id.slice(1))} · ${esc((kunde(E.doppelt.kunde) || {}).name || '')} · ${chf(debSummen(E.doppelt).brutto)}<br><button class="btn sm" data-go="kunden" data-p="${E.doppelt.id}" style="margin-top:6px">Zur Rechnung ${esc(E.doppelt.id.slice(1))}</button></div>` : ''}
     ${E.absenderOk ? '' : `<div class="box s2" style="margin-top:10px">Auf dem PDF steht nicht ${esc(DB.firma.marke)} als Absender. Eine Rechnung, die Sie bekommen haben, gehört unter <b>Rechnungen</b>.</div>`}`;
@@ -3365,16 +3450,16 @@ function dnLesen() {
 function dnSumme() { const el = $('#dn-summe'); if (el) el.textContent = chf(dnLesen().reduce((s, p) => s + p[1] * p[2], 0)); }
 function neueRechnung(stand = { kunde: '', pos: [['', 1, '']] }) {
   const A = dnArtikel(), E = stand.erk;
-  const formular = `<label class="fld" style="margin-top:10px"><span>Rechnung an</span><select id="dn-kunde"><option value="">— Kunde wählen —</option>${E && E.neu ? `<option value="__pdf"${stand.kunde === '__pdf' ? ' selected' : ''}>${esc(E.neu.name)} (neu, aus dem PDF)</option>` : ''}${DB.kunden.map(k => `<option value="${k.id}"${k.id === stand.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
+  const formular = `<label class="fld" style="margin-top:10px"><span>Rechnung an</span><select id="dn-kunde"><option value="">— Kunde wählen —</option>${E && E.neu ? `<option value="__pdf"${stand.kunde === '__pdf' ? ' selected' : ''}>${esc(E.neu.name)} (neu, vom Beleg)</option>` : ''}${DB.kunden.map(k => `<option value="${k.id}"${k.id === stand.kunde ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="neu">+ Neuer Kunde…</option></select></label>
     <div class="dnz dnk dim"><span>Leistung / Artikel</span><span>Menge</span><span>Preis CHF</span><span></span></div>
     <div id="dn-pos">${stand.pos.map(dnZeile).join('')}</div>
     <datalist id="dn-artikel">${[...A.keys()].map(n => `<option value="${esc(n)}">`).join('')}</datalist>
     <div class="row" style="justify-content:space-between;margin-top:6px"><button class="btn sm" data-dnzeile>+ Zeile</button><span>Total <b class="num" id="dn-summe"></b></span></div>`;
   const acts = `<div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Als Entwurf anlegen</button></div>`;
-  modal(E ? `<h3>Neue Rechnung aus PDF</h3><p class="dim" style="font-size:13px">Aus ${esc(E.datei)} gelesen. Bitte prüfen, was erkannt wurde. Die Rechnung wird als Entwurf angelegt und bekommt die nächste Nummer.</p>
+  modal(E ? `<h3>Neue Rechnung aus ${E.art}</h3><p class="dim" style="font-size:13px">Aus ${esc(E.datei)} gelesen. Bitte prüfen, was erkannt wurde. Die Rechnung wird als Entwurf angelegt und bekommt die nächste Nummer.</p>
       <div class="dnpdf"><div class="dnv" id="dn-vorschau"><div class="leer">Vorschau…</div></div><div>${erkanntBox(E)}${formular}</div></div>${acts}`
     : `<h3>Neue Rechnung</h3><p class="dim" style="font-size:13px">Die Rechnung wird als Entwurf angelegt und vor dem Versand freigegeben.</p>
-      <label class="drop" id="drop-dn" style="margin-top:12px;padding:18px"><b>PDF einer Rechnung hochladen</b>Kunde, Positionen und Beträge werden erkannt. Die Datei verlässt diesen Browser nicht.<input type="file" id="dn-pdf" accept=".pdf,application/pdf" hidden></label>
+      <label class="drop" id="drop-dn" style="margin-top:12px;padding:18px"><b>Rechnung hochladen: PDF, Scan oder Foto</b>Kunde, Positionen und Beträge werden erkannt. Die Datei verlässt diesen Browser nicht.<input type="file" id="dn-pdf" accept=".pdf,application/pdf,image/*" hidden></label>
       <div class="row" style="margin-top:6px;font-size:12px"><button class="btn link sm" data-dnmuster style="padding:0">Beispiel-PDF herunterladen</button><span class="dim">zum Ausprobieren</span></div>
       <div class="oder"><span>oder von Hand, Preise inkl. MWST</span></div>${formular}${acts}`,
     () => {
