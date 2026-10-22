@@ -1352,7 +1352,8 @@ function buchungen() {
     const s = debSummen(d), k = kunde(d.kunde);
     b(d.datum, '1100', '3400', s.netto, 'Rechnung ' + d.id + ' ' + (k ? k.name : ''), d.id);
     b(d.datum, '1100', '2200', s.mwst, 'MWST 8.1 % Rechnung ' + d.id, d.id, { art: 'umsatz', satz: d.satz, basis: s.netto });
-    (d.zahlungen || []).forEach(z => b(z.datum, z.weg === 'Bar' ? '1000' : '1020', '1100', z.betrag, 'Zahlung ' + d.id + (z.notiz ? ' · ' + z.notiz : ''), d.id));
+    // cash goes into the till; Twint is settled later with the card takings (1091); the rest came via the bank
+    (d.zahlungen || []).forEach(z => b(z.datum, z.weg === 'Bar' ? '1000' : z.weg === 'Twint' ? '1091' : '1020', '1100', z.betrag, 'Zahlung ' + d.id + (z.notiz ? ' · ' + z.notiz : ''), d.id));
   });
   DB.bank.forEach(x => {
     if (!x.zu) return;
@@ -1510,10 +1511,14 @@ function kasseStand() {
   const bar = r2(DB.kasseTage.reduce((s, t) => s + t.bar, 0));
   const summe = f => r2(DB.kasse.filter(f).reduce((s, e) => s + e.betrag, 0));
   const ein = summe(e => e.art === 'bancomat' || e.art === 'ueberweisung'), aus = summe(e => e.art === 'auszahlung'), diff = summe(e => e.art === 'zaehlung');
-  const bestand = r2(KASSE_ANFANG + bar - ein - aus + diff);
+  const kunden = r2(barVonKunden().reduce((s, z) => s + z.betrag, 0));
+  const bestand = r2(KASSE_ANFANG + bar + kunden - ein - aus + diff);
   // the float stays in the till; everything above it belongs on the bank
-  return { bar, ein, aus, diff, bestand, einzahlen: Math.max(0, r2(bestand - KASSE_ANFANG)) };
+  return { bar, kunden, ein, aus, diff, bestand, einzahlen: Math.max(0, r2(bestand - KASSE_ANFANG)) };
 }
+// a customer who pays an invoice in cash: the money is in the till (booked on 1000)
+const barVonKunden = () => DB.debitoren.flatMap(d => (d.zahlungen || []).map((z, i) => ({ z, i })).filter(x => x.z.weg === 'Bar')
+  .map(({ z, i }) => ({ datum: z.datum, art: 'kunde', betrag: z.betrag, id: 'Z-' + d.id + '-' + i, deb: d.id, notiz: 'Rechnung ' + d.id.slice(1) + ' · ' + ((kunde(d.kunde) || {}).name || '') })));
 /* The cash book: every day's takings in, every deposit and expense out, and
    after each line what should be in the till. Within a day, money taken out
    in the morning comes first, the evening's takings next, a count last. */
@@ -1521,11 +1526,12 @@ function kassenbuch() {
   const Z = [
     ...DB.kasseTage.map(t => ({ datum: t.datum, art: 'tag', betrag: t.bar, id: 'T' + t.datum })),
     ...DB.kasse.map(e => ({ ...e })),
+    ...barVonKunden(),
   ];
-  const rang = { tag: 1, zaehlung: 2 };
+  const rang = { tag: 1, kunde: 1, zaehlung: 2 };
   Z.sort((a, b) => a.datum !== b.datum ? (a.datum < b.datum ? -1 : 1) : (rang[a.art] || 0) - (rang[b.art] || 0));
   let s = KASSE_ANFANG;
-  Z.forEach(z => { z.wert = z.art === 'tag' ? z.betrag : z.art === 'zaehlung' ? z.betrag : -z.betrag; s = r2(s + z.wert); z.saldo = s; });
+  Z.forEach(z => { z.wert = z.art === 'tag' || z.art === 'kunde' || z.art === 'zaehlung' ? z.betrag : -z.betrag; s = r2(s + z.wert); z.saldo = s; });
   return Z;
 }
 
@@ -2473,7 +2479,7 @@ VIEWS.kasse = () => {
   const auslagen = DB.kasse.filter(e => e.art === 'auszahlung');
   const gezaehlt = DB.kasse.filter(e => e.art === 'zaehlung').sort((a, b) => a.datum < b.datum ? 1 : -1)[0];
   const minus = Z.find(z => z.saldo < 0);
-  const ART = { bancomat: 'Einzahlung auf die Bank', ueberweisung: 'Einzahlung auf die Bank', auszahlung: 'Barauslage', zaehlung: 'Kasse gezählt' };
+  const ART = { bancomat: 'Einzahlung auf die Bank', ueberweisung: 'Einzahlung auf die Bank', auszahlung: 'Barauslage', zaehlung: 'Kasse gezählt', kunde: 'Zahlung Kunde, bar' };
   const tag = d => ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(d + 'T12:00').getDay()] + ' ' + dt(d);
   const summary = `<section class="secondary-summary"><p class="section-label">Kassenstand</p><div class="grid g4 rkopf">
     <button class="kpi kl ${k.einzahlen > 1000 ? 's2' : ''}" data-kseinzahlen><div class="k">Jetzt einzuzahlen</div><div class="v num">${chf(k.einzahlen, 0)}</div><div class="s">Bargeld über dem Wechselgeld</div><div class="go">Einzahlung erfassen →</div></button>
@@ -2519,6 +2525,7 @@ VIEWS.kasse = () => {
       else {
         was = ART[z.art] + (z.art === 'auszahlung' ? ' · ' + esc(kname(z.konto || '6100')) : ''); sub = esc(z.notiz || '');
         if (z.art === 'auszahlung') stand = z.beleg ? `<span class="pill s1" title="${esc(z.beleg)}">Beleg ✓</span>` : `${pill('s2', 'Beleg fehlt')} <button class="btn sm" data-kbeleg="${z.id}">Beleg hochladen</button>`;
+        else if (z.art === 'kunde') stand = `<button class="pill s1 pl" data-go="kunden" data-p="${esc(z.deb)}">Rechnung ${esc(z.deb.slice(1))}</button>`;
         else if (z.art === 'zaehlung') stand = z.betrag ? `<span class="pill s2">Differenz</span>` : `<span class="pill s1">stimmt</span>`;
         else { const b = DB.bank.find(x => x.zu && x.zu.typ === 'kasse' && x.zu.ref === z.id); stand = b ? `<button class="pill s1 pl" data-go="bank">✓ ${b.id}</button>` : `<button class="pill g pl" data-go="bank">wartet auf Bank</button>`; }
         if (z.eigen) stand += ` <button class="btn sm link" data-kasseweg="${z.id}">entfernen</button>`;
