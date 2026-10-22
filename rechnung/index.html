@@ -529,6 +529,8 @@ header h1{font-size:28px;font-weight:650;line-height:1.2;letter-spacing:-.025em}
 [data-nav=menue] #rail .menu{background:var(--wash);color:var(--acci);border-color:var(--line);min-height:44px}
 [data-nav=oben] #rail .menu,[data-nav=schmal] #rail .menu{display:inline-flex;align-items:center;justify-content:center;flex:none;gap:6px;min-height:44px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--wash);color:var(--acci);cursor:pointer}
 [data-nav=oben] #rail .menu svg{width:17px;height:17px}
+/* the Kopfleiste already shows every section from 761 px up; the menu is only the phone's way in */
+@media (min-width:761px){[data-nav=oben] #rail .menu{display:none}}
 [data-nav=schmal] #rail .menu svg{display:none}
 [data-nav=oben] #rail nav a .lbl{white-space:nowrap}
 [data-nav=schmal] #rail .grp,[data-nav=oben] #rail .grp{background:var(--line)}
