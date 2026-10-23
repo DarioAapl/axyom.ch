@@ -276,7 +276,9 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 .sum{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
 .sum.big{font-size:15px;font-weight:700;border-top:1px solid var(--line);margin-top:4px;padding-top:8px}
 .log{font-size:12.5px}
-.log div{padding:7px 0;border-bottom:1px solid var(--soft);display:grid;grid-template-columns:118px 1fr;gap:8px}
+.log div{padding:7px 0;border-bottom:1px solid var(--soft);display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px}
+/* typed text (a note, an address) can be one long word: it wraps instead of widening the page */
+.log span,.box{overflow-wrap:anywhere}
 .log div:last-child{border:0}
 
 /* charts */
@@ -506,7 +508,7 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
   .paper{padding:20px 16px;font-size:11.5px}
   .vatrow{position:relative;grid-template-columns:repeat(2,minmax(0,1fr));padding:8px 44px 8px 0;border-top:1px solid var(--soft)}.vatrow .derived{grid-column:auto}.vatrow .x{position:absolute;right:0;bottom:8px}
   .stufen .st{font-size:10.5px;padding:6px 5px}
-  .log div{grid-template-columns:1fr}
+  .log div{grid-template-columns:minmax(0,1fr)}
 }
 @media print{#rail,header .tools,#toast,.noprint{display:none!important}body{background:#fff}#view{padding:0}}
 /* Shared accounting workspace. Keep the optional navigation modes intact. */
@@ -985,10 +987,22 @@ const tageBis = iso => Math.round((new Date(iso + 'T12:00:00') - new Date(HEUTE 
 const monatName = ym => MONATE[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
 const monatKurz = ym => MON3[+ym.slice(5, 7) - 1];
 const quartal = iso => Math.ceil(+iso.slice(5, 7) / 3);
-// «38,5» on a Swiss keyboard and «38.5» elsewhere mean the same thing
+/* «38,5» on a Swiss keyboard and «38.5» elsewhere mean the same thing, and
+   so do «1'234.50», «1’234.50» and «1.234,50»: when both a point and a comma
+   appear, the last one is the decimal mark. Anything else in the field
+   («12abc», «1e21», «zwei») is not a number, and neither is an amount of a
+   billion or more: nothing in a small firm's books is that large, so it is a
+   typing slip. Then the fallback «alt» is returned. */
+const ZAHL_MAX = 1e9;
 function zahl(v, alt = 0) {
-  const n = parseFloat(String(v).replace(/[’' ]/g, '').replace(',', '.'));
-  return Number.isFinite(n) ? n : alt;
+  let t = String(v ?? '').replace(/[’'\s\u00a0\u202f]/g, '').replace(/^\u2212/, '-');
+  const p = t.lastIndexOf('.'), k = t.lastIndexOf(',');
+  if (p >= 0 && k >= 0) t = p > k ? t.replace(/,/g, '') : t.replace(/\./g, '').replace(',', '.');
+  else if (k >= 0) t = (t.match(/,/g).length > 1 ? t.replace(/,/g, '') : t.replace(',', '.'));
+  else if ((t.match(/\./g) || []).length > 1) t = t.replace(/\./g, '');
+  if (!/^[-+]?(\d+\.?\d*|\.\d+)$/.test(t)) return alt;
+  const n = parseFloat(t);
+  return Number.isFinite(n) && Math.abs(n) < ZAHL_MAX ? n : alt;
 }
 const konto = nr => KONTEN.find(k => k.nr === nr) || { nr, name: '?' };
 const kname = nr => nr + ' ' + konto(nr).name;
@@ -2192,7 +2206,7 @@ VIEWS.rechnungen = () => {
 };
 VIEWS.rechnungen_nach = () => {
   if (PARAM && innerWidth <= 900) { const p = document.querySelector('.split>.decision'); if (p) setTimeout(() => p.scrollIntoView({ block: 'start' }), 0); }
-  const s = $('#rsuche'); if (s) s.addEventListener('input', () => { RSUCHE = s.value; ZEIGE = ''; PARAM = ''; history.replaceState(null, '', '#rechnungen'); const p = s.selectionStart; render(); const n = $('#rsuche'); n.focus(); n.setSelectionRange(p, p); });
+  const s = $('#rsuche'); if (s) s.addEventListener('input', () => { RSUCHE = s.value; ZEIGE = ''; PARAM = ''; if (location.hash !== '#rechnungen') history.replaceState(null, '', '#rechnungen');   /* once, not per key: Safari refuses more than 100 in 10 s */ const p = s.selectionStart; render(); const n = $('#rsuche'); n.focus(); n.setSelectionRange(p, p); });
   vatLive();
 };
 
@@ -2544,7 +2558,7 @@ VIEWS.kasse = () => {
 VIEWS.kasse_nach = () => {
   const g = $('#kz-gezaehlt'); if (!g) return;
   g.addEventListener('input', () => {
-    const d = g.value.trim() ? r2(zahl(g.value) - kasseStand().bestand) : null;
+    const n = zahl(g.value, NaN), d = g.value.trim() && n >= 0 ? r2(n - kasseStand().bestand) : null;
     $('#kz-diff').style.display = d === null ? 'none' : '';
     $('#kz-diff b').textContent = d === null ? '' : d ? chf(d) : '0.00 ✓';
     $('#kz-diff b').style.color = d ? 'var(--warn)' : 'var(--ok)';
@@ -2739,7 +2753,7 @@ function kundenListe() {
 }
 VIEWS.kunden_nach = () => {
   if (PARAM && innerWidth <= 900) { const p = document.querySelector('.split>.decision'); if (p) setTimeout(() => p.scrollIntoView({ block: 'start' }), 0); }
-  [['#dsuche', v => DSUCHE = v], ['#dlsuche', v => { DLSUCHE = v; DZEIGE = ''; PARAM = ''; history.replaceState(null, '', '#kunden'); }]].forEach(([sel, setze]) => {
+  [['#dsuche', v => DSUCHE = v], ['#dlsuche', v => { DLSUCHE = v; DZEIGE = ''; PARAM = ''; if (location.hash !== '#kunden') history.replaceState(null, '', '#kunden'); }]].forEach(([sel, setze]) => {
     const s = $(sel); if (s) s.addEventListener('input', () => { setze(s.value); const p = s.selectionStart; render(); const n = $(sel); n.focus(); n.setSelectionRange(p, p); });
   });
 };
@@ -3294,16 +3308,35 @@ function bildVorbereiten(c) {
   const o = document.createElement('canvas'); o.width = W; o.height = H; o.getContext('2d').putImageData(d, 0, 0);
   return o;
 }
+// the same picture turned by 90, 180 or 270 degrees
+function gedreht(c, grad) {
+  const quer = grad % 180 !== 0, o = document.createElement('canvas');
+  o.width = quer ? c.height : c.width; o.height = quer ? c.width : c.height;
+  const g = o.getContext('2d'); g.translate(o.width / 2, o.height / 2); g.rotate(grad * Math.PI / 180); g.drawImage(c, -c.width / 2, -c.height / 2);
+  return o;
+}
+/* A slightly tilted photo is straightened by Tesseract itself (rotateAuto);
+   without it the table rows run into each other and lines get lost. A photo
+   taken sideways or upside down reads as nonsense with low confidence: then
+   the other three ways round are tried and the clearest reading is kept
+   (the turned picture replaces the original, for the second pass too). */
 async function ocrZeilen(bilder, melden, vorbereitet) {
   const w = await tesseractBereit(), zeilen = [];
   for (let i = 0; i < bilder.length; i++) {
     TESS_FORTSCHRITT = m => m.status === 'recognizing text' && melden(`Seite ${i + 1}: ${Math.round(m.progress * 100)} %`);
-    const { data } = await w.recognize(vorbereitet ? bildVorbereiten(bilder[i]) : bilder[i]);
+    const lesen = c => w.recognize(vorbereitet ? bildVorbereiten(c) : c, { rotateAuto: true }).then(r => r.data);
+    const roh = bilder[i]; let data = await lesen(roh);
+    if (!vorbereitet && data.confidence < 60) for (const grad of [180, 90, 270]) {
+      melden('Das Bild steht quer oder auf dem Kopf — wird gedreht…');
+      const c = gedreht(roh, grad), d = await lesen(c);
+      if (d.confidence > data.confidence) { data = d; bilder[i] = c; }
+      if (data.confidence >= 70) break;
+    }
     const mm = 210 / bilder[i].width;
     (data.lines || []).forEach(l => {
       const hoehe = (l.bbox.y1 - l.bbox.y0) * mm;
-      const zellen = l.words.filter(x => x.text.trim()).map(x => ({ s: x.text.trim(), x: x.bbox.x0 * mm, x2: x.bbox.x1 * mm }))
-        .reduce((L, t) => { const v = L[L.length - 1]; if (v && t.x - v.x2 < Math.max(1.6, hoehe * .9)) { v.s += ' ' + t.s; v.x2 = t.x2; } else L.push({ ...t }); return L; }, []);
+      const zellen = l.words.filter(x => x.text.trim()).map(x => ({ s: x.text.trim(), x: x.bbox.x0 * mm, x2: x.bbox.x1 * mm, k: x.confidence }))
+        .reduce((L, t) => { const v = L[L.length - 1]; if (v && t.x - v.x2 < Math.max(1.6, hoehe * .9)) { v.s += ' ' + t.s; v.x2 = t.x2; v.k = Math.min(v.k, t.k); } else L.push({ ...t }); return L; }, []);
       if (zellen.length) zeilen.push({ p: i + 1, y: l.bbox.y1 * mm, zellen, text: zellen.map(c => c.s).join('  ') });
     });
   }
@@ -3318,7 +3351,8 @@ async function seiteAlsBild(doc, n) {
   return c;
 }
 async function fotoAlsBild(file) {
-  const b = await createImageBitmap(file), k = Math.min(1, 2400 / b.width);
+  // small photos are enlarged: Tesseract misreads letters under ~20 px high
+  const b = await createImageBitmap(file), k = Math.min(2400 / b.width, Math.max(1, 2000 / b.width));
   const c = document.createElement('canvas'); c.width = Math.round(b.width * k); c.height = Math.round(b.height * k);
   const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(b, 0, 0, c.width, c.height);
   return c;
@@ -3437,6 +3471,13 @@ function kontoVorschlag(E) {
   return { konto: '6500', sicher: 'tief', grund: 'Neuer Lieferant · nichts Eindeutiges auf dem Beleg, bitte Konto wählen' };
 }
 
+// how alike two strings are, 0..1 (1 − edit distance / longer length)
+function aehnlich(a, b) {
+  if (!a.length || !b.length) return a === b ? 1 : 0;
+  let v = [...Array(b.length + 1).keys()];
+  for (let i = 1; i <= a.length; i++) { const n = [i]; for (let j = 1; j <= b.length; j++) n[j] = Math.min(v[j] + 1, n[j - 1] + 1, v[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); v = n; }
+  return 1 - v[b.length] / Math.max(a.length, b.length);
+}
 // the sender, the payment details
 function lieferantErkennen(zeilen, E, ocr) {
   const TS = ocr ? 4 : 1.5, TZ = ocr ? 10 : 6, f = DB.firma, klein = E.text.toLowerCase();
@@ -3462,6 +3503,23 @@ function lieferantErkennen(zeilen, E, ocr) {
     const c = zellen.find(c => /\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(c.s) && !istFirma(c.s) && c.s.length < 60);
     name = c ? c.s.replace(/^.*?,\s*(?=[^,]*\b(AG|GmbH|SA|Sàrl|KG)\b)/, '').replace(/,.*$/, '') : '';
     strasse = ''; ortz = '';
+  }
+  /* a photo: the QR block's small print sits next to the code's dots and is
+     often misread, while the same name stands clearly in the letterhead.
+     Of the spellings on the page that are nearly the same name, the one the
+     text recognition was surest of wins (k = its least certain word). When
+     the QR name itself is barely legible (k < 50), the letterhead's company
+     name is taken, if it was read clearly. */
+  if (ocr && name) {
+    const kern = s => s.toLowerCase().replace(/[^\p{L}\d]/gu, ''), a = kern(name);
+    // nearly the same spelling, or the QR name cut short («Talnet» for «Talnet Kommunikation AG»)
+    const kurz = a.length >= 4 && !/\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(name);
+    const gleich = s => { const b = kern(s); return Math.abs(a.length - b.length) <= 4 && aehnlich(a, b) >= .75 || kurz && b.startsWith(a); };
+    const qrZelle = zellen.find(c => c.s === name), sicher = c => c.k ?? 0;
+    const unleserlich = !qrZelle || sicher(qrZelle) < 50, kopf = c => c.p === 1 && c.y < 45 && sicher(c) >= 80;
+    const besser = zellen.filter(c => c !== qrZelle && c.s.length < 60 && /\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(c.s) && !istFirma(c.s) && (gleich(c.s) || unleserlich && kopf(c)))
+      .sort((x, y) => sicher(y) - sicher(x))[0];
+    if (besser && sicher(besser) > (qrZelle ? sicher(qrZelle) : 0)) name = besser.s;
   }
   if (name && !istFirma(name)) {
     const m = ortz.match(/^(?:CH-|LI-|FL-)?(\d{4,5})\s+(.+)$/);
@@ -3975,7 +4033,7 @@ document.addEventListener('click', e => {
   }
   if ('kassezaehlen' in d) {
     const v = $('#kz-gezaehlt').value.trim(), soll = kasseStand().bestand;
-    if (!v || !(zahl(v) >= 0)) { $('#kz-gezaehlt').closest('.fld').classList.add('err'); toast('Bitte den gezählten Betrag eintragen.', 2); return; }
+    if (!v || !(zahl(v, NaN) >= 0)) { $('#kz-gezaehlt').closest('.fld').classList.add('err'); toast('Bitte den gezählten Betrag eintragen.', 2); return; }
     const diff = r2(zahl(v) - soll), grund = $('#kz-grund').value.trim();
     if (diff && !grund) { $('#kz-grund').closest('.fld').classList.add('err'); toast('Bei einer Differenz braucht es einen Grund.', 2); return; }
     DB.kasse.push({ id: 'E-' + Date.now().toString(36).slice(-4).toUpperCase(), datum: HEUTE, art: 'zaehlung', betrag: diff, notiz: diff ? grund : '', eigen: true });
@@ -4049,8 +4107,10 @@ document.addEventListener('click', e => {
       <label class="fld" style="margin-top:8px"><span>Was war falsch? (Pflicht)</span><input id="m-grund"></label>
       <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Korrigieren & neu senden</button></div>`,
       () => { const g = $('#m-grund').value.trim(); if (!g) { $('#m-grund').closest('.fld').classList.add('err'); return; }
-        const alt = debSummen(x).brutto;
-        document.querySelectorAll('[data-ki]').forEach(inp => { const p = x.pos[+inp.dataset.ki], f = +inp.dataset.kf; p[f] = f ? zahl(inp.value, p[f]) : inp.value; });
+        const alt = debSummen(x).brutto, P = x.pos.map(p => p.slice());
+        document.querySelectorAll('[data-ki]').forEach(inp => { const p = P[+inp.dataset.ki], f = +inp.dataset.kf; p[f] = f ? zahl(inp.value, NaN) : inp.value.trim(); });
+        const fehlt = posFehler(P); if (fehlt) { toast(fehlt, 2); return; }
+        x.pos = P;
         prot(x, `Korrigiert (${g}): ${chf(alt)} → ${chf(debSummen(x).brutto)}, neu versendet`); modalZu(); neu(); toast('Korrigiert und neu versendet.', 1); });
     return;
   }
@@ -4070,7 +4130,10 @@ document.addEventListener('click', e => {
   if (d.exq) { EXPORT_Q = d.exq; render(); return; }
   if (d.export) { exportieren(d.export); return; }
   if ('beispielcamt' in d) { const r = camtLesen(BEISPIEL_CAMT); neu(); toast(r.neu ? `${r.neu} Buchungen eingelesen${r.doppelt ? ', ' + r.doppelt + ' doppelte übersprungen' : ''} — jetzt im Bankabgleich.` : 'Schon eingelesen — nichts Neues.', r.neu ? 1 : 2); return; }
-  if ('firmaspeichern' in d) { document.querySelectorAll('[data-firma]').forEach(i => DB.firma[i.dataset.firma] = i.value.trim()); logge('Firmendaten geändert'); neu(); toast('Gespeichert.', 1); return; }
+  if ('firmaspeichern' in d) {
+    const n = document.querySelector('[data-firma="name"]');
+    if (n && !n.value.trim()) { n.closest('.fld')?.classList.add('err'); toast('Der Firmenname darf nicht leer sein.', 2); return; }
+    document.querySelectorAll('[data-firma]').forEach(i => DB.firma[i.dataset.firma] = i.value.trim()); logge('Firmendaten geändert'); neu(); toast('Gespeichert.', 1); return; }
   if ('textespeichern' in d) { document.querySelectorAll('[data-text]').forEach(i => DB.texte[i.dataset.text] = i.value.trim()); logge('Textvorlagen geändert'); neu(); toast('Gespeichert.', 1); return; }
 });
 
@@ -4082,8 +4145,10 @@ function kundeNeu(fertig) {
     <label class="fld"><span>Anrede</span><select id="n-anrede"><option value="sie">Sie</option><option value="du">Du</option></select></label><label class="fld"><span>Zahlungsziel (Tage)</span><input id="n-ziel" value="30" inputmode="numeric"></label></div>
     <div class="acts"><button class="btn" data-zu>Abbrechen</button><button class="btn dark" data-ok>Anlegen</button></div>`,
     () => { const name = $('#n-name').value.trim(); if (!name) { $('#n-name').closest('.fld').classList.add('err'); return; }
+      const ziel = zahl($('#n-ziel').value, NaN);
+      if (!(Number.isInteger(ziel) && ziel >= 0 && ziel <= 365)) { $('#n-ziel').closest('.fld').classList.add('err'); toast('Zahlungsziel: ganze Tage, 0 bis 365.', 2); return; }
       const id = 'C' + (Math.max(...DB.kunden.map(k => +k.id.slice(1))) + 1);
-      DB.kunden.push({ id, name, kontakt: $('#n-kontakt').value.trim(), strasse: $('#n-strasse').value.trim(), ort: $('#n-ort').value.trim(), anrede: $('#n-anrede').value, mail: $('#n-mail').value.trim(), ziel: zahl($('#n-ziel').value, 30) });
+      DB.kunden.push({ id, name, kontakt: $('#n-kontakt').value.trim(), strasse: $('#n-strasse').value.trim(), ort: $('#n-ort').value.trim(), anrede: $('#n-anrede').value, mail: $('#n-mail').value.trim(), ziel });
       logge('Kunde angelegt: ' + name); modalZu(); fertig(id); toast('Kunde angelegt.', 1); });
 }
 
@@ -4095,6 +4160,18 @@ function dnArtikel() {
   const m = new Map();
   [...BEISPIEL_RAPPORTE, ...RAPPORTE, ...DB.rapporte, ...DB.debitoren].forEach(x => x.pos.forEach(p => { if (!m.has(p[0])) m.set(p[0], p[2]); }));
   return m;
+}
+/* The rules for the lines of a customer invoice, new or corrected: text,
+   a quantity above zero, a price (a negative one is a discount), and an
+   invoice that as a whole is owed. Returns what is wrong, or ''. */
+function posFehler(P) {
+  if (!P.length) return 'Mindestens eine Position.';
+  const schlecht = P.findIndex(p => !String(p[0]).trim() || !(p[1] > 0) || !p[2]);
+  if (schlecht >= 0) return `Zeile ${schlecht + 1}: Text, Menge (über null) und Preis ausfüllen.`;
+  const total = P.reduce((a, p) => a + p[1] * p[2], 0);
+  if (total <= 0) return 'Das Total muss über null liegen. Eine Gutschrift ist keine Rechnung.';
+  if (total >= ZAHL_MAX) return 'Das Total ist unrealistisch hoch. Menge und Preis prüfen.';
+  return '';
 }
 function dnLesen() {
   return [...document.querySelectorAll('#dn-pos .dnz')].map(z => { const [a, b, c] = z.querySelectorAll('input'); return [a.value.trim(), zahl(b.value, 0), zahl(c.value, 0)]; });
@@ -4118,10 +4195,7 @@ function neueRechnung(stand = { kunde: '', pos: [['', 1, '']] }) {
       const sel = $('#dn-kunde').value, P = dnLesen().filter(p => p[0] || p[2]);
       if (!sel) { $('#dn-kunde').closest('.fld').classList.add('err'); toast('An wen geht die Rechnung?', 2); return; }
       if (E && E.doppelt) { toast('Diese Rechnung gibt es schon: ' + esc(E.doppelt.id.slice(1)) + '.', 2); return; }
-      // a negative price is a discount; the invoice as a whole must still be owed
-      const schlecht = P.findIndex(p => !p[0] || p[1] <= 0 || !p[2]);
-      if (!P.length || schlecht >= 0) { toast(P.length ? `Zeile ${schlecht + 1}: Text, Menge und Preis ausfüllen.` : 'Mindestens eine Position.', 2); return; }
-      if (P.reduce((a, p) => a + p[1] * p[2], 0) <= 0) { toast('Das Total muss über null liegen. Eine Gutschrift ist keine Rechnung.', 2); return; }
+      const fehlt = posFehler(P); if (fehlt) { toast(fehlt, 2); return; }
       let kid = sel;
       if (sel === '__pdf') {
         kid = 'C' + (Math.max(...DB.kunden.map(k => +k.id.slice(1))) + 1);
