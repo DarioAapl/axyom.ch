@@ -3506,10 +3506,11 @@ function lieferantErkennen(zeilen, E, ocr) {
   }
   /* a photo: the QR block's small print sits next to the code's dots and is
      often misread, while the same name stands clearly in the letterhead.
-     Of the spellings on the page that are nearly the same name, the one the
-     text recognition was surest of wins (k = its least certain word). When
-     the QR name itself is barely legible (k < 50), the letterhead's company
-     name is taken, if it was read clearly. */
+     Of the spellings on the page that are nearly the same name, the
+     letterhead's wins if it was read clearly (k ≥ 80, k = its least certain
+     word), otherwise the one read with most certainty. When the QR name is
+     barely legible (k < 50), any clearly read company name in the
+     letterhead is taken. */
   if (ocr && name) {
     const kern = s => s.toLowerCase().replace(/[^\p{L}\d]/gu, ''), a = kern(name);
     // nearly the same spelling, or the QR name cut short («Talnet» for «Talnet Kommunikation AG»)
@@ -3518,8 +3519,9 @@ function lieferantErkennen(zeilen, E, ocr) {
     const qrZelle = zellen.find(c => c.s === name), sicher = c => c.k ?? 0;
     const unleserlich = !qrZelle || sicher(qrZelle) < 50, kopf = c => c.p === 1 && c.y < 45 && sicher(c) >= 80;
     const besser = zellen.filter(c => c !== qrZelle && c.s.length < 60 && /\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(c.s) && !istFirma(c.s) && (gleich(c.s) || unleserlich && kopf(c)))
-      .sort((x, y) => sicher(y) - sicher(x))[0];
-    if (besser && sicher(besser) > (qrZelle ? sicher(qrZelle) : 0)) name = besser.s;
+      .sort((x, y) => kopf(y) - kopf(x) || sicher(y) - sicher(x))[0];
+    // the letterhead's large print, read clearly, beats the QR block's small print
+    if (besser && (kopf(besser) || sicher(besser) > (qrZelle ? sicher(qrZelle) : 0))) name = besser.s;
   }
   if (name && !istFirma(name)) {
     const m = ortz.match(/^(?:CH-|LI-|FL-)?(\d{4,5})\s+(.+)$/);
