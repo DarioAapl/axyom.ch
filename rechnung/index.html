@@ -3321,10 +3321,20 @@ function gedreht(c, grad) {
    the other three ways round are tried and the clearest reading is kept
    (the turned picture replaces the original, for the second pass too). */
 async function ocrZeilen(bilder, melden, vorbereitet) {
-  const w = await tesseractBereit(), zeilen = [];
+  let w = await tesseractBereit(); const zeilen = [];
+  /* After many pictures the recognition's memory can run out (seen in
+     Safari's engine: «Out of bounds memory access»), and the worker is dead
+     from then on. Then it is replaced by a fresh one and the picture read again. */
+  const neuerVersuch = async (c, fehler) => {
+    console.warn('Texterkennung neu gestartet:', fehler && fehler.message);
+    const alt = TESS_WORKER; TESS_WORKER = null; try { await (await alt).terminate(); } catch (e) { }
+    w = await tesseractBereit();
+    return (await w.recognize(c, { rotateAuto: true })).data;
+  };
   for (let i = 0; i < bilder.length; i++) {
     TESS_FORTSCHRITT = m => m.status === 'recognizing text' && melden(`Seite ${i + 1}: ${Math.round(m.progress * 100)} %`);
-    const lesen = c => w.recognize(vorbereitet ? bildVorbereiten(c) : c, { rotateAuto: true }).then(r => r.data);
+    const lesen = async c => { const bild = vorbereitet ? bildVorbereiten(c) : c;
+      try { return (await w.recognize(bild, { rotateAuto: true })).data; } catch (e) { return neuerVersuch(bild, e); } };
     const roh = bilder[i]; let data = await lesen(roh);
     if (!vorbereitet && data.confidence < 60) for (const grad of [180, 90, 270]) {
       melden('Das Bild steht quer oder auf dem Kopf — wird gedreht…');
@@ -3487,6 +3497,10 @@ function lieferantErkennen(zeilen, E, ocr) {
   const za = zellen.filter(c => /^konto\s*\/\s*zahlbar an/i.test(c.s)).sort((a, b) => b.x - a.x)[0];
   let qr = za ? spalteUnter(zeilen, za, TS, TZ) : [];
   if (qr.length && IBAN.test(qr[0].replace(/\s/g, ' '))) { E.iban = qr[0].match(IBAN)[0]; qr = qr.slice(1); }
+  // the address ends with its postcode and town: a photo can read on into
+  // the next field («Referenz», even misread as «Haferenz»)
+  const plzOrt = qr.findLastIndex(s => /^(?:CH-|LI-|FL-)?\d{4,5}\s+\p{L}/u.test(s));
+  if (plzOrt > 0) qr = qr.slice(0, plzOrt + 1);
   const rf = zellen.filter(c => /^referenz$/i.test(c.s)).sort((a, b) => b.x - a.x)[0];
   if (rf) { const r = spalteUnter(zeilen, rf, TS, TZ, 1)[0]; if (r && /\d{5}/.test(r)) E.referenz = r; }
   if (!E.iban) { const m = E.text.replace(/\n/g, ' ').match(IBAN); if (m && m[0].replace(/\s/g, '') !== f.iban.replace(/\s/g, '')) E.iban = m[0]; }
@@ -3516,12 +3530,13 @@ function lieferantErkennen(zeilen, E, ocr) {
     // nearly the same spelling, or the QR name cut short («Talnet» for «Talnet Kommunikation AG»)
     const kurz = a.length >= 4 && !/\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(name);
     const gleich = s => { const b = kern(s); return Math.abs(a.length - b.length) <= 4 && aehnlich(a, b) >= .75 || kurz && b.startsWith(a); };
-    const qrZelle = zellen.find(c => c.s === name), sicher = c => c.k ?? 0;
-    const unleserlich = !qrZelle || sicher(qrZelle) < 50, kopf = c => c.p === 1 && c.y < 45 && sicher(c) >= 80;
-    const besser = zellen.filter(c => c !== qrZelle && c.s.length < 60 && /\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(c.s) && !istFirma(c.s) && (gleich(c.s) || unleserlich && kopf(c)))
+    const sicher = c => c.k ?? 0, kopf = c => c.p === 1 && c.y < 45 && sicher(c) >= 80;
+    const unleserlich = Math.max(0, ...zellen.filter(c => c.s === name).map(sicher)) < 50;
+    const firmenform = s => /\b(AG|GmbH|SA|Sàrl|KG|Genossenschaft)\b/.test(s);
+    // every spelling of the name on the page competes: the letterhead's first, then the surest
+    const best = zellen.filter(c => c.s.length < 60 && !istFirma(c.s) && (c.s === name || firmenform(c.s) && (gleich(c.s) || unleserlich && kopf(c))))
       .sort((x, y) => kopf(y) - kopf(x) || sicher(y) - sicher(x))[0];
-    // the letterhead's large print, read clearly, beats the QR block's small print
-    if (besser && (kopf(besser) || sicher(besser) > (qrZelle ? sicher(qrZelle) : 0))) name = besser.s;
+    if (best) name = best.s;
   }
   if (name && !istFirma(name)) {
     const m = ortz.match(/^(?:CH-|LI-|FL-)?(\d{4,5})\s+(.+)$/);
