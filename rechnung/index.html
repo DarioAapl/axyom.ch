@@ -2420,7 +2420,7 @@ function kontostand() {
   const bank = r2(start + DB.bank.reduce((t, b) => t + b.betrag, 0)), buch = r2(s1020(B));
   const offen = DB.bank.filter(b => !b.zu), offenSum = r2(offen.reduce((t, b) => t + b.betrag, 0));
   const diff = r2(bank - buch);
-  return { bank, buch, diff, offen, offenSum, unterwegs: r2(offenSum - diff), per: DB.bank.map(b => b.datum).sort().pop() };
+  return { bank, buch, diff, offen, offenSum, unterwegs: r2(offenSum - diff), per: DB.bank.map(b => b.datum).sort().pop() || HEUTE };
 }
 VIEWS.bank = () => {
   if (BFILTER_DEF[PARAM]) { BFILTER = PARAM; PARAM = ''; }
