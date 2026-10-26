@@ -517,178 +517,208 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 }
 @media print{#rail,header .tools,#toast,.noprint{display:none!important}body{background:#fff}#view{padding:0}}
 
-/* ── Modern, calm workspace refinement ── */
+/* ── Modern, calm workspace design system ── */
 :root{
-  --r:8px;
+  --r:14px;
+  --r-sm:10px;
   --surf:#f4f6f9;
   --card:#ffffff;
-  --soft:#e5e9f0;
-  --line:#cbd2dc;
-  --ink:#182230;
-  --dim:#5a6677;
+  --soft:rgba(16,24,40,.07);
+  --line:rgba(16,24,40,.13);
+  --ink:#141c26;
+  --dim:#647082;
   --acc:#1d5bbf;
   --acci:#154596;
   --wash:#eef4ff;
-  --shadow-sm:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.03);
-  --shadow-md:0 4px 12px rgba(16,24,40,.06);
+  --shadow-sm:0 2px 10px -2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.02);
+  --shadow-md:0 8px 24px -4px rgba(16,24,40,.07),0 2px 6px -1px rgba(16,24,40,.03);
 }
-body{font-size:13.5px;color:var(--ink);background:var(--surf)}
-header{background:var(--card);backdrop-filter:none;-webkit-backdrop-filter:none;padding:16px 28px;align-items:center;position:static;border-bottom:1px solid var(--soft)}
-header h1{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-.02em}
-.page-context{color:var(--dim);font-size:12.5px;margin-top:3px;max-width:70ch;line-height:1.45}
-#view{padding:20px 28px 48px}
+body{font-size:13.5px;color:var(--ink);background:var(--surf);letter-spacing:-.006em;line-height:1.5}
+header{background:color-mix(in srgb,var(--surf) 82%,transparent);backdrop-filter:saturate(1.8) blur(16px);-webkit-backdrop-filter:saturate(1.8) blur(16px);padding:20px 32px 16px;align-items:center;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--soft)}
+header h1{font-size:23px;font-weight:750;line-height:1.2;letter-spacing:-.025em}
+.page-context{color:var(--dim);font-size:13px;margin-top:3px;max-width:68ch;line-height:1.45}
+#view{padding:24px 32px 56px;max-width:1440px}
 
-/* Compact, calm navigation rail that fits all modules without clipping */
-#rail{width:236px;background:var(--card);color:var(--ink);border-right:1px solid var(--soft);padding:16px 12px}
-#rail .brand{min-height:36px;align-items:center;padding:2px 8px 6px}
-#rail .brand .logo{filter:brightness(0);width:92px}
-#rail .firm{color:var(--dim);font-size:11.5px;padding:6px 10px 12px;border-bottom:1px solid var(--soft);margin-bottom:4px}
-#rail .firm b{color:var(--ink);font-size:13px;font-weight:650}
-#rail .grp{color:var(--dim);font-size:10.5px;font-weight:700;letter-spacing:.055em;padding:12px 10px 4px;opacity:.85}
-#rail nav{gap:1px;padding-bottom:8px}
-#rail nav a{color:var(--dim);font-size:13px;font-weight:500;padding:7px 10px;min-height:36px;gap:9px;border-radius:7px;transition:background .12s ease,color .12s ease}
+/* Calm, refined sidebar rail */
+#rail{width:244px;background:var(--card);color:var(--ink);border-right:1px solid var(--soft);padding:20px 14px}
+#rail .brand{min-height:38px;align-items:center;padding:2px 10px 8px}
+#rail .brand .logo{filter:brightness(0);width:96px}
+#rail .firm{color:var(--dim);font-size:11.5px;padding:6px 10px 14px;border-bottom:1px solid var(--soft);margin-bottom:6px}
+#rail .firm b{color:var(--ink);font-size:13px;font-weight:650;letter-spacing:-.01em}
+#rail .grp{color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.08em;padding:14px 10px 5px;opacity:.72}
+#rail nav{gap:2px;padding-bottom:8px}
+#rail nav a{color:var(--dim);font-size:13px;font-weight:520;padding:8px 11px;min-height:38px;gap:10px;border-radius:10px;transition:all .15s ease}
+#rail nav a .ic{width:16px;height:16px;opacity:.7;transition:opacity .15s,color .15s}
 #rail nav a:hover,#rail nav a:active{color:var(--ink);background:var(--surf)}
-#rail nav a.on{background:var(--wash);color:var(--acci);font-weight:650}
-#rail .foot{color:var(--dim);border-color:var(--soft);font-size:11.5px;padding:10px 8px 0;line-height:1.45}
-#rail .foot button{color:var(--acci);min-height:24px;min-width:0;font-size:11.5px;padding:2px 0;text-decoration:none;font-weight:550}
+#rail nav a:hover .ic{opacity:.95}
+#rail nav a.on{background:var(--wash);color:var(--acci);font-weight:650;box-shadow:inset 0 0 0 1px rgba(29,91,191,.08)}
+#rail nav a .badge{font-size:10.5px;font-weight:650;border-radius:99px;padding:1px 7px;background:rgba(16,24,40,.07);color:var(--dim)}
+#rail nav a .badge.s3{background:var(--badbg);color:var(--bad)}
+#rail nav a .badge.s1{background:rgba(16,24,40,.06);color:var(--dim)}
+#rail .foot{color:var(--dim);border-color:var(--soft);font-size:11px;padding:12px 10px 0;line-height:1.5;opacity:.85}
+#rail .foot button{color:var(--acci);min-height:24px;min-width:0;font-size:11px;padding:2px 0;text-decoration:none;font-weight:600}
 #rail .foot button:hover{color:var(--ink);text-decoration:underline}
-[data-nav=menue] #rail .lade{background:var(--card);box-shadow:8px 0 32px rgba(24,34,48,.14)}
+[data-nav=menue] #rail .lade{background:var(--card);box-shadow:12px 0 40px rgba(24,34,48,.16)}
 [data-nav=menue] #rail .menu{background:var(--wash);color:var(--acci);border-color:var(--line);min-height:38px}
-[data-nav=oben] #rail .menu,[data-nav=schmal] #rail .menu{display:inline-flex;align-items:center;justify-content:center;flex:none;gap:6px;min-height:38px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--wash);color:var(--acci);cursor:pointer}
+[data-nav=oben] #rail .menu,[data-nav=schmal] #rail .menu{display:inline-flex;align-items:center;justify-content:center;flex:none;gap:6px;min-height:38px;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:var(--wash);color:var(--acci);cursor:pointer}
 [data-nav=oben] #rail .menu svg{width:17px;height:17px}
 @media (min-width:761px){[data-nav=oben] #rail .menu{display:none}}
 [data-nav=schmal] #rail .menu svg{display:none}
 [data-nav=oben] #rail nav a .lbl{white-space:nowrap}
 [data-nav=schmal] #rail .grp,[data-nav=oben] #rail .grp{background:var(--line)}
 
-/* Cards & KPIs */
-.card,.kpi{padding:16px 18px;border-radius:var(--r);border-color:var(--soft);background:var(--card);box-shadow:var(--shadow-sm)}
-.card>h2,.h2{font-size:15px;font-weight:650;gap:10px;flex-wrap:wrap;letter-spacing:-.01em}
-.card .lead{font-size:12.5px;line-height:1.5;margin:4px 0 12px;color:var(--dim)}
-.grid{gap:14px}.stack>*+*{margin-top:16px}
-.kpi{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;text-align:left;transition:border-color .15s,box-shadow .15s}
-.kpi .k{font-size:12px;color:var(--dim);font-weight:550}
-.kpi .v{font-size:20px;margin:0;text-align:right;letter-spacing:-.02em;font-weight:700}
-.kpi .s,.kpi .go{grid-column:1/-1;margin-top:3px;font-size:11.5px;line-height:1.4}
-.kpi.kl .v{font-size:19px}.kpi.ks{display:flex}.kpi.ks .ksz{font-size:12px}.kpi.ks .ksz b{font-size:13px}
+/* Elevated, airy cards & KPIs */
+.card,.kpi{padding:20px 22px;border-radius:var(--r);border:1px solid var(--soft);background:var(--card);box-shadow:var(--shadow-sm)}
+.card>h2,.h2{font-size:15.5px;font-weight:700;gap:10px;flex-wrap:wrap;letter-spacing:-.015em;color:var(--ink)}
+.card .lead{font-size:12.5px;line-height:1.5;margin:4px 0 14px;color:var(--dim)}
+.grid{gap:16px}.stack>*+*{margin-top:18px}
+.kpi{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+button.kpi:hover{transform:translateY(-1px);border-color:var(--line);box-shadow:var(--shadow-md)}
+.kpi .k{font-size:12px;color:var(--dim);font-weight:600}
+.kpi .v{font-size:22px;margin:2px 0 0;text-align:left;letter-spacing:-.025em;font-weight:750}
+.kpi .s,.kpi .go{margin-top:2px;font-size:12px;line-height:1.4}
+.kpi.kl .v{font-size:22px}.kpi.ks{ align-items:stretch }.kpi.ks .ksz{font-size:12.5px}.kpi.ks .ksz b{font-size:13.5px}
 
-/* Proportional interactive controls */
-.btn{min-height:36px;min-width:0;padding:7px 14px;border-radius:7px;font-size:13px;font-weight:600;white-space:normal;text-align:center;transition:background .14s,border-color .14s,box-shadow .14s}
-.btn.sm{min-height:30px;min-width:0;padding:5px 10px;font-size:12px;border-radius:6px}
-.btn.link,.btn.link.fr{min-height:0;min-width:0;padding:3px 4px;font-weight:600}
+/* Sleek segmented controls & buttons */
+.btn{min-height:36px;min-width:0;padding:7px 15px;border-radius:var(--r-sm);border:1px solid var(--line);font-size:13px;font-weight:600;white-space:normal;text-align:center;transition:all .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+.btn:hover{background:var(--surf);border-color:rgba(16,24,40,.2)}
+.btn.sm{min-height:30px;min-width:0;padding:5px 11px;font-size:12px;border-radius:8px;white-space:nowrap}
+.btn.link,.btn.link.fr{min-height:0;min-width:0;padding:3px 4px;font-weight:600;box-shadow:none;border:0}
 .btn.link.fr{font-weight:500;font-size:12px;color:var(--dim)}
 .btn.link.fr:hover{color:var(--acci)}
-.btn.acc{color:#fff;background:var(--acc);border-color:var(--acc)}
+.btn.acc{color:#fff;background:var(--acc);border-color:var(--acc);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .btn.acc:hover{background:var(--acci);border-color:var(--acci)}
-.chip{min-height:32px;min-width:0;border-radius:99px;padding:5px 12px;font-size:12.5px;font-weight:550;transition:background .14s,border-color .14s,color .14s}
-.chip.on{background:var(--wash);border-color:var(--acc);color:var(--acci);font-weight:650}
+.chips{display:inline-flex;gap:3px;flex-wrap:wrap;background:rgba(16,24,40,.045);padding:4px;border-radius:11px;border:1px solid rgba(16,24,40,.04)}
+.chip{min-height:30px;min-width:0;border:0;background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:550;color:var(--dim);transition:all .15s ease}
+.chip:hover{color:var(--ink);background:rgba(255,255,255,.55)}
+.chip.on{background:var(--card);color:var(--ink);font-weight:650;box-shadow:0 1px 3px rgba(16,24,40,.08),0 0 0 1px rgba(16,24,40,.04)}
+.chip .n{font-size:11px;font-weight:650;background:rgba(16,24,40,.06);color:var(--dim);padding:1px 6px;border-radius:99px;margin-left:2px;opacity:1}
+.chip.on .n{background:var(--wash);color:var(--acci)}
 .tab{min-height:38px;min-width:0;padding:8px 14px}
 button.pill{min-height:24px;min-width:0}
-.pill{font-size:11.5px;white-space:normal;padding:2px 8px}
+.pill{font-size:11.5px;font-weight:600;white-space:normal;padding:2.5px 9px;border-radius:99px}
+.stufen{gap:5px}
+.stufen .st{border-radius:8px;padding:7px 8px;font-weight:600;background:var(--surf)}
 .stufen:not(.mini){flex-wrap:wrap}.stufen:not(.mini) .st{white-space:normal;overflow:visible}
-.fld input,.fld select,input.in,select.in,#suche{min-height:38px;border-radius:7px}
-#suche{width:248px}.tools{min-width:0}.tools input{max-width:100%}
+.stufen.mini{gap:4px}.stufen.mini .st{height:4px;border-radius:99px}
+.fld input,.fld select,input.in,select.in,#suche{min-height:38px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--card);transition:border-color .15s,box-shadow .15s}
+#suche{width:260px;background-color:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.02)}.tools{min-width:0;gap:12px}.tools input{max-width:100%}
 .vatrow{grid-template-columns:92px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 32px}
 .vatcell input,.vatcell select{height:40px;min-height:40px}
 .vatrow .x{min-height:32px;min-width:32px;width:32px;height:32px;border-radius:6px;display:inline-grid;place-items:center}
 .vatrow .x:hover{background:var(--surf);color:var(--ink)}
 summary{padding:8px 0;min-height:0;min-width:0}
+.drop{border-radius:var(--r);background:var(--card);border-color:var(--line)}
 .drop:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
 :focus-visible,#treffer .tr:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .check{min-height:32px;align-items:center}.check input{margin:0}
 
 /* Workspaces & Lists */
-.invoice-toolbar{padding:8px 12px;margin-bottom:12px;border-radius:var(--r);box-shadow:var(--shadow-sm)}
+.invoice-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;margin-bottom:16px;background:transparent;border:0;box-shadow:none}
+.invoice-toolbar-label{display:none}
 .invoice-workspace{min-height:calc(100dvh - 172px)}
 .invoice-workspace>.col:first-child>.liste{min-height:calc(100dvh - 172px)}
-.liste{top:16px;border-radius:var(--r);box-shadow:var(--shadow-sm)}
-.liste .lh{padding:10px 12px}
-.li{padding:11px 14px;transition:background .12s}
-.li .a,.li .b{flex-wrap:wrap}.li .a{font-size:13px}.li .a>span:first-child{overflow-wrap:anywhere}.li .c{margin-top:5px}
-.queue-heading{padding:8px 12px 6px;color:var(--dim);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:var(--surf);border-bottom:1px solid var(--soft)}
-.panel{top:16px}
-.split{gap:14px;grid-template-columns:minmax(250px,300px) minmax(330px,390px) minmax(0,1fr)}
-.split.deb{grid-template-columns:minmax(240px,290px) minmax(320px,380px) minmax(0,1fr)}
+.liste{top:82px;border-radius:var(--r);border:1px solid var(--soft);box-shadow:var(--shadow-sm);background:var(--card)}
+.liste .lh{padding:14px}
+.li{padding:12px 14px;border-bottom:1px solid var(--soft);border-left:3px solid transparent;transition:background .14s ease}
+.li:hover{background:var(--surf)}
+.li.on{background:var(--wash);border-left-color:var(--acc)}
+.li .a,.li .b{flex-wrap:wrap}.li .a{font-size:13.5px;font-weight:650;letter-spacing:-.01em}.li .a>span:first-child{overflow-wrap:anywhere}.li .c{margin-top:6px}
+.li .stufen.mini{display:none}
+.queue-heading{padding:9px 14px 7px;color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;background:var(--surf);border-bottom:1px solid var(--soft)}
+.panel{top:82px}
+.split{gap:16px;grid-template-columns:minmax(256px,310px) minmax(330px,395px) minmax(0,1fr)}
+.split.deb{grid-template-columns:minmax(246px,300px) minmax(320px,385px) minmax(0,1fr)}
 .posz .pt span:first-child,.pdfbar .pt span{white-space:normal;overflow:visible;overflow-wrap:anywhere}
-.pdfv,.sourcev{box-shadow:var(--shadow-sm)}
-.pdfbar{flex-wrap:wrap;padding:9px 12px 9px 14px}.pdfbar .pa{flex-wrap:wrap}.pdfbar .ib{width:32px;height:32px;min-height:32px;min-width:32px}
+.pdfv,.sourcev{box-shadow:var(--shadow-sm);border-radius:var(--r);border:1px solid var(--soft)}
+.pdfbar{flex-wrap:wrap;padding:11px 14px 11px 16px;background:var(--card)}.pdfbar .pa{flex-wrap:wrap}.pdfbar .ib{width:32px;height:32px;min-height:32px;min-width:32px}
 .pdfbar .lk{min-height:30px;min-width:0;padding:4px 8px}
-.decision-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--soft);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.pdfscroll{background:#ebe6df;padding:18px}
+.pdfseite{border-radius:4px;box-shadow:0 6px 24px rgba(26,18,13,.12)}
+.decision-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--soft);display:flex;gap:8px;justify-content:flex-end;align-items:center}
 
 /* Tables */
 .tw{max-width:100%}.tw:focus-visible{outline-offset:2px}
-table.t{font-size:12.5px}
-table.t th{padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--dim);border-bottom:1px solid var(--line)}
-table.t td{padding:10px;line-height:1.45;border-bottom:1px solid var(--soft)}
+table.t{font-size:13px}
+table.t th{padding:10px 12px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);border-bottom:1px solid var(--line)}
+table.t td{padding:12px;line-height:1.45;border-bottom:1px solid var(--soft);vertical-align:middle}
+table.t tbody tr:last-child td{border-bottom:0}
 .row{gap:8px}.row>.btn{max-width:100%}.sum{gap:12px}.sum>span:first-child{min-width:0}
 
-/* Overview & Section hierarchy */
-.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);margin:0 0 4px}
-.overview-section{margin-top:22px}.overview-section:first-child{margin-top:0}
-.overview-section>h2{font-size:16px;font-weight:700;letter-spacing:-.015em;margin-bottom:10px}
-.secondary-summary{margin-top:22px;padding-top:16px;border-top:1px solid var(--soft)}
-.secondary-summary>.section-label{margin-bottom:6px}
+/* Calm Overview Dashboard (#uebersicht) */
+.section-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin:0 0 4px}
+.overview-section{margin-top:24px}.overview-section:first-child{margin-top:0}
+.overview-section>h2{font-size:16px;font-weight:700;letter-spacing:-.015em;margin-bottom:12px}
+.secondary-summary{margin-top:24px;padding-top:18px;border-top:1px solid var(--soft)}
+.secondary-summary>.section-label{margin-bottom:8px}
 .secondary-summary .rkopf{margin-bottom:0}
-.overview-summary .kpi{border-top:3px solid var(--line)}
-.overview-summary .kpi:first-child{border-top-color:var(--acc)}
-.work-grid{align-items:stretch}
-.work-card{height:100%;display:flex;flex-direction:column;border-top:3px solid var(--ok)}
-.work-card:first-child{border-top-color:var(--warn)}
-.task-list{display:flex;flex-direction:column}
-.task-list .todo{flex:none;min-height:46px}
-.work-card-foot{margin-top:auto;padding:12px 12px 10px;background:var(--surf);border-radius:7px;border:1px solid var(--soft);font-size:12px;color:var(--dim)}
-.work-card-foot b{display:block;margin-bottom:2px;color:var(--ink);font-size:12.5px}
-.overview-pipelines{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}
-.overview-pipelines .overview-section{margin-top:0;background:var(--card);border:1px solid var(--soft);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
-.overview-pipelines .supplier-stock-heading{margin-bottom:10px}
-.overview-pipelines .supplier-stock-heading h2{font-size:15px;font-weight:650;margin:0}
-.overview-pipelines .financial-overview{grid-template-columns:repeat(2,minmax(0,1fr));border-radius:7px;flex:1}
-.overview-pipelines .financial-item{border-left:0;padding:12px 14px}
-.overview-pipelines .financial-item:nth-child(even){border-left:1px solid var(--soft)}
-.overview-pipelines .financial-item:nth-child(n+3){border-top:1px solid var(--soft)}
-.overview-pipelines .financial-value{font-size:20px;margin-top:4px}
-.overview-pipelines .financial-detail{margin-top:4px}
-.financial-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--card);border:1px solid var(--soft);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
-.financial-item{appearance:none;border:0;border-left:1px solid var(--soft);background:var(--card);color:var(--ink);padding:14px 16px;text-align:left;cursor:pointer;min-width:0;transition:background .14s ease}
-.financial-item:first-child{border-left:0}
-.financial-item:hover{background:var(--surf)}
+
+/* Top Financial Pulse Strip */
+.overview-pulse{margin-top:0}
+.financial-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;background:transparent;border:0;border-radius:0;overflow:visible;box-shadow:none}
+.financial-item{appearance:none;border:1px solid var(--soft);border-radius:var(--r);background:var(--card);color:var(--ink);padding:16px 18px;text-align:left;cursor:pointer;min-width:0;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;justify-content:space-between;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.financial-item:hover{transform:translateY(-2px);background:var(--card);border-color:var(--line);box-shadow:var(--shadow-md)}
 .financial-item:focus-visible{position:relative;z-index:2}
 .financial-name{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;color:var(--dim)}
-.financial-value{display:block;margin-top:6px;font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.financial-detail{display:block;margin-top:6px;font-size:11.5px;line-height:1.4;color:var(--dim)}
-.financial-action{display:block;margin-top:3px;font-size:11px;color:var(--acci);font-weight:600;opacity:.75;transition:opacity .14s}
-.financial-item:hover .financial-action{opacity:1}
+.financial-value{display:block;margin-top:8px;font-size:23px;font-weight:750;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.financial-detail{display:block;margin-top:6px;font-size:12px;line-height:1.4;color:var(--dim)}
+.financial-action{display:inline-block;margin-left:6px;font-size:11.5px;color:var(--acci);font-weight:600;opacity:0;transform:translateX(-3px);transition:opacity .15s ease,transform .15s ease}
+.financial-item:hover .financial-action{opacity:1;transform:translateX(0)}
+
+/* Actionable Today Cards */
+.work-grid{align-items:stretch;gap:16px}
+.work-card{height:100%;display:flex;flex-direction:column;padding:20px 22px;border:1px solid var(--soft)}
+.task-list{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.task-list .todo{flex:none;min-height:48px;padding:10px 12px;margin:0 -6px;border:0;border-radius:10px;background:transparent;transition:background .14s ease}
+.task-list .todo:hover{background:var(--surf)}
+.todo .t{font-size:13.5px;font-weight:620;letter-spacing:-.01em}
+.todo .d{font-size:12px;color:var(--dim);margin-top:1px}
+.todo .n{width:26px;height:26px;border-radius:99px;background:var(--surf);display:inline-grid;place-items:center;font-size:12px;color:var(--dim);transition:all .15s ease}
+.todo:hover .n{background:var(--wash);color:var(--acci);transform:translateX(2px)}
+.work-card-foot{margin-top:auto;padding:10px 14px;background:var(--surf);border-radius:10px;border:0;font-size:12px;color:var(--dim);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.work-card-foot b{color:var(--ink);font-size:12px;font-weight:650}
+
+/* Progressive Disclosure Switcher & Pipelines on #uebersicht */
+.overview-switcher-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:26px;margin-bottom:14px;flex-wrap:wrap}
+.overview-switcher-bar h2{font-size:16px;font-weight:700;letter-spacing:-.015em;margin:0}
+.overview-pipelines{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:0}
+.overview-pipelines .overview-section{margin-top:0;background:var(--card);border:1px solid var(--soft);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
+.overview-pipelines .supplier-stock-heading{margin-bottom:14px}
+.overview-pipelines .supplier-stock-heading h2{font-size:15.5px;font-weight:700;margin:0}
+.overview-pipelines .financial-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;flex:1}
+.overview-pipelines .financial-item{padding:13px 15px;background:var(--surf);border:1px solid transparent;border-radius:11px;box-shadow:none}
+.overview-pipelines .financial-item:hover{background:var(--card);border-color:var(--line);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.overview-pipelines .financial-value{font-size:20px;margin-top:4px}
+.overview-pipelines .financial-detail{margin-top:3px;font-size:11.5px}
+.overview-pipelines .financial-action{display:none}
 .chart-scale{font-size:11.5px;color:var(--dim);display:flex;justify-content:space-between;margin:10px 0}
 .exact-values{margin-top:12px;border-top:1px solid var(--soft);padding-top:4px}
 .exact-values summary{cursor:pointer;color:var(--acci);font-weight:600;font-size:12.5px;padding:6px 0}
-.bank-workspace+.secondary-summary,.cash-workspace+.secondary-summary,.report-surface+.secondary-summary,.tax-workspace+.secondary-summary,.split+.secondary-summary{margin-top:22px}
-.settings-work+#darstellung{margin-top:22px!important}.settings-work+.card{margin-top:22px}
-.ansicht{gap:10px}.ansicht .zeile{grid-template-columns:130px minmax(0,1fr);gap:12px}.ansicht .zeile+.zeile{padding-top:10px}.wahl{gap:8px}.opt{padding:8px;border-radius:7px}.vs{height:48px}.vs.hoch{height:58px}
+.bank-workspace+.secondary-summary,.cash-workspace+.secondary-summary,.report-surface+.secondary-summary,.tax-workspace+.secondary-summary,.split+.secondary-summary{margin-top:24px}
+.settings-work+#darstellung{margin-top:24px!important}.settings-work+.card{margin-top:24px}
+.ansicht{gap:10px}.ansicht .zeile{grid-template-columns:130px minmax(0,1fr);gap:12px}.ansicht .zeile+.zeile{padding-top:10px}.wahl{gap:8px}.opt{padding:8px;border-radius:10px}.vs{height:48px}.vs.hoch{height:58px}
 
 @media(max-width:1100px){
   header{flex-wrap:wrap}header .tools{width:100%;justify-content:flex-end}
   .overview-pipelines{grid-template-columns:minmax(0,1fr)}
   .financial-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .financial-item{border-left:0}.financial-item:nth-child(even){border-left:1px solid var(--soft)}.financial-item:nth-child(n+3){border-top:1px solid var(--soft)}
 }
 @media(max-width:900px){
-  header{padding:12px 14px 10px;gap:12px}header h1{font-size:20px}#view{padding:12px 12px 40px}
+  header{position:static;padding:14px 16px 12px;gap:12px}header h1{font-size:20px}#view{padding:14px 14px 40px}
   header .tools{flex-wrap:wrap}.current-date{width:100%;text-align:left}header .tools #suche{flex:1 0 100%;width:100%}
-  .card,.kpi{padding:12px}.split,.split.deb{gap:12px;grid-template-columns:minmax(0,1fr)}.invoice-workspace{min-height:0}.invoice-workspace>.col:first-child{display:block}.invoice-workspace>.col:first-child>.liste{min-height:0}.liste .items{max-height:none;overflow:visible}
-  .invoice-toolbar{align-items:flex-start}.invoice-toolbar .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  .card,.kpi{padding:14px}.split,.split.deb{gap:12px;grid-template-columns:minmax(0,1fr)}.invoice-workspace{min-height:0}.invoice-workspace>.col:first-child{display:block}.invoice-workspace>.col:first-child>.liste{min-height:0}.liste .items{max-height:none;overflow:visible}
+  .invoice-toolbar{align-items:flex-start}.invoice-toolbar .chips{flex-wrap:nowrap;overflow-x:auto;max-width:100%}
   .secondary-summary{margin-top:18px;padding-top:12px}.overview-section,.overview-pipelines{margin-top:18px}
 }
 @media(max-width:560px){
   .g4,.secondary-summary .g4,.secondary-summary .bkopf{grid-template-columns:repeat(2,minmax(0,1fr))}
   .secondary-summary .bkopf .ks{grid-column:1/-1}
-  .kpi{padding:10px}.kpi .v,.kpi.kl .v{font-size:17px}.kpi .s{line-height:1.3}
+  .kpi{padding:12px}.kpi .v,.kpi.kl .v{font-size:17px}.kpi .s{line-height:1.3}
   .task-surface .g2{grid-template-columns:minmax(0,1fr)}
-  .task-surface .card{padding:10px 12px}.task-surface .card .lead{display:none}.task-surface .todo{min-height:44px;flex:none}
+  .task-surface .card{padding:14px}.task-surface .card .lead{display:none}.task-surface .todo{min-height:44px;flex:none}
   .financial-overview,.overview-pipelines .financial-overview{grid-template-columns:minmax(0,1fr)}
-  .financial-item,.financial-item:nth-child(even),.financial-item:nth-child(n+3),.overview-pipelines .financial-item,.overview-pipelines .financial-item:nth-child(even),.overview-pipelines .financial-item:nth-child(n+3){border-left:0;border-top:1px solid var(--soft)}
-  .financial-item:first-child,.overview-pipelines .financial-item:first-child{border-top:0}
-  .liste .lh{padding:8px}.chip{padding:5px 8px;font-size:12px}.invoice-toolbar{display:block;padding:8px}.invoice-toolbar-label{display:block;padding:2px 0 6px}.invoice-toolbar .chips{flex-wrap:wrap;overflow:visible;padding-bottom:0}.customer-toolbar .chip.ku{margin-left:0}
-  .bank-workspace .card{padding:10px}.bank-workspace .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}.bank-workspace .work-guidance{display:none}
+  .liste .lh{padding:10px}.chip{padding:5px 9px;font-size:12px}.invoice-toolbar{display:block}.invoice-toolbar .chips{flex-wrap:wrap;overflow:visible}.customer-toolbar .chip.ku{margin-left:0}
+  .bank-workspace .card{padding:12px}.bank-workspace .chips{flex-wrap:nowrap;overflow-x:auto;max-width:100%}.bank-workspace .work-guidance{display:none}
   .cash-workspace>.grid,.report-surface>.grid,.tax-workspace>.grid{gap:12px}
   .settings-work .g2{gap:12px}.settings-work .card .lead{display:none}
   .ansicht .zeile{grid-template-columns:minmax(0,1fr)}.vs{display:none}.opt{min-height:44px}
@@ -2163,6 +2193,7 @@ function rechnungsRisiko(r) {
 
 /* Dashboard context for supplier invoices. The operational invoice screen keeps
    only its compact status toolbar and the actual list/document/review workspace. */
+let UEB_TAB = 'bestand';
 function lieferantenBestand() {
   const R = DB.rechnungen.filter(r => !r.geloescht);
   const sum = L => L.reduce((s, r) => s + r, 0);
@@ -2171,14 +2202,14 @@ function lieferantenBestand() {
   const ueber = zahl.filter(r => tageBis(faellig(r)) < 0);
   const auto = R.filter(r => r.auto && r.stufe !== 'abgeglichen');
   const fragen = R.filter(r => !!(r.klaerung || r.duplikatVon));
-  const item = (filter, titel, wert, detail, aktion) => `<button class="financial-item" data-go="rechnungen" data-p="${filter}"><span class="financial-name k">${titel}</span><span class="financial-value v">${wert}</span><span class="financial-detail">${detail}<span class="financial-action">${aktion} →</span></span></button>`;
+  const item = (filter, titel, wert, detail) => `<button class="financial-item" data-go="rechnungen" data-p="${filter}"><span class="financial-name k">${titel}</span><span class="financial-value v">${wert}</span><span class="financial-detail">${detail}</span></button>`;
   return `<section class="overview-section supplier-stock-summary" aria-labelledby="supplier-stock-heading">
-    <div class="row supplier-stock-heading"><div><p class="section-label">Bestand der Arbeitsliste</p><h2 id="supplier-stock-heading">Lieferantenrechnungen</h2></div><span class="spacer"></span><button class="btn link" data-go="rechnungen">Arbeitsfläche öffnen →</button></div>
+    <div class="row supplier-stock-heading"><div><p class="section-label">Lieferanten</p><h2 id="supplier-stock-heading">Lieferantenrechnungen</h2></div><span class="spacer"></span><button class="btn link" data-go="rechnungen">Öffnen →</button></div>
     <div class="financial-overview supplier-stock-grid">
-      ${item('pruefen', 'Zu prüfen', pruef.length, pruef.length ? `${chf(sum(pruef.map(r => summen(r).chf)), 0)} · Konto und MWST kontrollieren` : 'Nichts offen', 'Prüfliste öffnen')}
-      ${item('zahlen', 'Zu bezahlen', zahl.length, `${chf(sum(zahl.map(nochZuZahlen)), 0)}${ueber.length ? ` · ${ueber.length} überfällig` : ''}`, 'Zahlungen öffnen')}
-      ${item('auto', 'Automatische Zahlungen', auto.length, auto.length ? `${chf(sum(auto.map(r => summen(r).chf)), 0)} · LSV oder Dauerauftrag` : 'Keine automatische Belastung', 'Automatische Zahlungen öffnen')}
-      ${item('fragen', 'Offene Fragen', fragen.length, fragen.length ? 'Klärung oder vermutlich doppelt' : 'Keine offenen Fragen', 'Klärfälle öffnen')}
+      ${item('pruefen', 'Zu prüfen', pruef.length, pruef.length ? `${chf(sum(pruef.map(r => summen(r).chf)), 0)} offen` : 'Nichts offen')}
+      ${item('zahlen', 'Zu bezahlen', zahl.length, `${chf(sum(zahl.map(nochZuZahlen)), 0)}${ueber.length ? ` · ${ueber.length} überfällig` : ''}`)}
+      ${item('auto', 'Automatisch (LSV)', auto.length, auto.length ? `${chf(sum(auto.map(r => summen(r).chf)), 0)} vorgemerkt` : 'Keine Belastung')}
+      ${item('fragen', 'Offene Fragen', fragen.length, fragen.length ? 'Klärung oder doppelt' : 'Alles geklärt')}
     </div>
   </section>`;
 }
@@ -2194,19 +2225,19 @@ VIEWS.uebersicht = () => {
   const naechste = zuZahlen.filter(r => !r.klaerung).sort((a, b) => faellig(a) < faellig(b) ? -1 : 1);
 
   const todo = [];
-  for (const [key, severity, text] of [['entscheidung', 3, 'Duplikate, offene Fragen und überfällige Zahlungen klären'], ['routine', 1, 'Konto und MWST prüfen, anschliessend buchen'], ['plan', 1, 'Zahlung im E-Banking auslösen und hier festhalten']]) {
+  for (const [key, severity, text] of [['entscheidung', 3, 'Duplikate, Fragen & Überfälliges'], ['routine', 1, 'Konto & MWST prüfen'], ['plan', 1, 'Im E-Banking auslösen']]) {
     const n = R.filter(RFILTER_DEF[key].f).length;
     if (n) todo.push([severity, `${n} · ${RFILTER_DEF[key].name}`, text, 'rechnungen', key, n]);
   }
-  if (o.debUeber) todo.push([3, `${o.debUeber} Kundenrechnungen überfällig`, 'Erinnerung senden oder Zahlung erfassen', 'kunden', 'ueber']);
-  for (const [key, severity, text] of [['entscheidung', 3, 'Fehlende Belege, Duplikate und Fragen klären'], ['routine', 1, 'Zuordnungsvorschläge prüfen und bestätigen']]) {
+  if (o.debUeber) todo.push([3, `${o.debUeber} Kundenrechnungen überfällig`, 'Erinnerung oder Zahlung erfassen', 'kunden', 'ueber']);
+  for (const [key, severity, text] of [['entscheidung', 3, 'Fehlende Belege & Fragen klären'], ['routine', 1, 'Vorschläge bestätigen']]) {
     const n = DB.bank.filter(BFILTER_DEF[key].f).length;
     if (n) todo.push([severity, `${n} Bankbuchungen · ${BFILTER_DEF[key].name}`, text, 'bank', key, n]);
   }
   if (o.debFreigabe) todo.push([1, `${o.debFreigabe} Kundenrechnung${o.debFreigabe === 1 ? '' : 'en'} freigeben`, 'Prüfen und versenden', 'kunden', 'freigabe']);
-  if (o.debEntwurf) todo.push([1, `${o.debEntwurf} Rapporte oder Entwürfe verrechnen`, 'Rechnung vorbereiten', 'kunden', 'entwurf']);
+  if (o.debEntwurf) todo.push([1, `${o.debEntwurf} Rapporte verrechnen`, 'Rechnung vorbereiten', 'kunden', 'entwurf']);
   if (o.einzahlen > 1000) todo.push([1, `${chf(o.einzahlen, 0)} Bargeld einzahlen`, 'Wechselgeld bleibt in der Kasse', 'kasse', '']);
-  if (o.bankAbschluss) todo.push([1, `${o.bankAbschluss} Bankbuchungen freigeben`, 'Vollständig, bereit für den Treuhänder', 'bank', 'abschluss']);
+  if (o.bankAbschluss) todo.push([1, `${o.bankAbschluss} Bankbuchungen freigeben`, 'Bereit für den Treuhänder', 'bank', 'abschluss']);
   const tasks = risk => todo.filter(t => (t[0] === 3) === risk).map(t => `<div class="todo" data-go="${t[3]}" data-p="${t[4]}" ${t[5] ? `${t[3] === 'rechnungen' ? 'data-cohort' : 'data-bank-cohort'} data-count="${t[5]}"` : ''} role="button" tabindex="0"><span class="dot s${t[0]}"></span><div><div class="t">${esc(t[1])}</div><div class="d">${esc(t[2])}</div></div><span class="n">→</span></div>`).join('') || '<div class="leer">Hier ist nichts offen.</div>';
 
   const serien = Object.entries(GRUPPEN).map(([key, g]) => ({ key, name: g.name, farbe: g.farbe }));
@@ -2217,31 +2248,46 @@ VIEWS.uebersicht = () => {
   const kasse = kasseStand();
   const offeneDebitoren = DB.debitoren.filter(d => d.stufe === 'versendet').length;
 
-  return `<section class="overview-section task-surface" aria-labelledby="work-heading"><p class="section-label">Geld im Betrieb · Nächste Schritte</p><h2 id="work-heading">Arbeit heute</h2><div class="grid g2 work-grid">
-    <div class="card work-card"><h2>Braucht Entscheidung <span class="pill s2">Zuerst klären</span></h2><p class="lead">Fragen und Zahlungsrisiken vor der Routinearbeit.</p><div class="task-list">${tasks(true)}</div><div class="work-card-foot"><b>${todo.filter(t => t[0] === 3).length} Themen zuerst klären</b>Danach sind ${todo.filter(t => t[0] !== 3).length} Routinebereiche ohne diese Blocker bereit.</div></div>
-    <div class="card work-card"><h2>Routine erledigen <span class="pill s1">Bereit</span></h2><p class="lead">Prüfen, vorbereiten und an den Treuhänder übergeben.</p><div class="task-list">${tasks(false)}</div></div>
-  </div></section>
-  <div class="overview-pipelines">${lieferantenBestand()}${kundenBestand()}</div>
-  <section class="overview-section secondary-summary" aria-label="Geld im Betrieb"><h2>Finanzieller Kontext</h2>
+  const bestandView = `<div class="overview-pipelines">${lieferantenBestand()}${kundenBestand()}</div>
+    <section class="overview-section card" style="margin-top:16px"><h2>Nächste Zahlungen <small>Fällige Lieferantenrechnungen · ohne LSV</small></h2>
+      <p class="lead">${chf(summeZahlen)} noch zu zahlen. <button class="btn link" data-go="rechnungen" data-p="zahlen" style="margin-left:6px">Alle Zahlungen öffnen →</button></p>
+      <div class="grid g2" style="gap:10px">${naechste.slice(0, 4).map(r => `<div class="todo" style="background:var(--surf);margin:0;padding:10px 14px" data-go="rechnungen" data-p="${r.id}" role="button" tabindex="0"><div><div class="t">${esc(lief(r.lief).name)}</div><div class="d">${tageBis(faellig(r)) < 0 ? 'Überfällig seit ' : 'Fällig am '}${dt(faellig(r))}</div></div><span class="num" style="margin-left:auto;font-weight:700">${chf(nochZuZahlen(r))}</span></div>`).join('') || '<div class="leer">Keine Zahlungen vorgemerkt.</div>'}</div>
+    </section>`;
+
+  const verlaufView = `<div class="grid g2" style="align-items:start">
+    <div class="card"><h2>Umsatz und Ergebnis <small>Apr–Okt 2026 · CHF netto</small></h2>
+      <p class="lead">Monatlicher Umsatz und Nettoergebnis.</p>
+      <div class="chart-scale"><span>0 CHF</span><span>Max. ${chf(maxU, 0)}</span></div>
+      <div class="bars" style="height:170px">${ergReihen.map(({ ym, z }) => { const tip = `${monatName(ym)} · Umsatz ${chf(z.umsatz)} · Ergebnis ${chf(z.ergebnis)}`; return `<div class="bc${ym === '2026-10' ? ' live' : ''}"><div class="plot"><div class="stk" style="height:${maxU > 0 ? Math.max(0, z.umsatz) / maxU * 100 : 0}%"><div class="bar-segment" tabindex="0" role="img" aria-label="${esc(tip)}" data-tip="${esc(tip)}" style="height:100%;background:var(--acc)"></div></div></div><div class="lbl">${monatKurz(ym)}</div></div>`; }).join('')}</div>
+      <details class="exact-values"><summary>Monatstabelle anzeigen · CHF</summary><div class="tw"><table class="t"><thead><tr><th>Monat 2026</th><th class="r">Umsatz</th><th class="r">Ergebnis</th></tr></thead><tbody>${ergReihen.map(({ ym, z }) => `<tr><td>${monatKurz(ym)}</td><td class="num r">${fmt(z.umsatz)}</td><td class="num r">${fmt(z.ergebnis)}</td></tr>`).join('')}</tbody></table></div></details>
+    </div>
+    <div class="card"><h2>Kosten je Monat <small>Apr–Okt 2026 · CHF netto</small></h2>
+      <p class="lead">Aufwand nach Kategorien aus gebuchten Belegen.</p>
+      ${balken(reihen, serien)}
+    </div>
+  </div>`;
+
+  return `<section class="overview-section overview-pulse" aria-label="Geld im Betrieb">
     <div class="financial-overview">
-      <button class="financial-item" data-overview-metric data-go="bank"><span class="financial-name">Bank laut Buchhaltung</span><span class="financial-value">${chf(bank, 0)}</span><span class="financial-detail">${bankFragen ? `${bankFragen} Buchungen brauchen Entscheidung` : 'Keine offenen Abweichungen'}<span class="financial-action">Bank abgleichen →</span></span></button>
-      <button class="financial-item" data-overview-metric data-go="kasse"><span class="financial-name">Bargeld in der Kasse</span><span class="financial-value">${chf(kasse.bestand, 0)}</span><span class="financial-detail">${chf(KASSE_ANFANG, 0)} Wechselgeld · ${chf(kasse.einzahlen, 0)} einzuzahlen<span class="financial-action">Kassenbuch öffnen →</span></span></button>
-      <button class="financial-item" data-overview-metric data-go="kunden" data-p="offen"><span class="financial-name">Offene Forderungen</span><span class="financial-value">${chf(debOffen, 0)}</span><span class="financial-detail">${offeneDebitoren} offene Rechnung${offeneDebitoren === 1 ? '' : 'en'} · ${o.debUeber} überfällig<span class="financial-action">Forderungen prüfen →</span></span></button>
-      <button class="financial-item" data-overview-metric data-go="kosten" data-p="2026-09"><span class="financial-name">Ergebnis September 2026</span><span class="financial-value">${chf(sep.ergebnis, 0)}</span><span class="financial-detail">${pct(sep.umsatz ? sep.ergebnis / sep.umsatz * 100 : 0)} Marge · Monat abgeschlossen<span class="financial-action">Erfolgsrechnung öffnen →</span></span></button>
-    </div></section>
-  <section class="overview-section"><h2>Geschäftsverlauf</h2><div class="grid g2" style="align-items:start">
-    <div class="card"><h2>Umsatz und Ergebnis <small>April–Oktober 2026 · CHF netto</small></h2>
-      <p class="lead">Balken zeigen Umsatz. Ergebnis inklusive Verlust steht in der Wertetabelle.</p>
-      <div class="chart-scale"><span>0 CHF</span><span>Skalenmaximum ${chf(maxU, 0)}</span></div>
-      <div class="bars" style="height:160px">${ergReihen.map(({ ym, z }) => { const tip = `${monatName(ym)} · Umsatz ${chf(z.umsatz)} · Ergebnis ${chf(z.ergebnis)}`; return `<div class="bc${ym === '2026-10' ? ' live' : ''}"><div class="plot"><div class="stk" style="height:${maxU > 0 ? Math.max(0, z.umsatz) / maxU * 100 : 0}%"><div class="bar-segment" tabindex="0" role="img" aria-label="${esc(tip)}" data-tip="${esc(tip)}" style="height:100%;background:var(--acc)"></div></div></div><div class="lbl">${monatKurz(ym)}</div></div>`; }).join('')}</div>
-      <details class="exact-values"><summary>Exakte Monatswerte · CHF</summary><div class="tw"><table class="t"><thead><tr><th>Monat 2026</th><th class="r">Umsatz</th><th class="r">Ergebnis</th></tr></thead><tbody>${ergReihen.map(({ ym, z }) => `<tr><td>${monatKurz(ym)}</td><td class="num r">${fmt(z.umsatz)}</td><td class="num r">${fmt(z.ergebnis)}</td></tr>`).join('')}</tbody></table></div></details>
+      <button class="financial-item" data-overview-metric data-go="bank"><span class="financial-name">Bank laut Buchhaltung <span class="financial-action">Abgleichen →</span></span><span class="financial-value">${chf(bank, 0)}</span><span class="financial-detail">${bankFragen ? `${bankFragen} Buchungen offen` : 'Abgeglichen'}</span></button>
+      <button class="financial-item" data-overview-metric data-go="kasse"><span class="financial-name">Bargeld in der Kasse <span class="financial-action">Kasse →</span></span><span class="financial-value">${chf(kasse.bestand, 0)}</span><span class="financial-detail">${chf(kasse.einzahlen, 0)} einzuzahlen</span></button>
+      <button class="financial-item" data-overview-metric data-go="kunden" data-p="offen"><span class="financial-name">Offene Forderungen <span class="financial-action">Prüfen →</span></span><span class="financial-value">${chf(debOffen, 0)}</span><span class="financial-detail">${offeneDebitoren} offen · ${o.debUeber} überfällig</span></button>
+      <button class="financial-item" data-overview-metric data-go="kosten" data-p="2026-09"><span class="financial-name">Ergebnis September <span class="financial-action">Details →</span></span><span class="financial-value">${chf(sep.ergebnis, 0)}</span><span class="financial-detail">${pct(sep.umsatz ? sep.ergebnis / sep.umsatz * 100 : 0)} Marge · abgeschlossen</span></button>
     </div>
-    <div class="card"><h2>Nächste Zahlungen <small>Nach Fälligkeit · alle offenen Termine</small></h2><p class="lead">${chf(summeZahlen)} noch zu zahlen, ohne automatische Belastungen. Klärungsfälle stehen oben.</p>
-      ${naechste.slice(0, 4).map(r => `<div class="todo" data-go="rechnungen" data-p="${r.id}" role="button" tabindex="0"><div><div class="t">${esc(lief(r.lief).name)}</div><div class="d">${tageBis(faellig(r)) < 0 ? 'Überfällig seit ' : 'Fällig am '}${dt(faellig(r))}</div></div><span class="num">${chf(nochZuZahlen(r))}</span></div>`).join('') || '<div class="leer">Keine Zahlungen vorgemerkt.</div>'}
-      <div style="margin-top:8px"><button class="btn link" data-go="rechnungen" data-p="zahlen">Alle Zahlungen ansehen →</button></div>
-    </div>
+  </section>
+  <section class="overview-section task-surface" aria-labelledby="work-heading"><div class="row" style="justify-content:space-between;margin-bottom:10px"><div><p class="section-label">Prioritäten</p><h2 id="work-heading" style="margin:0">Arbeit heute</h2></div></div><div class="grid g2 work-grid">
+    <div class="card work-card"><h2>Braucht Entscheidung <span class="pill s2">${todo.filter(t => t[0] === 3).length} offen</span></h2><p class="lead">Fragen, Duplikate und überfällige Posten zuerst klären.</p><div class="task-list">${tasks(true)}</div></div>
+    <div class="card work-card"><h2>Routine erledigen <span class="pill s1">${todo.filter(t => t[0] !== 3).length} bereit</span></h2><p class="lead">Standardprüfungen, Zahlungen und Übergabe an den Treuhänder.</p><div class="task-list">${tasks(false)}</div></div>
   </div></section>
-  <section class="overview-section card"><h2>Kosten je Monat <small>April–Oktober 2026 · CHF netto</small></h2><p class="lead">Aus gebuchten Belegen. Bewege den Zeiger über einen Abschnitt für Kategorie und Wert.</p>${balken(reihen, serien)}</section>`;
+  <div class="overview-switcher-bar">
+    <div><p class="section-label">Detailbereiche</p><h2>${UEB_TAB === 'verlauf' ? 'Geschäftsverlauf & Kosten' : 'Bestand & Fälligkeiten'}</h2></div>
+    <div class="chips" role="tablist" aria-label="Detailbereiche umschalten">
+      <button class="chip${UEB_TAB === 'bestand' ? ' on' : ''}" data-uebtab="bestand" role="tab" aria-selected="${UEB_TAB === 'bestand'}">Rechnungen & Zahlungen</button>
+      <button class="chip${UEB_TAB === 'verlauf' ? ' on' : ''}" data-uebtab="verlauf" role="tab" aria-selected="${UEB_TAB === 'verlauf'}">Umsatz & Kosten</button>
+      <button class="chip${UEB_TAB === 'alle' ? ' on' : ''}" data-uebtab="alle" role="tab" aria-selected="${UEB_TAB === 'alle'}">Alles zeigen</button>
+    </div>
+  </div>
+  ${UEB_TAB === 'bestand' ? bestandView : UEB_TAB === 'verlauf' ? verlaufView : `${bestandView}<div style="margin-top:16px">${verlaufView}</div>`}`;
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2718,14 +2764,14 @@ function kundenBestand() {
   const D = DB.debitoren, sum = L => L.reduce((s, x) => s + x, 0);
   const ent = D.filter(DTABS.entwurf.f), frei = D.filter(DTABS.freigabe.f), off = D.filter(DTABS.offen.f), ueb = D.filter(DTABS.ueber.f);
   const nEnt = ent.length + DB.rapporte.length, alt = Math.max(0, ...ueb.map(d => -tageBis(d.faellig)));
-  const item = (filter, titel, wert, detail, aktion) => `<button class="financial-item" data-go="kunden" data-p="${filter}"><span class="financial-name">${titel}</span><span class="financial-value">${wert}</span><span class="financial-detail">${detail}<span class="financial-action">${aktion} →</span></span></button>`;
+  const item = (filter, titel, wert, detail) => `<button class="financial-item" data-go="kunden" data-p="${filter}"><span class="financial-name">${titel}</span><span class="financial-value">${wert}</span><span class="financial-detail">${detail}</span></button>`;
   return `<section class="overview-section customer-stock-summary" aria-labelledby="customer-stock-heading">
-    <div class="row supplier-stock-heading"><div><p class="section-label">Bestand der Arbeitsliste</p><h2 id="customer-stock-heading">Kundenrechnungen</h2></div><span class="spacer"></span><button class="btn link" data-go="kunden">Arbeitsfläche öffnen →</button></div>
+    <div class="row supplier-stock-heading"><div><p class="section-label">Kunden</p><h2 id="customer-stock-heading">Kundenrechnungen</h2></div><span class="spacer"></span><button class="btn link" data-go="kunden">Öffnen →</button></div>
     <div class="financial-overview">
-      ${item('entwurf', 'Zu verrechnen', nEnt, nEnt ? `${chf(sum(ent.map(d => debSummen(d).brutto)) + sum(DB.rapporte.map(belegSumme)), 0)} · ${DB.rapporte.length} Rapport${DB.rapporte.length === 1 ? '' : 'e'}, ${ent.length} Entwurf${ent.length === 1 ? '' : 'e'}` : 'Nichts offen', 'Zu verrechnende öffnen')}
-      ${item('freigabe', 'Zur Freigabe', frei.length, frei.length ? `${chf(sum(frei.map(d => debSummen(d).brutto)), 0)} · wartet auf ${esc(DB.firma.inhaber)}` : 'Nichts offen', 'Freigaben öffnen')}
-      ${item('offen', 'Offen', off.length, `${chf(sum(off.map(d => debSummen(d).offen)), 0)} · noch ausstehend`, 'Offene Rechnungen öffnen')}
-      ${item('ueber', 'Überfällig', ueb.length, ueb.length ? `${chf(sum(ueb.map(d => debSummen(d).offen)), 0)} · älteste ${alt} T.` : 'Alles im Ziel', 'Überfällige öffnen')}
+      ${item('entwurf', 'Zu verrechnen', nEnt, nEnt ? `${chf(sum(ent.map(d => debSummen(d).brutto)) + sum(DB.rapporte.map(belegSumme)), 0)} · ${DB.rapporte.length} Rapport${DB.rapporte.length === 1 ? '' : 'e'}` : 'Nichts offen')}
+      ${item('freigabe', 'Zur Freigabe', frei.length, frei.length ? `${chf(sum(frei.map(d => debSummen(d).brutto)), 0)} bereit` : 'Nichts offen')}
+      ${item('offen', 'Offen', off.length, `${chf(sum(off.map(d => debSummen(d).offen)), 0)} ausstehend`)}
+      ${item('ueber', 'Überfällig', ueb.length, ueb.length ? `${chf(sum(ueb.map(d => debSummen(d).offen)), 0)} · max. ${alt} T.` : 'Alles im Ziel')}
     </div>
   </section>`;
 }
@@ -3936,12 +3982,13 @@ function sucheZeigen() {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-dlegende],[data-dandere],[data-ausbeleg],[data-dneu],[data-beispielrapport],[data-dnzeile],[data-dnweg],[data-dnmuster],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
+  const t = e.target.closest('[data-go],[data-uebtab],[data-rfilter],[data-papierkorb],[data-legende],[data-geklaert],[data-doppelt],[data-keindoppel],[data-zeileplus],[data-zeileweg],[data-kontieren],[data-frage],[data-loeschen],[data-bezahlt],[data-raten],[data-zuordnen],[data-bfilter],[data-bfreigabe],[data-bfrage],[data-bgeklaert],[data-doppelbelastet],[data-zweikaeufe],[data-blegende],[data-belegfuer],[data-ohnebeleg],[data-ksart],[data-kasseerfassen],[data-kasseweg],[data-kseinzahlen],[data-kassezaehlen],[data-kbeleg],[data-dtab],[data-dlegende],[data-dandere],[data-ausbeleg],[data-dneu],[data-beispielrapport],[data-dnzeile],[data-dnweg],[data-dnmuster],[data-vorlegen],[data-freigeben],[data-zurueck],[data-zahlung],[data-mahnen],[data-korrigieren],[data-storno],[data-kundeneu],[data-kmonat],[data-kgruppe],[data-mq],[data-eingereicht],[data-export],[data-exq],[data-beispielcamt],[data-firmaspeichern],[data-textespeichern],[data-wiederher],[data-zu],[data-ok],[data-ansicht],[data-ansichtstd],[data-andere],[data-ratefeld],[data-zoom],[data-pdf],[data-menu],[data-reset],#schatten,#reset,#toast');
   // a tap on the area already open still closes the menu
   if (e.target.closest('#nav a, #rail .brand') && document.documentElement.classList.contains('nav-offen')) menu(false);
   if (!t) { if (!e.target.closest('header .tools')) { const b = $('#treffer'); if (b) b.remove(); } if (e.target.id === 'modal') modalZu(); return; }
   const d = t.dataset;
   if (t.id === 'toast') { t.classList.remove('show'); return; }
+  if (d.uebtab) { UEB_TAB = d.uebtab; render(); return; }
   if ('menu' in d) { menu(!document.documentElement.classList.contains('nav-offen')); return; }
   if (t.id === 'schatten') { menu(false); $('#rail .menu').focus(); return; }
   if (d.ansicht) {
