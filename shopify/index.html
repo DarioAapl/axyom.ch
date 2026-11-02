@@ -51,8 +51,7 @@ nav { display: flex; align-items: center; gap: 14px; }
 .btn.is-3d { border: 0; color: var(--black);
   background: linear-gradient(180deg, #6fe3cf 0%, #00b2a0 42%, #00857a 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,40,36,.25), 0 2px 0 #007a6e, 0 12px 24px rgba(0,178,160,.22); }
-.btn.is-soon { color: var(--muted); border-color: var(--line); cursor: default; }
-.btn.is-soon:hover { box-shadow: none; border-color: var(--line); }
+.plans-cta { margin-top: 24px; }
 
 /* Hero */
 .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; padding-top: 88px; padding-bottom: 72px; }
@@ -124,7 +123,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     <a id="logo" href="/" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><img src="/media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"></a>
     <nav class="sub2">
       <div class="lang-switch" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button></div>
-      <a class="btn is-3d" href="https://youtu.be/6O6iTwifvcg" target="_blank" rel="noopener" data-i18n="sh.nav.demo">Demo ansehen</a>
+      <a class="btn is-3d" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener" data-i18n="sh.nav.install">Installieren</a>
     </nav>
   </div>
 </header>
@@ -136,8 +135,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <h1 data-i18n-html="sh.h1">Ihr Shop beantwortet Fragen. Rund um die Uhr<span class="star">.</span></h1>
       <p class="lead" data-i18n="sh.lead">Axyom AI ist ein KI-Assistent in Ihrem Online-Shop. Er antwortet Ihren Kunden aus Ihrem eigenen Katalog: Produkte, Varianten, Preise und Richtlinien. Er zeigt Bestellstatus an und spricht die Sprache des Kunden.</p>
       <div class="ctas">
-        <a class="btn is-3d" href="https://youtu.be/6O6iTwifvcg" target="_blank" rel="noopener" data-i18n="sh.cta.demo">Demo ansehen (5 Min.)</a>
-        <span class="btn is-soon" aria-disabled="true" data-i18n="sh.cta.soon">Bald im Shopify App Store</span>
+        <a class="btn is-3d" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener" data-i18n="sh.cta.install">Im Shopify App Store installieren</a>
+        <a class="btn" href="https://youtu.be/6O6iTwifvcg" target="_blank" rel="noopener" data-i18n="sh.cta.demo">Demo ansehen (5 Min.)</a>
       </div>
       <p class="ctas-note" data-i18n-html="sh.cta.other">Kein Shopify? Axyom AI läuft auch auf anderen Websites. Schreiben Sie uns: <a href="mailto:kontakt@axyom.ch?subject=Axyom%20AI%20f%C3%BCr%20meine%20Website">kontakt@axyom.ch</a></p>
     </div>
@@ -165,7 +164,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     <div class="wrap">
       <h2 data-i18n="sh.s.h">In wenigen Minuten eingerichtet. Ohne Code.</h2>
       <ol class="steps">
-        <li><h3 data-i18n="sh.s.1.t">App installieren</h3><p data-i18n="sh.s.1.d">Ihr Katalog wird automatisch eingelesen.</p></li>
+        <li><h3 data-i18n="sh.s.1.t">App installieren</h3><p data-i18n-html="sh.s.1.d">Aus dem <a href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener">Shopify App Store</a>. Ihr Katalog wird automatisch eingelesen.</p></li>
         <li><h3 data-i18n="sh.s.2.t">Plan wählen</h3><p data-i18n="sh.s.2.d">14 Tage kostenlos testen, abgerechnet über Shopify.</p></li>
         <li><h3 data-i18n="sh.s.3.t">Im Theme einschalten</h3><p data-i18n="sh.s.3.d">Ein Schalter im Theme-Editor. Die Verbindung zu Ihrem Shop entsteht automatisch, es gibt keinen Schlüssel zu kopieren.</p></li>
         <li><h3 data-i18n="sh.s.4.t">Fertig</h3><p data-i18n="sh.s.4.d">Der Chat erscheint unten im Shop und beantwortet die erste Frage.</p></li>
@@ -182,6 +181,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         <div class="plan"><div class="name sub2">Business</div><div class="price">$199 <small data-i18n="sh.p.mo">pro Monat</small></div><div class="vol" data-i18n="sh.p.3">10'000 Gespräche pro Monat</div></div>
       </div>
       <p class="fine" data-i18n="sh.p.fine">Alle Pläne mit 14 Tagen Gratis-Test. Abgerechnet in US-Dollar über Ihre Shopify-Rechnung. Kündigen Sie jederzeit, indem Sie die App deinstallieren.</p>
+      <div class="ctas plans-cta"><a class="btn is-3d" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener" data-i18n="sh.p.cta">14 Tage gratis testen</a></div>
     </div>
   </section>
 
