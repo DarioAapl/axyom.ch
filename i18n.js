@@ -90,7 +90,6 @@
     'sh.eyebrow': 'Axyom AI for Shopify',
     'sh.h1': 'Your store answers questions. Around the clock<span class="star">.</span>',
     'sh.lead': 'Axyom AI is an AI assistant in your online store. It answers your customers from your own catalogue: products, variants, prices and policies. It shows order status and speaks the customer’s language.',
-    'sh.cta.demo': 'Watch demo (5 min)',
     'sh.cta.install': 'Install on the Shopify App Store',
     'sh.cta.other': 'Not on Shopify? Axyom AI also runs on other websites. Write to us: <a href="mailto:kontakt@axyom.ch?subject=Axyom%20AI%20for%20my%20website">kontakt@axyom.ch</a>',
     'sh.shot.alt': 'The Axyom assistant in a test store: it gives the price of a snowboard with a link and says honestly that the store does not sell ski helmets.',
