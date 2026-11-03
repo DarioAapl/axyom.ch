@@ -10,14 +10,14 @@
 <style>
 :root{
   --ink:#202936; --dim:#586575; --soft:#e8ebef; --line:#ced5de;
-  --acc:#245fbd; --acci:#194f9f; --wash:#edf3fc;
+  --acc:#00786c; --acci:#005d54; --wash:#e7f5f3;
   --dark:#202936; --surf:#f5f6f8; --card:#fff;
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px;
   /* three levels and nothing else: rot = jetzt, gelb = heute, grün = erledigt */
   --bad:#c02a17; --badbg:rgba(192,42,23,.09);
   --warn:#a85600; --warnbg:rgba(178,94,0,.10);
-  --ok:#007a6e; --okbg:rgba(0,178,160,.12);
-  --info:#2f6db3; --infobg:rgba(47,109,179,.09);
+  --ok:#2e7d32; --okbg:rgba(46,125,50,.11);
+  --info:#2b6f77; --infobg:rgba(43,111,119,.09); --infoink:#17393d;
   --r:12px;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -270,7 +270,7 @@ table.t .sub{font-size:12px;color:var(--dim);margin-top:1px}
 .box.s2{background:var(--warnbg);color:#5c3300}
 .box.s3{background:var(--badbg);color:#6a1509}
 .box.s1{background:var(--okbg);color:#00433c}
-.box.i{background:var(--infobg);color:#173a62}
+.box.i{background:var(--infobg);color:var(--infoink,#173a62)}
 .box b{font-weight:700}
 .box .btn{margin-top:8px}
 .sum{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
@@ -585,7 +585,7 @@ summary{padding:12px 0}.drop:focus-visible{outline:3px solid var(--acc);outline-
 @media(max-width:560px){.pdfbar .zoom{display:inline-flex}}
 
 /* Task-first accounting surfaces: dense, ruled and operational before summary. */
-:root{--r:7px;--surf:#f7f8fa;--soft:#e2e6eb;--line:#c7ced7;--acc:#225ea8;--acci:#174b88;--wash:#edf3fa}
+:root{--r:7px;--surf:#f7f8fa;--soft:#e2e6eb;--line:#c7ced7;--acc:#00786c;--acci:#005d54;--wash:#e7f5f3}
 body{font-size:13.5px}
 header{padding:16px 24px;border-bottom-color:var(--line)}
 header h1{font-size:22px;letter-spacing:-.015em}
@@ -1552,7 +1552,8 @@ function kassenbuch() {
 /* ── Ansicht ──────────────────────────────────────────────────────────
    How one gets around, chosen per kind of device in Einstellungen. Kept
    apart from the demo data, so «Demo zurücksetzen» leaves it alone. */
-const ANSICHT_SPEICHER = 'axyom-rechnungswesen-ansicht';
+// v2: every visitor starts again with the Seitenleiste (2026-11-03)
+const ANSICHT_SPEICHER = 'axyom-rechnungswesen-ansicht-v2';
 const ANSICHTEN = {
   seite: ['Seitenleiste', 'Alle Bereiche links, immer sichtbar'],
   schmal: ['Schmale Leiste', 'Nur Symbole — mehr Platz für die Arbeit'],
@@ -1564,7 +1565,7 @@ const GERAETE = [
   // no narrow rail on a phone: 68 px of 390 is too much to give up
   { id: 'handy', name: 'Handy', d: 'bis 760 px', wahl: ['seite', 'oben'], namen: { seite: ['Menü', 'Die Seitenleiste zum Aufklappen'] } },
 ];
-const ANSICHT_STANDARD = { computer: 'seite', tablet: 'seite', handy: 'oben' };
+const ANSICHT_STANDARD = { computer: 'seite', tablet: 'seite', handy: 'seite' };
 let ANSICHT = { ...ANSICHT_STANDARD };
 try {
   const s = JSON.parse(localStorage.getItem(ANSICHT_SPEICHER) || 'null');
@@ -1618,6 +1619,10 @@ function renderRail() {
   if (n === 'oben') {
     const nv = $('#nav'), a = nv.querySelector('a.on');
     if (a) { const r = a.getBoundingClientRect(), b = nv.getBoundingClientRect(); if (r.left < b.left || r.right > b.right) nv.scrollLeft += r.left - b.left - 24; }
+  } else {
+    // same in the Seitenleiste on a short screen: a deep link must not land on a cut-off entry
+    const nv = $('#nav'), a = nv.querySelector('a.on');
+    if (a) { const r = a.getBoundingClientRect(), b = nv.getBoundingClientRect(); if (r.top < b.top) nv.scrollTop += r.top - b.top - 24; else if (r.bottom > b.bottom) nv.scrollTop += r.bottom - b.bottom + 24; }
   }
 }
 const VIEWS = {};
