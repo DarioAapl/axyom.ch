@@ -12,8 +12,8 @@
    at start-up. Swapping text afterwards would leave the old letters behind,
    so this script runs BEFORE the page module and the switch reloads.
 
-   Language: ?lang=en|de, else the saved choice, else the browser language
-   (German browsers get DE, everyone else EN).
+   Language: ?lang=en|de, else the visitor's saved choice, else German —
+   every first visit opens in German, whatever the browser language.
    ============================================================ */
 (function () {
   'use strict';
@@ -286,7 +286,7 @@
     var q = /[?&]lang=(en|de)\b/.exec(location.search);
     if (q) return q[1];
     try { var s = localStorage.getItem(KEY); if (s === 'en' || s === 'de') return s; } catch (e) {}
-    return /^de\b/i.test(navigator.language || '') ? 'de' : 'en';
+    return 'de';
   }
 
   var lang = pick();
