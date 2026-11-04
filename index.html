@@ -1,1560 +1,827 @@
 <!DOCTYPE html>
-<html lang="de" class="compact" data-i18n-title="meta.title">
+<html lang="de" data-i18n-title="hp.meta.title">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>history.scrollRestoration = 'manual';</script>  <!-- Neuladen startet immer oben -->
-<title>Axyom — Software, die für Sie arbeitet</title>
+<title>Axyom — Ihr Betrieb. Ein System.</title>
+<meta name="description" data-i18n-attr="content:hp.meta.desc" content="Massgeschneiderte Business-Software für KMU in Liechtenstein und der Ostschweiz: Kunden, Offerten, Projekte, Stunden und Rechnungen in einem System.">
+<meta name="theme-color" content="#0b1013">
 <link rel="icon" href="media/brand/favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="media/brand/favicon.ico">
 <link rel="apple-touch-icon" href="media/brand/apple-touch-icon.png">
-<meta name="description" data-i18n-attr="content:meta.desc" content="Massgeschneiderte Software und KI für Ihren Betrieb. Entwickelt in Liechtenstein und der Schweiz.">
-<link rel="stylesheet" href="polish.css">
-<link rel="stylesheet" href="mobile.css">
-
+<link rel="preload" href="media/fonts/inter-500.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face{font-family:Inter;font-style:normal;font-weight:400;font-display:swap;src:url("media/fonts/inter-400.woff2") format("woff2")}
+@font-face{font-family:Inter;font-style:normal;font-weight:500;font-display:swap;src:url("media/fonts/inter-500.woff2") format("woff2")}
+@font-face{font-family:Inter;font-style:normal;font-weight:600;font-display:swap;src:url("media/fonts/inter-600.woff2") format("woff2")}
+@font-face{font-family:Inter;font-style:normal;font-weight:800;font-display:swap;src:url("media/fonts/inter-800.woff2") format("woff2")}
+
 /* ============================================================
-   Axyom im Oryzo/Lusion-Skelett. Alle Masse in Design-px @1920,
-   skaliert über --s = min(vw/1920, vh/819.2)  (Paket §2).
+   Axyom homepage — a scroll-through showcase of the business
+   systems we build. The product screens are drawn in HTML from
+   invented data (Talblick Technik AG); nothing on them is live.
+   German is inline, English comes from i18n.js (hp.* keys).
    ============================================================ */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --s: 1;
-  --black:  #0b1013;
-  --white:  #eef4f2;
-  --panel:  #16211f;
-  --stage:  #0f1a18;
-  --accent: #00b2a0;
-  --amber:  #ef5800;
+:root{
+  --night:#0b1013; --night2:#10181b; --night3:#162225;
+  --paper:#f3f6f5; --card:#fff; --ink:#0f1a1d; --ink2:#3d4b50; --mute:#6b787d;
+  --line:#dde4e2; --line-d:rgba(238,244,242,.12);
+  --snow:#eef4f2; --snow2:rgba(238,244,242,.66);
+  --teal:#00b2a0; --teal-d:#00786c; --teal-dd:#004c44; --teal-w:#e4f4f1;
+  --amber:#c46a00; --red:#c0392b; --green:#2e7d32;
+  --wrap:1200px; --gut:24px;
+  --ease:cubic-bezier(.2,.7,.2,1);
 }
-html { background: var(--black); }
-body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  color: var(--white);
-  font-size: calc(24px * var(--s));
-  font-weight: 400;
-  overflow-x: hidden;
-  min-height: 100vh;
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:var(--night);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--snow);background:var(--night);
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--teal);color:var(--night)}
+a{color:inherit}
+img,video,svg{display:block}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gut)}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.light .eyebrow{color:var(--teal-d)}
+h1,h2,h3{font-weight:600;letter-spacing:-.025em;line-height:1.05}
+.dot{color:var(--teal)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--teal);color:var(--night);padding:8px 14px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:6px}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 24px;border-radius:999px;font:600 15px/1 Inter,sans-serif;
+  text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .25s var(--ease),background .25s,box-shadow .25s,border-color .25s;white-space:nowrap}
+.btn.solid{background:var(--teal);color:#04201c;box-shadow:0 8px 30px rgba(0,178,160,.28),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.solid:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,178,160,.38),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.ghost{border-color:var(--line-d);color:var(--snow)}
+.btn.ghost:hover{border-color:rgba(238,244,242,.35);background:rgba(238,244,242,.04)}
+.btn .arr{transition:transform .25s var(--ease)}
+.btn:hover .arr{transform:translateX(3px)}
+.btn.ghost:hover .arr.down{transform:translateY(3px)}
+
+/* ---------- header ---------- */
+#top{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s,border-color .3s,backdrop-filter .3s;border-bottom:1px solid transparent}
+#top.scrolled{background:rgba(11,16,19,.9);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-color:var(--line-d)}
+#top .wrap{display:flex;align-items:center;gap:28px;height:72px}
+#top .logo img{height:30px;width:auto}
+#top nav{display:flex;gap:28px;margin-left:auto;font-size:15px;font-weight:500}
+#top nav a{text-decoration:none;color:var(--snow2);transition:color .2s}
+#top nav a:hover{color:var(--snow)}
+.lang-switch{display:flex;gap:2px;padding:3px;border:1px solid var(--line-d);border-radius:999px}
+.lang-switch button{background:none;border:0;color:var(--snow2);font:600 12px/1 Inter,sans-serif;letter-spacing:.06em;padding:7px 10px;border-radius:999px;cursor:pointer}
+.lang-switch button[aria-pressed=true]{background:rgba(238,244,242,.1);color:var(--snow)}
+#top .btn{height:42px;padding:0 18px;font-size:14px}
+
+/* ---------- hero ---------- */
+#hero{position:relative;padding:150px 0 0;overflow:hidden;isolation:isolate}
+#hero::before{content:"";position:absolute;inset:-20% -10% auto;height:120%;z-index:-1;
+  background:radial-gradient(50% 45% at 50% 62%,rgba(0,178,160,.22),transparent 70%),radial-gradient(35% 30% at 85% 10%,rgba(0,178,160,.08),transparent 70%)}
+#hero .grid-bg{position:absolute;inset:0;z-index:-1;opacity:.5;
+  background-image:linear-gradient(var(--line-d) 1px,transparent 1px),linear-gradient(90deg,var(--line-d) 1px,transparent 1px);background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(60% 50% at 50% 30%,#000,transparent 75%);mask-image:radial-gradient(60% 50% at 50% 30%,#000,transparent 75%)}
+.hero-copy{text-align:center;max-width:880px;margin:0 auto}
+.hero-copy .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border:1px solid var(--line-d);border-radius:999px;background:rgba(238,244,242,.03);letter-spacing:.08em}
+.hero-copy .eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(0,178,160,.18)}
+.hero-copy h1{font-size:clamp(46px,8.2vw,104px);font-weight:600;letter-spacing:-.045em;line-height:.98;margin:26px 0 22px}
+.hero-copy h1 .soft{color:var(--snow2)}
+.hero-copy p{font-size:clamp(17px,1.6vw,20px);color:var(--snow2);max-width:620px;margin:0 auto}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+.hero-stage{perspective:1600px;margin-top:72px;padding:0 var(--gut)}
+.hero-tilt{max-width:1120px;margin:0 auto;transform-origin:50% 0;transform:rotateX(var(--tilt,20deg)) scale(var(--sc,.94));will-change:transform}
+.hero-fade{position:absolute;left:0;right:0;bottom:0;height:180px;background:linear-gradient(transparent,var(--night));pointer-events:none}
+
+/* ---------- product window (shared) ---------- */
+.win{border-radius:14px;background:#fff;overflow:hidden;position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 40px 120px -20px rgba(0,0,0,.65),0 0 80px -10px rgba(0,178,160,.18)}
+.light .win{box-shadow:0 0 0 1px rgba(15,26,29,.08),0 30px 80px -24px rgba(15,26,29,.28)}
+.win-bar{height:38px;background:#f4f6f6;border-bottom:1px solid #e3e8e7;display:flex;align-items:center;gap:7px;padding:0 14px}
+.win-bar i{width:11px;height:11px;border-radius:50%;background:#dfe4e3}
+.win-bar .url{margin:0 auto;font:500 12px/1 Inter,sans-serif;color:#7d898c;background:#fff;border:1px solid #e3e8e7;border-radius:7px;padding:6px 40px}
+.win-body{position:relative;aspect-ratio:1040/650;overflow:hidden}
+.scr{position:absolute;left:0;top:0;width:1040px;height:650px;transform-origin:0 0;transform:scale(var(--k,1));
+  color:#1d2a2e;font-size:12.5px;line-height:1.4;display:flex;background:#f6f8f8;text-align:left}
+.stack .scr{opacity:0;transition:opacity .55s var(--ease),filter .55s var(--ease);filter:blur(4px)}
+.stack .scr.on{opacity:1;filter:none}
+
+/* app chrome inside a screen */
+.s-side{width:196px;flex:none;background:#fff;border-right:1px solid #e6ebea;padding:18px 10px;display:flex;flex-direction:column;gap:2px}
+.s-side .brand{display:flex;align-items:center;gap:8px;padding:0 8px 14px}
+.s-side .brand svg{width:22px;height:22px}
+.s-side .brand b{font-size:13px}
+.s-firm{margin:0 4px 12px;padding:8px 10px;border:1px solid #e6ebea;border-radius:9px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:12px}
+.s-firm span{color:#8a9598;font-weight:500}
+.s-grp{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#98a3a6;padding:10px 10px 4px}
+.s-nav{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:#55646a;font-weight:500}
+.s-nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.s-nav.on{background:var(--teal-w);color:var(--teal-dd);font-weight:600}
+.s-nav em{margin-left:auto;font-style:normal;font-size:10px;font-weight:700;background:#f0f3f2;color:#55646a;border-radius:99px;padding:1px 7px}
+.s-nav.on em{background:#fff}
+.s-main{flex:1;min-width:0;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.s-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.s-head h4{font-size:20px;font-weight:650;letter-spacing:-.02em}
+.s-head p{color:#7a878a;font-size:12px;margin-top:2px}
+.s-search{width:220px;height:32px;border:1px solid #e1e7e6;border-radius:9px;background:#fff;color:#9aa5a7;display:flex;align-items:center;padding:0 10px;gap:7px}
+.s-btn{height:30px;padding:0 12px;border-radius:8px;background:var(--teal-d);color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.s-btn.l{background:#fff;color:#1d2a2e;border:1px solid #dfe5e4}
+.c{background:#fff;border:1px solid #e6ebea;border-radius:12px;padding:14px 16px}
+.c h5{font-size:13px;font-weight:650;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.c h5 small{font-weight:500;color:#8a9598;font-size:11px}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi .l{color:#7a878a;font-size:11.5px}
+.kpi .v{font-size:22px;font-weight:650;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11px;margin-top:2px;color:#7a878a}
+.kpi .d b{color:var(--green);font-weight:600}
+.pill{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.p-g{background:#e7f3e8;color:#23652a}.p-t{background:var(--teal-w);color:var(--teal-dd)}.p-a{background:#fdf0de;color:#8a4b00}.p-r{background:#fbe7e4;color:#9b2a1e}.p-n{background:#eef1f0;color:#55646a}
+.todo{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #eef2f1}
+.todo:first-of-type{border-top:0}
+.todo i{width:8px;height:8px;border-radius:50%;flex:none}
+.todo div{flex:1}.todo div small{display:block;color:#8a9598;font-size:11px}
+.todo b{font-weight:600}
+.tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#8a9598;font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid #e6ebea}
+.tbl td{padding:8px;border-bottom:1px solid #f0f3f2}
+.tbl .r{text-align:right}
+.tbl tr.hl td{background:#f6fbfa}
+.bar{height:8px;border-radius:99px;background:#edf1f0;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--teal-d))}
+.chart{display:flex;align-items:flex-end;gap:10px;height:118px;padding-top:6px}
+.chart div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;font-size:10px;color:#98a3a6}
+.chart div span{width:100%;border-radius:5px 5px 2px 2px;background:#d6ebe7}
+.chart div.on span{background:linear-gradient(var(--teal),var(--teal-d))}
+.tl{position:relative;padding-left:20px}
+.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:#e3e9e8}
+.tl div{position:relative;padding:0 0 13px}
+.tl div::before{content:"";position:absolute;left:-19px;top:4px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #cfd8d6}
+.tl div.t::before{border-color:var(--teal-d);background:var(--teal-d)}
+.tl small{display:block;color:#8a9598;font-size:11px}
+.doc{background:#fff;border:1px solid #e3e8e7;border-radius:6px;box-shadow:0 10px 30px -12px rgba(15,26,29,.18);padding:26px 30px;font-size:11.5px}
+.ava{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex:none}
+.split{display:grid;gap:14px;min-height:0;align-items:start}
+
+/* ---------- sections ---------- */
+section{position:relative}
+.light{background:var(--paper);color:var(--ink)}
+.sec-head{max-width:760px}
+.sec-head h2{font-size:clamp(34px,4.6vw,58px);margin:14px 0 18px;letter-spacing:-.035em}
+.sec-head p{font-size:19px;color:var(--snow2)}
+.light .sec-head p{color:var(--ink2)}
+
+/* problem → answer */
+#wandel{padding:140px 0 120px}
+.wandel{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:56px}
+.wcard{border-radius:20px;padding:30px;border:1px solid var(--line-d);background:var(--night2);min-height:280px;position:relative;overflow:hidden}
+.wcard h3{font-size:22px;margin-bottom:6px;letter-spacing:-.02em}
+.wcard p{color:var(--snow2);font-size:15.5px}
+.chaos{position:relative;height:150px;margin-top:22px}
+.chaos span{position:absolute;padding:8px 12px;border-radius:9px;background:var(--night3);border:1px solid var(--line-d);font-size:13px;color:var(--snow2);white-space:nowrap;
+  transform:rotate(var(--r));box-shadow:0 8px 20px rgba(0,0,0,.3)}
+.wcard.yes{background:linear-gradient(160deg,#0f2a27,#0d1c1d 60%);border-color:rgba(0,178,160,.3)}
+.one{margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.one span{padding:10px 12px;border-radius:10px;background:rgba(0,178,160,.1);border:1px solid rgba(0,178,160,.22);font-size:13px;color:var(--snow);display:flex;gap:8px;align-items:center}
+.one span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--teal);flex:none}
+
+/* showcase */
+#loesung{padding:130px 0 60px}
+.show{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:56px;margin-top:40px}
+.steps{padding:12vh 0 22vh}
+.step{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:.32;transition:opacity .5s var(--ease)}
+.step.on{opacity:1}
+.step .num{font:600 13px/1 Inter,sans-serif;color:var(--teal-d);letter-spacing:.08em;display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.step .num::after{content:"";height:1px;width:40px;background:currentColor;opacity:.4}
+.step h3{font-size:clamp(26px,2.8vw,36px);letter-spacing:-.03em;margin-bottom:14px}
+.step p{color:var(--ink2);font-size:17.5px;max-width:440px}
+.step ul{list-style:none;margin-top:18px;display:grid;gap:8px}
+.step li{display:flex;gap:10px;align-items:flex-start;font-size:15.5px;color:var(--ink2)}
+.step li::before{content:"";width:16px;height:16px;flex:none;margin-top:3px;border-radius:50%;background:var(--teal-w) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.2l2.2 2.2 4.8-4.8' fill='none' stroke='%23004c44' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px}
+.stage{position:sticky;top:calc(50vh - var(--sh,300px) / 2);height:max-content;align-self:start;margin-top:12vh}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:20px}
+.dots i{width:22px;height:4px;border-radius:9px;background:#cfd8d6;transition:background .3s,width .3s}
+.dots i.on{background:var(--teal-d);width:40px}
+.note{margin-top:14px;text-align:center;font-size:13px;color:var(--mute)}
+
+/* modules strip */
+#module{padding:40px 0 130px}
+.mods{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:44px}
+.mod{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;transition:transform .3s var(--ease),box-shadow .3s}
+.mod:hover{transform:translateY(-3px);box-shadow:0 18px 40px -20px rgba(15,26,29,.25)}
+.mod svg{width:26px;height:26px;stroke:var(--teal-d);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:14px}
+.mod h3{font-size:16.5px;letter-spacing:-.01em;margin-bottom:6px}
+.mod p{font-size:14.5px;color:var(--ink2);line-height:1.5}
+
+/* trades */
+#betriebe{padding:140px 0}
+.trades{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
+.trade{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:4/5;background:var(--night3)}
+.trade video,.trade img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
+.trade:hover video{transform:scale(1.05)}
+.trade::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 50%,rgba(6,10,12,.85))}
+.trade b{position:absolute;left:18px;bottom:16px;z-index:1;font-weight:600;font-size:17px}
+.trade b small{display:block;font-weight:400;font-size:13px;color:var(--snow2);margin-top:2px}
+.trade.cta{display:flex;flex-direction:column;justify-content:space-between;padding:22px;text-decoration:none;
+  background:linear-gradient(160deg,#0f2a27,#0b1714);border:1px solid rgba(0,178,160,.3)}
+.trade.cta::after{display:none}
+.trade.cta h3{font-size:24px;letter-spacing:-.02em}
+.trade.cta span{color:var(--teal);font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* process */
+#ablauf{padding:140px 0}
+.proc{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:64px;position:relative}
+.proc::before{content:"";position:absolute;top:21px;left:22px;right:22px;height:2px;background:linear-gradient(90deg,var(--teal-d) var(--pp,0%),var(--line) var(--pp,0%))}
+.pstep{padding-right:28px;position:relative}
+.pstep .n{width:44px;height:44px;border-radius:50%;background:var(--paper);border:2px solid var(--line);display:grid;place-items:center;font-weight:650;color:var(--mute);position:relative;transition:all .4s var(--ease)}
+.pstep.on .n{border-color:var(--teal-d);background:var(--teal-d);color:#fff;box-shadow:0 0 0 6px rgba(0,120,108,.12)}
+.pstep h3{font-size:20px;margin:22px 0 8px;letter-spacing:-.02em}
+.pstep p{color:var(--ink2);font-size:15.5px}
+
+/* promise */
+#versprechen{padding:0 0 140px}
+.prom{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
+.pcard{border-radius:18px;padding:26px;background:#fff;border:1px solid var(--line)}
+.pcard svg{width:30px;height:30px;stroke:var(--teal-d);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;margin-bottom:18px}
+.pcard h3{font-size:18px;margin-bottom:8px;letter-spacing:-.015em}
+.pcard p{font-size:15px;color:var(--ink2)}
+
+/* shopify band */
+#ai{padding:0 0 0}
+.aiband{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 32px;border-radius:20px;
+  background:var(--ink);color:var(--snow);text-decoration:none;transition:transform .3s var(--ease)}
+.aiband:hover{transform:translateY(-2px)}
+.aiband b{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.aiband p{color:var(--snow2);font-size:15px;margin-top:2px}
+.aiband .go{color:var(--teal);font-weight:600;display:flex;gap:8px;align-items:center;white-space:nowrap}
+
+/* contact */
+#kontakt{padding:150px 0 70px;overflow:hidden;isolation:isolate}
+#kontakt::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(50% 60% at 20% 40%,rgba(0,178,160,.16),transparent 70%)}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+.kgrid h2{font-size:clamp(38px,5vw,66px);letter-spacing:-.04em;margin:14px 0 20px}
+.kgrid .lead{color:var(--snow2);font-size:19px;max-width:440px}
+.kmail{display:inline-flex;margin-top:28px;font-size:22px;font-weight:600;color:var(--snow);text-decoration:none;border-bottom:1.5px solid var(--teal);padding-bottom:3px}
+.kmail:hover{color:var(--teal)}
+.kplace{margin-top:16px;color:var(--snow2);font-size:15px}
+form{background:var(--night2);border:1px solid var(--line-d);border-radius:20px;padding:28px;display:grid;gap:14px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:grid;gap:7px;font-size:13.5px;font-weight:500;color:var(--snow2)}
+input,textarea{font:inherit;font-size:16px;color:var(--snow);background:var(--night);border:1px solid var(--line-d);border-radius:11px;padding:12px 14px;transition:border-color .2s,box-shadow .2s;width:100%}
+textarea{resize:vertical;min-height:110px}
+input:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px rgba(0,178,160,.15)}
+input.is-invalid{border-color:#e0705f}
+.fact{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:4px}
+.fact small{color:var(--snow2);font-size:13px;flex:1;min-width:200px}
+footer{border-top:1px solid var(--line-d);margin-top:110px;padding-top:28px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--snow2);font-size:14px}
+footer nav{display:flex;gap:22px;flex-wrap:wrap}
+footer a{text-decoration:none}
+footer a:hover{color:var(--snow)}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}
+
+/* ---------- responsive ---------- */
+@media (max-width:1020px){
+  .mods,.prom{grid-template-columns:repeat(2,1fr)}
+  .trades{grid-template-columns:repeat(2,1fr)}
+  .proc{grid-template-columns:repeat(2,1fr);row-gap:40px}
+  .proc::before{display:none}
 }
-::selection { background: var(--accent); color: var(--black); }
-
-/* ---------- Typo-Tokens (Paket §2) ---------- */
-.h1   { font-size: calc(164px * var(--s)); line-height: 0.90; font-weight: 500; letter-spacing: -0.018em; }
-.h2   { font-size: calc(68px  * var(--s)); line-height: 0.95; font-weight: 500; text-transform: uppercase; }
-.h3   { font-size: calc(45px  * var(--s)); line-height: 1.0;  font-weight: 500; text-transform: uppercase; }
-.h4   { font-size: calc(32px  * var(--s)); line-height: 1.09; font-weight: 500; text-transform: uppercase; }
-.h5   { font-size: calc(20px  * var(--s)); line-height: 1.2;  font-weight: 600; }
-.body1{ font-size: calc(38px  * var(--s)); line-height: 1.26; font-weight: 400; }
-.body2{ font-size: calc(24px  * var(--s)); line-height: 1.33; font-weight: 400; }
-.sub1 { font-size: calc(24px  * var(--s)); line-height: 1.09; font-weight: 500; text-transform: uppercase; }
-.sub2 { font-size: calc(16px  * var(--s)); line-height: 1.09; font-weight: 500; text-transform: uppercase; }
-.quote{ font-size: calc(30px  * var(--s)); line-height: 1.2;  font-weight: 500; }
-.mega { font-size: calc(260px * var(--s)); line-height: 0.9;  font-weight: 800; letter-spacing: -0.02em; }
-
-/* ---------- Hintergrund-Ebenen ---------- */
-.bg { position: fixed; inset: 0; opacity: 0; pointer-events: none; }
-#bg-stage {
-  background:
-    radial-gradient(90% 120% at 68% 30%, rgba(0,178,160,.10), transparent 55%),
-    linear-gradient(160deg, #142320, #0f1a18 55%, #0a1211);
+@media (max-width:900px){
+  :root{--gut:16px}
+  body{font-size:16px}
+  #top nav{display:none}
+  #top .wrap{gap:12px}
+  .lang-switch{margin-left:auto}
+  #hero{padding-top:120px}
+  .hero-stage{margin-top:48px}
+  .wandel,.kgrid{grid-template-columns:1fr}
+  .kgrid{gap:40px}
+  /* showcase on a phone: the window sticks under the header, the text scrolls beneath it */
+  .show{display:flex;flex-direction:column;margin-top:24px}
+  .stage{order:-1;align-self:stretch}
+  /* a phone shows the work area without the app sidebar, so the screen stays readable */
+  .scr{width:760px}.s-side{display:none}.win-body{aspect-ratio:760/650}
+  .hero-copy .eyebrow{font-size:11px;letter-spacing:.06em;white-space:nowrap}
+  .stage{position:sticky;top:72px;z-index:2;margin:0 calc(-1 * var(--gut));padding:12px var(--gut) 14px;background:linear-gradient(var(--paper) 88%,rgba(243,246,245,0))}
+  .stage .note{display:none}
+  .dots{margin-top:12px}
+  .steps{padding:4vh 0 10vh}
+  .step{min-height:62vh;justify-content:flex-start;padding-top:6vh}
+  #wandel,#loesung,#betriebe,#ablauf,#kontakt{padding-top:96px;padding-bottom:96px}
+  #versprechen{padding-bottom:96px}
+  .aiband{flex-direction:column;align-items:flex-start}
 }
-#bg-grid { /* feines Bühnenraster, als Canvas (Knoten weichen dem Zeiger aus, hero-grid.js) */
-  position: absolute; inset: 0; width: 100%; height: 100%; }
-#bg-void {
-  background:
-    radial-gradient(75% 85% at 8% 82%, rgba(0,178,160,.16) 0%, rgba(0,178,160,.05) 40%, transparent 68%),
-    radial-gradient(90% 90% at 62% 15%, #101b19 0%, transparent 70%),
-    #0b1211;
+@media (max-width:560px){
+  .mods,.prom,.proc{grid-template-columns:1fr}
+  .trades{grid-template-columns:1fr 1fr;gap:10px}
+  .trade b{left:12px;bottom:11px;font-size:15px}
+  .frow{grid-template-columns:1fr}
+  #top .btn{display:none}
+  .one{grid-template-columns:1fr 1fr}
+  .wcard{padding:22px}
 }
-#bg-amber { background:#fff; }
-#bg-light { background: #e9efed; }
-#bg-band  { background: linear-gradient(180deg, #10181a, #0b1013); }
-#bg-end   { background: radial-gradient(100% 100% at 50% 120%, #10201d, #060909 70%); }
-
-/* Atmosphäre (Paket §3b): Vignette ab halbem Radius, 1.5 % Gegenfarbton, Korn */
-#vignette { position: fixed; inset: 0; z-index: 40; pointer-events: none;
-  background: radial-gradient(115% 100% at 50% 44%, transparent 46%, rgba(4,6,7,.55)); }
-#tint { position: fixed; inset: 0; z-index: 41; pointer-events: none;
-  background: var(--amber); opacity: 0.015; }
-#grain { position: fixed; inset: 0; z-index: 42; pointer-events: none; opacity: 0.05; }
-
-#gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-
-/* ---------- Sektionsgerüst (Überlappungs-Architektur) ---------- */
-.section { position: relative; }
-.section__inner { position: fixed; inset: 0; z-index: 3; visibility: hidden; }
-
-/* ---------- Chrome ---------- */
-#site-header { position: fixed; inset: calc(32px * var(--s)) calc(60px * var(--s)) auto; z-index: 20; }
-#logo {
-  position: absolute; left: 0; top: 0; transform-origin: 0 0;
-  font-weight: 800; letter-spacing: -0.02em; line-height: 1;
-  font-size: calc(28px * var(--s)); color: var(--white); white-space: nowrap;
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rv{opacity:1;transform:none;transition:none}
+  .hero-tilt{transform:none!important}
+  .stack .scr{transition:none;filter:none}
+  .step{transition:none}
 }
-#logo .x { color: var(--accent); }
-#nav { position: absolute; right: 0; top: 0; display: flex; gap: calc(34px * var(--s)); }
-#nav a { color: var(--white); text-decoration: none; }
-.lang-switch { display: flex; align-items: center; gap: calc(4px * var(--s)); margin-top: calc(-2px * var(--s)); }
-.lang-switch button { font: inherit; letter-spacing: .06em; background: none; border: 0; cursor: pointer;
-  color: var(--white); opacity: .5; padding: calc(6px * var(--s)) calc(6px * var(--s)); min-width: 32px; min-height: 32px; transition: opacity .2s; }
-.lang-switch button:hover, .lang-switch button[aria-pressed="true"] { opacity: 1; }
-.lang-switch button[aria-pressed="true"] { color: var(--accent); }
-.lang-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-.brand-on-light .lang-switch button { color: var(--black); }
-.brand-on-light .lang-switch button[aria-pressed="true"] { color: #00796d; }
-#nav a.btn { color: var(--black); padding: calc(12px * var(--s)) calc(24px * var(--s)); font-size: calc(15px * var(--s)); letter-spacing: .04em; margin-top: calc(-8px * var(--s)); }
-#scroll-indicator { position: fixed; right: 0; top: 0; bottom: 0; z-index: 20; width: calc(4px * var(--s)); }
-#scroll-indicator__bar { position: absolute; right: calc(8px * var(--s)); top: 0;
-  width: calc(3px * var(--s)); height: calc(120px * var(--s)); background: var(--white); opacity: .8; }
-#plaque {
-  position: fixed; z-index: 20; right: 0; top: calc(120px * var(--s));
-  width: 60px; height: 200px; background: var(--white); color: var(--black);
-  writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
-  gap: 8px;
-}
-#plaque::before { content: '●'; color: var(--accent); font-size: 10px; }
-#scroll-hint { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(32px * var(--s));
-  z-index: 20; opacity: .7; display: flex; gap: .6em; align-items: center; }
-
-/* Flip-Knöpfe (Paket §5) */
-.btn {
-  display: inline-block; position: relative;
-  padding: calc(18px * var(--s)) calc(26px * var(--s));
-  border-radius: calc(48px * var(--s));
-  background: var(--panel); color: var(--white);
-  font-size: calc(16px * var(--s)); font-weight: 500; text-transform: uppercase;
-  text-decoration: none; border: 2px solid rgba(0,178,160,0);
-  transition: border-color .25s; cursor: pointer; line-height: 1.1;
-}
-.btn::before { content: ''; position: absolute; inset: 0; border-radius: calc(48px * var(--s));
-  box-shadow: inset 0 0 .75em rgba(0,178,160,0); transition: box-shadow .25s; }
-.btn:hover, .btn.is-active { border-color: var(--accent); }
-.btn:hover::before, .btn.is-active::before { box-shadow: inset 0 0 .75em var(--accent); }
-.btn.is-solid { background: var(--accent); color: var(--black); font-weight: 600; }
-/* 3D-Knopf im Material des X: Markenverlauf #00B2A0→#004C44, Kante als Extrusion, Glanz oben,
-   Neigung zum Zeiger (JS setzt --tx/--ty), Druck beim Klicken (apple-design §1: Feedback auf pointer-down) */
-.btn.is-3d { border: 0; transform-style: preserve-3d;
-  background: linear-gradient(180deg, #6fe3cf 0%, #00b2a0 42%, #00857a 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,40,36,.25),
-    0 2px 0 #007a6e, 0 12px 24px rgba(0,178,160,.22);   /* eine feine Kante, kein Stapel */
-  transform: perspective(600px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateZ(0);
-  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s cubic-bezier(.2,.8,.2,1); }
-.btn.is-3d::before { box-shadow: none; }
-.btn.is-3d:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(0,40,36,.25),
-    0 2px 0 #007a6e, 0 16px 30px rgba(0,178,160,.3); }
-.btn.is-3d:active { transform: perspective(600px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateY(2px) scale(.985);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 #007a6e, 0 6px 12px rgba(0,178,160,.2);
-  transition-duration: .08s; }
-
-/* Flipper-Zeichen */
-.fl-char { display: inline-block; position: relative; overflow: hidden; vertical-align: top;
-  padding: 0.20em 0.02em 0.10em; margin: -0.20em -0.02em -0.10em; }
-.fl-char > span { display: inline-block; position: relative; }
-.fl-char .dup { position: absolute; top: 100%; left: 0; }
-
-/* gestrichelte Linie */
-.dash { height: 1px; width: 100%; opacity: .55;
-  background: repeating-linear-gradient(90deg, var(--white) 0 2px, transparent 2px 4px); }
-.dash.dark { background: repeating-linear-gradient(90deg, var(--black) 0 2px, transparent 2px 4px); }
-
-/* Split-Helfer */
-.sp-char { display: inline-block; will-change: transform, opacity, filter; }
-.sp-line-mask, .sp-word-mask { overflow: hidden;
-  padding: 0.18em 0.06em 0.14em; margin: -0.18em -0.06em -0.14em; }
-.sp-line, .sp-word { display: inline-block; will-change: transform; }
-.sp-line-mask { display: block; }
-.sp-line-mask .sp-line { display: block; }
-
-/* ============ HERO ============ */
-#hero-top { position: absolute; left: calc(60px * var(--s)); top: calc(32px * var(--s)); width: calc(843px * var(--s)); }
-#hero-wordmark { font-weight: 800; letter-spacing: -0.02em; line-height: 1;
-  font-size: calc(210px * var(--s)); white-space: nowrap; }
-#hero-wordmark .x { color: var(--accent); }
-#hero-copy { position: absolute; left: calc(1236px * var(--s)); top: calc(468px * var(--s)); width: calc(615px * var(--s)); }
-/* Titel und Folgesatz stehen untereinander im selben Block, damit sie sich bei längeren
-   Übersetzungen nie überlappen; jede gemessene Zeile bleibt eine eigene Zeile. */
-#hero-copy2 { margin-top: .35em; }
-#hero-copy .sp-line { display: block; }
-#hero-video { position: absolute; left: calc(1656px * var(--s)); top: calc(933px * var(--s));
-  width: calc(204px * var(--s)); height: calc(115px * var(--s)); border-radius: calc(8px * var(--s));
-  overflow: hidden; cursor: pointer; }
-#hero-video img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.8) brightness(.85); }
-#hero-video span { position: absolute; right: 8px; bottom: 6px; font-size: calc(13px * var(--s));
-  font-weight: 600; text-transform: uppercase; }
-
-/* ============ CLAIM ============ */
-#claim-title { position: absolute; left: 0; right: 0; top: calc(96px * var(--s)); text-align: center; white-space: nowrap; }
-html:not(.mobile) #claim-title { font-size: calc(120px * var(--s)); }
-#claim-title .star { color: var(--accent); }
-#claim-brand { position: absolute; left: 0; right: 0; top: calc(271px * var(--s)); text-align: center; color: var(--accent); }
-
-/* ============ BETRIEBE ============ */
-#bt-mega { position: absolute; left: 0; right: 0; top: calc(400px * var(--s)); text-align: center; transform-origin: 50% 0;
-  white-space: nowrap; color: var(--white);
-  text-shadow: 0 0 calc(60px * var(--s)) rgba(238,244,242,.35); z-index: 1; }
-#bt-strip { position: absolute; left: 0; top: calc(330px * var(--s)); height: calc(690px * var(--s));
-  display: flex; gap: calc(24px * var(--s)); z-index: 2; will-change: transform; }
-#bt-strip img, #bt-strip video, #bt-strip .bakery-slot { flex: none; width: calc(520px * var(--s)); height: calc(690px * var(--s));
-  object-fit: cover; border-radius: calc(6px * var(--s)); filter: saturate(.85) brightness(.9); }
-/* Magazin-Moment: die letzte Karte des Streifens wird gross und übergibt
-   an den nächsten Abschnitt (oryzo wearable→RISE, Masse 840×1036 @1920) */
-#bt-big { position: absolute; left: 50%; top: 50%; width: calc(840px * var(--s));
-  height: calc(1000px * var(--s)); border-radius: calc(12px * var(--s));
-  overflow: hidden; z-index: 3; will-change: transform, opacity; }
-#bt-big video { position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; }   /* kein CSS-Filter: würde bei jeder Grössenänderung neu rastern (Ruckler) */
-#bt-big-shade { position: absolute; inset: 0;
-  background: radial-gradient(80% 80% at 50% 50%, rgba(11,16,19,.55), rgba(11,16,19,.15) 70%); }
-#bt-report { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: calc(800px * var(--s)); padding: calc(56px * var(--s)) calc(64px * var(--s)); text-align: center;
-  background: rgba(11,16,19,.62); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(238,244,242,.14); border-radius: calc(18px * var(--s));
-  box-shadow: 0 calc(40px * var(--s)) calc(90px * var(--s)) rgba(0,0,0,.45); }
-#bt-report-logo { display: block; width: calc(150px * var(--s)); height: calc(150px * var(--s)); object-fit: contain; margin: 0 auto calc(20px * var(--s)); }
-#bt-stars { display: flex; justify-content: center; gap: calc(8px * var(--s)); margin-bottom: calc(26px * var(--s)); }
-#bt-stars svg { width: calc(32px * var(--s)); height: calc(32px * var(--s)); fill: var(--accent); }
-#bt-quote { font-size: calc(38px * var(--s)); line-height: 1.22; font-weight: 500; letter-spacing: -0.01em; margin-bottom: calc(26px * var(--s)); }
-#bt-report .row { display: flex; justify-content: space-between; align-items: baseline;
-  padding: calc(14px * var(--s)) 0; }
-#bt-report .ok { color: var(--accent); font-weight: 600; }
-
-/* ============ FEATURES (B-Bauform) ============ */
-.ft-item { position: absolute; left: calc(100px * var(--s)); top: 0; width: calc(900px * var(--s)); height: 100%; }
-.ft-tag  { position: absolute; top: calc(300px * var(--s)); color: var(--accent);
-  font-size: calc(17px * var(--s)); letter-spacing: .10em; font-weight: 600; }   /* Kleintext: leicht positives Tracking */
-/* Titel ist das Hauptelement: Satzschrift, enges Tracking, Gewicht statt Versalien (apple-design §15) */
-.ft-title{ position: relative; margin-top: calc(348px * var(--s)); width: 100%; text-align: left;
-  text-transform: none; font-weight: 600; font-size: calc(116px * var(--s)); line-height: 0.98; letter-spacing: -0.032em;
-  text-wrap: balance; }   /* keine Einzelwörter in der letzten Zeile */
-.ft-desc { position: relative; margin-top: calc(40px * var(--s)); width: calc(700px * var(--s));
-  font-size: calc(30px * var(--s)); line-height: 1.4; letter-spacing: -0.005em; color: rgba(238,244,242,.72); }
-/* Der dreizeilige dritte Titel braucht einen eigenen Leseraum; keine Kollision mit dem Lauftext. */
-.ft-item[data-i="2"] .ft-desc { margin-top: calc(100px * var(--s)); }
-#ft-rail { position: absolute; right: calc(105px * var(--s)); top: 0; width: calc(160px * var(--s)); height: 100%; }
-#ft-rail div { position: absolute; right: 0; text-align: right; text-transform: none; letter-spacing: 0;
-  font-size: calc(17px * var(--s)); font-weight: 500; opacity: .45; transition: opacity .35s ease, color .35s ease; }
-#ft-vdash { position: absolute; right: calc(66px * var(--s)); top: calc(270px * var(--s));
-  width: 1px; height: calc(540px * var(--s)); opacity: .35; background: rgba(238,244,242,.35); }
-#ft-foot { position: absolute; right: calc(60px * var(--s)); bottom: calc(32px * var(--s));
-  width: calc(390px * var(--s)); text-align: right; opacity: .5; font-size: calc(17px * var(--s)); line-height: 1.33; }
-
-/* ============ Zentrale Ansage (A-Bauform) ============ */
-.center-a { position: absolute; left: 0; right: 0; text-align: center; }
-.ca-sub   { top: calc(118px * var(--s)); }
-.ca-h2    { top: calc(175px * var(--s)); }
-.ca-body  { top: calc(328px * var(--s)); }
-.ca-body > div { display: inline-block; width: calc(430px * var(--s)); }
-#as-field { position: absolute; left: 50%; top: calc(560px * var(--s)); transform: translateX(-50%);
-  width: calc(520px * var(--s)); text-align: center; }
-#as-input { border-bottom: 1px solid rgba(238,244,242,.4); padding: calc(12px * var(--s)) 0;
-  font-size: calc(24px * var(--s)); opacity: .9; text-align: left; }
-#as-input .caret { display: inline-block; width: 2px; height: 1em; background: var(--accent);
-  vertical-align: text-bottom; animation: caret 1.1s steps(1) infinite; }
-@keyframes caret { 50% { opacity: 0; } }
-#as-answer { position: absolute; left: 50%; transform: translateX(-50%); top: calc(760px * var(--s));
-  width: calc(520px * var(--s)); text-align: center; }
-#as-answer .a { color: var(--accent); font-weight: 500; font-size: calc(30px * var(--s)); }
-#as-answer .n { margin-top: .8em; opacity: .7; }
-#lang-pills { position: absolute; left: 0; right: 0; top: calc(560px * var(--s));
-  display: flex; justify-content: center; gap: calc(18px * var(--s)); }
-
-/* ============ HALTUNG (helle Umkehr) ============ */
-#ha .section-dark-text { color: #10201d; }
-#ha-top { position: absolute; left: calc(60px * var(--s)); right: calc(60px * var(--s)); top: calc(86px * var(--s));
-  display: flex; align-items: center; gap: calc(20px * var(--s)); color: #10201d; }
-#ha-top .dash { flex: 1; }
-#ha-label { position: absolute; left: calc(60px * var(--s)); top: calc(363px * var(--s)); color: #10201d; }
-#ha-mega { position: absolute; left: 0; right: 0; top: calc(380px * var(--s)); text-align: center; color: #0b1013; }
-#ha-mega .dot { color: var(--accent); }
-#ha-body { position: absolute; left: 0; right: 0; top: calc(700px * var(--s)); text-align: center; color: #22302d; }
-#ha-body > div { display: inline-block; width: calc(760px * var(--s)); }
-/* Versprechen: Überschrift + vier Karten als leichtes Material auf der hellen Fläche (apple-design §12/§15) */
-#ha-grid-head { position: absolute; left: calc(60px * var(--s)); top: calc(196px * var(--s)); color: #0b1013;
-  font-size: calc(60px * var(--s)); font-weight: 600; letter-spacing: -0.025em; line-height: 1.05; }
-#ha-grid { position: absolute; left: calc(60px * var(--s)); right: calc(60px * var(--s)); top: calc(320px * var(--s));
-  height: calc(700px * var(--s)); display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(28px * var(--s)); color: #10201d; }
-.ha-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-  gap: calc(40px * var(--s)); padding: calc(40px * var(--s)); border-radius: calc(24px * var(--s));
-  background: rgba(255,255,255,.62); border: 1px solid rgba(16,32,29,.06);
-  box-shadow: 0 calc(24px * var(--s)) calc(60px * var(--s)) rgba(16,32,29,.08); }
-/* Symbol gross und mittig auf einer zarten Akzent-Scheibe (SF-Symbols-Logik: dünne Linie, viel Luft) */
-.ha-ico { box-sizing: border-box; width: calc(200px * var(--s)); height: calc(200px * var(--s)); padding: calc(56px * var(--s));
-  border-radius: 50%; background: rgba(0,178,160,.10); color: var(--accent); }
-.ha-card-text { max-width: calc(390px * var(--s)); }
-#ha-grid h5 { font-size: calc(32px * var(--s)); line-height: 1.12; letter-spacing: -0.015em; margin-bottom: .55em; }
-#ha-grid .body2 { color: rgba(16,32,29,.7); font-size: calc(20px * var(--s)); line-height: 1.45; }
-
-/* ============ VORGEHEN (F-Tabelle) ============ */
-#vg-kopf { position: absolute; right: calc(174px * var(--s)); top: calc(90px * var(--s)); width: calc(432px * var(--s)); }
-#vg-head { position: absolute; left: calc(60px * var(--s)); right: calc(60px * var(--s)); top: calc(280px * var(--s)); }
-#vg-head .dash { margin-top: calc(14px * var(--s)); }
-.vg-row { position: absolute; left: calc(60px * var(--s)); right: calc(60px * var(--s)); height: calc(220px * var(--s)); }
-.vg-row .num { position: absolute; left: 0; top: calc(18px * var(--s)); }
-.vg-row .quote { position: absolute; left: 0; top: calc(46px * var(--s));
-  width: calc(560px * var(--s)); font-size: calc(26px * var(--s)); }
-.vg-row .who { position: absolute; left: 0; bottom: calc(2px * var(--s)); opacity: .7; }
-.vg-row img { position: absolute; right: 0; top: calc(18px * var(--s)); width: calc(280px * var(--s));
-  height: calc(180px * var(--s)); object-fit: cover; border-radius: calc(6px * var(--s));
-  filter: saturate(.85) brightness(.9); }
-.vg-row .dash { position: absolute; left: 0; right: 0; bottom: 0; }
-
-/* ============ RECHNUNG (Querband) ============ */
-#band { position: absolute; top: calc(108px * var(--s)); left: 0; height: calc(864px * var(--s));
-  display: flex; gap: calc(24px * var(--s)); will-change: transform; }
-.panel { position: relative; height: 100%; flex: none; border-radius: calc(10px * var(--s)); overflow: hidden; }
-.panel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  filter: saturate(.8) brightness(.55); }
-.panel .t { position: absolute; left: calc(40px * var(--s)); top: 50%; transform: translateY(-58%);
-  font-size: calc(200px * var(--s)); font-weight: 800; letter-spacing: -0.02em; line-height: .95; }
-.panel .n { position: absolute; left: calc(40px * var(--s)); bottom: calc(28px * var(--s));
-  font-size: calc(20px * var(--s)); font-weight: 500; text-transform: uppercase; opacity: .9; }
-.panel.solid { background: radial-gradient(90% 100% at 30% 70%, rgba(0,178,160,.25), transparent 60%), var(--panel); }
-.panel.solid .t { color: var(--accent); }
-.panel.chart { background: linear-gradient(180deg, #121d1b, #0d1514); }
-.panel.chart .bars { position: absolute; inset: auto calc(60px * var(--s)) calc(90px * var(--s));
-  height: 55%; display: flex; align-items: flex-end; gap: calc(26px * var(--s)); opacity: .5; }
-.panel.chart .bars i { flex: 1; background: linear-gradient(180deg, rgba(0,178,160,.7), rgba(0,178,160,.12));
-  border-radius: calc(4px * var(--s)) calc(4px * var(--s)) 0 0; }
-#band-note { position: absolute; left: calc(60px * var(--s)); bottom: calc(32px * var(--s));
-  width: calc(620px * var(--s)); opacity: .75; }
-
-/* ============ EINSTIEG ============ */
-#es-mega { position: absolute; left: 0; right: 0; top: calc(430px * var(--s)); text-align: center;
-  opacity: .14; z-index: 1; }
-#es-title { position: absolute; left: 0; right: 0; top: calc(366px * var(--s)); text-align: center; z-index: 2; }
-#es-pills { position: absolute; left: 0; right: 0; top: calc(620px * var(--s));
-  display: flex; justify-content: center; gap: calc(16px * var(--s)); z-index: 2; }
-#es-table { position: absolute; left: 50%; transform: translateX(-50%); top: calc(760px * var(--s));
-  display: flex; gap: calc(24px * var(--s)); z-index: 2; }
-#es-table > div { width: calc(340px * var(--s)); }
-#es-table h5 { margin-bottom: .6em; }
-#es-table .sub2 { opacity: .75; padding: .5em 0; }
-
-/* ============ NACHWORT ============ */
-#nw-col { position: absolute; left: calc(606px * var(--s)); top: calc(140px * var(--s)); width: calc(708px * var(--s)); }
-#nw-btns { display: flex; gap: calc(12px * var(--s)); margin-bottom: calc(56px * var(--s)); }
-.nw-block { margin-bottom: calc(44px * var(--s)); }
-.nw-block h5 { margin-bottom: .55em; }
-.nw-block .body2 { opacity: .88; }
-
-/* ============ ABBINDER ============ */
-/* Abbinder: Kontaktformular als Material rechts, Ansprache links, X mittig darunter (apple-design §12/§15) */
-/* Abbinder als zentrierter Block (1400 px breit): links Ansprache + X, rechts Formular, vertikal mittig */
-#ab-title { position: absolute; left: calc(260px * var(--s)); top: calc(280px * var(--s)); width: calc(620px * var(--s));
-  font-size: calc(64px * var(--s)); font-weight: 600; line-height: 1.05; letter-spacing: -0.025em; }
-#ab-note { position: absolute; left: calc(260px * var(--s)); top: calc(455px * var(--s)); width: calc(560px * var(--s));
-  font-size: calc(22px * var(--s)); line-height: 1.4; color: rgba(238,244,242,.7); }
-#ab-mail { position: absolute; left: calc(260px * var(--s)); top: calc(548px * var(--s));
-  font-size: calc(22px * var(--s)); font-weight: 500; color: var(--accent); text-decoration: none; }
-#ab-form { position: absolute; right: calc(260px * var(--s)); top: calc(250px * var(--s)); width: calc(700px * var(--s));
-  padding: calc(40px * var(--s)); border-radius: calc(24px * var(--s));
-  background: rgba(238,244,242,.05); border: 1px solid rgba(238,244,242,.10);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  display: grid; gap: calc(18px * var(--s)); }
-.ab-row { display: grid; grid-template-columns: 1fr 1fr; gap: calc(18px * var(--s)); }
-.ab-field { display: block; }
-.ab-field span { display: block; font-size: calc(14px * var(--s)); letter-spacing: .04em; color: rgba(238,244,242,.65);
-  margin-bottom: calc(8px * var(--s)); }
-.ab-field input, .ab-field textarea { display: block; width: 100%; box-sizing: border-box; font: inherit; color: var(--white);
-  font-size: calc(18px * var(--s)); background: rgba(238,244,242,.06); border: 1px solid rgba(238,244,242,.12);
-  border-radius: calc(14px * var(--s)); padding: 0 calc(18px * var(--s)); height: calc(56px * var(--s));
-  transition: border-color .2s, box-shadow .2s, background-color .2s; outline: none; -webkit-appearance: none; }
-.ab-field textarea { height: auto; min-height: calc(124px * var(--s)); padding: calc(14px * var(--s)) calc(18px * var(--s)); resize: vertical; line-height: 1.4; }
-.ab-field input::placeholder, .ab-field textarea::placeholder { color: rgba(238,244,242,.35); }
-.ab-field input:focus, .ab-field textarea:focus { border-color: var(--accent); background: rgba(238,244,242,.08);
-  box-shadow: 0 0 0 calc(3px * var(--s)) rgba(0,178,160,.28); }
-.ab-field input.is-invalid, .ab-field textarea.is-invalid { border-color: #e0715f; box-shadow: 0 0 0 calc(3px * var(--s)) rgba(224,113,95,.25); }
-.ab-actions { display: flex; align-items: center; gap: calc(22px * var(--s)); margin-top: calc(6px * var(--s)); }
-#ab-form button { font: inherit; text-transform: uppercase; font-size: calc(15px * var(--s)); font-weight: 600; letter-spacing: .04em; }
-#ab-form-hint { font-size: calc(14px * var(--s)); line-height: 1.4; color: rgba(238,244,242,.5); }
-#ab-legal { position: absolute; right: calc(36px * var(--s)); bottom: calc(32px * var(--s));
-  width: calc(546px * var(--s)); text-align: right; opacity: .6; }
-#ab-links { position: absolute; left: calc(100px * var(--s)); bottom: calc(32px * var(--s)); display: flex; gap: calc(34px * var(--s)); }
-#ab-links a { color: var(--white); text-decoration: none; text-transform: uppercase;
-  font-size: calc(15px * var(--s)); letter-spacing: .04em; font-weight: 500; opacity: .7; }
 </style>
 </head>
 <body>
+<a class="skip" href="#main" data-i18n="hp.skip">Zum Inhalt springen</a>
 
-<div class="bg" id="bg-stage"><canvas id="bg-grid" aria-hidden="true"></canvas></div>
-<div class="bg" id="bg-void"></div>
-<div class="bg" id="bg-amber"></div>
-<div class="bg" id="bg-light"></div>
-<div class="bg" id="bg-band"></div>
-<div class="bg" id="bg-end"></div>
-
-<canvas id="gl" aria-hidden="true"></canvas>
-
-<header id="site-header">
-  <a id="logo" href="#hero" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><span id="logo-inner"><img class="brand-light" src="media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"><img class="brand-dark" src="media/brand/logo-dark.svg" alt="" aria-hidden="true" width="1664" height="749"></span></a>
-  <nav id="nav" class="sub2">
+<header id="top">
+  <div class="wrap">
+    <a class="logo" href="#hero" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><img src="media/brand/logo-light.svg" alt="Axyom" width="67" height="30"></a>
+    <nav aria-label="Hauptnavigation" data-i18n-attr="aria-label:hp.nav.aria">
+      <a href="#loesung" data-i18n="hp.nav.product">Lösung</a>
+      <a href="#betriebe" data-i18n="hp.nav.trades">Für wen</a>
+      <a href="#ablauf" data-i18n="hp.nav.process">Ablauf</a>
+      <a href="/shopify/" data-i18n="hp.nav.ai">Axyom AI</a>
+    </nav>
     <div class="lang-switch" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button></div>
-    <a href="#ab" class="btn is-solid is-3d flip" id="nav-cta" data-i18n="nav.cta">Erstgespräch</a>
-  </nav>
+    <a class="btn solid" href="#kontakt" data-i18n="nav.cta">Erstgespräch</a>
+  </div>
 </header>
-<div id="scroll-indicator"><div id="scroll-indicator__bar"></div></div>
 
-<p id="scroll-hint" class="sub2" data-i18n="scroll">⌄ Scrollen</p>
+<main id="main">
 
-<main id="site-content">
-
-  <!-- 1 · HERO (1 vh) -->
-  <div id="hero" class="section" style="height:100vh">
-    <div class="section__inner">
-      <div id="hero-top">
-        <div id="hero-wordmark"><img src="media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"></div>
-      </div>
-      <div id="hero-copy" class="body1">
-        <div id="hero-copy1" data-i18n="hero.copy">Gestalten Sie Ihren Betrieb effizient.</div>
-        <div id="hero-copy2" data-i18n="hero.copy2">Axyom erledigt, was Sie heute von Hand machen.</div>
-      </div>
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap hero-copy">
+    <span class="eyebrow rv"><i></i><span data-i18n="hp.hero.eyebrow">Business-Software aus Liechtenstein</span></span>
+    <h1 class="rv d1" data-i18n-html="hp.hero.title">Ihr Betrieb.<br><span class="soft">Ein System</span><span class="dot">.</span></h1>
+    <p class="rv d2" data-i18n="hp.hero.sub">Kunden, Offerten, Projekte, Stunden und Rechnungen an einem Ort – gebaut für die Art, wie Ihr Betrieb arbeitet. Nicht umgekehrt.</p>
+    <div class="hero-cta rv d3">
+      <a class="btn solid" href="#kontakt"><span data-i18n="hp.hero.cta">Erstgespräch vereinbaren</span><span class="arr" aria-hidden="true">→</span></a>
+      <a class="btn ghost" href="#loesung"><span data-i18n="hp.hero.more">So sieht es aus</span><span class="arr down" aria-hidden="true">↓</span></a>
     </div>
   </div>
-
-  <!-- 2 · CLAIM (2.2 vh) — ein Scroll vom Hero bis zur fertigen Aussage -->
-  <div id="claim" class="section" style="height:220vh">
-    <div class="section__inner">
-      <h1 id="claim-title" class="h1" data-i18n-html="claim.title">Ein System statt mehrerer Tools<span class="star">.</span></h1>
-      <div id="claim-brand" class="h4"></div>
+  <div class="hero-stage" aria-hidden="true">
+    <div class="hero-tilt">
+      <div class="win"><div class="win-bar"><i></i><i></i><i></i><span class="url">app.axyom.ch</span></div><div class="win-body" id="hero-body"></div></div>
     </div>
   </div>
+  <div class="hero-fade"></div>
+</section>
 
-  <!-- 4 · FEATURES (10.5 vh) -->
-  <div id="ft" class="section" style="height:1000vh">
-    <div class="section__inner">
-      <div class="ft-item" data-i="0">
-        <div class="ft-tag sub1" data-i18n="ft.0.tag">Kennenlernen</div>
-        <h3 class="ft-title h3" data-i18n="ft.0.title">Wir lernen Ihren Betrieb kennen</h3>
-        <div class="ft-desc body2" data-i18n="ft.0.desc">Wir lernen Ihre heutige Arbeitsweise und Ihre Abläufe mit den bestehenden Tools kennen.</div>
-      </div>
-      <div class="ft-item" data-i="1">
-        <div class="ft-tag sub1" data-i18n="ft.1.tag">Passgenau</div>
-        <h3 class="ft-title h3" data-i18n="ft.1.title">Keine neuen Tools. Keine Umstrukturierung.</h3>
-        <div class="ft-desc body2" data-i18n="ft.1.desc">Wir bauen Ihr Tool so, dass es sich ohne grossen Aufwand in Ihren Betrieb integrieren lässt.</div>
-      </div>
-      <div class="ft-item" data-i="2">
-        <div class="ft-tag sub1" data-i18n="ft.2.tag">Erweiterbar</div>
-        <h3 class="ft-title h3" data-i18n="ft.2.title">Ihr eigenes System – nach Belieben anpassbar</h3>
-        <div class="ft-desc body2" data-i18n="ft.2.desc">Ihr hauseigenes Tool lässt sich jederzeit weiterentwickeln und wächst mit Ihrem Betrieb.</div>
-      </div>
-      <div id="ft-rail">
-        <div class="sub2" style="top: calc(270px * var(--s))" data-i18n="ft.0.tag">Kennenlernen</div>
-        <div class="sub2" style="top: calc(523px * var(--s))" data-i18n="ft.1.tag">Passgenau</div>
-        <div class="sub2" style="top: calc(775px * var(--s))" data-i18n="ft.2.tag">Erweiterbar</div>
-      </div>
-      <div id="ft-vdash"></div>
-      <div id="ft-foot"></div>
+<!-- ============ FROM CHAOS TO ONE SYSTEM ============ -->
+<section id="wandel">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="hp.w.eyebrow">Das Problem</span>
+      <h2 data-i18n-html="hp.w.title">Fünf Tools, drei Excel-Listen und ein Stapel Belege<span class="dot">.</span></h2>
+      <p data-i18n="hp.w.sub">Die meisten Betriebe arbeiten mit Programmen, die nicht miteinander reden. Jede Offerte wird abgetippt, jede Stunde zweimal erfasst, und am Monatsende sucht jemand die Belege zusammen.</p>
     </div>
-  </div>
-
-  <!-- 3 · BETRIEBE (13.25 vh) -->
-  <div id="bt" class="section" style="height:1325vh">
-    <div class="section__inner">
-      <div id="bt-mega" class="mega" data-i18n="bt.mega">Für jeden Betrieb.</div>
-      <div id="bt-strip"></div>
-      <div id="bt-big">
-        <video src="media/media/vid-fromheaven.mp4" muted loop playsinline preload="none"></video>
-        <div id="bt-big-shade"></div>
-        <div id="bt-report">
-          <img id="bt-report-logo" src="media/media/fromheaven-logo.png" alt="From Heaven" width="480" height="480">
-          <div id="bt-stars" role="img" aria-label="5 von 5 Sternen" data-i18n-attr="aria-label:bt.stars"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 6.1 6.7.9-4.9 4.7 1.2 6.7L12 17.7l-5.95 3.2 1.2-6.7-4.9-4.7 6.7-.9z"/></svg></div>
-          <div id="bt-quote" data-i18n="bt.quote">«Durch Axyom habe ich die Fleissarbeit abgegeben - ohne jemanden dafür einzustellen und ohne meine Abende dafür herzugeben.»</div>
-          <div class="sub2" style="opacity:.75" data-i18n="bt.source">From Heaven · Café-Tapas-Bar, Bad Ragaz</div>
+    <div class="wandel">
+      <div class="wcard rv">
+        <h3 data-i18n="hp.w.before">Heute</h3>
+        <p data-i18n="hp.w.before.d">Daten an vielen Orten, Wissen in wenigen Köpfen.</p>
+        <div class="chaos" aria-hidden="true">
+          <span style="--r:-6deg;left:2%;top:8%">Offerte_final_v3.docx</span>
+          <span style="--r:4deg;left:44%;top:0">Stunden_Oktober.xlsx</span>
+          <span style="--r:-2deg;left:20%;top:42%">Kundenliste (alt).xlsx</span>
+          <span style="--r:7deg;left:58%;top:46%">✉ Re: Re: Rechnung?</span>
+          <span style="--r:-4deg;left:6%;top:76%">Belege_Schuhschachtel</span>
+          <span style="--r:3deg;left:52%;top:80%">Notizzettel</span>
+        </div>
+      </div>
+      <div class="wcard yes rv d1">
+        <h3 data-i18n="hp.w.after">Mit Axyom</h3>
+        <p data-i18n="hp.w.after.d">Ein System, das Ihre Abläufe abbildet – vom ersten Anruf bis zur Übergabe an den Treuhänder.</p>
+        <div class="one">
+          <span data-i18n="hp.m.crm.t">Kunden</span><span data-i18n="hp.m.quote.t">Offerten</span><span data-i18n="hp.m.proj.t">Projekte</span>
+          <span data-i18n="hp.m.time.t">Stunden</span><span data-i18n="hp.m.inv.t">Rechnungen</span><span data-i18n="hp.m.exp.t">Treuhand</span>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- 7 · HALTUNG (5.73 vh, helle Umkehr) -->
-  <div id="ha" class="section" style="height:573vh">
-    <div class="section__inner">
-      <div id="ha-top" class="sub2"><div class="dash dark"></div><span data-i18n="ha.top">Unser Versprechen</span><div class="dash dark"></div></div>
-      <div id="ha-label" class="h4" data-i18n="ha.label">Worauf Sie sich verlassen können</div>
-      <div id="ha-mega" class="mega" data-i18n-html="ha.mega">ehrlich<span class="dot">.</span></div>
-      <div id="ha-body" class="body2"><div data-i18n="ha.body">Klare Aussagen statt grosser Versprechen. Sie erfahren von Anfang an, was Ihr System leistet und wo seine Grenzen liegen.</div></div>
-      <div id="ha-grid-head" data-i18n="ha.head">Was Sie von uns erwarten dürfen.</div>
-      <div id="ha-grid">
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.1.t">Persönliche Betreuung</h5><div class="body2" data-i18n="ha.1.d">Sie haben eine feste Ansprechperson, die Ihren Betrieb kennt. Direkt erreichbar, ohne Ticketsystem und ohne Warteschleife.</div></div></div>
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m8.5 13 2.5 2.5 4.5-4.5"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.2.t">Ehrliche Einschätzung</h5><div class="body2" data-i18n="ha.2.d">Wir sagen Ihnen vor dem Projekt, was Automatisierung in Ihrem Betrieb leisten kann und was nicht. Klare Erwartungen, keine Überraschungen.</div></div></div>
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.3.t">Aus der Region</h5><div class="body2" data-i18n="ha.3.d">Entwickelt in Liechtenstein und der Schweiz. Kurze Wege, persönliche Termine vor Ort und Betreuung in Ihrer Sprache.</div></div></div>
-        <div class="ha-card"><svg class="ha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></svg><div class="ha-card-text"><h5 class="h5" data-i18n="ha.4.t">Volle Kontrolle</h5><div class="body2" data-i18n="ha.4.d">Jedes System arbeitet Ihnen zu. Die Entscheidungen bleiben bei Ihnen, und nichts verlässt den Betrieb ohne Ihre Freigabe.</div></div></div>
+<!-- ============ SHOWCASE ============ -->
+<section id="loesung" class="light">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="hp.s.eyebrow">Ein Rundgang</span>
+      <h2 data-i18n-html="hp.s.title">So arbeitet ein Betrieb mit Axyom<span class="dot">.</span></h2>
+      <p data-i18n="hp.s.sub">Ein Beispiel aus einem unserer Systeme: ein Auftrag vom ersten Kontakt bis zur Buchhaltung. Scrollen Sie durch.</p>
+    </div>
+    <div class="show">
+      <div class="steps">
+        <article class="step" data-s="0">
+          <div class="num">01 · <span data-i18n="hp.s0.tag">Überblick</span></div>
+          <h3 data-i18n="hp.s0.t">Alles, was heute ansteht – auf einen Blick.</h3>
+          <p data-i18n="hp.s0.d">Offene Offerten, laufende Projekte, fällige Rechnungen. Wer mehrere Firmen führt, sieht sie zusammen oder einzeln.</p>
+          <ul><li data-i18n="hp.s0.l1">Aufgaben nach Dringlichkeit, nicht nach Programm</li><li data-i18n="hp.s0.l2">Mehrere Firmen in einer Ansicht</li></ul>
+        </article>
+        <article class="step" data-s="1">
+          <div class="num">02 · <span data-i18n="hp.s1.tag">Kunden</span></div>
+          <h3 data-i18n="hp.s1.t">Jeder Kunde mit seiner ganzen Geschichte.</h3>
+          <p data-i18n="hp.s1.d">Anfragen, Besuche, Offerten, Projekte und Rechnungen – chronologisch an einem Ort. Wer übernimmt, weiss sofort Bescheid.</p>
+          <ul><li data-i18n="hp.s1.l1">Kontakte, Notizen und Dokumente beim Kunden</li><li data-i18n="hp.s1.l2">Nachfassen mit Termin, damit nichts liegen bleibt</li></ul>
+        </article>
+        <article class="step" data-s="2">
+          <div class="num">03 · <span data-i18n="hp.s2.tag">Offerten</span></div>
+          <h3 data-i18n="hp.s2.t">Offerten in Minuten statt Stunden.</h3>
+          <p data-i18n="hp.s2.d">Positionen direkt aus Ihren Preislisten, Ihr Layout, Ihre Konditionen. Angenommen? Daraus wird mit einem Klick ein Projekt.</p>
+          <ul><li data-i18n="hp.s2.l1">Lieferanten-Preislisten importieren</li><li data-i18n="hp.s2.l2">Versionen und Status jeder Offerte</li></ul>
+        </article>
+        <article class="step" data-s="3">
+          <div class="num">04 · <span data-i18n="hp.s3.tag">Projekte &amp; Stunden</span></div>
+          <h3 data-i18n="hp.s3.t">Sehen, ob sich ein Auftrag lohnt – solange er läuft.</h3>
+          <p data-i18n="hp.s3.d">Stunden pro Person und Projekt, Budget gegen Aufwand, Marge pro Auftrag. Nicht erst bei der Schlussrechnung.</p>
+          <ul><li data-i18n="hp.s3.l1">Interne Kosten und Verrechnungsansatz getrennt</li><li data-i18n="hp.s3.l2">Material und Stunden direkt auf das Projekt</li></ul>
+        </article>
+        <article class="step" data-s="4">
+          <div class="num">05 · <span data-i18n="hp.s4.tag">Rechnungen</span></div>
+          <h3 data-i18n="hp.s4.t">Rechnungen schreiben, ohne abzutippen.</h3>
+          <p data-i18n="hp.s4.d">Aus Stunden und Material wird die Rechnung mit QR-Zahlteil. Zahlungen werden anhand des Bankauszugs zugeordnet.</p>
+          <ul><li data-i18n="hp.s4.l1">Swiss QR-Rechnung</li><li data-i18n="hp.s4.l2">Offene Posten und Mahnungen im Blick</li></ul>
+        </article>
+        <article class="step" data-s="5">
+          <div class="num">06 · <span data-i18n="hp.s5.tag">Treuhand</span></div>
+          <h3 data-i18n="hp.s5.t">Saubere Übergabe an Ihren Treuhänder.</h3>
+          <p data-i18n="hp.s5.d">Belege, Buchungsjournal und MWST-Zahlen als Export – vollständig und geprüft. Die Buchhaltung bleibt bei Ihrem Treuhänder.</p>
+          <ul><li data-i18n="hp.s5.l1">Exporte für Abacus, Bexio und Excel</li><li data-i18n="hp.s5.l2">Ihre Daten jederzeit vollständig exportierbar</li></ul>
+        </article>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <div class="win"><div class="win-bar"><i></i><i></i><i></i><span class="url">app.axyom.ch</span></div><div class="win-body stack" id="stack"></div></div>
+        <div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <p class="note" data-i18n="hp.s.note">Beispiel mit erfundenen Daten</p>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- 12 · ABBINDER (1.21 vh) -->
-  <div id="ab" class="section" style="height:121vh">
-    <div class="section__inner">
-      <h2 id="ab-title" data-i18n="ab.title">Erzählen Sie uns von Ihrem Betrieb.</h2>
-      <div id="ab-note" data-i18n="ab.note">Unverbindlich. Wir besprechen Ihre Abläufe und geben Ihnen eine ehrliche Einschätzung.</div>
-      <a id="ab-mail" class="flip" href="mailto:Kontakt@axyom.ch">Kontakt@axyom.ch</a>
-      <form id="ab-form" novalidate>
-        <div class="ab-row">
-          <label class="ab-field"><span data-i18n="ab.name">Name</span><input name="name" type="text" autocomplete="name" required></label>
-          <label class="ab-field"><span data-i18n="ab.biz">Betrieb</span><input name="betrieb" type="text" autocomplete="organization"></label>
+<!-- ============ MODULES ============ -->
+<section id="module" class="light">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="hp.m.eyebrow">Bausteine</span>
+      <h2 data-i18n-html="hp.m.title">Nur das, was Ihr Betrieb braucht<span class="dot">.</span></h2>
+      <p data-i18n="hp.m.sub">Jedes System wird aus Bausteinen zusammengestellt und auf Ihre Abläufe angepasst. Was Sie nicht brauchen, kommt nicht hinein.</p>
+    </div>
+    <div class="mods">
+      <div class="mod rv"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.6 3.5 6"/></svg><h3 data-i18n="hp.m.crm.t">Kunden</h3><p data-i18n="hp.m.crm.d">Kontakte, Verlauf, Nachfassen und Dokumente pro Kunde.</p></div>
+      <div class="mod rv d1"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg><h3 data-i18n="hp.m.quote.t">Offerten</h3><p data-i18n="hp.m.quote.d">Aus Preislisten und Vorlagen, mit Status und Versionen.</p></div>
+      <div class="mod rv d2"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg><h3 data-i18n="hp.m.proj.t">Projekte</h3><p data-i18n="hp.m.proj.d">Projektakte mit Budget, Material, Dateien und Marge.</p></div>
+      <div class="mod rv d3"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><h3 data-i18n="hp.m.time.t">Stunden</h3><p data-i18n="hp.m.time.d">Zeiterfassung pro Person und Projekt, auch unterwegs.</p></div>
+      <div class="mod rv"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><h3 data-i18n="hp.m.inv.t">Rechnungen</h3><p data-i18n="hp.m.inv.d">QR-Rechnungen, Zahlungsabgleich, offene Posten.</p></div>
+      <div class="mod rv d1"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/></svg><h3 data-i18n="hp.m.disp.t">Einsatzplanung</h3><p data-i18n="hp.m.disp.d">Wer ist wann bei welchem Kunden – für Betriebe mit Aussendienst.</p></div>
+      <div class="mod rv d2"><svg viewBox="0 0 24 24"><path d="M4 4h16v5H4zM6 9v11h12V9"/><path d="M10 13h4"/></svg><h3 data-i18n="hp.m.arch.t">Archiv</h3><p data-i18n="hp.m.arch.d">Belege und Dokumente revisionssicher abgelegt und auffindbar.</p></div>
+      <div class="mod rv d3"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg><h3 data-i18n="hp.m.exp.t">Treuhand</h3><p data-i18n="hp.m.exp.d">Exporte für Ihren Treuhänder statt Belegstapel.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRADES ============ -->
+<section id="betriebe">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="hp.t.eyebrow">Für wen</span>
+      <h2 data-i18n-html="hp.t.title">Für Betriebe, die Aufträge abwickeln<span class="dot">.</span></h2>
+      <p data-i18n="hp.t.sub">Handwerk, Werkstatt, Praxis oder Laden: Wo Offerten, Stunden und Rechnungen den Alltag bestimmen, nimmt Ihnen ein eigenes System die Fleissarbeit ab.</p>
+    </div>
+    <div class="trades">
+      <div class="trade rv"><video data-src="media/media/vid-schreiner.mp4" poster="media/media/vid-schreiner-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.1">Schreinerei<small>Offerten aus Materiallisten</small></b></div>
+      <div class="trade rv d1"><video data-src="media/media/vid-garage.mp4" poster="media/media/vid-garage-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.2">Garage<small>Aufträge, Teile und Termine</small></b></div>
+      <div class="trade rv d2"><video data-src="media/media/vid-schweisser.mp4" poster="media/media/vid-schweisser-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.3">Metallbau<small>Projekte mit Stunden und Material</small></b></div>
+      <div class="trade rv d3"><video data-src="media/media/vid-zahnarzt.mp4" poster="media/media/vid-zahnarzt-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.4">Praxis<small>Termine und Abrechnung</small></b></div>
+      <div class="trade rv"><video data-src="media/media/vid-coiffeur.mp4" poster="media/media/vid-coiffeur-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.5">Coiffeur<small>Kundenkartei und Kasse</small></b></div>
+      <div class="trade rv d1"><video data-src="media/media/vid-baeckerei.mp4" poster="media/media/vid-baeckerei-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.6">Bäckerei<small>Bestellungen und Lieferungen</small></b></div>
+      <div class="trade rv d2"><video data-src="media/media/vid-florist.mp4" poster="media/media/vid-florist-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.7">Floristik<small>Aufträge und Lieferungen</small></b></div>
+      <a class="trade cta rv d3" href="#kontakt"><h3 data-i18n="hp.t.cta">Ihr Betrieb ist anders? Gut so.</h3><span><span data-i18n="hp.t.cta2">Erzählen Sie uns davon</span> <span aria-hidden="true">→</span></span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROCESS ============ -->
+<section id="ablauf" class="light">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="hp.p.eyebrow">Ablauf</span>
+      <h2 data-i18n-html="hp.p.title">Vom ersten Gespräch zum eigenen System<span class="dot">.</span></h2>
+      <p data-i18n="hp.p.sub">Sie sehen Ihr System, bevor es gebaut wird. Und Sie entscheiden bei jedem Schritt, ob es weitergeht.</p>
+    </div>
+    <div class="proc" id="proc">
+      <div class="pstep"><div class="n">1</div><h3 data-i18n="hp.p1.t">Kennenlernen</h3><p data-i18n="hp.p1.d">Wir kommen vorbei und schauen uns an, wie Ihr Betrieb heute arbeitet: welche Tools, welche Listen, wo es hakt.</p></div>
+      <div class="pstep"><div class="n">2</div><h3 data-i18n="hp.p2.t">Prototyp</h3><p data-i18n="hp.p2.d">Sie erhalten einen klickbaren Prototyp mit Ihren Abläufen. So sehen Sie, was Sie bekommen, bevor gebaut wird.</p></div>
+      <div class="pstep"><div class="n">3</div><h3 data-i18n="hp.p3.t">Aufbau</h3><p data-i18n="hp.p3.d">Wir bauen in Etappen, jede mit einer Abnahme durch Sie. Bestehende Daten übernehmen wir, wo es sinnvoll ist.</p></div>
+      <div class="pstep"><div class="n">4</div><h3 data-i18n="hp.p4.t">Betrieb</h3><p data-i18n="hp.p4.d">Wir betreiben, sichern und entwickeln Ihr System weiter. Mit einer festen Ansprechperson, die Ihren Betrieb kennt.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROMISE ============ -->
+<section id="versprechen" class="light">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="ha.top">Unser Versprechen</span>
+      <h2 data-i18n-html="hp.v.title">Ehrlich, persönlich, aus der Region<span class="dot">.</span></h2>
+    </div>
+    <div class="prom">
+      <div class="pcard rv"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><h3 data-i18n="ha.1.t">Persönliche Betreuung</h3><p data-i18n="ha.1.d">Sie haben eine feste Ansprechperson, die Ihren Betrieb kennt. Direkt erreichbar, ohne Ticketsystem und ohne Warteschleife.</p></div>
+      <div class="pcard rv d1"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11l2 2 4-4"/></svg><h3 data-i18n="ha.2.t">Ehrliche Einschätzung</h3><p data-i18n="ha.2.d">Wir sagen Ihnen vor dem Projekt, was Automatisierung in Ihrem Betrieb leisten kann und was nicht. Klare Erwartungen, keine Überraschungen.</p></div>
+      <div class="pcard rv d2"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><h3 data-i18n="ha.3.t">Aus der Region</h3><p data-i18n="ha.3.d">Entwickelt in Liechtenstein und der Schweiz. Kurze Wege, persönliche Termine vor Ort und Betreuung in Ihrer Sprache.</p></div>
+      <div class="pcard rv d3"><svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z"/><path d="M12 8v6M9 11l3 3 3-3"/></svg><h3 data-i18n="hp.v4.t">Ihre Daten bleiben Ihre</h3><p data-i18n="hp.v4.d">Sie können Ihre Daten jederzeit vollständig exportieren – auch nach Vertragsende. Nichts verlässt den Betrieb ohne Ihre Freigabe.</p></div>
+    </div>
+    <div style="margin-top:56px" class="rv">
+      <a class="aiband" href="/shopify/">
+        <div><b data-i18n="hp.ai.t">Auch von uns: Axyom AI für Shopify</b><p data-i18n="hp.ai.d">Der KI-Assistent, der in Ihrem Onlineshop Kundenfragen beantwortet.</p></div>
+        <span class="go"><span data-i18n="hp.ai.go">Mehr erfahren</span> <span aria-hidden="true">→</span></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section id="kontakt">
+  <div class="wrap">
+    <div class="kgrid">
+      <div class="rv">
+        <span class="eyebrow" data-i18n="hp.k.eyebrow">Erstgespräch</span>
+        <h2 data-i18n-html="ab.title.dot">Erzählen Sie uns von Ihrem Betrieb<span class="dot">.</span></h2>
+        <p class="lead" data-i18n="ab.note">Unverbindlich. Wir besprechen Ihre Abläufe und geben Ihnen eine ehrliche Einschätzung.</p>
+        <a class="kmail" href="mailto:kontakt@axyom.ch">kontakt@axyom.ch</a>
+        <p class="kplace" data-i18n="hp.k.place">Schaan, Liechtenstein · Termine vor Ort in Liechtenstein und der Ostschweiz</p>
+      </div>
+      <form id="ab-form" class="rv d1" novalidate>
+        <div class="frow">
+          <label><span data-i18n="ab.name">Name</span><input name="name" type="text" autocomplete="name" required></label>
+          <label><span data-i18n="ab.biz">Betrieb</span><input name="betrieb" type="text" autocomplete="organization"></label>
         </div>
-        <label class="ab-field"><span data-i18n="ab.email">E-Mail</span><input name="email" type="email" autocomplete="email" required></label>
-        <label class="ab-field"><span data-i18n="ab.msg">Worum geht es?</span><textarea name="nachricht" rows="4" data-i18n-attr="placeholder:ab.msg.ph" placeholder="Was Sie heute von Hand erledigen und was Sie sich wünschen."></textarea></label>
-        <div class="ab-actions">
-          <button type="submit" class="btn is-solid is-3d flip" data-i18n="ab.send">Erstgespräch anfragen</button>
-          <div id="ab-form-hint" data-i18n="ab.hint">Öffnet Ihr Mailprogramm mit den Angaben. Wir antworten persönlich.</div>
+        <label><span data-i18n="ab.email">E-Mail</span><input name="email" type="email" autocomplete="email" required></label>
+        <label><span data-i18n="ab.msg">Worum geht es?</span><textarea name="nachricht" rows="4" data-i18n-attr="placeholder:ab.msg.ph" placeholder="Was Sie heute von Hand erledigen und was Sie sich wünschen."></textarea></label>
+        <div class="fact">
+          <button type="submit" class="btn solid"><span data-i18n="ab.send">Erstgespräch anfragen</span><span class="arr" aria-hidden="true">→</span></button>
+          <small data-i18n="ab.hint">Öffnet Ihr Mailprogramm mit den Angaben. Wir antworten persönlich.</small>
         </div>
       </form>
-      <div id="ab-links"><a class="flip" href="/privacy.html" data-i18n-html="ab.privacy">Datenschutz</a><a class="flip" href="/shopify/" data-i18n-html="ab.shopify">Axyom AI für Shopify</a><a class="flip" href="/impressum.html" data-i18n-html="ab.imprint">Impressum</a><a class="flip" href="credits.html" data-i18n-html="ab.credits">Bildnachweise</a></div>
-      <div id="ab-legal" class="sub2" data-i18n-html="ab.legal">© 2026 Axyom<br>Liechtenstein &amp; Schweiz</div>
     </div>
+    <footer>
+      <span data-i18n="hp.f.copy">© 2026 Axyom · Liechtenstein &amp; Schweiz</span>
+      <nav aria-label="Rechtliches" data-i18n-attr="aria-label:hp.f.aria">
+        <a href="/shopify/" data-i18n="ab.shopify">Axyom AI für Shopify</a>
+        <a href="/privacy.html" data-i18n="ab.privacy">Datenschutz</a>
+        <a href="/impressum.html" data-i18n="ab.imprint">Impressum</a>
+        <a href="/credits.html" data-i18n="ab.credits">Bildnachweise</a>
+      </nav>
+    </footer>
   </div>
+</section>
 
 </main>
 
-<div id="vignette"></div>
-<div id="tint"></div>
-<canvas id="grain"></canvas>
-
 <script src="i18n.js"></script>
-<script src="three-bundle.js"></script>
-<script type="module">
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-import { createContinuity } from './motion-continuity.js';
-import { createHeroGrid } from './hero-grid.js';
-const { THREE, RoomEnvironment } = window.__AXT;
-
-/* ============ Tuning (Taste G öffnet das Panel) ============ */
-const TUNE = {
-  glatt: 20,        // Scroll-Glättung 1/s
-  stag: 0.2,        // Staffel-Versatz je Zeichen/Zeile
-  fenster: 0.6,     // Fensterbreite je Zeichen/Zeile
-  charDist: 1.0,    // Einflug-Distanz (em)
-  flipTempo: 1.0,   // Buchstaben-Flipper-Tempo
-  introTempo: 1.0,  // Seiten-Intro-Tempo
-  xTempo: 1.0,      // Tempo der X-Querung (Blender-Spur)
-};
-
-/* ============ Mathe (Paket §6) ============ */
-const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
-const cUnMix = (a,b,x) => clamp((x-a)/(b-a), 0, 1);
-const fit = (x,a,b,from,to,e) => { let t = cUnMix(a,b,x); if (e) t = e(t); return from + t*(to-from); };
-const ease = {
-  cubicIn:  t => t*t*t,
-  cubicOut: t => { t-=1; return t*t*t+1; },
-  cubicInOut: t => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1,
-  expoOut:  t => t===1 ? 1 : 1 - Math.pow(2, -10*t),
-  backOut:  t => { const c=1.70158; t-=1; return t*t*((c+1)*t+c)+1; },
-  sineOut:  t => Math.sin(t*Math.PI/2),
-};
-
-/* ============ Skalierung (Paket §2: min(Breite, Höhendeckel)) ============ */
-const DW = () => (document.documentElement.classList.contains('mobile') ? 430 : 1920);
-const DH = () => (document.documentElement.classList.contains('mobile') ? 932 : 1080);
-function applyScale() {
-  const s = Math.min(LW()/DW(), LH()/DH());
-  document.documentElement.style.setProperty('--s', String(s));
-  return s;
-}
-const S = () => Math.min(LW()/DW(), LH()/DH());
-
-/* ============ Split-Helfer ============ */
-function splitChars(el) {
-  const original = [...el.childNodes];
-  const chars = [];
-  function visit(node, parent) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      node.textContent.split(/(\s+)/).forEach(word => {
-        if (!word) return;
-        if (/^\s+$/.test(word)) { parent.appendChild(document.createTextNode(' ')); return; }
-        const holder = document.createElement('span'); holder.style.whiteSpace = 'nowrap';
-        for (const letter of word) {
-          const ch = document.createElement('span'); ch.className = 'sp-char'; ch.textContent = letter;
-          holder.appendChild(ch); chars.push(ch);
-        }
-        parent.appendChild(holder);
-      });
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const copy = node.cloneNode(false); parent.appendChild(copy);
-      [...node.childNodes].forEach(child => visit(child, copy));
-    }
-  }
-  el.replaceChildren(); original.forEach(node => visit(node, el));
-  return chars;
-}
-function splitLines(el, mask) {
-  el.setAttribute("aria-label", el.textContent.trim());
-  const words = el.textContent.trim().split(/\s+/).filter(Boolean);
-  el.innerHTML = words.map(w => `<span class="sp-word" style="display:inline-block">${w}</span>`).join(' ');
-  const els = [...el.querySelectorAll('.sp-word')];
-  const rows = new Map();
-  els.forEach(w => {
-    const top = Math.round(w.getBoundingClientRect().top);
-    if (!rows.has(top)) rows.set(top, []);
-    rows.get(top).push(w.textContent);
-  });
-  el.innerHTML = '';
-  const lines = [];
-  for (const group of rows.values()) {
-    const holder = document.createElement('div');
-    holder.className = mask ? 'sp-line-mask' : 'sp-line';
-    const line = document.createElement('div');
-    line.className = 'sp-line'; line.textContent = group.join(' ');
-    holder.appendChild(line); el.appendChild(holder); lines.push(line);
-  }
-  return lines;
-}
-
-/* ============ Buchstaben-Flipper (Paket §5) ============ */
-const flippers = [];
-function makeFlipper(el) {
-  const targets = [];
-  const build = (node) => {
-    const text = node.textContent;
-    node.textContent = '';
-    const chars = [];
-    text.split(/(\s+)/).forEach(part => {
-      if (/^\s+$/.test(part)) { node.appendChild(document.createTextNode(' ')); return; }
-      const w = document.createElement('span'); w.style.whiteSpace = 'nowrap';
-      for (const ch of part) {
-        const c = document.createElement('span'); c.className = 'fl-char';
-        const inner = document.createElement('span'); inner.textContent = ch;
-        const dup = document.createElement('span'); dup.className = 'dup'; dup.textContent = ch; dup.setAttribute('aria-hidden', 'true');
-        inner.appendChild(dup); c.appendChild(inner); w.appendChild(c);
-        chars.push(inner);
-      }
-      node.appendChild(w);
-    });
-    return chars;
+  /* ------------------------------------------------------------
+     Product screens. Invented data, drawn once, scaled to fit.
+     ------------------------------------------------------------ */
+  var IC = {
+    home: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    crm: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.6 3.5 6"/>',
+    quote: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/>',
+    proj: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/>',
+    time: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    inv: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+    bank: '<path d="M3 10h18M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18M12 3l9 5H3z"/>',
+    exp: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/>',
+    set: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'
   };
-  el.setAttribute('aria-label', el.textContent.trim());
-  const chars = build(el);
-  const f = { el, chars, ratio: 0, flipped: false, dir: 1, get speed() { return (2 + 4/Math.max(1,chars.length)) * TUNE.flipTempo; } };
-  el.addEventListener('pointerenter', e => { f.flipped = true; f.dir = (e.movementX||1) >= 0 ? 1 : -1; });
-  el.addEventListener('pointerleave', () => { f.flipped = false; });
-  flippers.push(f);
-}
-function updateFlippers(dt) {
-  for (const f of flippers) {
-    const target = f.flipped ? 1 : 0;
-    const next = clamp(f.ratio + (f.flipped ? 1 : -1) * f.speed * dt, 0, 1);
-    if (next === f.ratio) continue;
-    f.ratio = next;
-    const n = f.chars.length;
-    f.chars.forEach((c, i) => {
-      let b = n > 1 ? i/(n-1) : 0;
-      if (f.dir < 0) b = 1 - b;
-      const t = fit(f.ratio, b*0.4, b*0.4+0.6, 0, 1, ease.backOut);
-      c.style.transform = `translate3d(0, ${(-1.4*t).toFixed(4)}em, 0)`;
+  var NAV = [['home', 'Übersicht'], ['crm', 'Kunden', '148'], ['quote', 'Offerten', '7'], ['proj', 'Projekte', '12'], ['time', 'Stunden'], ['inv', 'Rechnungen', '5'], ['bank', 'Bank'], ['exp', 'Treuhand'], ['set', 'Einstellungen']];
+  var MARK = '<svg viewBox="100 0 710 749" aria-hidden="true"><path fill="#00b2a0" d="M105.3 748.3c.7-1.5 1.2-3.2 2.2-4.6 51.6-72.1 103.3-144.1 154.9-216.2 30.6-42.8 61.2-85.6 91.8-128.4.9-1.3 1.8-2.6 2.8-4-1.1-1.6-2.2-3.2-3.3-4.7C288.6 299.3 223.4 208.3 158.3 117.3c-.6-.9-1.2-1.8-1.8-3.1.1-.4.4-.8.4-.8 1.1.8 2.4 1.5 3.4 2.3 87.6 70.8 175.2 141.5 262.8 212.3 1.3 1.1 2.7 2.1 4.5 3.6C552.6 221 677.5 110.5 802.3 0l.6.5C705.9 132 609 263.5 511.9 395.1c1.4 2 2.6 3.8 3.9 5.6 63.9 90.8 127.8 181.6 191.7 272.4.6.9 1.2 1.8 1.8 3.2-.2.6-.3.7-.4.8-1.3-.9-2.6-1.6-3.8-2.6-89.7-70.1-179.5-140.2-269.2-210.3-1.2-1-2.5-1.9-4-3-1.1.9-2.2 1.7-3.2 2.6C323.6 556.2 218.5 648.7 113.5 741.2c-2.6 2.3-5.2 4.5-8 6.9z"/></svg>';
+  function side(on) {
+    var h = '<div class="s-side"><div class="brand">' + MARK + '<b>Axyom</b></div><div class="s-firm">Talblick Technik AG <span>▾</span></div>';
+    NAV.forEach(function (n, i) {
+      if (i === 1) h += '<div class="s-grp">Aufträge</div>';
+      if (i === 5) h += '<div class="s-grp">Finanzen</div>';
+      h += '<div class="s-nav' + (n[0] === on ? ' on' : '') + '"><svg viewBox="0 0 24 24">' + IC[n[0]] + '</svg>' + n[1] + (n[2] ? '<em>' + n[2] + '</em>' : '') + '</div>';
     });
+    return h + '</div>';
   }
-}
-document.querySelectorAll('.flip').forEach(makeFlipper);
-/* Kontaktformular: baut eine Mail an Kontakt@axyom.ch mit den Angaben; Pflichtfelder inline markiert */
-document.getElementById('ab-form').addEventListener('submit', e => {
-  e.preventDefault();
-  const form = e.currentTarget, data = Object.fromEntries(new FormData(form).entries());
-  let firstBad = null;
-  form.querySelectorAll('input[required]').forEach(i => {
-    const ok = i.type === 'email' ? /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(i.value.trim()) : i.value.trim().length > 0;
-    i.classList.toggle('is-invalid', !ok);
-    if (!ok && !firstBad) firstBad = i;
-  });
-  if (firstBad) { firstBad.focus(); return; }
-  const T = window.axyomT || ((k, de) => de);
-  const subject = T('mail.subject', 'Erstgespräch') + (data.betrieb ? ': ' + data.betrieb : '');
-  const body = [T('mail.name', 'Name') + ': ' + data.name, T('mail.biz', 'Betrieb') + ': ' + (data.betrieb || '–'), T('mail.email', 'E-Mail') + ': ' + data.email, '', data.nachricht || ''].join('\n');
-  const href = 'mailto:Kontakt@axyom.ch?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-  form.dataset.mailto = href;
-  location.href = href;
-});
-document.getElementById('ab-form').addEventListener('input', e => e.target.classList.remove('is-invalid'));
-/* 3D-Knöpfe neigen sich zum Zeiger, wie ein Objekt, das man antippt */
-document.querySelectorAll('.btn.is-3d').forEach(b => {
-  b.addEventListener('pointermove', e => {
-    const r = b.getBoundingClientRect();
-    const nx = (e.clientX - r.left) / r.width - .5, ny = (e.clientY - r.top) / r.height - .5;
-    b.style.setProperty('--tx', (-ny * 8).toFixed(1) + 'deg');
-    b.style.setProperty('--ty', (nx * 10).toFixed(1) + 'deg');
-  }, { passive: true });
-  b.addEventListener('pointerleave', () => { b.style.setProperty('--tx', '0deg'); b.style.setProperty('--ty', '0deg'); });
-});
-
-/* ============ Scroll-Zustand ============ */
-const state = { scroll: 0, target: 0, startTime: 0 };
-const vhProbe = document.createElement('div');
-vhProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:100vh;visibility:hidden;pointer-events:none';
-document.body.appendChild(vhProbe);
-let vhCache = vhProbe.offsetHeight || innerHeight;
-addEventListener('resize', () => { vhCache = vhProbe.offsetHeight || innerHeight; });
-const vh = () => vhCache;
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-function range(el) {
-  const top = Number(el.dataset.timelineTop)*vh(), h = Number(el.dataset.timelineHeight)*vh();
-  return { show: (state.scroll - top)/vh() + 1, hide: (state.scroll - top - h)/vh() };
-}
-
-/* ============ Sektionselemente + Splits ============ */
-const secs = {};
-for (const id of ['hero','claim','ft','bt','ha','ab'])
-  secs[id] = { el: $('#'+id), inner: $('#'+id+' .section__inner') };
-
-/* Modi: `compact` = statischer Fallback nur noch bei reduzierter Bewegung (oder WebGL-Fehler);
-   `mobile` = eigener Layout-Modus (Entwurfsfläche 430×932) mit derselben Scroll-Choreografie */
-const compactMode = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const mobileMode = !compactMode && matchMedia('(max-width: 900px)').matches;
-if (mobileMode) document.documentElement.classList.add('mobile');
-
-/* ============ Layout-Viewport ============
-   iOS Safari ändert innerHeight, sobald die Adressleiste ein- oder ausfährt, und feuert
-   dabei resize. Würden wir darauf reagieren, springt der ganze Massstab (--s), die
-   WebGL-Grösse und jede Kachelrechnung – das ist das Ruckeln beim Scrollen.
-   Handy: Layout-Höhe = kleine Viewport-Höhe (100svh, Leiste ausgefahren), einmal beim
-   Start gemessen; danach zählt nur noch eine Breitenänderung (Drehen → Neuladen).
-   Desktop: unverändert live aus innerWidth/innerHeight. */
-const svhProbe = document.createElement('div');
-svhProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:100svh;visibility:hidden;pointer-events:none';
-document.body.appendChild(svhProbe);
-let layoutW = innerWidth;
-let layoutH = mobileMode ? (svhProbe.offsetHeight || innerHeight) : innerHeight;
-function LW() { return layoutW; }
-function LH() { return layoutH; }
-function syncLayoutViewport() {   // true, wenn sich die Layout-Masse wirklich geändert haben
-  const w = innerWidth;
-  const h = mobileMode ? (innerWidth === layoutW ? layoutH : (svhProbe.offsetHeight || innerHeight)) : innerHeight;
-  if (w === layoutW && h === layoutH) return false;
-  layoutW = w; layoutH = h;
-  return true;
-}
-const XF = mobileMode ? 0.55 : 1;   // Massstab der gebackenen Wurf-Spur des X auf dem Handy
-/* Informationsdichte statt Kino-Leerlauf: jede normale Bildschirmstrecke bringt
-   die nächste Aussage. Die dramaturgische Zeitachse bleibt pro Sektion erhalten,
-   wird aber je nach Inhaltsart unterschiedlich stark auf echten Scrollweg verdichtet. */
-const SCROLL_FACTORS = compactMode
-  ? {}
-  : (mobileMode
-      ? { hero: .62, claim: .38, ft: .32, bt: .30, ha: .34, ab: .45 }
-      : { hero: .72, claim: .45, ft: .38, bt: .36, ha: .40, ab: .52 });
-/* Nur die verlangten Wege werden zusätzlich verdichtet. Die Zeitachse und damit
-   sämtliche ruhenden Kompositionen bleiben unverändert:
-   - Hero-Ausgang 0.5 bis fertiger Claim 1.9: ein Viertel des ursprünglichen Scrollwegs
-   - fertiger erster Punkt bis fertiger dritter Punkt: ein Viertel des ursprünglichen Scrollwegs
-   Claim → erster Punkt behält exakt den bisherigen Faktor. */
-const SCROLL_PROFILES = compactMode ? {} : {
-  hero:  [[0, .5, 1], [.5, 1, .25]],
-  claim: [[0, .9, .25], [.9, 2.2, 1]],
-  ft:    [[0, .25, 1], [.25, 6.8, .25], [6.8, 10, .25]],
-};
-function scrollParts(id, height, baseFactor, isLast) {
-  let parts = (SCROLL_PROFILES[id] || [[0, height, 1]])
-    .map(([from, to, multiplier]) => ({ from, to, factor: baseFactor*multiplier }));
-  // Beim letzten Abschnitt bleibt wie bisher das letzte Timeline-vh physisch 1 vh lang,
-  // damit der Abbinder am Seitenende vollständig erreicht wird.
-  if (isLast) {
-    const cut = Math.max(0, height-1), split = [];
-    parts.forEach(p => {
-      if (p.from < cut) split.push({ from:p.from, to:Math.min(p.to,cut), factor:p.factor });
-      if (p.to > cut) split.push({ from:Math.max(p.from,cut), to:p.to, factor:1 });
-    });
-    parts = split.filter(p => p.to > p.from);
+  function head(t, sub, right) {
+    return '<div class="s-head"><div><h4>' + t + '</h4><p>' + sub + '</p></div>' + (right || '<div class="s-search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Suchen …</div>') + '</div>';
   }
-  return parts;
-}
-const timeline = [];
-let timelineTop = 0;
-Object.values(secs).forEach(({el}, index) => {
-  const height = parseFloat(el.style.height)/100;
-  const factor = SCROLL_FACTORS[el.id] || 1;
-  const parts = scrollParts(el.id, height, factor, index === Object.keys(secs).length-1);
-  const physical = parts.reduce((sum,p) => sum + (p.to-p.from)*p.factor, 0);
-  el.dataset.timelineTop = timelineTop;
-  el.dataset.timelineHeight = height;
-  timeline.push({el, top:timelineTop, height, factor, parts, physical});
-  if (!compactMode) el.style.height = (physical*100)+'vh';
-  timelineTop += height;
-});
-function toTimeline(y) {
-  if (compactMode) return y;
-  const section = [...timeline].reverse().find(s => y >= s.el.offsetTop) || timeline[0];
-  const localPhysical = (y-section.el.offsetTop)/vh();
-  let used = 0, localTimeline = 0;
-  for (let i=0; i<section.parts.length; i++) {
-    const p = section.parts[i], span = (p.to-p.from)*p.factor;
-    if (localPhysical <= used+span || i === section.parts.length-1) {
-      localTimeline = p.from + Math.max(0, Math.min(p.to-p.from, (localPhysical-used)/p.factor));
-      break;
+  function scr(on, main) { return '<div class="scr">' + side(on) + '<div class="s-main">' + main + '</div></div>'; }
+  var AV = function (t, c) { return '<span class="ava" style="background:' + c + '">' + t + '</span>'; };
+
+  // a decorative QR-like block (not a code, nothing to scan) with the Swiss cross
+  function qr() {
+    var n = 25, s = '', seed = 7;
+    var rnd = function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    var finder = function (x, y) { return '<rect x="' + x + '" y="' + y + '" width="7" height="7" fill="#111"/><rect x="' + (x + 1) + '" y="' + (y + 1) + '" width="5" height="5" fill="#fff"/><rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="3" height="3" fill="#111"/>'; };
+    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
+      var inF = (x < 8 && y < 8) || (x > 16 && y < 8) || (x < 8 && y > 16) || (x > 9 && x < 15 && y > 9 && y < 15);
+      if (!inF && rnd() > .52) s += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="#111"/>';
     }
-    used += span;
+    return '<svg viewBox="0 0 25 25" width="92" height="92" shape-rendering="crispEdges">' + s + finder(0, 0) + finder(18, 0) + finder(0, 18) +
+      '<rect x="10.5" y="10.5" width="4" height="4" fill="#fff"/><rect x="11" y="11" width="3" height="3" fill="#111"/><rect x="12.2" y="11.5" width=".6" height="2" fill="#fff"/><rect x="11.5" y="12.2" width="2" height=".6" fill="#fff"/></svg>';
   }
-  return (section.top+localTimeline)*vh();
-}
-function toPhysical(y) {
-  if (compactMode) return y;
-  const timelineY = y/vh();
-  const section = [...timeline].reverse().find(s => timelineY >= s.top) || timeline[0];
-  const localTimeline = Math.max(0, Math.min(section.height, timelineY-section.top));
-  let localPhysical = 0;
-  for (const p of section.parts) {
-    if (localTimeline >= p.to) localPhysical += (p.to-p.from)*p.factor;
-    else {
-      if (localTimeline > p.from) localPhysical += (localTimeline-p.from)*p.factor;
-      break;
-    }
-  }
-  return section.el.offsetTop + localPhysical*vh();
-}
 
-// Keep the readable fallback until the animated layout can actually start.
-Promise.race([
-  document.fonts.ready.then(() => true),
-  new Promise(resolve => setTimeout(() => resolve(false), 2000))
-]).then(fontsReady => {
-  // Freeze fallback metrics for this visit; late fonts must not break line splits.
-  if (!fontsReady) document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, Arial, sans-serif';
-  init();
-});
-let inited = false;
-let sp_word, sp_copyLines;
-let cl_titleChars, cl_brandChars;
-let ha_megaChars, as_h2chars, sp_h2chars, ab_titleLines;
-let ftSplits, as_bodyLines, sp_bodyLines, ha_bodyLines;
-let vg_quoteLines, nw_blocks, re_titleChars, es_titleChars;
-function init() {
-  if (inited) return; inited = true;
-  performance.mark('axyom-ready');
-  if (compactMode) { document.documentElement.classList.add("ready"); return; }
-  document.documentElement.classList.remove('compact');
-  // Measure only after switching to the animated desktop layout.
-  document.querySelectorAll('.section__inner').forEach(e => e.style.visibility = 'visible');
-  // Titel und Folgesatz laufen als eine Zeilenfolge ein.
-  sp_copyLines = [...splitLines($('#hero-copy1'), false), ...splitLines($('#hero-copy2'), false)]
-    .map(l => ({ line: l, chars: splitChars(l) }));
-  cl_titleChars = [...$('#claim-title').textContent].map(()=>0); // ersetzt unten
-  cl_titleChars = splitChars($('#claim-title'));
-  cl_brandChars = splitChars($('#claim-brand'));
-  ha_megaChars  = splitChars($('#ha-mega'));
-  ab_titleLines = splitLines($('#ab-title'), true);
-  ftSplits = $$('.ft-item').map(item => ({
-    desc: splitLines(item.querySelector('.ft-desc'), true),
-    title: splitChars(item.querySelector('.ft-title')),
-  }));
-  ha_bodyLines = splitLines($('#ha-body > div'), true);
-  document.documentElement.classList.add('ready');
-  state.startTime = 0;   // Intro-Uhr startet MIT der Sichtbarkeit, nicht mit dem Laden
-  document.querySelectorAll('.section__inner').forEach(e => e.style.visibility = 'hidden');
-}
+  var SCREENS = [
+    // 0 · overview
+    scr('home', head('Guten Morgen, Sandra', 'Dienstag, 3. November · Alle Firmen') +
+      '<div class="row4">' +
+      '<div class="c kpi"><div class="l">Offene Offerten</div><div class="v">CHF 48’200</div><div class="d">7 Offerten · <b>3 diese Woche</b></div></div>' +
+      '<div class="c kpi"><div class="l">Laufende Projekte</div><div class="v">12</div><div class="d">2 über Budget</div></div>' +
+      '<div class="c kpi"><div class="l">Stunden diese Woche</div><div class="v">164 h</div><div class="d"><b>91 %</b> verrechenbar</div></div>' +
+      '<div class="c kpi"><div class="l">Offene Rechnungen</div><div class="v">CHF 31’560</div><div class="d">1 überfällig</div></div></div>' +
+      '<div class="split" style="grid-template-columns:1.25fr 1fr">' +
+      '<div class="c"><h5>Heute zu tun <small>6 Aufgaben</small></h5>' +
+      '<div class="todo"><i style="background:var(--red)"></i><div><b>Rechnung R-2026-214 überfällig</b><small>Garage Büchel · CHF 2’840 · seit 12 Tagen</small></div><span class="pill p-r">Mahnen</span></div>' +
+      '<div class="todo"><i style="background:var(--amber)"></i><div><b>Offerte nachfassen</b><small>Bäckerei Sonnenberg · O-2026-118 · versendet vor 8 Tagen</small></div><span class="pill p-a">Heute</span></div>' +
+      '<div class="todo"><i style="background:var(--amber)"></i><div><b>Projekt «Umbau Werkstatt» bei 92 % Budget</b><small>Metallbau Kühne · 110 von 120 h</small></div><span class="pill p-a">Prüfen</span></div>' +
+      '<div class="todo"><i style="background:var(--teal)"></i><div><b>4 Rapporte verrechnen</b><small>aus Projekten P-114, P-119</small></div><span class="pill p-t">Bereit</span></div>' +
+      '<div class="todo"><i style="background:var(--teal)"></i><div><b>Belege Oktober an Treuhänder</b><small>38 Belege vollständig</small></div><span class="pill p-t">Bereit</span></div></div>' +
+      '<div class="c"><h5>Umsatz 2026 <small>alle Firmen</small></h5><div class="chart">' +
+      [46, 58, 52, 70, 64, 76, 60, 82, 74, 90].map(function (v, i) { return '<div' + (i === 9 ? ' class="on"' : '') + '><span style="height:' + v + '%"></span>' + ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O'][i] + '</div>'; }).join('') +
+      '</div><div style="display:flex;gap:16px;margin-top:12px;font-size:11.5px;color:#55646a">' +
+      '<span style="white-space:nowrap"><b style="color:#1d2a2e">Talblick Technik AG</b> 64 %</span><span style="white-space:nowrap"><b style="color:#1d2a2e">Talblick Service GmbH</b> 36 %</span></div></div></div>'),
 
-/* Galerie: vier grosse Loops, der letzte (From Heaven) wird zum Vollbild */
-const GAL = [
-  ['vid-schreiner','Schreiner beim Arbeiten mit dem Stemmeisen'],
-  ['vid-coiffeur','Coiffeur beim Haarschnitt'],
-  ['vid-baeckerei','Konditorin glättet eine Torte'],
-  ['vid-garage','Mechaniker am Motor'],
-  ['vid-florist','Floristin bindet einen Strauss'],
-  ['vid-zahnarzt','Zahnarzt wählt ein Instrument'],
-  ['vid-schweisser','Schweisser an einem Stahlrahmen'],
-  ['vid-fromheaven','Bar-Raum des From Heaven in Bad Ragaz'],
-];
-const strip = $('#bt-strip');
-let bt_tileRect = null;
-GAL.forEach(([n, alt]) => {
-  const v = document.createElement('video');
-  v.src = `media/media/${n}.mp4`; v.poster = `media/media/${n}-poster.jpg`;
-  v.muted = true; v.loop = true; v.autoplay = false; v.preload = "none"; v.playsInline = true;
-  v.setAttribute('aria-label', window.axyomT ? window.axyomT('gal.' + n, alt) : alt);
-  strip.appendChild(v);
-});
+    // 1 · customers
+    scr('crm', head('Bäckerei Sonnenberg', 'Kunde seit 2023 · Vaduz', '<div style="display:flex;gap:8px"><span class="s-btn l">Notiz</span><span class="s-btn">+ Offerte</span></div>') +
+      '<div class="split" style="grid-template-columns:230px 1fr 1fr">' +
+      '<div class="c" style="padding:10px"><div class="s-search" style="width:100%;margin-bottom:8px">Kunden suchen …</div>' +
+      [['Bäckerei Sonnenberg', 'Vaduz', 1], ['Garage Büchel', 'Schaan', 0], ['Metallbau Kühne', 'Buchs SG', 0], ['Praxis Dr. Frei', 'Triesen', 0], ['Hotel Alpenblick', 'Malbun', 0], ['Gemeinde Gamprin', 'Gamprin', 0], ['Schreinerei Wolf', 'Sevelen', 0]].map(function (c) {
+        return '<div style="padding:8px 9px;border-radius:8px;' + (c[2] ? 'background:var(--teal-w);' : '') + '"><b style="font-weight:600;' + (c[2] ? 'color:var(--teal-dd)' : '') + '">' + c[0] + '</b><div style="font-size:11px;color:#8a9598">' + c[1] + '</div></div>';
+      }).join('') + '</div>' +
+      '<div class="c"><h5>Verlauf <small>alles zu diesem Kunden</small></h5><div class="tl">' +
+      '<div class="t"><b>Offerte O-2026-118 versendet</b><small>Heute nachfassen · CHF 18’400 · Kühlraum-Elektrik</small></div>' +
+      '<div class="t"><b>Besichtigung vor Ort</b><small>21. Okt · Sandra Meier · 1.5 h · 6 Fotos</small></div>' +
+      '<div><b>Anfrage per E-Mail</b><small>18. Okt · «Neuer Kühlraum ab Januar»</small></div>' +
+      '<div><b>Rechnung R-2026-131 bezahlt</b><small>2. Jun · CHF 3’260 · Service Backofen</small></div>' +
+      '<div><b>Projekt P-087 abgeschlossen</b><small>28. Mai · Marge 31 %</small></div></div></div>' +
+      '<div style="display:grid;gap:14px;align-content:start"><div class="c"><h5>Kontakte</h5>' +
+      '<div style="display:flex;gap:10px;align-items:center;padding:4px 0">' + AV('LM', '#00786c') + '<div><b style="font-weight:600">Lena Marxer</b><div style="font-size:11px;color:#8a9598">Inhaberin · bevorzugt Telefon</div></div></div>' +
+      '<div style="display:flex;gap:10px;align-items:center;padding:4px 0">' + AV('TB', '#5b6b8a') + '<div><b style="font-weight:600">Tobias Beck</b><div style="font-size:11px;color:#8a9598">Backstube</div></div></div></div>' +
+      '<div class="c"><h5>Umsatz <small>seit 2023</small></h5><div class="kpi"><div class="v">CHF 41’780</div><div class="d">9 Rechnungen · <b>immer pünktlich</b></div></div></div>' +
+      '<div class="c"><h5>Offen</h5><div style="display:flex;justify-content:space-between"><span>1 Offerte</span><span class="pill p-a">Nachfassen</span></div></div></div></div>'),
 
-// The enlarged From-Heaven clip is the very same video element as its gallery tile.
-const heroClip = strip.children[GAL.length-1];
-const bakerySlot = document.createElement('div');
-bakerySlot.className = 'bakery-slot';
-bakerySlot.setAttribute('aria-hidden', 'true');
-heroClip.replaceWith(bakerySlot);
-$('#bt-big video').replaceWith(heroClip);
-heroClip.preload = 'auto';   // Vollbild-Clip früh puffern, damit der erste Übergang nicht ruckelt
+    // 2 · quote
+    scr('quote', head('Offerte O-2026-118', 'Bäckerei Sonnenberg · Kühlraum-Elektrik', '<div style="display:flex;gap:8px;align-items:center"><span class="pill p-t">Versendet</span><span class="s-btn">In Auftrag umwandeln →</span></div>') +
+      '<div class="split" style="grid-template-columns:1fr 250px">' +
+      '<div class="doc"><div style="display:flex;justify-content:space-between;margin-bottom:18px"><div>' + MARK.replace('<svg', '<svg width="26" height="26"') + '<b style="display:block;margin-top:6px">Talblick Technik AG</b><span style="color:#8a9598">Landstrasse 12 · 9494 Schaan</span></div>' +
+      '<div style="text-align:right;color:#55646a">Bäckerei Sonnenberg<br>Lena Marxer<br>Städtle 8 · 9490 Vaduz</div></div>' +
+      '<b style="font-size:15px">Offerte Kühlraum-Elektrik</b><div style="color:#8a9598;margin:2px 0 12px">Schaan, 26. Oktober 2026 · gültig 30 Tage</div>' +
+      '<table class="tbl"><tr><th>Menge</th><th>Einheit</th><th>Bezeichnung</th><th class="r">Ansatz</th><th class="r">Betrag</th></tr>' +
+      '<tr><td>1</td><td>Stk</td><td>Unterverteilung UV-K1, verdrahtet <span class="pill p-n">Preisliste</span></td><td class="r">4’850.00</td><td class="r">4’850.00</td></tr>' +
+      '<tr><td>65</td><td>m</td><td>Installationskabel 5×2.5 <span class="pill p-n">Preisliste</span></td><td class="r">9.80</td><td class="r">637.00</td></tr>' +
+      '<tr><td>4</td><td>Stk</td><td>LED-Feuchtraumleuchte IP65</td><td class="r">186.00</td><td class="r">744.00</td></tr>' +
+      '<tr class="hl"><td>86</td><td>h</td><td>Montage Elektroinstallateur</td><td class="r">118.00</td><td class="r">10’148.00</td></tr>' +
+      '<tr><td>1</td><td>psch</td><td>Prüfung und Sicherheitsnachweis</td><td class="r">680.00</td><td class="r">680.00</td></tr></table>' +
+      '<div style="display:flex;justify-content:flex-end;margin-top:12px"><div style="width:220px;font-variant-numeric:tabular-nums">' +
+      '<div style="display:flex;justify-content:space-between;color:#55646a"><span>Total exkl. MWST</span><span>17’059.00</span></div>' +
+      '<div style="display:flex;justify-content:space-between;color:#55646a"><span>MWST 8.1 %</span><span>1’381.80</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-weight:700;font-size:13px;border-top:1.5px solid #1d2a2e;margin-top:5px;padding-top:5px"><span>Total CHF</span><span>18’440.80</span></div></div></div></div>' +
+      '<div style="display:grid;gap:14px;align-content:start"><div class="c"><h5>Aus Preisliste</h5><div style="font-size:11.5px;color:#55646a;display:grid;gap:7px">' +
+      '<div style="display:flex;justify-content:space-between"><span>Elektro-Grosshandel</span><span class="pill p-g">aktuell</span></div><div style="display:flex;justify-content:space-between"><span>12’480 Artikel</span><span>Import 01.10.</span></div></div></div>' +
+      '<div class="c"><h5>Kalkulation</h5><div style="font-size:11.5px;display:grid;gap:7px;font-variant-numeric:tabular-nums">' +
+      '<div style="display:flex;justify-content:space-between"><span>Material</span><span>6’231.00</span></div><div style="display:flex;justify-content:space-between"><span>Arbeit</span><span>10’828.00</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-weight:650"><span>Erwartete Marge</span><span style="color:var(--green)">29 %</span></div></div></div>' +
+      '<div class="c"><h5>Versionen</h5><div style="font-size:11.5px;color:#55646a">v2 · versendet 26.10.<br>v1 · Entwurf 22.10.</div></div></div></div>'),
 
-/* ============ Text-Animatoren (Paket §6) ============ */
-function h1In(chars, c, out) {
-  const n = chars.length;
-  chars.forEach((ch, i) => {
-    const k = n>1 ? i/(n-1) : 0;
-    const isLast = i === n-1;
-    const yIn = fit(c, k*0.18, k*0.18+0.55, 0.42, 0, ease.cubicOut);
-    const yOut = fit(out, k*0.12, k*0.12+0.62, 0, -0.58, ease.cubicIn);
-    if (isLast) {
-      ch.style.transform = `translate3d(0, ${(yIn+yOut).toFixed(3)}em, 0) scale(${fit(c, 0.6, 1, 0, 1, ease.backOut).toFixed(3)})`;
-    } else {
-      ch.style.transform = `translate3d(${fit(c, k*0.3, k*0.3+0.6, 0.25, 0, ease.expoOut).toFixed(3)}ex, ${(yIn+yOut).toFixed(3)}em, 0)`;
-    }
-    ch.style.opacity = (fit(c, k*0.3, k*0.3+0.4, 0, 1, ease.expoOut) * fit(out, k*0.2, k*0.2+0.8, 1, 0)).toFixed(3);
-    ch.style.filter = `blur(${fit(c, k*0.3, k*0.3+0.4, 0.1, 0, ease.expoOut).toFixed(3)}em)`;
-  });
-}
-function charsYIn(chars, c, out) {
-  const n = chars.length, S1 = TUNE.stag, F1 = TUNE.fenster;
-  chars.forEach((ch, i) => {
-    const k = n>1 ? i/(n-1) : 0;
-    const yIn = fit(c, k*S1+0.1, k*S1+0.1+F1, 1, 0, ease.cubicOut) * TUNE.charDist;
-    const yOut = fit(out, k*S1, k*S1+0.68, 0, -0.7, ease.cubicIn);
-    ch.style.transform = `translate3d(0, ${(yIn+yOut).toFixed(3)}em, 0)`;
-    ch.style.opacity = (fit(c, k*S1, k*S1+F1*0.83, 0, 1) * fit(out, k*S1, k*S1+0.8, 1, 0)).toFixed(3);
-  });
-}
-function charFade(chars, a, l, reverse) {
-  const n = chars.length;
-  chars.forEach((ch, i) => {
-    let G = n>1 ? i/(n-1) : 0;
-    if (reverse) G = 1 - G;
-    ch.style.opacity = (fit(a, G*0.3, G*0.3+0.6, 0, 1) * fit(l, G*0.3, G*0.3+0.6, 1, 0)).toFixed(3);
-  });
-}
-function linesIn(lines, p, out) {
-  const n = lines.length;
-  lines.forEach((ln, i) => {
-    const I = n>1 ? i/(n-1) : 0;
-    const yIn = fit(p, I*0.2, I*0.2+0.8, 0.82, 0, ease.cubicOut);
-    const yOut = out === undefined ? 0 : fit(out, I*0.16, I*0.16+0.72, 0, -0.68, ease.cubicIn);
-    ln.style.transform = `translate3d(0, ${(yIn+yOut).toFixed(3)}em, 0)`;
-    ln.style.opacity = out === undefined ? 1 : fit(out, I*0.2, I*0.2+0.8, 1, 0).toFixed(3);
-  });
-}
+    // 3 · project & hours
+    scr('proj', head('P-119 · Umbau Werkstatt', 'Metallbau Kühne · Projektleitung Marco Vogt', '<div style="display:flex;gap:8px"><span class="s-btn l">Material</span><span class="s-btn">+ Stunden</span></div>') +
+      '<div class="row4">' +
+      '<div class="c kpi"><div class="l">Budget</div><div class="v">120 h</div><div class="bar" style="margin-top:8px"><span style="width:92%"></span></div><div class="d" style="margin-top:5px">110 h erfasst · 92 %</div></div>' +
+      '<div class="c kpi"><div class="l">Auftragswert</div><div class="v">CHF 24’600</div><div class="d">Offerte O-2026-097</div></div>' +
+      '<div class="c kpi"><div class="l">Kosten bisher</div><div class="v">CHF 15’920</div><div class="d">Stunden intern + Material</div></div>' +
+      '<div class="c kpi"><div class="l">Marge aktuell</div><div class="v" style="color:var(--green)">27 %</div><div class="d">Ziel 25 %</div></div></div>' +
+      '<div class="split" style="grid-template-columns:1.5fr 1fr">' +
+      '<div class="c"><h5>Stunden <small>diese Woche</small></h5><table class="tbl"><tr><th>Datum</th><th>Person</th><th>Tätigkeit</th><th class="r">Std.</th><th class="r">Ansatz</th></tr>' +
+      '<tr><td>Mo 2.11.</td><td>' + AV('MV', '#00786c').replace('class="ava"', 'class="ava" style="width:20px;height:20px;font-size:8px;vertical-align:middle;margin-right:6px;background:#00786c"') + 'Marco Vogt</td><td>Montage Hallenkran</td><td class="r">8.0</td><td class="r">118.00</td></tr>' +
+      '<tr><td>Mo 2.11.</td><td>' + AV('JS', '#5b6b8a').replace('class="ava"', 'class="ava" style="width:20px;height:20px;font-size:8px;vertical-align:middle;margin-right:6px;background:#5b6b8a"') + 'Jana Senti</td><td>Verteilung Werkstatt</td><td class="r">7.5</td><td class="r">118.00</td></tr>' +
+      '<tr><td>Di 3.11.</td><td>' + AV('MV', '#00786c').replace('class="ava"', 'class="ava" style="width:20px;height:20px;font-size:8px;vertical-align:middle;margin-right:6px;background:#00786c"') + 'Marco Vogt</td><td>Anschlüsse Maschinen</td><td class="r">6.5</td><td class="r">118.00</td></tr>' +
+      '<tr><td>Di 3.11.</td><td>' + AV('LH', '#8a6b4a').replace('class="ava"', 'class="ava" style="width:20px;height:20px;font-size:8px;vertical-align:middle;margin-right:6px;background:#8a6b4a"') + 'Luca Hasler</td><td>Lernender · Kabelzug</td><td class="r">8.0</td><td class="r">68.00</td></tr></table></div>' +
+      '<div class="c"><h5>Budget nach Bereich</h5><div style="display:grid;gap:12px;font-size:11.5px">' +
+      [['Montage', 64, 70], ['Verteilung', 28, 30], ['Prüfung', 6, 10], ['Planung', 12, 10]].map(function (b) {
+        var p = Math.min(100, Math.round(b[1] / b[2] * 100)), over = b[1] > b[2];
+        return '<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>' + b[0] + '</span><span style="' + (over ? 'color:var(--red);font-weight:600' : 'color:#55646a') + '">' + b[1] + ' / ' + b[2] + ' h</span></div><div class="bar"><span style="width:' + p + '%;' + (over ? 'background:#d9776a' : '') + '"></span></div></div>';
+      }).join('') + '</div></div></div>'),
 
-/* ============ three.js: das X ============ */
-const canvas = $('#gl');
-let renderer;
-try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); }
-catch (error) { document.documentElement.classList.add("compact"); throw error; }
-renderer.setPixelRatio(Math.min(2, devicePixelRatio));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(26.2, 1, 0.1, 50);
-camera.position.set(0, 0, 8);
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.55;
+    // 4 · invoice
+    scr('inv', head('Rechnung R-2026-231', 'Bäckerei Sonnenberg · aus Projekt P-122', '<div style="display:flex;gap:8px;align-items:center"><span class="pill p-g">Bezahlt 30.10.</span><span class="s-btn l">PDF</span></div>') +
+      '<div class="split" style="grid-template-columns:1fr 250px">' +
+      '<div class="doc" style="padding:0;overflow:hidden"><div style="padding:22px 28px 16px"><div style="display:flex;justify-content:space-between"><div><b style="font-size:15px">Rechnung</b><div style="color:#8a9598">Nr. R-2026-231 · 16. Oktober 2026 · zahlbar in 30 Tagen</div></div>' + MARK.replace('<svg', '<svg width="24" height="24"') + '</div>' +
+      '<table class="tbl" style="margin-top:12px"><tr><th>Bezeichnung</th><th class="r">Menge</th><th class="r">Betrag</th></tr>' +
+      '<tr><td>Service Kühlanlage · Rapport 14.10.</td><td class="r">3.5 h</td><td class="r">413.00</td></tr><tr><td>Ersatzteil Thermostat</td><td class="r">1 Stk</td><td class="r">164.00</td></tr>' +
+      '<tr><td><b>Total inkl. 8.1 % MWST</b></td><td></td><td class="r"><b>623.74</b></td></tr></table></div>' +
+      '<div style="border-top:1.5px dashed #c9d1cf;display:grid;grid-template-columns:150px 1fr;gap:18px;padding:16px 28px;font-size:10.5px">' +
+      '<div><b>Empfangsschein</b><div style="color:#55646a;margin-top:6px">Konto / Zahlbar an<br>LI21 0880 0000 0000 0000 0<br>Talblick Technik AG<br><br>Betrag CHF 623.74</div></div>' +
+      '<div style="display:flex;gap:16px"><div><b>Zahlteil</b><div style="margin-top:8px">' + qr() + '</div></div><div style="color:#55646a;margin-top:18px">Konto / Zahlbar an<br>LI21 0880 0000 0000 0000 0<br>Talblick Technik AG · Schaan<br><br>Referenz<br>00 00000 00000 00000 00023 12310</div></div></div></div>' +
+      '<div style="display:grid;gap:14px;align-content:start"><div class="c"><h5>Status</h5><div class="tl">' +
+      '<div class="t"><b>Erstellt aus Rapport</b><small>16.10. · automatisch</small></div><div class="t"><b>Per E-Mail versendet</b><small>16.10.</small></div><div class="t"><b>Zahlung zugeordnet</b><small>30.10. · Bankauszug</small></div></div></div>' +
+      '<div class="c"><h5>Offene Posten</h5><div style="font-size:11.5px;display:grid;gap:6px;font-variant-numeric:tabular-nums"><div style="display:flex;justify-content:space-between"><span>5 Rechnungen</span><span>CHF 31’560</span></div><div style="display:flex;justify-content:space-between;color:var(--red)"><span>davon überfällig</span><span>CHF 2’840</span></div></div></div></div></div>'),
 
-const key = new THREE.DirectionalLight(0xdffcf7, 2.0);
-const rim = new THREE.DirectionalLight(0x7de8dc, 0.6);
-const fill = new THREE.DirectionalLight(0xffd9b0, 0.35);
-const amb = new THREE.AmbientLight(0x11302b, 0.8);
-scene.add(key, rim, fill, amb);
-
-const rig = new THREE.Group(), spin = new THREE.Group();
-rig.add(spin); scene.add(rig);
-let modelDiameter = 1;
-let xMesh = null, stackMeshes = [];
-// Original polygon mesh retained; only its colour uses the brand gradient.
-const brandTextureCanvas = document.createElement('canvas');
-brandTextureCanvas.width = 16; brandTextureCanvas.height = 1024;
-const brandContext = brandTextureCanvas.getContext('2d');
-const brandGradient = brandContext.createLinearGradient(0, 1024*251.5/749, 0, 1024*748.253/749);
-brandGradient.addColorStop(0, '#00B2A0'); brandGradient.addColorStop(1, '#004C44');
-brandContext.fillStyle = brandGradient; brandContext.fillRect(0,0,16,1024);
-const brandTexture = new THREE.CanvasTexture(brandTextureCanvas);
-brandTexture.colorSpace = THREE.SRGBColorSpace;
-const xMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff, map: brandTexture, roughness: 0.32, metalness: 0.25, envMapIntensity: 0.9,
-  emissive: 0xffffff, emissiveMap: brandTexture, emissiveIntensity: 0.35,
-});
-fetch('media/x-shape.json').then(r => r.json()).then(pts => {
-  const shape = new THREE.Shape();
-  pts.forEach((p, i) => i ? shape.lineTo(p[0], p[1]) : shape.moveTo(p[0], p[1]));
-  const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.22, bevelEnabled: true,
-    bevelThickness: 0.03, bevelSize: 0.025, bevelSegments: 3, curveSegments: 8 });
-  geo.center();
-  // Planar gradient coordinates do not alter vertices or original face normals.
-  geo.computeBoundingBox();
-  const bounds = geo.boundingBox;
-  const position = geo.getAttribute('position'), uv = geo.getAttribute('uv');
-  for (let i=0; i<position.count; i++) uv.setXY(i,
-    (position.getX(i)-bounds.min.x)/(bounds.max.x-bounds.min.x),
-    (position.getY(i)-bounds.min.y)/(bounds.max.y-bounds.min.y));
-  uv.needsUpdate = true;
-  xMesh = new THREE.Mesh(geo, xMat); xMesh.name = 'Axyom original polygon X';
-  spin.add(xMesh);
-  const size = new THREE.Box3().setFromObject(xMesh).getSize(new THREE.Vector3());
-  modelDiameter = Math.max(size.x, size.y);
-});
-window.__gl = { get rig(){return rig}, get spin(){return spin}, camera, renderer };
-function worldPerPixel() {
-  return 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov)/2) / LH();
-}
-function placeRig(cx, cy, diaPx) {
-  const wpp = worldPerPixel();
-  rig.position.set((cx - LW()/2)*wpp, (LH()/2 - cy)*wpp, 0);
-  if (modelDiameter) spin.scale.setScalar((diaPx * wpp) / modelDiameter);
-  return wpp;
-}
-
-/* Die alte gebackene Wurf-Spur bleibt als Asset erhalten, wird im Hero aber nur
-   noch für ihre exakte Ausgangspose gelesen. Hero → Claim ist bewusst ruhig:
-   leichtes Wachstum, minimale räumliche Drehung, kein Münzwurf. */
-let flip = null;
-const q0inv = new THREE.Quaternion(0.7071, 0, 0, 0.7071).invert();
-fetch('media/hero-flip.json').then(r => r.json()).then(d => { flip = d.frames; });
-let xcross = null;
-fetch('media/x-cross.json').then(r => r.json()).then(d => { xcross = d.frames; });
-const _euC = new THREE.Euler(), _qC = new THREE.Quaternion();
-const _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion();
-const _qc = new THREE.Quaternion(), _zAxis = new THREE.Vector3(0, 0, 1);
-function sampleHeroClaim(ratio) {
-  if (!flip) return null;
-  const a = flip[0];
-  const p = ease.cubicInOut(clamp(ratio, 0, 1));
-  _qa.set(a[3],a[4],a[5],a[6]).multiply(q0inv);
-  _qb.setFromEuler(_euC.set(-0.08, -0.12, 0.04));
-  _qa.slerp(_qb, p);
-  return {
-    x: lerpN(a[0], -18, p),
-    y: lerpN(a[1], 8, p),
-    d: lerpN(a[2], 540, p),
-    q: _qa,
-    progress: p,
-  };
-}
-
-/* ============ Hintergrund-Dramaturgie ============ */
-const bgs = { stage: $('#bg-stage'), void: $('#bg-void'), amber: $('#bg-amber'),
-              light: $('#bg-light'), band: $('#bg-band'), end: $('#bg-end') };
-function updateBg() {
-  const y = state.scroll / vh();  // globale Position in vh
-  // Basisdunkel = void; Übergänge je ≥1.5vh (Paket §8)
-  const stage = fit(y, 1.2, 2.7, 1, 0);
-  const haTop = Number(secs.ha.el.dataset.timelineTop);
-  // Helle Fläche liegt schon unter dem Vollbild-Video, bevor der Vorhang (bt r 12.4–13.9) hochfährt
-  // (bt-r 12.4 entspricht y = haTop-1.85, weil r = y - top + 1)
-  const light = fit(y, haTop-2.1, haTop-1.9, 0, 1) * fit(y, haTop+4.65, haTop+5.45, 1, 0);
-  const uiLight = light * fit(y, haTop-1.7, haTop-1.55, 0, 1);
-  const band  = 0;
-  const end   = fit(y, haTop+4.85, haTop+5.55, 0, 1);
-  // Amber-Ausbruch: Feature 2 (ft beginnt bei 22.25vh; Fenster r 2.5–4.5 → +2.5..+4.5)
-  const ftTop = Number(secs.ft.el.dataset.timelineTop);
-  const rFt = y - ftTop + 1;
-  const amber = fit(rFt, 3.75, 4.5, 0, 1) * fit(rFt, 6.4, 7.1, 1, 0);
-  const onLight = Math.max(uiLight, amber);
-  document.documentElement.classList.toggle('quality-light', amber > .5);
-  bgs.stage.style.opacity = stage;
-  bgs.amber.style.opacity = amber;
-  bgs.light.style.opacity = light;
-  bgs.band.style.opacity = band;
-  bgs.end.style.opacity = end;
-  const intro = fit(state.startTime, 0.05, 0.9, 0, 1, ease.cubicOut);
-  for (const k of ['stage','amber','light','band','end'])
-    bgs[k].style.opacity = (+bgs[k].style.opacity * intro).toFixed(3);
-  bgs.void.style.opacity = (clamp(1 - stage - light - band - end, 0, 1) * intro).toFixed(3);
-  // Tint nur auf dunklen Szenen; Vignette auf der hellen Fläche zurücknehmen
-  $('#tint').style.opacity = onLight > 0.5 ? 0 : 0.015;
-  $('#vignette').style.opacity = 1 - onLight * 0.75;
-  document.documentElement.classList.toggle('brand-on-light', onLight > .5);
-  // Header-Farbe auf heller Fläche
-  document.querySelectorAll('#logo').forEach(e => e.style.color = onLight > 0.5 ? '#10201d' : '');
-  $('#scroll-indicator__bar').style.background = onLight > 0.5 ? '#10201d' : '';
-}
-
-/* ============ Sektionen ============ */
-function setOn(sec, on) {
-  sec.inner.style.visibility = on ? 'visible' : 'hidden';
-  /* display none dazu: Kinder mit explizitem visibility:visible würden sonst
-     durch das versteckte Elternelement durchscheinen (CSS-Vererbungsfalle) */
-  sec.inner.style.display = on ? '' : 'none';
-}
-
-function uHero() {
-  const rg = range(secs.hero.el);
-  const l = fit(rg.hide, -1, -0.5, 1, 0);
-  const on = l > 0;
-  setOn(secs.hero, on);
-  const _ = state.startTime;
-  if (on && sp_copyLines) {
-    // Copy: Zeilen x-shift beim Verlassen + Zeichen-Intro
-    sp_copyLines.forEach((L, li) => {
-      const I = 1 - li/Math.max(1, sp_copyLines.length-1);
-      L.line.style.transform = `translate3d(${(fit(l, I*0.2, I*0.2+0.8, 1, 0, ease.cubicOut)*2).toFixed(3)}em, 0, 0)`;
-      const cn = L.chars.length;
-      L.chars.forEach((ch, ci) => {
-        const CI = 1 - ci/(cn-1), CE = 1 - CI;
-        const k = fit(l, CI*0.2, CI*0.2+0.8, 1, 0);
-        ch.style.opacity = (fit(_, 0.5+CE*0.2, 1.5+CE*0.2, 0, 1) * (1-k)).toFixed(3);
-        ch.style.filter = `blur(${fit(k, 0.25, 0.75, 0, 0.3).toFixed(2)}em)`;
-      });
-    });
-  }
-  // Logo-Morph: Hero-Wortmarke IST das Header-Logo.
-  // WICHTIG: offsetWidth (Layoutmass) statt getBoundingClientRect —
-  // letzteres enthält die laufende Skalierung und würde rückkoppeln.
-  const wm = $('#hero-wordmark');
-  const logoProgress = fit(l,0,.5,0,1,ease.cubicInOut);
-  const headerWidth = Math.max(96,132*S());
-  // Resize vector artwork at its actual displayed dimensions, avoiding a magnified bitmap layer.
-  $('#logo').style.width = (headerWidth + (wm.offsetWidth-headerWidth)*logoProgress)+'px';
-  const headerRect = $('#site-header').getBoundingClientRect();
-  const markRect = wm.getBoundingClientRect();
-  const offX = (markRect.left-headerRect.left)*logoProgress;
-  const offY = (markRect.top-headerRect.top)*logoProgress;
-  $('#logo').style.transform = `translate3d(${offX}px,${offY}px,0)`;
-  wm.style.visibility = 'hidden';   // das Header-Logo übernimmt die Darstellung
-  $('#scroll-hint').style.opacity = l * 0.7;
-  return l;
-}
-
-function uClaim() {
-  // Claim direkt nach dem Hero: Flug, Aussage und Abgang ohne lange Haltephase.
-  const r = range(secs.claim.el).show;   // r == Seiten-y (Claim beginnt bei 1)
-  const on = r > 0.5 && r < 3.2;
-  setOn(secs.claim, on);
-  if (!on || !cl_titleChars) return { r, animationRatio: fit(r, 0, 1.85, 0, 1), highlight: 0 };
-  const c = fit(r, 1.25, 1.9, 0, 1), cOut = fit(r, 2.2, 2.5, 0, 1);
-  const hdrOn = c > 0 && cOut < 1;
-  $('#claim-title').style.visibility = $('#claim-brand').style.visibility = hdrOn ? 'visible' : 'hidden';
-  h1In(cl_titleChars, c, cOut);
-  charsYIn(cl_brandChars, c, cOut);
-  return { r, animationRatio: fit(r, 0, 1.85, 0, 1), highlight: 0 };
-}
-
-function uBt() {
-  const r = range(secs.bt.el).show;
-  const on = r > 0.5 && r < 14.25;
-  setOn(secs.bt, on);
-  if (!on) { secs.bt.inner.querySelectorAll('video').forEach(v=>v.pause()); return; }
-  // Zeitplan (r): Riesenwort 1–2 von rechts · 2.6–3.6 wandert ein Stück nach oben ·
-  // Streifen 3.0–4.6 schnell bis die erste Kachel sicher links der Mitte steht,
-  // 4.4–9.5 langsam bis die From-Heaven-Kachel mit der linken Kante die Mitte berührt ·
-  // 9.5–10.8 wächst sie auf Vollbild · 10.5 Rezension · 12.4–13.9 Vorhang
-  const g1 = fit(r, 9.5, 10.8, 0, 1);
-  const grow = ease.cubicInOut(g1);
-  const g2 = fit(r, 12.4, 13.9, 0, 1);
-  const mega = $('#bt-mega');
-  const megaIn = fit(r, 0.6, 1.6, LW(), 0, ease.cubicOut);   // direkt nach dem Kapitel-Abgang
-  const up = fit(r, 2.6, 3.6, 0, 1, ease.cubicInOut);
-  const megaLift = (mobileMode ? (100 - 330) : (110 - 400)) * S() * up;
-  const megaOut = fit(g1, 0, 0.6, 1, 0);
-  mega.style.transform = `translate3d(${megaIn}px, ${megaLift}px, 0) scale(${1 - 0.18*up})`;
-  mega.style.opacity = megaOut.toFixed(3);
-  mega.style.visibility = r > 0.8 && megaOut > 0 ? 'visible' : 'hidden';
-  // Streifen: von rechts herein, zwei Tempi, bleibt ab 9.5 stehen (Ausgangslage der Vergrösserung)
-  const stripOn = r > 3.0 && g2 < 1;
-  strip.style.visibility = stripOn ? 'visible' : 'hidden';
-  // Videos selbst steuern: NIE vom display-Wechsel pausieren lassen —
-  // das stallt den Haupt-Thread und erzeugt einen sichtbaren Ruck.
-  strip.querySelectorAll('video').forEach(v => {
-    if (stripOn && v.paused) v.play().catch(()=>{});
-    if (!stripOn && !v.paused) v.pause();
-  });
-  const tileW = (mobileMode ? 290 : 520)*S(), gap = (mobileMode ? 14 : 24)*S(), pitch = tileW + gap;
-  const x0 = LW() + 40*S();
-  // Desktop: erste Kachel ganz links der Mitte, letzte mit linker Kante auf der Mitte.
-  // Handy: Kacheln sind breiter als die halbe Breite → erste und letzte Kachel jeweils zentriert.
-  const x1 = mobileMode ? LW()/2 - tileW/2 : LW()/2 - 60*S() - tileW;
-  const x2 = mobileMode ? LW()/2 - tileW/2 - (GAL.length-1) * pitch : LW()/2 - (GAL.length-1) * pitch;
-  const stripX = x0 + (x1-x0) * fit(r, 3.0, 4.6, 0, 1, ease.sineOut) + (x2-x1) * fit(r, 4.4, 9.5, 0, 1, ease.sineInOut);
-  strip.style.transform = `translate3d(${stripX}px, 0, 0)`;
-  strip.style.opacity = fit(r, 3.0, 3.6, 0, 1) * fit(g1, 0.4, 1, 1, 0);
-  // Follow the actual tile until expansion begins, then interpolate its rectangle.
-  const big = $('#bt-big');
-  const bigOn = r > 3.0 && g2 < 1;
-  big.style.visibility = bigOn ? 'visible' : 'hidden';
-  const soll = bigOn && g2 < 0.85 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (soll && heroClip.paused) heroClip.play().catch(()=>{});
-  if (!soll && !heroClip.paused) heroClip.pause();
-  if (bigOn) {
-    // Solange der Streifen fährt, der Kachel folgen; ab Beginn der Vergrösserung steht er still → Rechteck einmal merken
-    if (g1 <= 0 || !bt_tileRect) bt_tileRect = bakerySlot.getBoundingClientRect();
-    const tileRect = bt_tileRect;
-    const sw = tileRect.width, sh = tileRect.height;
-    const w = sw + (LW()-sw)*grow;
-    const h = sh + (vh()-sh)*grow;          // bis zur grossen Viewport-Höhe: deckt auch den Streifen unter Safaris Leiste
-    const sourceX = tileRect.left;
-    const sourceY = tileRect.top;
-    const x = sourceX * (1-grow);
-    const y = sourceY * (1-grow);
-    big.style.left = x+'px'; big.style.top = y+'px';
-    big.style.width = w+'px'; big.style.height = h+'px';
-    big.style.borderRadius = (6*(1-grow)*S())+'px';
-    const handoff = ease.cubicInOut(g2);
-    // Vorhang: das Vollbild fährt nach oben aus dem Bild und gibt die helle Fläche frei
-    big.style.transform = `translate(0px,${-vh()*1.04*handoff}px)`;
-    big.style.opacity = fit(r, 2.6, 3.4, 0, 1).toFixed(3);
-    $('#bt-big-shade').style.opacity = fit(g1, .5, 1, 0, 1);
-    // Rezension erst, wenn das Vollbild steht; löst sich vor dem Video auf
-    const cardOut = fit(g2, 0, 0.45, 1, 0);
-    $('#bt-report').style.opacity = (fit(r, 10.9, 11.4, 0, 1) * cardOut).toFixed(3);
-    $('#bt-report').style.transform = `translate(-50%, calc(-50% + ${(1-cardOut)*-40*S()}px))`;
-    [...$('#bt-report').children].forEach((row, i) => {
-      const I = i/6;
-      const c = fit(r, 11.0 + I*0.5, 11.5 + I*0.5, 0, 1);
-      row.style.opacity = c.toFixed(3);
-      row.style.transform = `translate3d(0, ${fit(c, 0, 1, 0.7, 0, ease.cubicOut)}em, 0)`;
-    });
-  }
-}
-
-function uFt() {
-  const r = range(secs.ft.el).show;
-  const on = r > 0.5 && r < 11;
-  setOn(secs.ft, on);
-  if (!on) return { active: -1 };
-  const wins = [[0.5,1.25,3.1,3.75],[3.75,4.5,6.4,7.05],[7.05,7.8,9.85,10.5]];
-  let active = -1;
-  $$('.ft-item').forEach((item, i) => {
-    const [i0,i1,o0,o1] = wins[i];
-    const cin = fit(r, i0, i1, 0, 1), cout = fit(r, o0, o1, 0, 1);
-    const vis = cin > 0 && cout < 1;
-    item.style.visibility = vis ? 'visible' : 'hidden';
-    if (!vis) return;
-    active = i;
-    // Das ganze Textkapitel folgt klar der Scrollrichtung: von unten herein,
-    // nach oben hinaus. Die ruhende Komposition dazwischen bleibt unverändert.
-    const blockIn = fit(cin, 0, 1, 84*S(), 0, ease.cubicOut);
-    const blockOut = fit(cout, 0, 1, 0, -120*S(), ease.cubicInOut);
-    item.style.transform = `translate3d(0, ${(blockIn+blockOut).toFixed(1)}px, 0)`;
-    // Etiketten als Block von links, Fliesstext zeilenweise maskiert,
-    // Abschluss-Titel zeichenweise von unten (Paket §6)
-    item.querySelectorAll('.ft-tag').forEach((el, j) => {
-      const I = j/3;
-      el.style.opacity = (fit(cin, I*0.25, I*0.25+0.6, 0, 1, ease.cubicOut) * fit(cout, I*0.25, I*0.25+0.75, 1, 0)).toFixed(3);
-      el.style.transform = `translate3d(${fit(cin, I*0.25, I*0.25+0.6, 1, 0, ease.cubicOut)}em, 0, 0)`;
-    });
-    if (ftSplits) {
-      // Innerhalb eines Kapitels nur gestaffelt ein-/ausblenden. Die vertikale
-      // Bewegung übernimmt der gesamte Block oben; so können Titel und Lauftext
-      // während des Hereinfahrens nicht ineinanderrutschen.
-      const titleChars = ftSplits[i].title, tn = titleChars.length;
-      titleChars.forEach((ch, j) => {
-        const k = tn > 1 ? j/(tn-1) : 0;
-        ch.style.transform = 'translate3d(0,0,0)';
-        ch.style.opacity = (fit(cin, k*TUNE.stag+0.08, k*TUNE.stag+0.08+TUNE.fenster, 0, 1) * fit(cout, k*TUNE.stag, k*TUNE.stag+0.62, 1, 0)).toFixed(3);
-      });
-      const descLines = ftSplits[i].desc, dn = descLines.length;
-      descLines.forEach((ln, j) => {
-        const k = dn > 1 ? j/(dn-1) : 0;
-        ln.style.transform = 'translate3d(0,0,0)';
-        ln.style.opacity = (fit(cin, k*0.16, k*0.16+0.72, 0, 1) * fit(cout, k*0.12, k*0.12+0.68, 1, 0)).toFixed(3);
-      });
-    }
-  });
-  const railOn = fit(r, 0.5, 1, 0, 1) * fit(r, 9.85, 10.5, 1, 0);
-  $$('#ft-rail div').forEach((d, i) => { d.style.color = i === active ? 'var(--accent)' : ''; d.style.opacity = i === active ? '1' : ''; });
-  $('#ft-rail').style.opacity = railOn;
-  $('#ft-vdash').style.opacity = railOn * 0.35;
-  $('#ft-foot').style.opacity = railOn * 0.8;
-  return { active, r };
-}
-
-function uHa() {
-  const r = range(secs.ha.el).show;
-  const on = r > 0.5 && r < 6.02;
-  setOn(secs.ha, on);
-  if (!on || !ha_megaChars) return;
-  const phase1 = fit(r, 1.2, 2, 0, 1), out1 = fit(r, 3, 3.7, 0, 1);
-  // Die helle Szene räumt vollständig auf, bevor der Abbinder einsetzt.
-  const sceneOut = fit(r, 5.55, 6.0, 0, 1);
-  $('#ha-top').style.opacity = fit(r, 0.8, 1.5, 0, 1) * (1-sceneOut);
-  $('#ha-top').style.transform = `translate3d(0, ${fit(sceneOut, 0, 1, 0, -0.65, ease.cubicIn)}em, 0)`;
-  $$('#ha-top .dash').forEach(d => d.style.transform = `scaleX(${fit(r, 0.8, 1.8, 0, 1, ease.cubicOut)})`);
-  $('#ha-label').style.opacity = phase1 * (1-out1);
-  $('#ha-label').style.transform = `translate3d(0, ${fit(phase1, 0, 1, 0.55, 0, ease.cubicOut) + fit(out1, 0, 1, 0, -0.65, ease.cubicIn)}em, 0)`;
-  $('#ha-mega').style.opacity = 1-out1;
-  const megaOn = phase1 > 0 && out1 < 1;
-  $('#ha-mega').style.visibility = megaOn ? 'visible' : 'hidden';
-  if (megaOn) {
-    const n = ha_megaChars.length;
-    ha_megaChars.forEach((ch, i) => {
-      const k = n>1 ? i/(n-1) : 0;
-      ch.style.transform = `translate3d(0, ${fit(phase1, k*0.2, k*0.2+0.7, 1, 0, ease.cubicOut) + fit(out1, k*0.12, k*0.12+0.72, 0, -0.72, ease.cubicIn)}em, 0)`;
-      ch.style.opacity = (fit(phase1, k*0.2, k*0.2+0.5, 0, 1) * fit(out1, k*0.2, k*0.2+0.8, 1, 0)).toFixed(3);
-    });
-  }
-  $('#ha-body').style.opacity = (fit(r, 1.8, 2.1, 0, 1) * (1 - out1)).toFixed(3);
-  if (ha_bodyLines) linesIn(ha_bodyLines, fit(r, 1.8, 2.8, 0, 1), out1);
-  const g = fit(r, 3.4, 4.2, 0, 1), gOut = sceneOut;
-  const grid = $('#ha-grid');
-  grid.style.visibility = g > 0 && gOut < 1 ? 'visible' : 'hidden';
-  const head = $('#ha-grid-head');
-  head.style.visibility = grid.style.visibility;
-  head.style.opacity = (fit(g, 0, 0.6, 0, 1, ease.cubicOut) * (1-gOut)).toFixed(3);
-  head.style.transform = `translate3d(0, ${fit(g, 0, 0.6, 0.4, 0, ease.cubicOut) + fit(gOut, 0, 1, 0, -0.7, ease.cubicIn)}em, 0)`;
-  [...grid.children].forEach((b, i) => {
-    const I = i/3;
-    b.style.opacity = (fit(g, I*0.2, I*0.2+0.7, 0, 1, ease.cubicOut) * (1-gOut)).toFixed(3);
-    b.style.transform = `translate3d(0, ${fit(g, I*0.2, I*0.2+0.7, 0.65, 0, ease.cubicOut) + fit(gOut, I*0.08, I*0.08+0.72, 0, -0.85, ease.cubicIn)}em, 0)`;
-  });
-}
-
-function uAb() {
-  const r = range(secs.ab.el).show;
-  const on = r > 0.25;
-  setOn(secs.ab, on);
-  if (!on || !ab_titleLines) return;
-  /* Die Sektion erreicht maximal r ≈ 1.21 (Seitenende) — Fenster entsprechend früh */
-  linesIn(ab_titleLines, fit(r, 0.27, 0.67, 0, 1));
-  $('#ab-note').style.opacity = fit(r, 0.4, 0.7, 0, 1);
-  $('#ab-mail').style.opacity = fit(r, 0.5, 0.75, 0, 1);
-  const f = fit(r, 0.6, 1.0, 0, 1, ease.cubicOut);
-  $('#ab-form').style.opacity = f.toFixed(3);
-  $('#ab-form').style.transform = `translate3d(0, ${((1-f)*40*S()).toFixed(1)}px, 0)`;
-  $('#ab-links').style.opacity = fit(r, 0.75, 1.05, 0, 1);
-  $('#ab-legal').style.opacity = fit(r, 0.75, 1.05, 0, 1) * 0.6;
-}
-
-/* ============ 3D-Regie: EINE durchgehende Zeitachse =====================
-   Wie die Referenz: ein globaler Zeiger über die ganze Seite, nie ein
-   Positions-Sprung. Bis y=1.75 wächst das X ruhig in den Claim; ab dort
-   übernimmt eine Keyframe-Liste in Seiten-vh. Fehlende Felder erben vom
-   vorherigen Key (fill-forward), Quaternions werden ge-slerpt, Licht wird
-   numerisch mitinterpoliert — Blendzonen entstehen von selbst.           */
-const XK = [
-  { v: 1.75, holdUntil: 2.2, x: -18, y: 8, d: 540, e: null /* Claim-Pose, dynamisch */, o: 1, em: 0.35, st: 0,
-    l: { k: [-2.6,-0.9,2.2, 1.5], r: [2.8,1.5,-1.8, 0.95], a: 0.5, en: 0.35 } },
-  /* Drei Gründe: genau eine Bewegung bis zum Ziel, dann ein klarer Halt. */
-  { v: 2.95, x: 400, y: 10, d: 620, e: [-0.18, -0.22, 0.07], o: 1, em: 0.35, m: { x: 0, y: 235, d: 230 },
-    l: { k: [-2.2,2.4,2.8, 1.9], r: [2.6,-0.8,-1.6, 0.8], a: 0.7, en: 0.5 } },
-  /* Punkt 1 halten → eine Bewegung zu Punkt 2 → halten. */
-  { v: 5.3, x: 400, y: 10, d: 620, e: [-0.18, -0.22, 0.07], em: 0.35, m: { x: 0, y: 235, d: 230 } },
-  { v: 6.7, x: 400, y: 10, d: 620, e: [-0.22, 0.12, 0.10], em: 0.15, m: { x: 0, y: 235, d: 230 } },
-  /* Punkt 2 halten → eine Bewegung zu Punkt 3 → halten. */
-  { v: 8.6, x: 400, y: 10, d: 620, e: [-0.22, 0.12, 0.10], em: 0.15, m: { x: 0, y: 235, d: 230 } },
-  { v: 10.0, x: 400, y: 10, d: 620, e: [-0.11, 0.40, 0.10], em: 0.35, m: { x: 0, y: 235, d: 230 } },
-  { v: 12.05, x: 400, y: 10, d: 620, e: [-0.11, 0.40, 0.10], em: 0.35, o: 1, m: { x: 0, y: 235, d: 230 } },
-  { v: 12.7,  x: 400, y: -90, d: 560, e: [0, 0.78, 0], o: 0, m: { x: 0, y: 330, d: 200 },        /* geht mit dem Kapiteltext */
-    l: { k: [1.6,2.2,2.6, 1.8], r: [-2.4,0.6,-1.8, 0.7], a: 0.7, en: 0.45 } },
-  /* verborgen durch Galerie, From Heaven, Versprechen */
-  { v: 31.1, x: 80, y: -250, d: 130, e: [-0.12, -0.3, -0.08], o: 0, st: 0, m: { x: 0, y: -160, d: 80 },
-    l: { k: [1.8,2.8,2.4, 2.1], r: [2.6,-0.8,-1.6, 0.6], a: 0.7, en: 0.5 } },
-  { v: 31.8, x: -390, y: -240, d: 290, e: [-0.12, -0.3, -0.08], o: 1, st: 0, m: { x: 0, y: -100, d: 320, o: 0 } },   /* Handy: kein X im Abbinder (Levin, 12.9.) */
-  { v: 32.4, e: [-0.05, 0.25, 0.12], st: 0 },
-];
-/* fill-forward + Quaternions vorbereiten */
-(function prepXK() {
-  const FIELDS = ['x','y','d','o','em','st'];
-  if (mobileMode) for (const k of XK) if (k.m) Object.assign(k, k.m);
-  for (let i = 1; i < XK.length; i++) {
-    for (const f of FIELDS) if (XK[i][f] === undefined) XK[i][f] = XK[i-1][f];
-    if (XK[i].e === undefined) XK[i].e = XK[i-1].e;
-    if (XK[i].l === undefined) XK[i].l = XK[i-1].l;
-  }
-  for (const k of XK) if (k.e) k.q = new THREE.Quaternion().setFromEuler(new THREE.Euler(...k.e));
-})();
-const _qk = new THREE.Quaternion();
-const lerpN = (a, b, t) => a + (b - a) * t;
-function evalXK(yv) {
-  if (yv <= XK[0].v) return null;
-  let i = 0;
-  while (i < XK.length - 1 && XK[i+1].v < yv) i++;
-  const A = XK[i], B = XK[Math.min(i+1, XK.length-1)];
-  // Optionaler Halt am Start-Key: erst losfahren, wenn der zugehörige Text abgeht.
-  const moveFrom = A.holdUntil === undefined ? A.v : A.holdUntil;
-  const t = A === B ? 1 : ease.cubicInOut(cUnMix(moveFrom, B.v, yv));
-  _qk.copy(A.q || B.q).slerp(B.q, t);
-  const L = {};
-  for (const key of ['k','r']) L[key] = A.l[key].map((v, j) => lerpN(v, B.l[key][j], t));
-  L.a = lerpN(A.l.a, B.l.a, t); L.en = lerpN(A.l.en, B.l.en, t);
-  return { x: lerpN(A.x,B.x,t), y: lerpN(A.y,B.y,t), d: lerpN(A.d,B.d,t),
-           o: lerpN(A.o,B.o,t), em: lerpN(A.em,B.em,t), st: lerpN(A.st,B.st,t), q: _qk, l: L };
-}
-function uGl(heroL, claim) {
-  const s = S();
-  const yv = state.scroll / vh();
-  const cx = LW()/2, cy = LH()/2;
-  stackMeshes.forEach(m => m.visible = false);
-  let o = 0;
-  if (yv <= XK[0].v) {
-    /* Zone A: ruhiges Wachstum bis 1.45, nur 0.3 vh halten, dann direkt weiter. */
-    if (flip && !XK[0].q) { const end = sampleHeroClaim(1); XK[0].q = end.q.clone(); XK[0].x = end.x*XF; XK[0].y = end.y*XF; XK[0].d = end.d*XF; }
-    const f = sampleHeroClaim(fit(yv, 0, 1.45, 0, 1));
-    if (f) {
-      /* Key 0 übernimmt exakt die Endpose → nahtlos in die Seitwärtsbewegung. */
-      if (!XK[0].q) { const end = sampleHeroClaim(1); XK[0].q = end.q.clone(); XK[0].x = end.x*XF; XK[0].y = end.y*XF; XK[0].d = end.d*XF; }
-      placeRig(cx + f.x*s*XF, cy - f.y*s*XF, f.d*s*XF);
-      spin.quaternion.copy(f.q);
-      const t = fit(f.progress, 0.35, 0.8, 0, 1, ease.cubicInOut);
-      const hi = claim.highlight || 0;
-      key.position.set(fit(t,0,1, 2.2, -2.6), fit(t,0,1, 3.2, -0.9), fit(t,0,1, 2.6, 2.2));
-      key.intensity = fit(t, 0, 1, 2.2, 1.5) + hi * 0.8;
-      rim.position.set(fit(t,0,1, -2.4, 2.8), 1.5, -1.8);
-      rim.intensity = fit(t, 0, 1, 0.55, 0.95) + hi * 0.5;
-      amb.intensity = fit(t, 0, 1, 0.85, 0.5);
-      scene.environmentIntensity = fit(t, 0, 1, 0.6, 0.35);
-      xMat.emissiveIntensity = 0.35 + hi * 0.9;
-      o = 1;
-    }
-  } else {
-    const P = evalXK(yv);
-    if (P) {
-      /* Querung Assistent→Sprachen: hier spielt die in Blender animierte
-         Spur (Vorlauf, Überschwingen, Nachpendeln) statt der Keyframes.
-         LINEAR gescrubbt — das Easing steckt in der Spur selbst. */
-      let px = P.x, py = P.y, q = P.q;
-      placeRig(cx + px*s, cy - py*s, Math.max(1, P.d)*s);
-      spin.quaternion.copy(q);
-      key.position.set(P.l.k[0], P.l.k[1], P.l.k[2]); key.intensity = P.l.k[3];
-      rim.position.set(P.l.r[0], P.l.r[1], P.l.r[2]); rim.intensity = P.l.r[3];
-      amb.intensity = P.l.a; scene.environmentIntensity = P.l.en;
-      xMat.emissiveIntensity = P.em;
-      o = P.o;
-      if (P.st > 0.5 && modelDiameter) {
-        const wpp = worldPerPixel();
-        stackMeshes.forEach((m, i) => {
-          m.visible = true;
-          m.position.copy(rig.position);
-          m.position.y += (i+1) * 70 * s * wpp;
-          m.scale.copy(spin.scale).multiplyScalar(1 - (i+1)*0.06);
-          m.quaternion.copy(spin.quaternion);
-          m.rotation.z += (i+1) * 0.35;
-          m.material.opacity = P.o;
-        });
-      }
-    }
-  }
-  canvas.style.opacity = o.toFixed(3);
-}
-
-/* ============ Cursor-Reaktion des Hero-Rasters ============ */
-const heroGrid = createHeroGrid({ canvas: $('#bg-grid'), S, viewport: () => ({ w: LW(), h: LH() }) });
-function updateCursorGrid(dt) {
-  heroGrid.update(dt, +bgs.stage.style.opacity);
-}
-
-/* ============ Korn ============ */
-const grain = $('#grain'), gctx = grain.getContext('2d');
-const noiseTile = document.createElement('canvas');
-noiseTile.width = noiseTile.height = 160;
-const nctx = noiseTile.getContext('2d');
-const nd = nctx.createImageData(160, 160);
-for (let i = 0; i < nd.data.length; i += 4) {
-  const v = Math.random()*255 | 0;
-  nd.data[i] = nd.data[i+1] = nd.data[i+2] = v; nd.data[i+3] = 34;
-}
-nctx.putImageData(nd, 0, 0);
-function drawGrain() {
-  if (grain.width !== LW() || grain.height !== vh()) { grain.width = LW(); grain.height = vh(); }
-  gctx.clearRect(0, 0, grain.width, grain.height);
-  const ox = (Math.random()*160)|0, oy = (Math.random()*160)|0;
-  for (let y = -oy; y < grain.height; y += 160)
-    for (let x = -ox; x < grain.width; x += 160)
-      gctx.drawImage(noiseTile, x, y);
-}
-
-/* ============ Chrome ============ */
-function uChrome() {
-  const total = document.body.scrollHeight - LH();
-  const p = total > 0 ? toPhysical(state.scroll)/total : 0;
-  const bar = $('#scroll-indicator__bar');
-  bar.style.transform = `translate3d(${fit(state.startTime, 0.5, 1, 61, 0, ease.cubicInOut)}px, ${p * (LH() - 120*S())}px, 0)`;
-  // Plakette nur im Hero
-  const l = fit(range(secs.hero.el).hide, -1, -0.5, 1, 0);
-  serialRatio = clamp(serialRatio + (l > 0.99 ? 3 : -3) * dtGlobal, 0, 1);
-
-}
-let serialRatio = 0, dtGlobal = 0.016;
-
-/* ============ Hauptschleife ============ */
-let last = performance.now()/1000;
-function resize(force) {
-  if (!syncLayoutViewport() && !force) return;   // Handy: Adressleisten-Resize ändert nichts
-  applyScale();
-  renderer.setSize(LW(), LH());
-  camera.aspect = LW()/LH();
-  camera.updateProjectionMatrix();
-}
-addEventListener('resize', () => resize(false));
-resize(true);
-
-const updateContinuity = createContinuity({ secs, fit, ease, S, phaseFor: id => range(secs[id].el).show });
-let grainTick = 0;
-function frameLoop() {
-  const now = performance.now()/1000;
-  const dt = Math.min(0.05, now - last); last = now;
-  dtGlobal = dt;
-  state.startTime += dt * TUNE.introTempo;
-  state.target = toTimeline(scrollY);
-  state.scroll += (state.target - state.scroll) * (1 - Math.exp(-TUNE.glatt*dt));
-  if (Math.abs(state.target - state.scroll) < 0.05) state.scroll = state.target;
-
-  if (inited && !compactMode) {
-    const heroL = uHero();
-    const claim = uClaim();
-    const ft = uFt();
-    uBt();
-    uHa(); uAb();
-    updateBg();
-    updateCursorGrid(dt);
-    uChrome();
-    uGl(heroL, claim);
-    updateContinuity(state.scroll);
-    updateFlippers(dt);
-  }
-  if (compactMode && inited) {
-    const hero = secs.hero.el;
-    canvas.style.opacity = Math.max(0, 1 - scrollY / (hero.offsetHeight*.55));
-    placeRig(innerWidth/2, $('#hero-wordmark').getBoundingClientRect().bottom + 145, Math.min(innerWidth*.62, 280));
-    spin.rotation.set(-0.12, scrollY*0.002, 0.06);
-    key.position.set(2,3,4); rim.position.set(-2,1,2);
-    document.querySelector('#logo').style.transform = '';
-    document.querySelector('#logo').style.width = '';
-  }
-  if (!compactMode && (grainTick++ & 3) === 0) drawGrain();
-  renderer.render(scene, camera);
-  requestAnimationFrame(frameLoop);
-}
-requestAnimationFrame(frameLoop);
-
-/* Local navigation. */
-const anchorOffsets = {hero:0,ft:0.5,bt:0.5,ab:0};
-document.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
-  const target = document.querySelector(link.getAttribute('href'));
-  if (!target) return;
-  event.preventDefault();
-  const top = compactMode ? target.offsetTop-64 : toPhysical((Number(target.dataset.timelineTop)+(anchorOffsets[target.id]||0))*vh());
-  history.replaceState(null,'',link.getAttribute('href'));
-  window.scrollTo({top:Math.max(0,top),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
-}));
-// Intersection observers also pause media after large navigation jumps.
-const mediaObserver = new IntersectionObserver(entries => entries.forEach(({target,isIntersecting})=>{
-  if (isIntersecting && !matchMedia('(prefers-reduced-motion: reduce)').matches) target.play().catch(()=>{});
-  else target.pause();
-}),{threshold:0.1});
-// Desktop bakery playback belongs exclusively to the expansion timeline.
-// Compact layouts show the video full-size, so visibility remains the trigger.
-document.querySelectorAll('video').forEach(v=>{ if (v !== heroClip || compactMode) mediaObserver.observe(v); });
-window.__review = { state, ready:()=>inited, compactMode, toPhysical, toTimeline, sections:secs };
-// Immer oben starten: Safari/Chrome stellen sonst die alte Scrollposition wieder her (auch aus dem Zurück-Cache)
-if (location.hash) history.replaceState(null, '', location.pathname + location.search);
-scrollTo(0, 0);
-addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
-let previousWidth = innerWidth;
-addEventListener('resize',()=>{
-  if (Math.abs(innerWidth-previousWidth)>80) { clearTimeout(window.__resizeTimer); window.__resizeTimer=setTimeout(()=>location.reload(),300); }
-});
-
-/* ============ Tuning-Panel (Taste G) ============ */
-(function tunePanel() {
-  const P = document.createElement('div');
-  P.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:99;background:rgba(10,14,16,.95);'+
-    'border:1px solid rgba(0,178,160,.4);border-radius:10px;padding:14px;font-size:12px;'+
-    'font-family:monospace;display:none;color:#eef4f2;width:250px';
-  const DEFS = [
-    ['glatt','Scroll-Glättung',4,24,0.5], ['stag','Staffel-Versatz',0.05,0.45,0.01],
-    ['fenster','Staffel-Fenster',0.3,0.95,0.01], ['charDist','Einflug-Distanz',0.3,2,0.05],
-    ['flipTempo','Flipper-Tempo',0.3,3,0.05], ['introTempo','Intro-Tempo',0.3,2.5,0.05],
-    ['xTempo','X-Querung',0.4,2,0.05],
+    // 5 · fiduciary export
+    scr('exp', head('Übergabe an den Treuhänder', 'Oktober 2026 · Treuhand Vogel &amp; Partner', '<span class="s-btn">Paket exportieren ↓</span>') +
+      '<div class="row4">' +
+      '<div class="c kpi"><div class="l">Belege Oktober</div><div class="v">38</div><div class="d"><b>alle vollständig</b></div></div>' +
+      '<div class="c kpi"><div class="l">Bankbuchungen</div><div class="v">112</div><div class="d"><b>112 zugeordnet</b></div></div>' +
+      '<div class="c kpi"><div class="l">MWST Q3</div><div class="v">CHF 9’412</div><div class="d">Abrechnung bereit</div></div>' +
+      '<div class="c kpi"><div class="l">Letzte Übergabe</div><div class="v">2. Okt</div><div class="d">September · bestätigt</div></div></div>' +
+      '<div class="split" style="grid-template-columns:1.3fr 1fr">' +
+      '<div class="c"><h5>Exporte <small>CSV · Abacus · Bexio · Excel</small></h5>' +
+      [['Buchungsjournal', 'Jede Buchung mit Soll, Haben, Betrag und Beleg'], ['Belegliste mit PDFs', 'Lieferanten- und Kundenrechnungen, als ZIP'], ['Kontensaldi', 'Vortrag, Soll, Haben und Saldo je Konto'], ['MWST-Abrechnung', 'Die Zahlen der Abrechnung je Quartal']].map(function (e) {
+        return '<div class="todo"><i style="background:var(--teal)"></i><div><b>' + e[0] + '</b><small>' + e[1] + '</small></div><span style="color:var(--teal-d);font-weight:700">↓</span></div>';
+      }).join('') + '</div>' +
+      '<div class="c"><h5>Übergaben</h5><div class="tl">' +
+      '<div class="t"><b>Oktober</b><small>bereit · 38 Belege, 112 Buchungen</small></div><div class="t"><b>September</b><small>übergeben 2.10. · bestätigt</small></div><div class="t"><b>August</b><small>übergeben 3.9. · bestätigt</small></div><div><b>Q2 MWST</b><small>abgerechnet</small></div></div></div></div>')
   ];
-  P.innerHTML = '<b style="color:#00b2a0">Motion-Tuning</b><br><br>' + DEFS.map(([k,label,a,b,st]) =>
-    `<label style="display:block;margin-bottom:8px">${label}: <span id="tv-${k}">${TUNE[k]}</span><br>`+
-    `<input type="range" id="tr-${k}" min="${a}" max="${b}" step="${st}" value="${TUNE[k]}" style="width:100%"></label>`
-  ).join('') + '<button id="tune-copy" style="width:100%;padding:6px;background:#00b2a0;border:0;border-radius:6px;cursor:pointer;font-weight:600">Werte kopieren</button>';
-  document.body.appendChild(P);
-  for (const [k] of DEFS) {
-    P.querySelector('#tr-'+k).addEventListener('input', e => {
-      TUNE[k] = +e.target.value;
-      P.querySelector('#tv-'+k).textContent = e.target.value;
-    });
+
+  var stack = $('#stack'), heroBody = $('#hero-body');
+  stack.innerHTML = SCREENS.join('');
+  heroBody.innerHTML = SCREENS[0];
+  var screens = $$('.scr', stack);
+  screens[0].classList.add('on');
+
+  function fit() {
+    $$('.win-body').forEach(function (b) { var s = b.querySelector('.scr'); if (s) b.style.setProperty('--k', (b.clientWidth / s.offsetWidth).toFixed(4)); });
+    var st = $('.stage'); if (st) st.style.setProperty('--sh', st.offsetHeight + 'px');
   }
-  P.querySelector('#tune-copy').addEventListener('click', () => {
-    const j = JSON.stringify(TUNE, null, 1);
-    navigator.clipboard?.writeText(j);
-    console.log('TUNE:', j);
-    P.querySelector('#tune-copy').textContent = 'Kopiert ✓';
-    setTimeout(() => P.querySelector('#tune-copy').textContent = 'Werte kopieren', 1200);
+  fit(); addEventListener('resize', fit);
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(document.body);
+
+  /* steps → screen */
+  var steps = $$('.step'), dots = $$('.dots i'), cur = -1;
+  function show(i) {
+    if (i === cur) return; cur = i;
+    screens.forEach(function (s, j) { s.classList.toggle('on', j === i); });
+    steps.forEach(function (s, j) { s.classList.toggle('on', j === i); });
+    dots.forEach(function (d, j) { d.classList.toggle('on', j === i); });
+  }
+  show(0);
+
+  /* header, hero tilt, step tracking, process line — one rAF-throttled scroll handler */
+  var top = $('#top'), tilt = $('.hero-tilt'), proc = $('#proc'), pst = $$('.pstep'), ticking = false;
+  function onScroll() {
+    ticking = false;
+    var y = scrollY, vh = innerHeight;
+    top.classList.toggle('scrolled', y > 20);
+    if (!reduce && tilt) {
+      var p = Math.min(1, Math.max(0, y / (vh * .7)));
+      tilt.style.setProperty('--tilt', (20 - 20 * p).toFixed(2) + 'deg');
+      tilt.style.setProperty('--sc', (.94 + .06 * p).toFixed(4));
+    }
+    // the step whose middle is nearest to the reading line wins
+    var line = innerWidth <= 900 ? vh * .72 : vh * .5, best = 0, bd = 1e9;
+    steps.forEach(function (s, i) { var r = s.getBoundingClientRect(), d = Math.abs(r.top + Math.min(r.height, vh * .5) / 2 - line); if (d < bd) { bd = d; best = i; } });
+    show(best);
+    if (proc) {
+      var r = proc.getBoundingClientRect(), f = Math.min(1, Math.max(0, (vh * .8 - r.top) / (r.height + vh * .2)));
+      if (innerWidth > 1020) proc.style.setProperty('--pp', (f * 100).toFixed(1) + '%');
+      pst.forEach(function (s, i) { s.classList.toggle('on', f >= i / pst.length + .02 || reduce); });
+    }
+  }
+  addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
+
+  /* reveal on view */
+  if ('IntersectionObserver' in window && !reduce) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
+    $$('.rv').forEach(function (el) { io.observe(el); });
+  } else $$('.rv').forEach(function (el) { el.classList.add('in'); });
+
+  /* trade loops play only while visible; with reduced motion the posters stay */
+  if (!reduce && 'IntersectionObserver' in window) {
+    var vo = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting) { if (!v.src) v.src = v.dataset.src; var pr = v.play(); if (pr && pr.catch) pr.catch(function () { }); }
+        else v.pause();
+      });
+    }, { threshold: .25 });
+    $$('.trade video').forEach(function (v) { vo.observe(v); });
+  }
+
+  /* contact form: builds a mail to kontakt@axyom.ch; required fields marked inline */
+  var form = $('#ab-form');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var data = {}; new FormData(form).forEach(function (v, k) { data[k] = v; });
+    var firstBad = null;
+    $$('input[required]', form).forEach(function (i) {
+      var ok = i.type === 'email' ? /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(i.value.trim()) : i.value.trim().length > 0;
+      i.classList.toggle('is-invalid', !ok); i.setAttribute('aria-invalid', String(!ok));
+      if (!ok && !firstBad) firstBad = i;
+    });
+    if (firstBad) { firstBad.focus(); return; }
+    var T = window.axyomT || function (k, de) { return de; };
+    var subject = T('mail.subject', 'Erstgespräch') + (data.betrieb ? ': ' + data.betrieb : '');
+    var body = [T('mail.name', 'Name') + ': ' + data.name, T('mail.biz', 'Betrieb') + ': ' + (data.betrieb || '–'), T('mail.email', 'E-Mail') + ': ' + data.email, '', data.nachricht || ''].join('\n');
+    location.href = 'mailto:kontakt@axyom.ch?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
   });
-  addEventListener('keydown', e => { if (e.key === 'g' && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) P.style.display = P.style.display === 'none' ? 'block' : 'none'; });
+  form.addEventListener('input', function (e) { e.target.classList.remove('is-invalid'); e.target.removeAttribute('aria-invalid'); });
 })();
 </script>
 </body>

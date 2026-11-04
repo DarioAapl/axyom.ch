@@ -5,212 +5,711 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Axyom AI für Shopify · Axyom</title>
 <link rel="canonical" href="https://axyom.ch/shopify/">
+<meta name="description" data-i18n-attr="content:sh.meta.desc" content="Axyom AI beantwortet die Fragen Ihrer Kunden direkt im Shop, aus Ihrem eigenen Katalog. Mit Bestellstatus, in der Sprache des Kunden, ohne Code.">
+<meta name="theme-color" content="#0b1013">
 <link rel="icon" href="/media/brand/favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="/media/brand/favicon.ico">
 <link rel="apple-touch-icon" href="/media/brand/apple-touch-icon.png">
-<meta name="description" data-i18n-attr="content:sh.meta.desc" content="Axyom AI beantwortet die Fragen Ihrer Kunden direkt im Shop, aus Ihrem eigenen Katalog. Mit Bestellstatus, in der Sprache des Kunden, ohne Code.">
+<link rel="preload" href="/media/fonts/inter-500.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-/* Axyom AI product page. Same tokens as the homepage (index.html :root), without its scroll engine. */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --black: #0b1013; --white: #eef4f2; --panel: #16211f; --stage: #0f1a18;
-  --accent: #00b2a0; --muted: #a9bdb8; --line: rgba(238,244,242,.1);
+@font-face{font-family:Inter;font-style:normal;font-weight:400;font-display:swap;src:url("/media/fonts/inter-400.woff2") format("woff2")}
+@font-face{font-family:Inter;font-style:normal;font-weight:500;font-display:swap;src:url("/media/fonts/inter-500.woff2") format("woff2")}
+@font-face{font-family:Inter;font-style:normal;font-weight:600;font-display:swap;src:url("/media/fonts/inter-600.woff2") format("woff2")}
+@font-face{font-family:Inter;font-style:normal;font-weight:800;font-display:swap;src:url("/media/fonts/inter-800.woff2") format("woff2")}
+
+/* ============================================================
+   Axyom AI product page — the same scroll-through showcase as the
+   homepage, for the Shopify assistant. The store (Nordhang) and
+   every conversation are invented; the chat panel copies the real
+   widget's look and wording (backend/widget/axyom.js in axyom-ai).
+   German is inline, English comes from i18n.js (sh.* / shp.* keys);
+   the chat lines carry their own DE/EN below.
+   ============================================================ */
+:root{
+  --night:#0b1013; --night2:#10181b; --night3:#162225;
+  --paper:#f3f6f5; --ink:#0f1a1d; --ink2:#3d4b50; --mute:#6b787d;
+  --line:#dde4e2; --line-d:rgba(238,244,242,.12);
+  --snow:#eef4f2; --snow2:rgba(238,244,242,.66);
+  --teal:#00b2a0; --teal-d:#00786c; --teal-dd:#004c44; --teal-w:#e4f4f1;
+  --wrap:1200px; --gut:24px;
+  --ease:cubic-bezier(.2,.7,.2,1);
 }
-html { background: var(--black); }
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: var(--white); font-size: 17px; line-height: 1.55; overflow-x: hidden;
-  background:
-    radial-gradient(90% 70% at 75% 0%, rgba(0,178,160,.13), transparent 60%),
-    linear-gradient(160deg, #142320, #0f1a18 45%, #0a1211);
-  min-height: 100vh;
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:var(--night);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--snow);background:var(--night);
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--teal);color:var(--night)}
+a{color:inherit}
+img,video,svg{display:block}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gut)}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.light .eyebrow{color:var(--teal-d)}
+h1,h2,h3{font-weight:600;letter-spacing:-.025em;line-height:1.05}
+.dot{color:var(--teal)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--teal);color:var(--night);padding:8px 14px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:6px}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 24px;border-radius:999px;font:600 15px/1 Inter,sans-serif;
+  text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .25s var(--ease),background .25s,box-shadow .25s,border-color .25s;white-space:nowrap}
+.btn.solid{background:var(--teal);color:#04201c;box-shadow:0 8px 30px rgba(0,178,160,.28),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.solid:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,178,160,.38),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.ghost{border-color:var(--line-d);color:var(--snow)}
+.btn.ghost:hover{border-color:rgba(238,244,242,.35);background:rgba(238,244,242,.04)}
+.light .btn.ghost{border-color:var(--line);color:var(--ink)}
+.btn .arr{transition:transform .25s var(--ease)}
+.btn:hover .arr{transform:translateX(3px)}
+.btn.ghost:hover .arr.down{transform:translateY(3px)}
+
+/* ---------- header ---------- */
+#top{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+#top.scrolled{background:rgba(11,16,19,.9);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-color:var(--line-d)}
+#top .wrap{display:flex;align-items:center;gap:28px;height:72px}
+#top .logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+#top .logo img{height:30px;width:auto}
+#top nav{display:flex;gap:28px;margin-left:auto;font-size:15px;font-weight:500}
+#top nav a{text-decoration:none;color:var(--snow2);transition:color .2s}
+#top nav a:hover{color:var(--snow)}
+.lang-switch{display:flex;gap:2px;padding:3px;border:1px solid var(--line-d);border-radius:999px}
+.lang-switch button{background:none;border:0;color:var(--snow2);font:600 12px/1 Inter,sans-serif;letter-spacing:.06em;padding:7px 10px;border-radius:999px;cursor:pointer}
+.lang-switch button[aria-pressed=true]{background:rgba(238,244,242,.1);color:var(--snow)}
+#top .btn{height:42px;padding:0 18px;font-size:14px}
+
+/* ---------- hero ---------- */
+#hero{position:relative;padding:150px 0 0;overflow:hidden;isolation:isolate}
+#hero::before{content:"";position:absolute;inset:-20% -10% auto;height:120%;z-index:-1;
+  background:radial-gradient(50% 45% at 50% 62%,rgba(0,178,160,.22),transparent 70%),radial-gradient(35% 30% at 85% 10%,rgba(0,178,160,.08),transparent 70%)}
+#hero .grid-bg{position:absolute;inset:0;z-index:-1;opacity:.5;
+  background-image:linear-gradient(var(--line-d) 1px,transparent 1px),linear-gradient(90deg,var(--line-d) 1px,transparent 1px);background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(60% 50% at 50% 30%,#000,transparent 75%);mask-image:radial-gradient(60% 50% at 50% 30%,#000,transparent 75%)}
+.hero-copy{text-align:center;max-width:1080px;margin:0 auto}
+.hero-copy .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border:1px solid var(--line-d);border-radius:999px;background:rgba(238,244,242,.03);letter-spacing:.08em}
+.hero-copy .eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(0,178,160,.18)}
+.hero-copy h1{font-size:clamp(40px,5.8vw,82px);font-weight:600;letter-spacing:-.045em;line-height:.98;margin:26px 0 22px}
+.hero-copy h1 .soft{color:var(--snow2)}
+.hero-copy p{font-size:clamp(17px,1.6vw,20px);color:var(--snow2);max-width:640px;margin:0 auto}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+.hero-copy .hero-note{margin-top:22px;font-size:14.5px;color:var(--snow2)}
+.hero-note a{color:var(--teal)}
+.hero-stage{perspective:1600px;margin-top:72px;padding:0 var(--gut)}
+.hero-tilt{max-width:1120px;margin:0 auto;transform-origin:50% 0;transform:rotateX(var(--tilt,20deg)) scale(var(--sc,.94));will-change:transform}
+.hero-fade{position:absolute;left:0;right:0;bottom:0;height:180px;background:linear-gradient(transparent,var(--night));pointer-events:none}
+
+/* ---------- browser window ---------- */
+.win{border-radius:14px;background:#fff;overflow:hidden;position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 40px 120px -20px rgba(0,0,0,.65),0 0 80px -10px rgba(0,178,160,.18)}
+.light .win{box-shadow:0 0 0 1px rgba(15,26,29,.08),0 30px 80px -24px rgba(15,26,29,.28)}
+.win-bar{height:38px;background:#f4f6f6;border-bottom:1px solid #e3e8e7;display:flex;align-items:center;gap:7px;padding:0 14px}
+.win-bar i{width:11px;height:11px;border-radius:50%;background:#dfe4e3}
+.win-bar .url{margin:0 auto;font:500 12px/1 Inter,sans-serif;color:#7d898c;background:#fff;border:1px solid #e3e8e7;border-radius:7px;padding:6px 40px}
+.win-body{position:relative;aspect-ratio:1040/650;overflow:hidden;background:#f7f5f1}
+.stage .win-body{aspect-ratio:1040/780}
+
+/* the invented store behind the chat — decoration, drawn at 1040×650 and scaled */
+.shop{position:absolute;left:0;top:0;width:1040px;height:650px;transform-origin:0 0;transform:scale(var(--k,1));color:#1b1e22;font-size:13px;text-align:left;background:#f7f5f1}
+.shop .sh-nav{height:58px;display:flex;align-items:center;gap:28px;padding:0 34px;border-bottom:1px solid #e7e2da;background:#fff}
+.shop .sh-logo{font:800 17px/1 Inter,sans-serif;letter-spacing:.16em}
+.shop .sh-nav span{color:#5c6066;font-weight:500}
+.shop .sh-nav .ic{margin-left:auto;display:flex;gap:16px;color:#5c6066}
+.shop .sh-hero{margin:22px 34px 0;height:190px;border-radius:14px;padding:30px 34px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#27384a,#121c26)}
+.shop .sh-hero svg{position:absolute;inset:auto 0 0 0;width:100%;height:120px}
+.shop .sh-hero small{position:relative;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.shop .sh-hero b{position:relative;font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:6px}
+.shop .sh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:22px 34px 0}
+.shop .sh-p{background:#fff;border:1px solid #ebe6de;border-radius:12px;padding:12px;transition:box-shadow .5s,border-color .5s}
+.shop .sh-p.hl{border-color:#00b2a0;box-shadow:0 0 0 3px rgba(0,178,160,.18)}
+.shop .sh-p .im{height:150px;border-radius:9px;background:#f1ede6;display:grid;place-items:center}
+.shop .sh-p b{display:block;font-weight:600;margin-top:10px}
+.shop .sh-p small{color:#6b6f75}
+
+/* the chat panel — real size, styled after the widget's light theme */
+.chat{--acc:#00b2a0;--acc2:#00968a;position:absolute;right:16px;bottom:16px;top:16px;width:350px;display:flex;flex-direction:column;
+  background:rgba(250,252,252,.97);border:1px solid rgba(15,26,29,.08);border-radius:20px;overflow:hidden;color:#1d2a2e;font-size:14px;line-height:1.45;text-align:left;
+  box-shadow:0 24px 60px -18px rgba(15,26,29,.35),0 2px 6px rgba(15,26,29,.06);transition:transform .7s var(--ease),background .5s,color .5s,border-color .5s}
+.chat.left{transform:translateX(var(--dx,0))}
+.c-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(15,26,29,.07)}
+.c-head b{font-weight:650;font-size:14.5px}
+.c-head .ai{font-size:10px;font-weight:700;border:1px solid rgba(15,26,29,.14);border-radius:6px;padding:2px 6px;margin-left:auto;color:#55646a}
+.c-head svg{width:17px;height:17px;stroke:#55646a;fill:none;stroke-width:1.7;stroke-linecap:round}
+.c-body{flex:1;min-height:0;padding:14px;display:flex;flex-direction:column;gap:9px;justify-content:flex-end;overflow:hidden}
+.m{max-width:84%;padding:9px 13px;border-radius:16px;opacity:0;transform:translateY(8px);transition:opacity .4s var(--ease),transform .4s var(--ease)}
+.m.in{opacity:1;transform:none}
+.m.b{align-self:flex-start;background:#eef2f2;border:1px solid rgba(15,26,29,.06);border-bottom-left-radius:6px}
+.m.u{align-self:flex-end;color:#fff;background:linear-gradient(180deg,var(--acc),var(--acc2));border-bottom-right-radius:6px}
+.ord.m,.signed.m,.foot.m{max-width:none}
+.m a{color:var(--acc2);font-weight:600;text-decoration:underline}
+.m.typing{display:flex;gap:4px;padding:12px 14px}
+.m.typing i{width:6px;height:6px;border-radius:50%;background:#98a3a6;animation:blink 1s infinite}
+.m.typing i:nth-child(2){animation-delay:.15s}.m.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+.pc{align-self:flex-start;width:84%;display:flex;gap:11px;align-items:center;padding:6px 10px 6px 6px;background:#fff;border:1px solid rgba(15,26,29,.09);border-radius:14px}
+.pc .th{width:44px;height:44px;border-radius:10px;background:#f1ede6;flex:none;display:grid;place-items:center}
+.pc b{display:block;font-weight:600;font-size:13px}
+.pc small{color:#6b787d;font-size:12px}
+.pc em{font-style:normal;font-weight:600;font-size:12px;color:var(--acc2);margin-left:8px}
+.c-tabs{display:flex;gap:6px;padding:8px 10px;border-top:1px solid rgba(15,26,29,.07)}
+.c-tabs span{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:34px;border-radius:999px;font-size:13px;font-weight:600;color:#6b787d}
+.c-tabs span.on{background:#fff;color:#1d2a2e;box-shadow:0 1px 4px rgba(15,26,29,.12)}
+.c-in{margin:0 10px 10px;height:40px;border:1px solid rgba(15,26,29,.12);border-radius:12px;background:#fff;display:flex;align-items:center;padding:0 6px 0 12px;color:#98a3a6;font-size:13px}
+.c-in i{margin-left:auto;width:28px;height:28px;border-radius:9px;background:var(--acc);display:grid;place-items:center}
+.c-in i svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* order view */
+.ord{align-self:stretch;border:1px solid rgba(0,178,160,.45);border-radius:16px;background:#fff;padding:12px 14px;font-size:13px}
+.ord .oh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ord .oh b{font-size:14px}
+.ord .st{font-size:11px;font-weight:700;color:#00675d;background:#e4f4f1;border-radius:99px;padding:3px 9px}
+.ord dl{display:grid;grid-template-columns:auto 1fr;gap:5px 12px}
+.ord dt{color:#6b787d}
+.ord dd{text-align:right}
+.ord .tr{margin-top:10px;padding-top:10px;border-top:1px solid #eef1f0;display:flex;justify-content:space-between;align-items:center}
+.ord .tr a{color:#00675d;font-weight:600;text-decoration:none}
+.signed{align-self:stretch;font-size:12px;color:#55646a;display:flex;align-items:center;gap:7px}
+.signed::before{content:"";width:7px;height:7px;border-radius:50%;background:#2e9d5b}
+.foot{align-self:stretch;font-size:11.5px;color:#8a9598;text-align:center}
+/* the merchant's own look (step 5) */
+.chat.dark{--acc:#ff7a45;--acc2:#e85d2a;background:rgba(20,24,28,.97);color:#eef1f3;border-color:rgba(255,255,255,.08)}
+.chat.dark .c-head{border-color:rgba(255,255,255,.08)}
+.chat.dark .c-head .ai{color:#c4ccd1;border-color:rgba(255,255,255,.18)}
+.chat.dark .c-head svg{stroke:#c4ccd1}
+.chat.dark .m.b{background:#232a30;border-color:rgba(255,255,255,.06)}
+.chat.dark .m a{color:#ff9a6e}
+.chat.dark .pc{background:#1b2126;border-color:rgba(255,255,255,.08)}
+.chat.dark .pc small{color:#a3adb3}
+.chat.dark .pc em{color:#ff9a6e}
+.chat.dark .c-tabs{border-color:rgba(255,255,255,.08)}
+.chat.dark .c-tabs span{color:#a3adb3}
+.chat.dark .c-tabs span.on{background:#2a3238;color:#fff;box-shadow:none}
+.chat.dark .c-in{background:#1b2126;border-color:rgba(255,255,255,.12)}
+.chat.dark .c-head .logo-dot{background:var(--acc)}
+.logo-dot{width:22px;height:22px;border-radius:7px;background:var(--acc);display:grid;place-items:center;flex:none;transition:background .5s}
+.logo-dot svg{width:13px!important;height:13px!important;stroke:#fff!important}
+.chips{position:absolute;right:16px;top:16px;display:grid;gap:6px;opacity:0;transform:translateY(-6px);transition:opacity .5s .35s,transform .5s .35s;pointer-events:none}
+.chips.on{opacity:1;transform:none}
+.chips span{font-size:12px;font-weight:600;background:#fff;color:#1d2a2e;border:1px solid rgba(15,26,29,.1);border-radius:9px;padding:6px 10px;box-shadow:0 6px 18px -8px rgba(15,26,29,.3);display:flex;gap:8px;align-items:center;justify-content:space-between}
+.chips span small{font-weight:500;color:#6b787d;font-size:11.5px}
+.chips .sw{width:14px;height:14px;border-radius:4px;background:#ff7a45}
+
+/* insights (step 6) — the merchant's view in the app */
+.ins{position:absolute;inset:0;background:#f6f8f8;color:#1d2a2e;padding:22px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto 1fr;gap:12px;font-size:13px;text-align:left;
+  opacity:0;transition:opacity .55s var(--ease);pointer-events:none}
+.ins.on{opacity:1}
+.ins .ih{grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-end}
+.ins .ih b{font-size:19px;font-weight:650;letter-spacing:-.02em}
+.ins .ih small{color:#7a878a;font-size:12px;display:block}
+.ins .ih .kp{display:flex;gap:18px;text-align:right}
+.ins .ih .kp div{font-size:20px;font-weight:650;font-variant-numeric:tabular-nums}
+.ins .ih .kp small{font-weight:500}
+.ic{background:#fff;border:1px solid #e6ebea;border-radius:12px;padding:14px;min-height:0;overflow:hidden}
+.ic h5{font-size:13px;font-weight:650;margin-bottom:10px}
+.ic li{list-style:none;display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #f0f3f2;font-size:12.5px}
+.ic li:first-child{border-top:0}
+.ic li span:last-child{color:#7a878a;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ic .bar{height:6px;border-radius:9px;background:#edf1f0;margin-top:4px;overflow:hidden}
+.ic .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-d));border-radius:9px}
+.ic .gap{align-self:center;color:#8a4b00;background:#fdf0de;border-radius:99px;padding:1px 8px;font-size:11px;font-weight:600}
+
+/* ---------- sections ---------- */
+section{position:relative}
+.light{background:var(--paper);color:var(--ink)}
+.sec-head{max-width:760px}
+.sec-head h2{font-size:clamp(34px,4.6vw,58px);margin:14px 0 18px;letter-spacing:-.035em}
+.sec-head p{font-size:19px;color:var(--snow2)}
+.light .sec-head p{color:var(--ink2)}
+
+/* showcase */
+#rundgang{padding:130px 0 60px}
+.show{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:56px;margin-top:40px}
+.steps{padding:12vh 0 22vh}
+.step{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:.32;transition:opacity .5s var(--ease)}
+.step.on{opacity:1}
+.step .num{font:600 13px/1 Inter,sans-serif;color:var(--teal-d);letter-spacing:.08em;display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.step .num::after{content:"";height:1px;width:40px;background:currentColor;opacity:.4}
+.step h3{font-size:clamp(26px,2.8vw,36px);letter-spacing:-.03em;margin-bottom:14px}
+.step p{color:var(--ink2);font-size:17.5px;max-width:440px}
+.step ul{list-style:none;margin-top:18px;display:grid;gap:8px}
+.step li{display:flex;gap:10px;align-items:flex-start;font-size:15.5px;color:var(--ink2)}
+.step li::before{content:"";width:16px;height:16px;flex:none;margin-top:3px;border-radius:50%;background:var(--teal-w) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.2l2.2 2.2 4.8-4.8' fill='none' stroke='%23004c44' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px}
+.stage{position:sticky;top:calc(50vh - var(--sh,300px) / 2);height:max-content;align-self:start;margin-top:12vh}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:20px}
+.dots i{width:22px;height:4px;border-radius:9px;background:#cfd8d6;transition:background .3s,width .3s}
+.dots i.on{background:var(--teal-d);width:40px}
+.note{margin-top:14px;text-align:center;font-size:13px;color:var(--mute)}
+
+/* setup */
+#einrichten{padding:140px 0}
+.proc{display:grid;grid-template-columns:repeat(4,1fr);margin-top:64px;position:relative}
+.proc::before{content:"";position:absolute;top:21px;left:22px;right:22px;height:2px;background:linear-gradient(90deg,var(--teal) var(--pp,0%),var(--line-d) var(--pp,0%))}
+.pstep{padding-right:28px;position:relative}
+.pstep .n{width:44px;height:44px;border-radius:50%;background:var(--night);border:2px solid var(--line-d);display:grid;place-items:center;font-weight:650;color:var(--snow2);position:relative;transition:all .4s var(--ease)}
+.pstep.on .n{border-color:var(--teal);background:var(--teal);color:#04201c;box-shadow:0 0 0 6px rgba(0,178,160,.14)}
+.pstep h3{font-size:20px;margin:22px 0 8px;letter-spacing:-.02em}
+.pstep p{color:var(--snow2);font-size:15.5px}
+.pstep p a{color:var(--teal)}
+
+/* pricing */
+#preise{padding:130px 0}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:52px}
+.plan{background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 28px;transition:transform .3s var(--ease),box-shadow .3s}
+.plan:hover{transform:translateY(-3px);box-shadow:0 18px 40px -20px rgba(15,26,29,.25)}
+.plan.mid{background:var(--ink);color:var(--snow);border-color:var(--ink)}
+.plan .name{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal-d)}
+.plan.mid .name{color:var(--teal)}
+.plan .price{font-size:52px;font-weight:600;letter-spacing:-.04em;line-height:1;margin:18px 0 6px}
+.plan .price small{font-size:15px;font-weight:500;letter-spacing:0;color:var(--mute)}
+.plan.mid .price small{color:var(--snow2)}
+.plan .vol{font-size:16px;color:var(--ink2);padding-top:16px;margin-top:18px;border-top:1px solid var(--line)}
+.plan.mid .vol{color:var(--snow2);border-color:var(--line-d)}
+.fine{color:var(--ink2);font-size:15px;margin-top:24px;max-width:46em}
+.fine a{color:var(--teal-d)}
+.plans-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+
+/* data */
+#daten{padding:130px 0}
+.data{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:52px}
+.dcard{border-radius:20px;padding:28px;background:var(--night2);border:1px solid var(--line-d)}
+.dcard svg{width:30px;height:30px;stroke:var(--teal);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;margin-bottom:18px}
+.dcard h3{font-size:19px;margin-bottom:8px;letter-spacing:-.015em}
+.dcard p{color:var(--snow2);font-size:15.5px}
+#daten .fine{color:var(--snow2)}
+#daten .fine a{color:var(--teal)}
+
+/* closing */
+#los{padding:0 0 70px;overflow:hidden;isolation:isolate}
+.end{position:relative;border-radius:28px;padding:72px 56px;text-align:center;overflow:hidden;isolation:isolate;
+  background:linear-gradient(160deg,#0f2a27,#0b1714);border:1px solid rgba(0,178,160,.3)}
+.end::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(50% 70% at 50% 0%,rgba(0,178,160,.25),transparent 70%)}
+.end h2{font-size:clamp(34px,4.6vw,58px);letter-spacing:-.035em}
+.end p{color:var(--snow2);font-size:19px;margin:16px auto 0;max-width:560px}
+.end .hero-cta{margin-top:32px}
+footer{border-top:1px solid var(--line-d);margin-top:90px;padding-top:28px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--snow2);font-size:14px}
+footer nav{display:flex;gap:22px;flex-wrap:wrap}
+footer a{text-decoration:none}
+footer a:hover{color:var(--snow)}
+footer .legal-note{flex-basis:100%;font-size:13px}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}
+
+/* ---------- responsive ---------- */
+@media (max-width:1020px){
+  .plans,.data{grid-template-columns:1fr}
+  .plans{max-width:520px}
+  .proc{grid-template-columns:repeat(2,1fr);row-gap:40px}
+  .proc::before{display:none}
 }
-::selection { background: var(--accent); color: var(--black); }
-a { color: var(--accent); }
-.wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
-.sub2 { font-size: 12px; line-height: 1.1; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-
-/* Header — same look as the homepage's compact header */
-header { position: sticky; top: 0; z-index: 10; background: rgba(11,20,18,.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
-header .wrap { height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-#logo { display: block; width: 100px; flex-shrink: 0; }
-#logo img { display: block; width: 100%; height: auto; }
-nav { display: flex; align-items: center; gap: 14px; }
-.lang-switch { display: flex; gap: 2px; }
-.lang-switch button { font: inherit; letter-spacing: .06em; background: none; border: 0; cursor: pointer; color: var(--white); opacity: .5; min-width: 32px; min-height: 32px; }
-.lang-switch button:hover, .lang-switch button[aria-pressed="true"] { opacity: 1; }
-.lang-switch button[aria-pressed="true"] { color: var(--accent); }
-.lang-switch button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* Buttons — the homepage's 3D pill */
-.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 14px 22px; border-radius: 30px;
-  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; text-decoration: none; line-height: 1.1;
-  color: var(--white); background: var(--panel); border: 2px solid rgba(0,178,160,.35); transition: border-color .25s, box-shadow .25s; }
-.btn:hover { border-color: var(--accent); box-shadow: inset 0 0 .75em rgba(0,178,160,.5); }
-.btn:active { translate: 0 1px; }
-.btn.is-3d { border: 0; color: var(--black);
-  background: linear-gradient(180deg, #6fe3cf 0%, #00b2a0 42%, #00857a 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,40,36,.25), 0 2px 0 #007a6e, 0 12px 24px rgba(0,178,160,.22); }
-.plans-cta { margin-top: 24px; }
-
-/* Hero */
-.hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; padding-top: 88px; padding-bottom: 72px; }
-.eyebrow { color: var(--accent); margin-bottom: 18px; }
-h1 { font-size: clamp(40px, 6vw, 76px); line-height: .98; font-weight: 500; letter-spacing: -.02em; }
-h1 .star { color: var(--accent); }
-.lead { font-size: clamp(18px, 1.6vw, 22px); line-height: 1.4; color: var(--white); opacity: .88; margin: 24px 0 32px; max-width: 34em; }
-.ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.ctas-note { color: var(--muted); font-size: 14px; margin-top: 16px; }
-.shot { justify-self: center; width: min(100%, 372px); border-radius: 18px; overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 30px 80px rgba(0,0,0,.55), 0 0 120px rgba(0,178,160,.18); }
-.shot img { display: block; width: 100%; height: auto; }
-.shot-cap { text-align: center; color: var(--muted); font-size: 13px; margin-top: 14px; }
-
-/* Sections */
-section { padding: 72px 0; border-top: 1px solid var(--line); }
-h2 { font-size: clamp(28px, 3.4vw, 44px); line-height: 1.05; font-weight: 500; letter-spacing: -.01em; margin-bottom: 36px; max-width: 22em; }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.card { background: rgba(22,33,31,.75); border: 1px solid var(--line); border-radius: 16px; padding: 26px 24px; }
-.card svg { width: 30px; height: 30px; color: var(--accent); margin-bottom: 16px; }
-.card h3 { font-size: 18px; font-weight: 600; line-height: 1.25; margin-bottom: 8px; }
-.card p { color: var(--muted); font-size: 15.5px; }
-
-.steps { counter-reset: s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; list-style: none; }
-.steps li { counter-increment: s; border-top: 2px solid var(--accent); padding-top: 18px; }
-.steps li::before { content: counter(s, decimal-leading-zero); display: block; color: var(--accent); font-weight: 600; font-size: 13px; letter-spacing: .08em; margin-bottom: 10px; }
-.steps h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
-.steps p { color: var(--muted); font-size: 15.5px; }
-
-.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.plan { background: rgba(22,33,31,.75); border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px; }
-.plan.is-mid { border-color: rgba(0,178,160,.55); }
-.plan .name { margin-bottom: 14px; color: var(--muted); }
-.plan .price { font-size: 40px; font-weight: 500; letter-spacing: -.01em; line-height: 1; }
-.plan .price small { font-size: 15px; color: var(--muted); font-weight: 400; letter-spacing: 0; }
-.plan .vol { margin-top: 12px; }
-.fine { color: var(--muted); font-size: 14px; margin-top: 20px; max-width: 46em; }
-
-.data { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-
-/* Footer — the legal documents that belong to Axyom AI */
-footer { border-top: 1px solid var(--line); padding: 40px 0 48px; }
-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: flex-end; }
-.legal-links { display: flex; flex-wrap: wrap; gap: 8px 22px; }
-.legal-links a { color: var(--white); opacity: .75; text-decoration: none; }
-.legal-links a:hover { opacity: 1; color: var(--accent); }
-.legal-note { color: var(--muted); font-size: 13px; margin-top: 14px; text-transform: none; letter-spacing: 0; }
-.copy { color: var(--muted); text-align: right; line-height: 1.5; }
-
-@media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; gap: 44px; padding-top: 56px; padding-bottom: 56px; }
-  .grid, .plans { grid-template-columns: 1fr 1fr; }
-  .steps { grid-template-columns: 1fr 1fr; row-gap: 28px; }
+@media (max-width:900px){
+  :root{--gut:16px}
+  body{font-size:16px}
+  #top nav{display:none}
+  #top .wrap{gap:12px}
+  .lang-switch{margin-left:auto}
+  #hero{padding-top:120px}
+  .hero-stage{margin-top:48px}
+  .hero-copy .eyebrow{font-size:11px;letter-spacing:.06em;white-space:nowrap}
+  /* a phone shows the chat alone, at full size: the store behind it would be too small to read */
+  .shop{display:none}
+  .win-body,.stage .win-body{aspect-ratio:auto;height:min(420px,46vh);background:#eef2f1}
+  .hero-stage .win-body{height:440px}
+  .chat{inset:0;width:auto;border:0;border-radius:0;box-shadow:none}
+  .chat.left{transform:none}
+  .chips{display:none}
+  .c-in{display:none}
+  .c-body{padding:10px 12px;gap:7px}
+  .chat{font-size:13.5px}
+  .m{padding:8px 12px}
+  .c-head{padding:11px 14px}
+  .ins{grid-template-columns:1fr;grid-template-rows:auto;align-content:start;padding:14px;gap:10px;overflow:hidden}
+  .ins .ih .kp{display:none}
+  .ins .ic.hide-m{display:none}
+  .show{display:flex;flex-direction:column;margin-top:24px}
+  .stage{order:-1;align-self:stretch;position:sticky;top:72px;z-index:2;margin:0 calc(-1 * var(--gut));padding:12px var(--gut) 14px;background:linear-gradient(var(--paper) 88%,rgba(243,246,245,0))}
+  .stage .note{display:none}
+  .dots{margin-top:12px}
+  .steps{padding:4vh 0 10vh}
+  .step{min-height:62vh;justify-content:flex-start;padding-top:6vh}
+  #rundgang,#einrichten,#preise,#daten{padding-top:96px;padding-bottom:96px}
+  .end{padding:52px 22px}
 }
-@media (max-width: 600px) {
-  .wrap { padding: 0 16px; }
-  .grid, .plans, .steps, .data { grid-template-columns: 1fr; }
-  section { padding: 56px 0; }
-  .ctas .btn { width: 100%; }
-  .copy { text-align: left; }
-  nav .btn { padding: 12px 14px; }
+@media (max-width:560px){
+  .proc{grid-template-columns:1fr}
+  #top .btn{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rv{opacity:1;transform:none;transition:none}
+  .hero-tilt{transform:none!important}
+  .m,.chat,.ins,.chips,.step{transition:none}
+  .m{opacity:1;transform:none}
+  .m.typing i{animation:none}
 }
 </style>
 </head>
 <body>
+<a class="skip" href="#main" data-i18n="hp.skip">Zum Inhalt springen</a>
 
-<header>
+<header id="top">
   <div class="wrap">
-    <a id="logo" href="/" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><img src="/media/brand/logo-light.svg" alt="Axyom" width="1664" height="749"></a>
-    <nav class="sub2">
-      <div class="lang-switch" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button></div>
-      <a class="btn is-3d" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener" data-i18n="sh.nav.install">Installieren</a>
+    <a class="logo" href="/" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><img src="/media/brand/logo-ai-light.svg" alt="Axyom AI" width="88" height="30"></a>
+    <nav aria-label="Hauptnavigation" data-i18n-attr="aria-label:hp.nav.aria">
+      <a href="#rundgang" data-i18n="shp.nav.tour">Funktionen</a>
+      <a href="#einrichten" data-i18n="shp.nav.setup">Einrichtung</a>
+      <a href="#preise" data-i18n="sh.p.h">Preise</a>
+      <a href="#daten" data-i18n="shp.nav.data">Daten</a>
     </nav>
+    <div class="lang-switch" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button></div>
+    <a class="btn solid" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener" data-i18n="sh.nav.install">Installieren</a>
   </div>
 </header>
 
-<main>
-  <div class="wrap hero">
-    <div>
-      <div class="eyebrow sub2" data-i18n="sh.eyebrow">Axyom AI für Shopify</div>
-      <h1 data-i18n-html="sh.h1">Ihr Shop beantwortet Fragen. Rund um die Uhr<span class="star">.</span></h1>
-      <p class="lead" data-i18n="sh.lead">Axyom AI ist ein KI-Assistent in Ihrem Online-Shop. Er antwortet Ihren Kunden aus Ihrem eigenen Katalog: Produkte, Varianten, Preise und Richtlinien. Er zeigt Bestellstatus an und spricht die Sprache des Kunden.</p>
-      <div class="ctas">
-        <a class="btn is-3d" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener" data-i18n="sh.cta.install">Im Shopify App Store installieren</a>
-      </div>
-      <p class="ctas-note" data-i18n-html="sh.cta.other">Kein Shopify? Axyom AI läuft auch auf anderen Websites. Schreiben Sie uns: <a href="mailto:kontakt@axyom.ch?subject=Axyom%20AI%20f%C3%BCr%20meine%20Website">kontakt@axyom.ch</a></p>
+<main id="main">
+
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap hero-copy">
+    <span class="eyebrow rv"><i></i><span data-i18n="sh.eyebrow">Axyom AI für Shopify</span></span>
+    <h1 class="rv d1" data-i18n-html="shp.hero.title">Ihr Shop beantwortet Fragen.<br><span class="soft">Rund um die Uhr</span><span class="dot">.</span></h1>
+    <p class="rv d2" data-i18n="sh.lead">Axyom AI ist ein KI-Assistent in Ihrem Online-Shop. Er antwortet Ihren Kunden aus Ihrem eigenen Katalog: Produkte, Varianten, Preise und Richtlinien. Er zeigt Bestellstatus an und spricht die Sprache des Kunden.</p>
+    <div class="hero-cta rv d3">
+      <a class="btn solid" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener"><span data-i18n="sh.p.cta">14 Tage gratis testen</span><span class="arr" aria-hidden="true">→</span></a>
+      <a class="btn ghost" href="#rundgang"><span data-i18n="hp.hero.more">So sieht es aus</span><span class="arr down" aria-hidden="true">↓</span></a>
     </div>
-    <figure>
-      <div class="shot"><img src="chat.png" width="372" height="492" alt="Der Axyom-Assistent in einem Test-Shop: Er nennt den Preis eines Snowboards mit Link und sagt ehrlich, dass der Shop keine Skihelme führt." data-i18n-attr="alt:sh.shot.alt"></div>
-      <figcaption class="shot-cap" data-i18n="sh.shot.cap">Echte Antworten aus einem Shopify-Testshop.</figcaption>
-    </figure>
+    <p class="hero-note rv d3" data-i18n-html="sh.cta.other">Kein Shopify? Axyom AI läuft auch auf anderen Websites. Schreiben Sie uns: <a href="mailto:kontakt@axyom.ch?subject=Axyom%20AI%20f%C3%BCr%20meine%20Website">kontakt@axyom.ch</a></p>
   </div>
-
-  <section>
-    <div class="wrap">
-      <h2 data-i18n="sh.f.h">Was der Assistent für Ihren Shop tut.</h2>
-      <div class="grid">
-        <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg><h3 data-i18n="sh.f.1.t">Antworten aus Ihrem Katalog</h3><p data-i18n="sh.f.1.d">Produkte, Varianten, Preise, Verfügbarkeit, Richtlinien und Seiten, mit Link zum passenden Produkt.</p></div>
-        <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></svg><h3 data-i18n="sh.f.2.t">Erfindet nichts</h3><p data-i18n="sh.f.2.d">Führt Ihr Shop etwas nicht, sagt der Assistent das, statt ein Produkt zu erfinden.</p></div>
-        <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg><h3 data-i18n="sh.f.3.t">Bestellstatus im Chat</h3><p data-i18n="sh.f.3.d">Kunden melden sich mit ihrem eigenen Shopify-Kundenkonto an und sehen Status, Artikel und Sendungsverfolgung. Nichts davon wird gespeichert.</p></div>
-        <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><h3 data-i18n="sh.f.4.t">In der Sprache des Kunden</h3><p data-i18n="sh.f.4.d">Die Antwort kommt in der Sprache, in der gefragt wird, ohne dass Sie etwas übersetzen müssen.</p></div>
-        <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><path d="M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1.5 3.3A2 2 0 0 1 12 21z"/></svg><h3 data-i18n="sh.f.5.t">In Ihrem Design</h3><p data-i18n="sh.f.5.d">Farben, Position, Symbol, hell oder dunkel und eine eigene Begrüssung, einstellbar in der App.</p></div>
-        <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><h3 data-i18n="sh.f.6.t">Was Ihre Kunden fragen</h3><p data-i18n="sh.f.6.d">Auswertungen zeigen die häufigsten Fragen, die meistgefragten Produkte und was der Assistent nicht beantworten konnte.</p></div>
-      </div>
+  <div class="hero-stage" aria-hidden="true">
+    <div class="hero-tilt">
+      <div class="win"><div class="win-bar"><i></i><i></i><i></i><span class="url">nordhang-boards.ch</span></div><div class="win-body" id="hero-body"></div></div>
     </div>
-  </section>
+  </div>
+  <div class="hero-fade"></div>
+</section>
 
-  <section>
-    <div class="wrap">
-      <h2 data-i18n="sh.s.h">In wenigen Minuten eingerichtet. Ohne Code.</h2>
-      <ol class="steps">
-        <li><h3 data-i18n="sh.s.1.t">App installieren</h3><p data-i18n-html="sh.s.1.d">Aus dem <a href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener">Shopify App Store</a>. Ihr Katalog wird automatisch eingelesen.</p></li>
-        <li><h3 data-i18n="sh.s.2.t">Plan wählen</h3><p data-i18n="sh.s.2.d">14 Tage kostenlos testen, abgerechnet über Shopify.</p></li>
-        <li><h3 data-i18n="sh.s.3.t">Im Theme einschalten</h3><p data-i18n="sh.s.3.d">Ein Schalter im Theme-Editor. Die Verbindung zu Ihrem Shop entsteht automatisch, es gibt keinen Schlüssel zu kopieren.</p></li>
-        <li><h3 data-i18n="sh.s.4.t">Fertig</h3><p data-i18n="sh.s.4.d">Der Chat erscheint unten im Shop und beantwortet die erste Frage.</p></li>
-      </ol>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap">
-      <h2 data-i18n="sh.p.h">Preise</h2>
-      <div class="plans">
-        <div class="plan"><div class="name sub2">Starter</div><div class="price">$29 <small data-i18n="sh.p.mo">pro Monat</small></div><div class="vol" data-i18n="sh.p.1">500 Gespräche pro Monat</div></div>
-        <div class="plan is-mid"><div class="name sub2">Pro</div><div class="price">$79 <small data-i18n="sh.p.mo">pro Monat</small></div><div class="vol" data-i18n="sh.p.2">2'000 Gespräche pro Monat</div></div>
-        <div class="plan"><div class="name sub2">Business</div><div class="price">$199 <small data-i18n="sh.p.mo">pro Monat</small></div><div class="vol" data-i18n="sh.p.3">10'000 Gespräche pro Monat</div></div>
-      </div>
-      <p class="fine" data-i18n="sh.p.fine">Alle Pläne mit 14 Tagen Gratis-Test. Abgerechnet in US-Dollar über Ihre Shopify-Rechnung. Kündigen Sie jederzeit, indem Sie die App deinstallieren.</p>
-      <div class="ctas plans-cta"><a class="btn is-3d" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener" data-i18n="sh.p.cta">14 Tage gratis testen</a></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap">
-      <h2 data-i18n="sh.d.h">Ihre Daten und die Ihrer Kunden.</h2>
-      <div class="data">
-        <div class="card"><h3 data-i18n="sh.d.1.t">Server in der Schweiz</h3><p data-i18n="sh.d.1.d">Der Assistent läuft auf unseren Servern in der Schweiz. Um Antworten zu formulieren, werden Chat-Nachrichten an unseren KI-Anbieter OpenAI übermittelt.</p></div>
-        <div class="card"><h3 data-i18n="sh.d.2.t">Kurz aufbewahrt</h3><p data-i18n="sh.d.2.d">Chat-Nachrichten werden nach 90 Tagen automatisch gelöscht. Bestelldaten werden nur live gelesen und nie gespeichert. Nach der Deinstallation löschen wir die Daten Ihres Shops.</p></div>
-      </div>
-      <p class="fine" data-i18n-html="sh.d.fine">Für die Kundendaten Ihres Shops handeln wir als Auftragsverarbeiter. Die Einzelheiten stehen im <a href="/dpa.html">Auftragsverarbeitungsvertrag</a> und in der <a href="/privacy.html">Datenschutzerklärung</a>.</p>
-    </div>
-  </section>
-</main>
-
-<footer>
+<!-- ============ SHOWCASE ============ -->
+<section id="rundgang" class="light">
   <div class="wrap">
-    <div>
-      <div class="legal-links sub2">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="hp.s.eyebrow">Ein Rundgang</span>
+      <h2 data-i18n-html="shp.s.title">Was der Assistent für Ihren Shop tut<span class="dot">.</span></h2>
+      <p data-i18n="shp.s.sub">Ein Abend in einem Snowboard-Shop. Die Kunden fragen, der Assistent antwortet. Scrollen Sie durch.</p>
+    </div>
+    <div class="show">
+      <div class="steps">
+        <article class="step" data-s="0">
+          <div class="num">01 · <span data-i18n="shp.s0.tag">Produkte</span></div>
+          <h3 data-i18n="sh.f.1.t">Antworten aus Ihrem Katalog</h3>
+          <p data-i18n="sh.f.1.d">Produkte, Varianten, Preise, Verfügbarkeit, Richtlinien und Seiten, mit Link zum passenden Produkt.</p>
+          <ul><li data-i18n="shp.s0.l1">Ihr Katalog wird automatisch eingelesen</li><li data-i18n="shp.s0.l2">Produktkarten mit Preis und Link direkt im Chat</li></ul>
+        </article>
+        <article class="step" data-s="1">
+          <div class="num">02 · <span data-i18n="shp.s1.tag">Ehrlich</span></div>
+          <h3 data-i18n="sh.f.2.t">Erfindet nichts</h3>
+          <p data-i18n="sh.f.2.d">Führt Ihr Shop etwas nicht, sagt der Assistent das, statt ein Produkt zu erfinden.</p>
+          <ul><li data-i18n="shp.s1.l1">Keine erfundenen Produkte, Preise oder Versprechen</li><li data-i18n="shp.s1.l2">Zeigt stattdessen, was Ihr Shop wirklich führt</li></ul>
+        </article>
+        <article class="step" data-s="2">
+          <div class="num">03 · <span data-i18n="shp.s2.tag">Bestellstatus</span></div>
+          <h3 data-i18n="shp.s2.t">«Wo ist meine Bestellung?» – beantwortet.</h3>
+          <p data-i18n="sh.f.3.d">Kunden melden sich mit ihrem eigenen Shopify-Kundenkonto an und sehen Status, Artikel und Sendungsverfolgung. Nichts davon wird gespeichert.</p>
+          <ul><li data-i18n="shp.s2.l1">Anmeldung direkt bei Shopify – wir sehen kein Passwort</li><li data-i18n="shp.s2.l2">Die Verbindung endet nach 30 Minuten von selbst</li></ul>
+        </article>
+        <article class="step" data-s="3">
+          <div class="num">04 · <span data-i18n="shp.s3.tag">Sprachen</span></div>
+          <h3 data-i18n="sh.f.4.t">In der Sprache des Kunden</h3>
+          <p data-i18n="sh.f.4.d">Die Antwort kommt in der Sprache, in der gefragt wird, ohne dass Sie etwas übersetzen müssen.</p>
+          <ul><li data-i18n="shp.s3.l1">Jede Frage in ihrer eigenen Sprache beantwortet</li><li data-i18n="shp.s3.l2">Keine Übersetzungen zu pflegen</li></ul>
+        </article>
+        <article class="step" data-s="4">
+          <div class="num">05 · <span data-i18n="shp.s4.tag">Design</span></div>
+          <h3 data-i18n="shp.s4.t">Sieht aus wie Ihr Shop.</h3>
+          <p data-i18n="sh.f.5.d">Farben, Position, Symbol, hell oder dunkel und eine eigene Begrüssung, einstellbar in der App.</p>
+          <ul><li data-i18n="shp.s4.l1">Alles im App-Admin einstellbar, ohne Code</li><li data-i18n="shp.s4.l2">Ihre Kunden können selbst zwischen hell und dunkel wechseln</li></ul>
+        </article>
+        <article class="step" data-s="5">
+          <div class="num">06 · <span data-i18n="shp.s5.tag">Auswertungen</span></div>
+          <h3 data-i18n="sh.f.6.t">Was Ihre Kunden fragen</h3>
+          <p data-i18n="sh.f.6.d">Auswertungen zeigen die häufigsten Fragen, die meistgefragten Produkte und was der Assistent nicht beantworten konnte.</p>
+          <ul><li data-i18n="shp.s5.l1">Lücken in Sortiment und Shop-Infos erkennen</li><li data-i18n="shp.s5.l2">Sehen, welche Produkte gefragt sind</li></ul>
+        </article>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <div class="win"><div class="win-bar"><i></i><i></i><i></i><span class="url">nordhang-boards.ch</span></div><div class="win-body" id="stage-body"></div></div>
+        <div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <p class="note" data-i18n="shp.s.note">Beispiel-Shop und Gespräche erfunden</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SETUP ============ -->
+<section id="einrichten">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="shp.nav.setup">Einrichtung</span>
+      <h2 data-i18n-html="shp.e.title">In wenigen Minuten eingerichtet. Ohne Code<span class="dot">.</span></h2>
+      <p data-i18n="shp.e.sub">Kein Entwickler, kein Schlüssel zum Kopieren, kein Skript im Theme.</p>
+    </div>
+    <ol class="proc" id="proc">
+      <li class="pstep"><div class="n">1</div><h3 data-i18n="sh.s.1.t">App installieren</h3><p data-i18n-html="sh.s.1.d">Aus dem <a href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener">Shopify App Store</a>. Ihr Katalog wird automatisch eingelesen.</p></li>
+      <li class="pstep"><div class="n">2</div><h3 data-i18n="sh.s.2.t">Plan wählen</h3><p data-i18n="sh.s.2.d">14 Tage kostenlos testen, abgerechnet über Shopify.</p></li>
+      <li class="pstep"><div class="n">3</div><h3 data-i18n="sh.s.3.t">Im Theme einschalten</h3><p data-i18n="sh.s.3.d">Ein Schalter im Theme-Editor. Die Verbindung zu Ihrem Shop entsteht automatisch, es gibt keinen Schlüssel zu kopieren.</p></li>
+      <li class="pstep"><div class="n">4</div><h3 data-i18n="sh.s.4.t">Fertig</h3><p data-i18n="sh.s.4.d">Der Chat erscheint unten im Shop und beantwortet die erste Frage.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section id="preise" class="light">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="sh.p.h">Preise</span>
+      <h2 data-i18n-html="shp.p.title">Ein Plan für jede Shop-Grösse<span class="dot">.</span></h2>
+      <p data-i18n="shp.p.sub">Sie zahlen nach Anzahl Gespräche. Alle Pläne mit 14 Tagen Gratis-Test.</p>
+    </div>
+    <div class="plans">
+      <div class="plan rv"><div class="name">Starter</div><div class="price">$29 <small data-i18n="sh.p.mo">pro Monat</small></div><div class="vol" data-i18n="sh.p.1">500 Gespräche pro Monat</div></div>
+      <div class="plan mid rv d1"><div class="name">Pro</div><div class="price">$79 <small data-i18n="sh.p.mo">pro Monat</small></div><div class="vol" data-i18n="sh.p.2">2'000 Gespräche pro Monat</div></div>
+      <div class="plan rv d2"><div class="name">Business</div><div class="price">$199 <small data-i18n="sh.p.mo">pro Monat</small></div><div class="vol" data-i18n="sh.p.3">10'000 Gespräche pro Monat</div></div>
+    </div>
+    <p class="fine" data-i18n="sh.p.fine">Alle Pläne mit 14 Tagen Gratis-Test. Abgerechnet in US-Dollar über Ihre Shopify-Rechnung. Kündigen Sie jederzeit, indem Sie die App deinstallieren.</p>
+    <div class="plans-cta"><a class="btn solid" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener"><span data-i18n="sh.p.cta">14 Tage gratis testen</span><span class="arr" aria-hidden="true">→</span></a></div>
+  </div>
+</section>
+
+<!-- ============ DATA ============ -->
+<section id="daten">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow" data-i18n="shp.nav.data">Daten</span>
+      <h2 data-i18n-html="shp.d.title">Ihre Daten und die Ihrer Kunden<span class="dot">.</span></h2>
+    </div>
+    <div class="data">
+      <div class="dcard rv"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg><h3 data-i18n="sh.d.1.t">Server in der Schweiz</h3><p data-i18n="sh.d.1.d">Der Assistent läuft auf unseren Servern in der Schweiz. Um Antworten zu formulieren, werden Chat-Nachrichten an unseren KI-Anbieter OpenAI übermittelt.</p></div>
+      <div class="dcard rv d1"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><h3 data-i18n="sh.d.2.t">Kurz aufbewahrt</h3><p data-i18n="sh.d.2.d">Chat-Nachrichten werden nach 90 Tagen automatisch gelöscht. Bestelldaten werden nur live gelesen und nie gespeichert. Nach der Deinstallation löschen wir die Daten Ihres Shops.</p></div>
+      <div class="dcard rv d2"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><h3 data-i18n="shp.d.3.t">Anmeldung bei Shopify</h3><p data-i18n="shp.d.3.d">Für den Bestellstatus melden sich Ihre Kunden direkt bei Shopify an. Wir sehen nie ein Passwort, und der Zugriff endet nach 30 Minuten.</p></div>
+    </div>
+    <p class="fine rv" data-i18n-html="sh.d.fine">Für die Kundendaten Ihres Shops handeln wir als Auftragsverarbeiter. Die Einzelheiten stehen im <a href="/dpa.html">Auftragsverarbeitungsvertrag</a> und in der <a href="/privacy.html">Datenschutzerklärung</a>.</p>
+  </div>
+</section>
+
+<!-- ============ CLOSING ============ -->
+<section id="los">
+  <div class="wrap">
+    <div class="end rv">
+      <h2 data-i18n-html="shp.end.title">Bereit für die erste Frage<span class="dot">?</span></h2>
+      <p data-i18n="shp.end.sub">Installieren, im Theme einschalten, fertig. Die ersten 14 Tage sind gratis.</p>
+      <div class="hero-cta">
+        <a class="btn solid" href="https://apps.shopify.com/axyom-ai" target="_blank" rel="noopener"><span data-i18n="sh.cta.install">Im Shopify App Store installieren</span><span class="arr" aria-hidden="true">→</span></a>
+        <a class="btn ghost" href="mailto:kontakt@axyom.ch?subject=Axyom%20AI" data-i18n="shp.end.ask">Frage stellen</a>
+      </div>
+    </div>
+    <footer>
+      <span><a href="/" data-i18n="shp.f.home">← Axyom · Business-Software</a></span>
+      <nav aria-label="Rechtliches" data-i18n-attr="aria-label:hp.f.aria">
         <a href="/terms.html" data-i18n="sh.l.terms">Nutzungsbedingungen</a>
         <a href="/dpa.html" data-i18n="sh.l.dpa">Auftragsverarbeitung (AVV)</a>
         <a href="/privacy.html" data-i18n="sh.l.privacy">Datenschutz</a>
         <a href="/impressum.html" data-i18n="sh.l.imprint">Impressum</a>
-      </div>
-      <p class="legal-note" data-i18n="sh.l.note">Diese Bedingungen gelten für Axyom AI (Shopify-App und Website-Assistent). Die rechtlichen Dokumente sind auf Englisch.</p>
-    </div>
-    <div class="copy sub2"><a href="/" style="color:inherit;text-decoration:none" data-i18n="sh.l.home">← Axyom</a><br>© 2026 Axyom · <span data-i18n="sh.l.place">Liechtenstein &amp; Schweiz</span></div>
+      </nav>
+      <p class="legal-note"><span data-i18n="sh.l.note">Diese Bedingungen gelten für Axyom AI (Shopify-App und Website-Assistent). Die rechtlichen Dokumente sind auf Englisch.</span> · <span data-i18n="hp.f.copy">© 2026 Axyom · Liechtenstein &amp; Schweiz</span></p>
+    </footer>
   </div>
-</footer>
+</section>
+
+</main>
 
 <script src="/i18n.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var EN = window.axyomLang === 'en';
+  var t = function (de, en) { return EN ? en : de; };
+
+  /* ------------------------------------------------------------
+     The invented store (Nordhang) and its products.
+     ------------------------------------------------------------ */
+  // every drawing gets its own gradient id: an id inside a hidden copy (the store is hidden on phones) paints nothing in Chrome
+  var gid = 0;
+  function board(c1, c2, w) {
+    var id = 'g' + (++gid);
+    return '<svg viewBox="0 0 60 150" width="' + (w || 44) + '" style="height:auto"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient></defs>' +
+      '<rect x="8" y="4" width="44" height="142" rx="22" fill="url(#' + id + ')"/><path d="M8 60h44M8 92h44" stroke="rgba(255,255,255,.35)" stroke-width="3"/><rect x="20" y="50" width="20" height="14" rx="4" fill="rgba(0,0,0,.35)"/><rect x="20" y="88" width="20" height="14" rx="4" fill="rgba(0,0,0,.35)"/></svg>';
+  }
+  var P = [
+    ['Nordhang Allround 152', 'CHF 449.–', '#00a3a3', '#0b5d6b'],
+    ['Nordhang Pulver 158', 'CHF 549.–', '#2d3e8f', '#121a45'],
+    ['Nordhang Park 148', 'CHF 419.–', '#e85d2a', '#8f2a12'],
+    ['Nordhang Kids 120', 'CHF 229.–', '#f2b33d', '#b06d0a']
+  ];
+  function shop() {
+    return '<div class="shop"><div class="sh-nav"><span class="sh-logo" style="color:#1b1e22">NORDHANG</span><span>Snowboards</span><span>' + t('Bindungen', 'Bindings') + '</span><span>' + t('Zubehör', 'Accessories') + '</span><span>Sale</span><span class="ic">⌕ &nbsp; ♡ &nbsp; ◫</span></div>' +
+      '<div class="sh-hero"><svg viewBox="0 0 1000 120" preserveAspectRatio="none"><path d="M0 120 L180 40 L300 90 L470 10 L640 80 L780 30 L1000 100 L1000 120Z" fill="rgba(255,255,255,.12)"/><path d="M0 120 L240 70 L420 110 L600 50 L820 95 L1000 60 L1000 120Z" fill="rgba(255,255,255,.18)"/></svg>' +
+      '<small>' + t('Winter 26/27', 'Winter 26/27') + '</small><b>' + t('Die neuen Boards sind da.', 'The new boards are here.') + '</b></div>' +
+      '<div class="sh-grid">' + P.map(function (p, i) {
+        return '<div class="sh-p" data-p="' + i + '"><div class="im">' + board(p[2], p[3], 50) + '</div><b>' + p[0] + '</b><small>' + p[1] + '</small></div>';
+      }).join('') + '</div></div>';
+  }
+
+  /* ------------------------------------------------------------
+     The chat panel, after the real widget (light theme).
+     ------------------------------------------------------------ */
+  var SEND = '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  var BUBBLE = '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+  function chat() {
+    return '<div class="chat"><div class="c-head"><span class="logo-dot">' + BUBBLE + '</span><b>Nordhang · Support</b><span class="ai">AI</span>' +
+      '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>' +
+      '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></div>' +
+      '<div class="c-body"></div>' +
+      '<div class="c-tabs"><span class="on" data-tab="chat">Chat</span><span data-tab="ord">' + t('Bestellstatus', 'Order tracking') + '</span></div>' +
+      '<div class="c-in">' + t('Nachricht schreiben …', 'Type a message …') + '<i>' + SEND + '</i></div></div>';
+  }
+  function card(i) { var p = P[i]; return '<div class="pc"><span class="th">' + board(p[2], p[3], 20) + '</span><span><b>' + p[0] + '</b><small>' + p[1] + '</small><em>' + t('Produkt ansehen →', 'View product →') + '</em></span></div>'; }
+
+  // each step: the conversation shown, which product to mark in the store, which tab, and the look
+  var CONV = [
+    { hl: 0, items: [
+      ['u', t('Ich fange gerade mit Snowboarden an. Welches Board passt zu mir?', 'I’m just starting out on a snowboard. Which board suits me?')],
+      ['b', t('Für den Einstieg passt das <b>Allround 152</b>: weich und verzeiht Fehler. Ab 75 kg eher das Pulver 158.', 'For starting out, the <b>Allround 152</b> fits well: soft and forgiving. Above 75 kg, take the Pulver 158.')],
+      ['card', 0], ['card', 1]] },
+    { hl: -1, items: [
+      ['u', t('Habt ihr auch Skihelme?', 'Do you sell ski helmets?')],
+      ['b', t('Nein, Skihelme führen wir nicht. Bei uns finden Sie Snowboards, Bindungen und Zubehör. Soll ich Ihnen eine passende Bindung zeigen?', 'No, we don’t sell ski helmets. We carry snowboards, bindings and accessories. Shall I show you a binding that fits?')]] },
+    { hl: -1, tab: 'ord', items: [
+      ['signed', t('Angemeldet — nur für diese Sitzung.', 'Signed in — for this session only.')],
+      ['ord'],
+      ['foot', t('Live aus Ihrem Shopify-Konto gelesen. Nicht gespeichert.', 'Read live from your Shopify account. Not stored.')]] },
+    { hl: -1, items: [
+      EN ? ['u', 'Liefert ihr auch nach Österreich?'] : ['u', 'Do you ship to Austria?'],
+      EN ? ['b', 'Ja, wir liefern nach Österreich. Die Lieferung dauert 3–5 Werktage.'] : ['b', 'Yes, we ship to Austria. Delivery takes 3–5 working days.'],
+      ['u', 'Et en France ?'],
+      ['b', 'Oui, nous livrons aussi en France, en 3 à 5 jours ouvrables.']] },
+    { hl: -1, look: 'dark', items: [
+      ['b', t('Servus! Fragen zu Boards, Bindungen oder Ihrer Bestellung? Ich helfe gern.', 'Hi there! Questions about boards, bindings or your order? Happy to help.')],
+      ['u', t('Gibt es das Park 148 noch?', 'Is the Park 148 still available?')],
+      ['b', t('Ja, das <b>Nordhang Park 148</b> ist an Lager.', 'Yes, the <b>Nordhang Park 148</b> is in stock.')], ['card', 2]] },
+    { hl: -1, insights: true, items: [] }
+  ];
+  function order() {
+    return '<div class="ord"><div class="oh"><b>' + t('Bestellung', 'Order') + ' #1042</b><span class="st">' + t('Versendet', 'Shipped') + '</span></div><dl>' +
+      '<dt>' + t('Bestellt am', 'Placed') + '</dt><dd>' + t('28. Okt. 2026', '28 Oct 2026') + '</dd>' +
+      '<dt>' + t('Artikel', 'Items') + '</dt><dd>Allround 152 · ' + t('Bindung Flow S', 'Flow S binding') + '</dd>' +
+      '<dt>' + t('Summe', 'Total') + '</dt><dd>CHF 638.00</dd></dl>' +
+      '<div class="tr"><span>' + t('Versand', 'Carrier') + ': Post</span><a>' + t('Sendung verfolgen →', 'Track parcel →') + '</a></div></div>';
+  }
+  function item(it) {
+    if (it[0] === 'u' || it[0] === 'b') return '<div class="m ' + it[0] + '">' + it[1] + '</div>';
+    if (it[0] === 'card') return card(it[1]).replace('class="pc"', 'class="pc m"');
+    if (it[0] === 'ord') return order().replace('class="ord"', 'class="ord m"');
+    return '<div class="' + it[0] + ' m">' + it[1] + '</div>';
+  }
+
+  function insights() {
+    var Q = [[t('Welches Board für Anfänger?', 'Which board for beginners?'), 142], [t('Liefert ihr nach Österreich?', 'Do you ship to Austria?'), 96], [t('Wo ist meine Bestellung?', 'Where is my order?'), 81], [t('Welche Grösse brauche ich?', 'Which size do I need?'), 64], [t('Kann ich umtauschen?', 'Can I exchange?'), 38]];
+    var T = [['Allround 152', 100], ['Pulver 158', 72], ['Park 148', 55], [t('Bindung Flow S', 'Flow S binding'), 31]];
+    var U = [[t('Habt ihr Skihelme?', 'Do you sell ski helmets?'), 23], [t('Gibt es Gutscheine?', 'Do you have gift cards?'), 17], [t('Kann ich vor Ort testen?', 'Can I test in store?'), 9]];
+    return '<div class="ins"><div class="ih"><div><small>Axyom AI · ' + t('Auswertungen', 'Insights') + '</small><b>' + t('Letzte 30 Tage', 'Last 30 days') + '</b></div>' +
+      '<div class="kp"><div>1’284<small>' + t('Gespräche', 'Conversations') + '</small></div></div></div>' +
+      '<div class="ic"><h5>' + t('Häufigste Fragen', 'Top questions') + '</h5><ul>' + Q.map(function (q) { return '<li><span>' + q[0] + '</span><span>' + q[1] + '</span></li>'; }).join('') + '</ul></div>' +
+      '<div class="ic hide-m"><h5>' + t('Meistgefragte Produkte', 'Most asked-about products') + '</h5><ul>' + T.map(function (p) { return '<li style="display:block"><span>' + p[0] + '</span><div class="bar"><i style="width:' + p[1] + '%"></i></div></li>'; }).join('') + '</ul></div>' +
+      '<div class="ic"><h5>' + t('Nicht beantwortet', 'Not answered') + '</h5><ul>' + U.map(function (u) { return '<li><span>' + u[0] + '</span><span class="gap">' + u[1] + '×</span></li>'; }).join('') + '</ul></div></div>';
+  }
+  function chips() {
+    return '<div class="chips"><span><small>' + t('Farbe', 'Colour') + '</small><i class="sw"></i></span><span><small>' + t('Darstellung', 'Theme') + '</small>' + t('Dunkel', 'Dark') + '</span><span><small>Position</small>' + t('Links', 'Left') + '</span><span><small>' + t('Begrüssung', 'Welcome') + '</small>' + t('Eigene', 'Custom') + '</span></div>';
+  }
+
+  var heroBody = $('#hero-body'), stageBody = $('#stage-body');
+  heroBody.innerHTML = shop() + chat();
+  stageBody.innerHTML = shop() + chat() + chips() + insights();
+
+  // the hero shows the first conversation, complete
+  $('.c-body', heroBody).innerHTML = CONV[0].items.map(item).join('');
+  $$('.m', heroBody).forEach(function (m) { m.classList.add('in'); });
+  $('.sh-p[data-p="0"]', heroBody).classList.add('hl');
+
+  function fit() {
+    $$('.win-body').forEach(function (b) {
+      var s = b.querySelector('.shop'); if (s) b.style.setProperty('--k', (b.clientWidth / 1040).toFixed(4));
+      var c = b.querySelector('.chat'); if (c) c.style.setProperty('--dx', (-(b.clientWidth - c.offsetWidth - 32)) + 'px');
+    });
+    var st = $('.stage'); if (st) st.style.setProperty('--sh', st.offsetHeight + 'px');
+  }
+  fit(); addEventListener('resize', fit);
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(document.body);
+
+  /* steps → conversation. Messages arrive one after another, with a typing dot before each answer. */
+  var steps = $$('.step'), dots = $$('.dots i'), cur = -1, timers = [];
+  var sChat = $('.chat', stageBody), sBody = $('.c-body', stageBody), sIns = $('.ins', stageBody), sChips = $('.chips', stageBody);
+  function play(i) {
+    var c = CONV[i];
+    timers.forEach(clearTimeout); timers = [];
+    sChat.classList.toggle('dark', c.look === 'dark');
+    sChat.classList.toggle('left', c.look === 'dark');
+    sChips.classList.toggle('on', c.look === 'dark');
+    sIns.classList.toggle('on', !!c.insights);
+    $$('.sh-p', stageBody).forEach(function (p, j) { p.classList.toggle('hl', j === c.hl); });
+    $$('.c-tabs span', sChat).forEach(function (s) { s.classList.toggle('on', s.dataset.tab === (c.tab || 'chat')); });
+    sBody.innerHTML = c.items.map(item).join('');
+    var ms = $$('.m', sBody);
+    if (reduce) { ms.forEach(function (m) { m.classList.add('in'); }); return; }
+    var at = 150;
+    ms.forEach(function (m) {
+      var isBot = m.classList.contains('b') && m.previousElementSibling;
+      if (isBot) {
+        var dotEl = document.createElement('div'); dotEl.className = 'm b typing'; dotEl.innerHTML = '<i></i><i></i><i></i>';
+        m.style.display = 'none'; sBody.insertBefore(dotEl, m);
+        timers.push(setTimeout(function () { dotEl.classList.add('in'); }, at));
+        at += 750;
+        timers.push(setTimeout(function () { dotEl.remove(); m.style.display = ''; requestAnimationFrame(function () { m.classList.add('in'); }); }, at));
+        at += 300;
+      } else {
+        timers.push(setTimeout(function () { m.classList.add('in'); }, at));
+        at += m.classList.contains('u') ? 500 : 260;
+      }
+    });
+  }
+  function show(i) {
+    if (i === cur) return; cur = i;
+    play(i);
+    steps.forEach(function (s, j) { s.classList.toggle('on', j === i); });
+    dots.forEach(function (d, j) { d.classList.toggle('on', j === i); });
+  }
+  show(0);
+
+  /* header, hero tilt, step tracking, setup line — one rAF-throttled scroll handler */
+  var top = $('#top'), tilt = $('.hero-tilt'), proc = $('#proc'), pst = $$('.pstep'), ticking = false;
+  function onScroll() {
+    ticking = false;
+    var y = scrollY, vh = innerHeight;
+    top.classList.toggle('scrolled', y > 20);
+    if (!reduce && tilt) {
+      var p = Math.min(1, Math.max(0, y / (vh * .7)));
+      tilt.style.setProperty('--tilt', (20 - 20 * p).toFixed(2) + 'deg');
+      tilt.style.setProperty('--sc', (.94 + .06 * p).toFixed(4));
+    }
+    var line = innerWidth <= 900 ? vh * .78 : vh * .5, best = 0, bd = 1e9;
+    steps.forEach(function (s, i) { var r = s.getBoundingClientRect(), d = Math.abs(r.top + Math.min(r.height, vh * .5) / 2 - line); if (d < bd) { bd = d; best = i; } });
+    show(best);
+    if (proc) {
+      var r = proc.getBoundingClientRect(), f = Math.min(1, Math.max(0, (vh * .8 - r.top) / (r.height + vh * .2)));
+      if (innerWidth > 1020) proc.style.setProperty('--pp', (f * 100).toFixed(1) + '%');
+      pst.forEach(function (s, i) { s.classList.toggle('on', f >= i / pst.length + .02 || reduce); });
+    }
+  }
+  addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
+
+  /* reveal on view */
+  if ('IntersectionObserver' in window && !reduce) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
+    $$('.rv').forEach(function (el) { io.observe(el); });
+  } else $$('.rv').forEach(function (el) { el.classList.add('in'); });
+})();
+</script>
 </body>
 </html>
