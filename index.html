@@ -218,10 +218,12 @@ section{position:relative}
 .trade::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 50%,rgba(6,10,12,.85))}
 .trade b{position:absolute;left:18px;bottom:16px;z-index:1;font-weight:600;font-size:17px}
 .trade b small{display:block;font-weight:400;font-size:13px;color:var(--snow2);margin-top:2px}
-.trade.cta{display:flex;flex-direction:column;justify-content:space-between;padding:22px;text-decoration:none;
+.trade.cta{grid-column:span 2;aspect-ratio:auto;display:flex;flex-direction:column;justify-content:space-between;padding:22px;text-decoration:none;
   background:linear-gradient(160deg,#0f2a27,#0b1714);border:1px solid rgba(0,178,160,.3)}
 .trade.cta::after{display:none}
-.trade.cta h3{font-size:24px;letter-spacing:-.02em}
+.trade.cta{gap:18px;padding:30px}
+.trade.cta h3{font-size:clamp(24px,2.6vw,36px);letter-spacing:-.03em}
+.trade.cta p{color:var(--snow2);font-size:16px;margin-top:12px;max-width:420px}
 .trade.cta span{color:var(--teal);font-weight:600;display:flex;align-items:center;gap:8px}
 
 /* process */
@@ -491,10 +493,9 @@ footer a:hover{color:var(--snow)}
       <div class="trade rv d1"><video data-src="media/media/vid-garage.mp4" poster="media/media/vid-garage-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.2">Garage<small>Aufträge, Teile und Termine</small></b></div>
       <div class="trade rv d2"><video data-src="media/media/vid-schweisser.mp4" poster="media/media/vid-schweisser-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.3">Metallbau<small>Projekte mit Stunden und Material</small></b></div>
       <div class="trade rv d3"><video data-src="media/media/vid-zahnarzt.mp4" poster="media/media/vid-zahnarzt-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.4">Praxis<small>Termine und Abrechnung</small></b></div>
-      <div class="trade rv"><video data-src="media/media/vid-coiffeur.mp4" poster="media/media/vid-coiffeur-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.5">Coiffeur<small>Kundenkartei und Kasse</small></b></div>
-      <div class="trade rv d1"><video data-src="media/media/vid-baeckerei.mp4" poster="media/media/vid-baeckerei-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.6">Bäckerei<small>Bestellungen und Lieferungen</small></b></div>
-      <div class="trade rv d2"><video data-src="media/media/vid-florist.mp4" poster="media/media/vid-florist-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.7">Floristik<small>Aufträge und Lieferungen</small></b></div>
-      <a class="trade cta rv d3" href="#kontakt"><h3 data-i18n="hp.t.cta">Ihr Betrieb ist anders? Gut so.</h3><span><span data-i18n="hp.t.cta2">Erzählen Sie uns davon</span> <span aria-hidden="true">→</span></span></a>
+      <div class="trade rv"><video data-src="media/media/vid-baeckerei.mp4" poster="media/media/vid-baeckerei-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.6">Bäckerei<small>Bestellungen und Lieferungen</small></b></div>
+      <div class="trade rv d1"><video data-src="media/media/vid-florist.mp4" poster="media/media/vid-florist-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.7">Floristik<small>Aufträge und Lieferungen</small></b></div>
+      <a class="trade cta rv d2" href="#kontakt"><div><h3 data-i18n="hp.t.cta">Ihr Betrieb ist anders? Gut so.</h3><p data-i18n="hp.t.cta3">Wir bauen auch für Branchen, die hier nicht stehen. Jedes System entsteht aus Ihren Abläufen, nicht aus einer Vorlage.</p></div><span><span data-i18n="hp.t.cta2">Erzählen Sie uns davon</span> <span aria-hidden="true">→</span></span></a>
     </div>
   </div>
 </section>
