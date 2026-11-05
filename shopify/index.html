@@ -239,8 +239,8 @@ section{position:relative}
 
 /* setup */
 #einrichten{padding:140px 0}
-.proc{display:grid;grid-template-columns:repeat(4,1fr);margin-top:64px;position:relative}
-.proc::before{content:"";position:absolute;top:21px;left:22px;right:22px;height:2px;background:linear-gradient(90deg,var(--teal) var(--pp,0%),var(--line-d) var(--pp,0%))}
+.proc{display:grid;grid-template-columns:repeat(4,1fr);margin-top:64px;position:relative;list-style:none;padding:0}
+.proc::before{content:"";position:absolute;top:21px;left:22px;right:calc(25% - 22px);height:2px;background:linear-gradient(90deg,var(--teal) var(--pp,0%),var(--line-d) var(--pp,0%))}
 .pstep{padding-right:28px;position:relative}
 .pstep .n{width:44px;height:44px;border-radius:50%;background:var(--night);border:2px solid var(--line-d);display:grid;place-items:center;font-weight:650;color:var(--snow2);position:relative;transition:all .4s var(--ease)}
 .pstep.on .n{border-color:var(--teal);background:var(--teal);color:#04201c;box-shadow:0 0 0 6px rgba(0,178,160,.14)}
@@ -697,7 +697,7 @@ footer .legal-note{flex-basis:100%;font-size:13px}
     show(best);
     if (proc) {
       var r = proc.getBoundingClientRect(), f = Math.min(1, Math.max(0, (vh * .8 - r.top) / (r.height + vh * .2)));
-      if (innerWidth > 1020) proc.style.setProperty('--pp', (f * 100).toFixed(1) + '%');
+      if (innerWidth > 1020) proc.style.setProperty('--pp', Math.min(f * 400 / 3, 100).toFixed(1) + '%');
       pst.forEach(function (s, i) { s.classList.toggle('on', f >= i / pst.length + .02 || reduce); });
     }
   }
