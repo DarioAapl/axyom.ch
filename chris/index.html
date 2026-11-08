@@ -1322,7 +1322,8 @@ tr.click:hover td{background:var(--card-2)}
 .wgrid.ist-raster .grid-item{position:absolute;top:0;left:0;transition:transform .5s var(--spring),width .5s var(--spring),
   height .5s var(--spring),box-shadow .25s;will-change:transform}
 .wgrid.no-anim .grid-item{transition:none}
-.grid-item.is-dragging{transition:box-shadow .25s;z-index:5;box-shadow:0 24px 50px -18px rgba(17,18,20,.35);cursor:grabbing}
+/* beim Ziehen folgt die Kachel dem Zeiger ohne Feder — sonst hinkt sie bis 250 px hinterher */
+.wgrid.ist-raster .grid-item.is-dragging{transition:box-shadow .25s;z-index:5;box-shadow:0 24px 50px -18px rgba(17,18,20,.35);cursor:grabbing}
 .grid-ghost{position:absolute;top:0;left:0;border-radius:var(--radius);border:1.5px dashed var(--acc);
   background:color-mix(in srgb,var(--acc) 9%,transparent);pointer-events:none;
   transition:transform .3s var(--spring),width .3s var(--spring),height .3s var(--spring)}
@@ -1347,7 +1348,7 @@ tr.click:hover td{background:var(--card-2)}
 .veil-resize{position:absolute;right:0;bottom:0;width:30px;height:30px;cursor:nwse-resize;touch-action:none}
 .veil-resize::after{content:"";position:absolute;right:9px;bottom:9px;width:10px;height:10px;border-right:2.5px solid var(--acc);
   border-bottom:2.5px solid var(--acc);border-radius:0 0 4px 0}
-.grid-item.is-leaving-grid{opacity:.55;scale:.5;transition:scale .3s var(--spring),opacity .2s}
+.wgrid.ist-raster .grid-item.is-leaving-grid{opacity:.55;scale:.5;transition:scale .3s var(--spring),opacity .2s}
 .is-grid-dragging{user-select:none;cursor:grabbing}
 .edit-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:10px 12px;border-radius:var(--radius);
   background:var(--card);box-shadow:var(--shadow);transform-origin:top;animation:bar-in .45s var(--spring) both}
@@ -5041,6 +5042,20 @@ function platzieren(lay, id, patch, lim) {
   items[k] = begrenzen({ ...items[k], ...patch }, lim);
   nachUnten(items, items[k]); verdichten(items); return items;
 }
+/* Wer eine Kachel auf eine andere zieht, die in den frei werdenden Platz
+   passt, tauscht die beiden — wie auf dem iPhone. Ohne das schob Levins
+   Raster die getroffene Kachel nach unten und liess ein Loch stehen. */
+function tauschen(lay, id, patch, lim) {
+  const items = lay.map(i => ({ ...i })), k = items.findIndex(i => i.id === id);
+  if (k < 0) return items;
+  const alt = { ...items[k] }, neu = begrenzen({ ...alt, ...patch }, lim);
+  const flaeche = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x))
+    * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  const [o, f] = items.filter(i => i.id !== id).map(i => [i, flaeche(neu, i)])
+    .filter(([, f]) => f > 0).sort((a, b) => b[1] - a[1])[0] || [];
+  if (o && o.w <= alt.w && o.h <= alt.h && f >= o.w * o.h * .4) { o.x = alt.x; o.y = alt.y; }
+  items[k] = neu; nachUnten(items, items[k]); verdichten(items); return items;
+}
 function anfuegen(lay, it) {
   const unten = lay.reduce((m, o) => Math.max(m, o.y + o.h), 0);
   const items = [...lay.map(o => ({ ...o })), begrenzen({ ...it, x:0, y:unten })];
@@ -5074,13 +5089,16 @@ function rasterBauen({ container, zeile = 72, gap = 14, onChange, ablage, onAbla
   }
   function beginnen(id, art, x, y, b) {
     const n = knoten.get(id); if (!n) return;
-    zug = { id, art, x0:x, y0:y, b, start:lay.map(i => ({ ...i })), raus:false };
+    zug = { id, art, x0:x, y0:y, b, start:lay.map(i => ({ ...i })), raus:false, s0:scrollY, letzt:null };
+    rollen();
     n.classList.add('is-dragging'); geist.hidden = false; setze(geist, box(lay.find(i => i.id === id)));
     document.body.classList.add('is-grid-dragging');
   }
   function bewegen(e) {
     if (!zug) return;
-    const n = knoten.get(zug.id), dx = e.clientX - zug.x0, dy = e.clientY - zug.y0;
+    zug.letzt = { clientX:e.clientX, clientY:e.clientY };
+    /* rollt die Seite während des Ziehens, zählt der gerollte Weg mit */
+    const n = knoten.get(zug.id), dx = e.clientX - zug.x0, dy = e.clientY - zug.y0 + (scrollY - zug.s0);
     const cw = spalte() + gap, ch = zeile + gap, s = zug.start.find(i => i.id === zug.id);
     let patch;
     if (zug.art === 'move') {
@@ -5094,8 +5112,21 @@ function rasterBauen({ container, zeile = 72, gap = 14, onChange, ablage, onAbla
       setze(n, { ...zug.b, width:w, height:h });
       patch = { x:s.x, y:s.y, w:(w + gap) / cw, h:(h + gap) / ch };
     }
-    const next = zug.raus ? [...entfernen(zug.start, zug.id), { ...s }] : platzieren(zug.start, zug.id, patch, KACHELN[zug.id].min);
+    const next = zug.raus ? [...entfernen(zug.start, zug.id), { ...s }]
+      : zug.art === 'move' ? tauschen(zug.start, zug.id, patch, KACHELN[zug.id].min)
+      : platzieren(zug.start, zug.id, patch, KACHELN[zug.id].min);
     if (JSON.stringify(next) !== JSON.stringify(lay)) { lay = next; malen(); }
+  }
+  /* am oberen oder unteren Rand rollt die Seite mit, je näher, desto schneller */
+  function rollen() {
+    if (!zug) return;
+    const l = zug.letzt;
+    if (l) {
+      const unten = innerHeight - l.clientY, oben = l.clientY - 80;
+      const v = unten < 80 ? (80 - unten) / 4 : oben < 60 ? -(60 - oben) / 4 : 0;
+      if (v) { scrollBy(0, v); bewegen(l); }
+    }
+    requestAnimationFrame(rollen);
   }
   function ende() {
     if (!zug) return;
