@@ -2812,11 +2812,21 @@ function handyNachziehen() {
     }
     if (!el.dataset.kante) { el.dataset.kante = '1'; el.addEventListener('scroll', kante, { passive:true }); }
   });
-  const an = document.querySelector('#rail a.on');
-  if (an && document.querySelector('#rail').clientWidth > document.querySelector('#rail').clientHeight)
-    an.scrollIntoView({ block:'nearest', inline:'center' });
+  /* das aktive Modul in die Mitte der Leiste — nur die Leiste rollt seitwärts.
+     scrollIntoView() rollte auch die Seite und lief bei jedem resize; Safari
+     auf dem iPhone feuert resize, während die Symbolleiste beim Herunterziehen
+     wächst, und so riss es die Seite aus dem Zug-zum-Aktualisieren zurück. */
+  const nav = document.querySelector('#nav'), an = nav?.querySelector('a.on');
+  if (an && nav.scrollWidth > nav.clientWidth && NAV_MITTE !== AKTIV) {
+    NAV_MITTE = AKTIV;
+    const nb = nav.getBoundingClientRect(), ab = an.getBoundingClientRect();
+    nav.scrollLeft += ab.left - nb.left - (nb.width - ab.width) / 2;
+  }
 }
-addEventListener('resize', () => handyNachziehen());
+let NAV_MITTE = null;
+/* nur echte Breitenwechsel zählen; die Höhe ändert Safari beim Rollen dauernd */
+let BREITE = innerWidth;
+addEventListener('resize', () => { if (innerWidth === BREITE) return; BREITE = innerWidth; NAV_MITTE = null; handyNachziehen(); });
 
 /* ── der Fragen-Knopf tritt zur Seite ─────────────────────────────────────
    Er liegt fix über der unteren rechten Ecke — dort, wo in einer Tabelle die
@@ -5334,7 +5344,9 @@ function pille(huelle, aktiv, cls) {
   else requestAnimationFrame(ziel);
 }
 const pillenSetzen = () => { pille($('#nav'), 'a.on', 'navpill'); pille($('#mwahl'), 'button.on', 'segpill'); };
-addEventListener('resize', () => { PILLEN.forEach(p => { p.sitzt = false; }); pillenSetzen(); });
+let PILLEN_BREITE = innerWidth;
+addEventListener('resize', () => { if (innerWidth === PILLEN_BREITE) return; PILLEN_BREITE = innerWidth;
+  PILLEN.forEach(p => { p.sitzt = false; }); pillenSetzen(); });
 document.fonts?.ready.then(() => { PILLEN.forEach(p => { p.sitzt = false; }); pillenSetzen(); });
 
 /* «CHF 30'426» zählt von 0 hoch und endet genau auf dem gerechneten Text */
