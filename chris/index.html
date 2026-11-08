@@ -1560,6 +1560,8 @@ tr.click:hover td{background:var(--card-2)}
   .reveal,.puls::after,.is-editing .grid-item,.edit-bar,.drawer{animation:none!important}
   .grid-item,.navpill,.segpill,.saeule,.mini-bar i,.bar i,.card{transition:none!important}
 }
+.mpunkte{display:inline-flex;gap:3px;margin-right:7px;vertical-align:1px}
+.mpunkte .mpunkt{margin:0}
 </style>
 </head>
 <body>
@@ -4180,7 +4182,7 @@ VIEWS.zeiten = () => {
       im System gibt es zusätzlich Start/Stopp mit mitlaufender Uhr.</div></div>`;
 
   const zeilen = [...zeiten].sort((a, b) => dz(b.datum) - dz(a.datum)).map(t => `
-    <tr class="${ZEIT_WAHL.includes(t.id) ? 'gewaehlt' : ''}">
+    <tr class="${ZEIT_WAHL.includes(t.id) ? 'gewaehlt' : ''}" data-m="${P(t.projekt).mandant}">
       <td style="width:52px">${t.verrechenbar && !t.dok
         ? `<div class="check ${ZEIT_WAHL.includes(t.id) ? 'on' : ''}" data-zwahl="${t.id}">
             <svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="#fff"
@@ -4268,7 +4270,7 @@ VIEWS.zahlungen = () => {
         .reduce((s, z) => s + z.betrag, 0))}</div>
       <div class="d">${DB.zahlungen.length} Zahlungen</div></div></div>`;
 
-  const zeilen = offeneRg.map(d => `<tr class="${DOK_OFFEN === d.id ? 'gewaehlt' : ''}">
+  const zeilen = offeneRg.map(d => `<tr class="${DOK_OFFEN === d.id ? 'gewaehlt' : ''}" data-m="${d.mandant}">
     <td><b>${esc(d.nr)}</b><div class="small muted">${esc(M(d.mandant).name)}</div></td>
     <td>${esc(K(d.kunde).name)}<div class="small muted">${esc(d.adresseName)}</div></td>
     <td class="num">${esc(d.datum)}</td>
@@ -4322,7 +4324,7 @@ VIEWS.zahlungen = () => {
     <div class="sec" style="margin-top:22px">Zahlungseingänge</div>
     <div class="scrollx"><table><thead><tr><th>Datum</th><th>Rechnung</th><th>Kunde</th><th>Art</th>
       <th>Referenz</th><th class="r">Betrag</th></tr></thead><tbody>
-      ${DB.zahlungen.filter(z => mDok().some(d => d.id === z.dok)).map(z => `<tr>
+      ${DB.zahlungen.filter(z => mDok().some(d => d.id === z.dok)).map(z => `<tr data-m="${D(z.dok).mandant}">
         <td class="num">${esc(z.datum)}</td>
         <td><span class="link" data-dok="${z.dok}">${esc(D(z.dok).nr)}</span></td>
         <td>${esc(K(D(z.dok).kunde).kurz)}</td><td>${esc(z.art)}</td>
@@ -4449,7 +4451,7 @@ VIEWS.versand = () => {
       <th>Versendet</th><th class="r">Empfänger</th><th class="r">Zugestellt</th>
       <th class="r">Fehlgeschlagen</th><th class="r">Abgemeldet</th><th>Status</th>
       </tr></thead><tbody>
-      ${DB.kampagnen.filter(c => imBlick(c.mandant)).map(c => `<tr>
+      ${DB.kampagnen.filter(c => imBlick(c.mandant)).map(c => `<tr data-m="${c.mandant}">
         <td><b>${esc(c.name)}</b></td><td>${esc(c.thema)}</td>
         <td><span class="chip s1">${esc(c.verteiler)}</span></td>
         <td class="num">${esc(c.versendet)}${c.geplant
@@ -4560,7 +4562,7 @@ VIEWS.lager = () => {
     <div class="scrollx"><table><thead><tr><th>Artikel</th><th>Kategorie</th><th>Nummer</th>
       <th class="r">Bestand</th><th class="r">Minimum</th><th>Lagerort</th><th class="r">Bewegungen</th>
       <th></th></tr></thead><tbody>
-      ${liste.map(l => `<tr class="${ART_OFFEN === l.id ? 'gewaehlt' : ''}">
+      ${liste.map(l => `<tr class="${ART_OFFEN === l.id ? 'gewaehlt' : ''}" data-m="${l.mandant}">
         <td><b>${esc(l.name)}</b>${l.ausgeliehen
           ? `<div class="small" style="color:var(--warn)">ausgeliehen: ${esc(l.ausgeliehen)}</div>` : ''}</td>
         <td><span class="tag t-mute">${esc(l.kat)}</span></td>
@@ -4654,7 +4656,7 @@ VIEWS.archiv = () => {
   const audit = `<div class="sec" style="margin-top:22px">Protokoll</div>
     <div class="scrollx"><table><thead><tr><th>Zeitpunkt</th><th>Wer</th><th>Mandant</th><th>Objekt</th>
       <th>Aktion</th><th>Detail</th></tr></thead><tbody>
-      ${DB.audit.filter(a => a.mandant === '—' || imBlick(a.mandant)).slice(0, 14).map(a => `<tr>
+      ${DB.audit.filter(a => a.mandant === '—' || imBlick(a.mandant)).slice(0, 14).map(a => `<tr data-m="${a.mandant}">
         <td class="num">${esc(a.datum)}</td><td>${esc(a.wer)}</td>
         <td>${a.mandant === '—' ? '—' : esc(M(a.mandant).name)}</td>
         <td><b>${esc(a.objekt)}</b></td>
@@ -5409,6 +5411,7 @@ render = function () {
   renderOhneBewegung();
   cockpitMontieren();
   titelChips();
+  mandantPunkte();
   pillenSetzen();
   /* ein zweites render() gleich nach dem Wechsel (beim Start rechnet
      archivStart() die Prüfsummen) würde die Einblendung abschneiden */
@@ -5416,6 +5419,34 @@ render = function () {
   if (blick !== BLICK) { BLICK = blick; BLICK_T = performance.now(); einblenden(); }
   else if (performance.now() - BLICK_T < 400) einblenden();
 };
+
+/* In der Gesamtsicht trägt jede Zeile einen Punkt in der Farbe ihres
+   Mandanten. Der Mandant kommt aus data-m oder aus dem Datensatz, auf den
+   die Zeile zeigt; ein Kunde bei zwei Einheiten bekommt zwei Punkte. */
+function mandantFuer(el) {
+  if (el.dataset.m) return el.dataset.m.split(' ');
+  const q = el.matches('[data-dok],[data-projekt],[data-artikel],[data-fall],[data-kunde]') ? el
+    : el.querySelector('[data-dok],[data-projekt],[data-artikel],[data-fall],[data-kunde]');
+  if (!q) return [];
+  const d = q.dataset;
+  if (d.kunde) return kundeMandanten(d.kunde);
+  const m = d.dok ? mandantVon('dok', d.dok) : d.projekt ? mandantVon('projekt', d.projekt)
+    : d.artikel ? mandantVon('artikel', d.artikel) : mandantVon('fall', d.fall);
+  return m ? [m] : [];
+}
+function mandantPunkte() {
+  if (MANDANT !== 'alle' || AKTIV === 'uebersicht') return;
+  const ziele = [...$$('#view tbody > tr:not(.detailzeile)')].filter(r => !r.closest('.detailzeile'))
+    .map(r => [r, r.querySelector('td')]).concat([...$$('#view .tabs .tab[data-projekt]')].map(t => [t, t]));
+  ziele.forEach(([quelle, ziel]) => {
+    if (!ziel || ziel.querySelector('.mpunkt')) return;
+    const ms = mandantFuer(quelle).filter(id => DB.mandanten.some(m => m.id === id));
+    if (!ms.length) return;
+    ziel.insertAdjacentHTML('afterbegin', `<span class="mpunkte" title="${esc(ms.map(id => M(id).name).join(', '))}"
+      aria-label="${esc(ms.map(id => M(id).name).join(', '))}">${ms.map(id =>
+      `<span class="mpunkt" style="background:${M(id).farbe}"></span>`).join('')}</span>`);
+  });
+}
 /* ── Fragen statt suchen ────────────────────────────────────────────────────
    Eine Frage ist schneller als das Wissen, in welchem Modul die Antwort liegt.
    Die Box unten rechts liest denselben Datenstand wie jeder Schirm — wird ein
