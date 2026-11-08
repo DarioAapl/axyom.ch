@@ -1111,7 +1111,9 @@ main{display:block;min-width:0;background:none}
   box-shadow:0 6px 14px -8px rgba(0,0,0,.6)}
 :root[data-theme="dark"] #rail .brand .mark{background:#f2f3f5}
 #rail .brand .mark svg{width:19px;height:19px;display:block}
-#rail .brand .wort{font-size:19px;font-weight:650;letter-spacing:-.035em}
+/* das echte Zeichen: Buchstaben in Tinte (im Dunkeln weiss), das X in seinem Verlauf */
+#rail .brand .logo{display:block;width:104px;height:auto;flex:none;color:var(--ink);transition:color .4s}
+#rail .brand .proto{align-self:center;margin-top:2px}
 #rail .brand .proto{font-size:10.5px;font-weight:600;color:var(--muted);background:var(--card);box-shadow:var(--shadow);
   padding:3px 9px;border-radius:999px}
 #nav{position:relative;display:flex;flex-direction:row;gap:2px;padding:4px;background:var(--card);border-radius:999px;
@@ -1522,6 +1524,7 @@ tr.click:hover td{background:var(--card-2)}
   #rail a .badge{position:static;box-shadow:none}
   #rail a[data-name]::after{display:none}
   #rail .brand .proto{display:none}
+  #rail .brand .logo{width:84px}
   .suche,.suche:focus-within{width:44px}.suche input{height:44px}
   .suche:focus-within{position:static}
   .suche:focus-within input{position:absolute;left:16px;right:16px;width:auto;top:10px;z-index:41;color:var(--ink);padding-right:14px}
@@ -1567,8 +1570,8 @@ tr.click:hover td{background:var(--card-2)}
        Die IDs bleiben, an ihnen hängt die Logik. -->
   <aside id="rail">
     <div class="brand" data-go="uebersicht" role="button" tabindex="0" title="Übersicht">
-      <span class="mark"><svg viewBox="96 0 716 750" aria-hidden="true"><use href="#axyomX"/></svg></span>
-      <span class="wort">axyom</span><span class="proto">Prototyp</span></div>
+      <svg class="logo" viewBox="0 0 1664 749" role="img" aria-label="axyom"><use href="#axyomLogo"/></svg>
+      <span class="proto">Prototyp</span></div>
     <nav id="nav" aria-label="Module"></nav>
     <div class="tools">
       <!-- SEA-01/03: eine Suche über alles, und sie hält sich an die Rechte -->
@@ -2659,13 +2662,10 @@ function renderTreffer() {
 /* ── Rendern ─────────────────────────────────────────────────────────────── */
 const VIEWS = {};
 
-/* ── «Alle Mandanten» ist eine Auswertungssicht, kein Arbeitsplatz ────────
-   Summieren darf man über die Mandanten, arbeiten nicht: eine Offerte, eine
-   Zahlung, eine Zeitbuchung gehört immer zu genau einer Einheit. Darum gilt
-   die Gesamtsicht nur für die Übersicht; wer von dort in ein Modul geht,
-   entscheidet zuerst, in welchem Mandanten er arbeitet. Kommt der Sprung von
-   einem Datensatz (Beleg, Projekt, Suchtreffer), ist die Frage schon
-   beantwortet — dann wird der Mandant des Datensatzes gesetzt. */
+/* ── «Alle Mandanten» gilt in jedem Modul ──────────────────────────────────
+   Wer die Gesamtsicht wählt, bleibt im gewählten Modul und sieht dort die
+   Einträge aller Mandanten zusammen. Was neu entsteht, erbt seinen Mandanten
+   vom Datensatz, aus dem es kommt. mandantWahl() bleibt für später stehen. */
 const gesamtNur = 'uebersicht';
 const pl = (n, ein, viele) => `${n} ${n === 1 ? ein : viele}`;
 function mandantWahl() {
@@ -2726,9 +2726,8 @@ function mandantVon(art, id) {
   return null;
 }
 function mandantMit(art, id) {
-  if (MANDANT !== 'alle') return;
-  const m = mandantVon(art, id);
-  if (m && mandantenSicht().includes(m)) MANDANT = m;
+  /* Die Gesamtsicht gilt jetzt in jedem Modul: wer dort einen Datensatz
+     öffnet, bleibt in der Gesamtsicht. */
 }
 
 function render() {
@@ -2743,8 +2742,7 @@ function render() {
     : m.sub;
   const y = window.scrollY;
   const seitlich = [...$('#view').querySelectorAll('.scrollx')].map(e => e.scrollLeft);
-  $('#view').innerHTML = (MANDANT === 'alle' && AKTIV !== gesamtNur)
-    ? mandantWahl() : VIEWS[AKTIV]();
+  $('#view').innerHTML = VIEWS[AKTIV]();
   tabellenEinpacken();
   renderRail();
   renderTreffer();
@@ -3748,14 +3746,16 @@ VIEWS.verkauf = () => {
 
   const kreise = `<div class="card tint" style="margin-top:18px">
     <div class="wl"><span>Nummernkreise</span>
-      <span class="r2">${esc(M().lang)}</span></div>
+      <span class="r2">${MANDANT === 'alle' ? 'alle Mandanten' : esc(M().lang)}</span></div>
+    ${(MANDANT === 'alle' ? mandantenSicht() : [MANDANT]).map(id => `
+    ${MANDANT === 'alle' ? `<div class="small" style="font-weight:650;margin:10px 0 6px">${esc(M(id).lang)}</div>` : ''}
     <div class="row" style="gap:18px">
-      ${Object.entries(M().kreise).map(([t, n]) => `<div>
+      ${Object.entries(M(id).kreise).map(([t, n]) => `<div>
         <div class="small muted">${esc(TYP[t])}</div>
         <div style="font-weight:650;font-variant-numeric:tabular-nums">
           ${t}-26-${String(n).padStart(4, '0')}</div>
         <div class="small muted">nächste: ${String(n + 1).padStart(4, '0')}</div></div>`).join('')}
-    </div>
+    </div>`).join('')}
     <div class="small muted" style="margin-top:11px;line-height:1.6;max-width:92ch">
       Je Mandant und Belegtyp ein eigener, fortlaufender Kreis. Eine stornierte Nummer wird nicht
       wiederverwendet: die Lücke ist das Beweisstück, nicht der Fehler.</div></div>`;
@@ -4307,7 +4307,7 @@ VIEWS.zahlungen = () => {
 
     <div class="grid g2" style="gap:14px;margin-top:18px">
       <div class="card"><div class="wl"><span>Mahnstufen</span>
-          <span class="r2">${esc(M().lang)}</span></div>
+          <span class="r2">${MANDANT === 'alle' ? 'alle Mandanten' : esc(M().lang)}</span></div>
         <div class="scrollx"><table><thead><tr><th>Stufe</th><th class="r">Tage nach Fälligkeit</th>
           <th class="r">Gebühr</th><th>Text</th></tr></thead><tbody>
           ${DB.mahnstufen.map(s => `<tr><td><b>${s.stufe}</b></td>
@@ -6567,10 +6567,8 @@ document.addEventListener('click', e => {
     if (MANDANT === 'alle') {
       /* Die Gesamtsicht ist eine Auswertungssicht: dort wird verglichen, nicht
          gearbeitet. Also landet sie auf der Übersicht. */
-      AKTIV = gesamtNur; DOK_OFFEN = null; KUNDE_OFFEN = null; FALL_OFFEN = null; ART_OFFEN = null;
-      toast(`Gesamtsicht über ${mandantenSicht().length} Mandanten — hier werden Zahlen
-        verglichen und summiert. Für jedes andere Modul wählen Sie einen Mandanten, damit
-        sich die drei Einheiten nicht vermischen.`, 1);
+      toast(`Gesamtsicht über ${mandantenSicht().length} Mandanten — jede Liste zeigt die
+        Einträge aller Einheiten zusammen.`, 1);
     } else {
       toast(`Mandant <b>${esc(M().lang)}</b>: eigene Stammdaten, Nummernkreise, Absender
         und Layouts.`, 1);
@@ -6604,7 +6602,6 @@ document.addEventListener('click', e => {
     const ref = go.dataset.ref, mand = go.dataset.mand;
     /* Aus der Gesamtsicht heraus: der Mandant des angeklickten Datensatzes
        gewinnt — sonst müsste man zweimal entscheiden. */
-    if (MANDANT === 'alle' && mand && mandantenSicht().includes(mand)) MANDANT = mand;
     if (ref) {
       if (AKTIV === 'verkauf' || AKTIV === 'zahlungen') { DOK_OFFEN = ref; mandantMit('dok', ref); }
       if (AKTIV === 'projekte') { PROJEKT_OFFEN = ref; mandantMit('projekt', ref); }
