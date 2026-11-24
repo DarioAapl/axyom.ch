@@ -50,7 +50,7 @@
     'ha.2.t': 'Honest assessment',
     'ha.2.d': 'Before the project we tell you what automation can and cannot do in your business. Clear expectations, no surprises.',
     'ha.3.t': 'From the region',
-    'ha.3.d': 'Built in Liechtenstein and Switzerland. Short distances, personal meetings on site and support in your language.',
+    'ha.3.d': 'Developed in Liechtenstein, hosted in Switzerland. Short distances, personal meetings on site and support in your language.',
     'ha.4.t': 'Full control',
     'ha.4.d': 'Every system works for you. The decisions stay with you, and nothing leaves your business without your approval.',
     // homepage (2026-11 showcase)
