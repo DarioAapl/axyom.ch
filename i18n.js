@@ -59,7 +59,6 @@
     'hp.skip': 'Skip to content',
     'hp.nav.aria': 'Main navigation',
     'hp.nav.product': 'Product',
-    'hp.nav.ai': 'Axyom AI',
     'hp.hero.title': 'Your business.<br><span class="soft">One system</span><span class="dot">.</span>',
     'hp.hero.cta': 'Book an intro call',
     'hp.hero.more': 'See how it looks',
