@@ -329,17 +329,22 @@ footer a:hover{color:var(--snow)}
   .stack .scr{transition:none;filter:none}
   .step{transition:none}
 }
-.gain{margin-top:56px}
-.gain h3{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:18px;text-align:center}
-.gtab{border:1px solid var(--line-d);border-radius:18px;overflow:hidden;background:var(--night2)}
-.grow{display:grid;grid-template-columns:1.1fr 1fr 1.3fr;align-items:center;padding:16px 24px;border-top:1px solid var(--line-d);font-size:15px}
-.grow.gh{border-top:0;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--snow2);padding:14px 24px;background:rgba(238,244,242,.02)}
-.grow .k{color:var(--snow);font-weight:500}
-.grow .b{color:var(--snow2);text-decoration:line-through;text-decoration-color:rgba(238,244,242,.3)}
-.grow .a{color:var(--snow);display:flex;gap:10px;align-items:center}
-.grow .a::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(0,178,160,.18);flex:none}
-.grow.gh .b{text-decoration:none}.grow.gh .a::before{display:none}
-@media(max-width:720px){.grow{grid-template-columns:1fr 1fr;row-gap:6px;padding:14px 18px}.grow .k{grid-column:1/-1}.grow.gh .k{display:none}}
+.sp{margin-top:56px;border-radius:22px;overflow:hidden;border:1px solid var(--line-d);display:grid;grid-template-columns:1fr 1fr}
+.sp>div{padding:34px 34px 10px}
+.sp .L{background:var(--night2)}
+.sp .R{background:linear-gradient(180deg,rgba(0,178,160,.14),rgba(0,178,160,.05));border-left:1px solid rgba(0,178,160,.3)}
+.sp h3{font-size:24px;font-weight:600;margin-bottom:6px}
+.sp>div>p{color:var(--snow2);font-size:15px;min-height:48px}
+.sp .chaos,.sp .one{height:150px}
+.sp .one{align-content:start}
+.sp ul{list-style:none;margin-top:26px}
+.sp li{padding:15px 0;border-top:1px solid var(--line-d);font-size:16px;min-height:72px}
+.sp .R li{border-color:rgba(0,178,160,.22)}
+.sp li small{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--snow2);margin-bottom:4px}
+.sp .L li span{color:var(--snow2);text-decoration:line-through;text-decoration-color:rgba(238,244,242,.3)}
+.sp .R li span{color:var(--snow);font-weight:500}
+.sp .R li small{color:var(--teal)}
+@media(max-width:820px){.sp{grid-template-columns:1fr}.sp .R{border-left:0;border-top:1px solid rgba(0,178,160,.3)}.sp li{min-height:0}.sp>div{padding:28px 22px 8px}}
 </style>
 </head>
 <body>
@@ -383,14 +388,11 @@ footer a:hover{color:var(--snow)}
 <section id="wandel">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="eyebrow" data-i18n="hp.w.eyebrow">Das Problem</span>
-      <h2 data-i18n-html="hp.w.title">Fünf Tools, drei Excel-Listen und ein Stapel Belege<span class="dot">.</span></h2>
-      <p data-i18n="hp.w.sub">Die meisten Betriebe arbeiten mit Programmen, die nicht miteinander reden. Jede Offerte wird abgetippt, jede Stunde zweimal erfasst, und am Monatsende sucht jemand die Belege zusammen.</p>
+      <span class="eyebrow" data-i18n="hp.w.eyebrow">Problem &amp; Lösung</span>
+      <h2 data-i18n-html="hp.w.title">Alles an einem Ort statt in fünf Programmen<span class="dot">.</span></h2>
     </div>
-    <div class="wandel">
-      <div class="wcard rv">
-        <h3 data-i18n="hp.w.before">Heute</h3>
-        <p data-i18n="hp.w.before.d">Daten an vielen Orten, Wissen in wenigen Köpfen.</p>
+    <div class="sp rv">
+      <div class="L"><h3 data-i18n="hp.w.before">Heute</h3><p data-i18n="hp.w.before.d">Daten an vielen Orten, Wissen in wenigen Köpfen.</p>
         <div class="chaos" aria-hidden="true">
           <span style="--r:-6deg;left:2%;top:8%">Offerte_final_v3.docx</span>
           <span style="--r:4deg;left:44%;top:0">Stunden_Oktober.xlsx</span>
@@ -399,26 +401,14 @@ footer a:hover{color:var(--snow)}
           <span style="--r:-4deg;left:6%;top:76%">Belege_Schuhschachtel</span>
           <span style="--r:3deg;left:52%;top:80%">Notizzettel</span>
         </div>
-      </div>
-      <div class="wcard yes rv d1">
-        <h3 data-i18n="hp.w.after">Mit Axyom</h3>
-        <p data-i18n="hp.w.after.d">Ein System, das Ihre Abläufe abbildet – vom ersten Anruf bis zur Übergabe an den Treuhänder.</p>
+        <ul><li><small data-i18n="hp.g.login">Logins</small><span data-i18n="hp.g.login.b">5 Passwörter</span></li><li><small data-i18n="hp.g.abo">Abos</small><span data-i18n="hp.g.abo.b">5 Anbieter, 5 Rechnungen</span></li><li><small data-i18n="hp.g.data">Daten erfassen</small><span data-i18n="hp.g.data.b">doppelt und dreifach</span></li><li><small data-i18n="hp.g.inv">Offerte → Rechnung</small><span data-i18n="hp.g.inv.b">abtippen</span></li><li><small data-i18n="hp.g.staff">Neue Mitarbeitende</small><span data-i18n="hp.g.staff.b">5 Programme lernen</span></li><li><small data-i18n="hp.g.help">Support</small><span data-i18n="hp.g.help.b">5 Hotlines</span></li><li><small data-i18n="hp.g.month">Monatsabschluss</small><span data-i18n="hp.g.month.b">Belege zusammensuchen</span></li></ul></div>
+      <div class="R"><h3 data-i18n="hp.w.after">Mit Axyom</h3><p data-i18n="hp.w.after.d">Ein System, das Ihre Abläufe abbildet – vom ersten Anruf bis zur Übergabe an den Treuhänder.</p>
         <div class="one">
           <span data-i18n="hp.m.crm.t">Kunden</span><span data-i18n="hp.m.quote.t">Offerten</span><span data-i18n="hp.m.proj.t">Projekte</span>
           <span data-i18n="hp.m.time.t">Stunden</span><span data-i18n="hp.m.inv.t">Rechnungen</span><span data-i18n="hp.m.exp.t">Treuhand</span>
         </div>
-      </div>
+        <ul><li><small data-i18n="hp.g.login">Logins</small><span data-i18n="hp.g.login.a">1 Login für alles</span></li><li><small data-i18n="hp.g.abo">Abos</small><span data-i18n="hp.g.abo.a">1 Abo, 1 Rechnung</span></li><li><small data-i18n="hp.g.data">Daten erfassen</small><span data-i18n="hp.g.data.a">einmal – überall aktuell</span></li><li><small data-i18n="hp.g.inv">Offerte → Rechnung</small><span data-i18n="hp.g.inv.a">ein Klick</span></li><li><small data-i18n="hp.g.staff">Neue Mitarbeitende</small><span data-i18n="hp.g.staff.a">eines</span></li><li><small data-i18n="hp.g.help">Support</small><span data-i18n="hp.g.help.a">ein Ansprechpartner in Liechtenstein</span></li><li><small data-i18n="hp.g.month">Monatsabschluss</small><span data-i18n="hp.g.month.a">bereit für den Treuhänder</span></li></ul></div>
     </div>
-    <div class="gain rv"><h3 data-i18n-html="hp.g.title">Was sich ändert<span class="dot">.</span></h3><div class="gtab">
-      <div class="grow gh"><span class="k"></span><span class="b" data-i18n="hp.w.before">Heute</span><span class="a" data-i18n="hp.w.after">Mit Axyom</span></div>
-      <div class="grow"><span class="k" data-i18n="hp.g.login">Logins</span><span class="b" data-i18n="hp.g.login.b">5 Passwörter</span><span class="a" data-i18n="hp.g.login.a">1 Login für alles</span></div>
-      <div class="grow"><span class="k" data-i18n="hp.g.abo">Abos</span><span class="b" data-i18n="hp.g.abo.b">5 Anbieter, 5 Rechnungen</span><span class="a" data-i18n="hp.g.abo.a">1 Abo, 1 Rechnung</span></div>
-      <div class="grow"><span class="k" data-i18n="hp.g.data">Daten erfassen</span><span class="b" data-i18n="hp.g.data.b">doppelt und dreifach</span><span class="a" data-i18n="hp.g.data.a">einmal – überall aktuell</span></div>
-      <div class="grow"><span class="k" data-i18n="hp.g.inv">Offerte → Rechnung</span><span class="b" data-i18n="hp.g.inv.b">abtippen</span><span class="a" data-i18n="hp.g.inv.a">ein Klick</span></div>
-      <div class="grow"><span class="k" data-i18n="hp.g.staff">Neue Mitarbeitende</span><span class="b" data-i18n="hp.g.staff.b">5 Programme lernen</span><span class="a" data-i18n="hp.g.staff.a">eines</span></div>
-      <div class="grow"><span class="k" data-i18n="hp.g.help">Support</span><span class="b" data-i18n="hp.g.help.b">5 Hotlines</span><span class="a" data-i18n="hp.g.help.a">ein Ansprechpartner in Liechtenstein</span></div>
-      <div class="grow"><span class="k" data-i18n="hp.g.month">Monatsabschluss</span><span class="b" data-i18n="hp.g.month.b">Belege zusammensuchen</span><span class="a" data-i18n="hp.g.month.a">bereit für den Treuhänder</span></div>
-    </div></div>
   </div>
 </section>
 
