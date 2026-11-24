@@ -167,7 +167,7 @@
     'hp.m.exp.d': 'Exports for your accountant instead of a pile of receipts.',
     'hp.v.title': 'Honest, personal, local<span class="dot">.</span>',
     'hp.v4.t': 'Privacy built in',
-    'hp.v4.d': 'Your data is stored on servers in Switzerland. We don\'t sell it, don\'t use it for advertising and don\'t share it without your knowledge.',
+    'hp.v4.d': 'Your data is stored on servers in Switzerland. We don\'t sell it, don\'t use it for advertising and don\'t pass it on.',
     'hp.k.eyebrow': 'Intro call',
     'hp.k.place': 'Schaan, Liechtenstein · On-site meetings in Liechtenstein and Eastern Switzerland',
     'ab.title.dot': 'Tell us about your business<span class="dot">.</span>',
