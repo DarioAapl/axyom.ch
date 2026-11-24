@@ -205,23 +205,10 @@ section{position:relative}
 /* modules strip */
 #module{padding:40px 0 130px}
 
-/* trades */
-#betriebe{padding:140px 0}
-.trades{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
-.trade{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:4/5;background:var(--night3)}
-.trade video,.trade img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
-.trade:hover video{transform:scale(1.05)}
-.trade::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 50%,rgba(6,10,12,.85))}
-.trade b{position:absolute;left:18px;bottom:16px;z-index:1;font-weight:600;font-size:17px}
-.trade b small{display:block;font-weight:400;font-size:13px;color:var(--snow2);margin-top:2px}
-.trade.cta{display:flex;flex-direction:column;justify-content:space-between;padding:22px;text-decoration:none;
-  background:linear-gradient(160deg,#0f2a27,#0b1714);border:1px solid rgba(0,178,160,.3)}
-.trade.cta::after{display:none}
-.trade.cta h3{font-size:24px;letter-spacing:-.02em}
-.trade.cta span{color:var(--teal);font-weight:600;display:flex;align-items:center;gap:8px}
 
 /* process */
 #ablauf{padding:140px 0}
+#module+#ablauf{padding-top:40px}
 .proc{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:64px;position:relative}
 .proc::before{content:"";position:absolute;top:21px;left:22px;right:22px;height:2px;background:linear-gradient(90deg,var(--teal-d) var(--pp,0%),var(--line) var(--pp,0%))}
 .pstep{padding-right:28px;position:relative}
@@ -278,7 +265,6 @@ footer a:hover{color:var(--snow)}
 /* ---------- responsive ---------- */
 @media (max-width:1020px){
   .prom{grid-template-columns:repeat(2,1fr)}
-  .trades{grid-template-columns:repeat(2,1fr)}
   .proc{grid-template-columns:repeat(2,1fr);row-gap:40px}
   .proc::before{display:none}
 }
@@ -303,14 +289,12 @@ footer a:hover{color:var(--snow)}
   .dots{margin-top:12px}
   .steps{padding:4vh 0 10vh}
   .step{min-height:62vh;justify-content:flex-start;padding-top:6vh}
-  #wandel,#loesung,#betriebe,#ablauf,#kontakt{padding-top:96px;padding-bottom:96px}
+  #wandel,#loesung,#ablauf,#kontakt{padding-top:96px;padding-bottom:96px}
   #versprechen{padding-bottom:96px}
   .aiband{flex-direction:column;align-items:flex-start}
 }
 @media (max-width:560px){
   .prom,.proc{grid-template-columns:1fr}
-  .trades{grid-template-columns:1fr 1fr;gap:10px}
-  .trade b{left:12px;bottom:11px;font-size:15px}
   .frow{grid-template-columns:1fr}
   #top .btn{display:none}
   .one{grid-template-columns:1fr 1fr}
@@ -435,7 +419,6 @@ footer a:hover{color:var(--snow)}
     <a class="logo" href="#hero" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><img src="media/brand/logo-light.svg" alt="Axyom" width="67" height="30"></a>
     <nav aria-label="Hauptnavigation" data-i18n-attr="aria-label:hp.nav.aria">
       <a href="#loesung" data-i18n="hp.nav.product">Lösung</a>
-      <a href="#betriebe" data-i18n="hp.nav.trades">Für wen</a>
       <a href="#ablauf" data-i18n="hp.nav.process">Ablauf</a>
       <a href="/shopify/" data-i18n="hp.nav.ai">Axyom AI</a>
     </nav>
@@ -594,27 +577,6 @@ footer a:hover{color:var(--snow)}
             <p class="pv-note"><span class="dk" data-i18n="hp.k.hint">Tippen Sie links an, was Ihr Betrieb braucht.</span><span class="mb" data-i18n="hp.k.hintm">Tippen Sie unten an, was Ihr Betrieb braucht.</span></p></div>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ TRADES ============ -->
-<section id="betriebe">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow" data-i18n="hp.t.eyebrow">Für wen</span>
-      <h2 data-i18n-html="hp.t.title">Für Betriebe, die Aufträge abwickeln<span class="dot">.</span></h2>
-      <p data-i18n="hp.t.sub">Handwerk, Werkstatt, Praxis oder Laden: Wo Offerten, Stunden und Rechnungen den Alltag bestimmen, nimmt Ihnen ein eigenes System die Fleissarbeit ab.</p>
-    </div>
-    <div class="trades">
-      <div class="trade rv"><video data-src="media/media/vid-schreiner.mp4" poster="media/media/vid-schreiner-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.1">Schreinerei<small>Offerten aus Materiallisten</small></b></div>
-      <div class="trade rv d1"><video data-src="media/media/vid-garage.mp4" poster="media/media/vid-garage-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.2">Garage<small>Aufträge, Teile und Termine</small></b></div>
-      <div class="trade rv d2"><video data-src="media/media/vid-schweisser.mp4" poster="media/media/vid-schweisser-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.3">Metallbau<small>Projekte mit Stunden und Material</small></b></div>
-      <div class="trade rv d3"><video data-src="media/media/vid-zahnarzt.mp4" poster="media/media/vid-zahnarzt-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.4">Praxis<small>Termine und Abrechnung</small></b></div>
-      <div class="trade rv"><video data-src="media/media/vid-coiffeur.mp4" poster="media/media/vid-coiffeur-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.5">Coiffeur<small>Kundenkartei und Kasse</small></b></div>
-      <div class="trade rv d1"><video data-src="media/media/vid-baeckerei.mp4" poster="media/media/vid-baeckerei-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.6">Bäckerei<small>Bestellungen und Lieferungen</small></b></div>
-      <div class="trade rv d2"><video data-src="media/media/vid-florist.mp4" poster="media/media/vid-florist-poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><b data-i18n-html="hp.t.7">Floristik<small>Aufträge und Lieferungen</small></b></div>
-      <a class="trade cta rv d3" href="#kontakt"><h3 data-i18n="hp.t.cta">Ihr Betrieb ist anders? Gut so.</h3><span><span data-i18n="hp.t.cta2">Erzählen Sie uns davon</span> <span aria-hidden="true">→</span></span></a>
     </div>
   </div>
 </section>
@@ -911,18 +873,6 @@ footer a:hover{color:var(--snow)}
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
     $$('.rv').forEach(function (el) { io.observe(el); });
   } else $$('.rv').forEach(function (el) { el.classList.add('in'); });
-
-  /* trade loops play only while visible; with reduced motion the posters stay */
-  if (!reduce && 'IntersectionObserver' in window) {
-    var vo = new IntersectionObserver(function (es) {
-      es.forEach(function (e) {
-        var v = e.target;
-        if (e.isIntersecting) { if (!v.src) v.src = v.dataset.src; var pr = v.play(); if (pr && pr.catch) pr.catch(function () { }); }
-        else v.pause();
-      });
-    }, { threshold: .25 });
-    $$('.trade video').forEach(function (v) { vo.observe(v); });
-  }
 
   /* contact form: builds a mail to kontakt@axyom.ch; required fields marked inline */
   var form = $('#ab-form');
