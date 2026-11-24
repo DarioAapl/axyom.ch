@@ -206,16 +206,6 @@ section{position:relative}
 #module{padding:40px 0 130px}
 
 
-/* process */
-#ablauf{padding:140px 0}
-#module+#ablauf{padding-top:40px}
-.proc{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:64px;position:relative}
-.proc::before{content:"";position:absolute;top:21px;left:22px;right:22px;height:2px;background:linear-gradient(90deg,var(--teal-d) var(--pp,0%),var(--line) var(--pp,0%))}
-.pstep{padding-right:28px;position:relative}
-.pstep .n{width:44px;height:44px;border-radius:50%;background:var(--paper);border:2px solid var(--line);display:grid;place-items:center;font-weight:650;color:var(--mute);position:relative;transition:all .4s var(--ease)}
-.pstep.on .n{border-color:var(--teal-d);background:var(--teal-d);color:#fff;box-shadow:0 0 0 6px rgba(0,120,108,.12)}
-.pstep h3{font-size:20px;margin:22px 0 8px;letter-spacing:-.02em}
-.pstep p{color:var(--ink2);font-size:15.5px}
 
 /* promise */
 #versprechen{padding:0 0 140px}
@@ -225,14 +215,6 @@ section{position:relative}
 .pcard h3{font-size:18px;margin-bottom:8px;letter-spacing:-.015em}
 .pcard p{font-size:15px;color:var(--ink2)}
 
-/* shopify band */
-#ai{padding:0 0 0}
-.aiband{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 32px;border-radius:20px;
-  background:var(--ink);color:var(--snow);text-decoration:none;transition:transform .3s var(--ease)}
-.aiband:hover{transform:translateY(-2px)}
-.aiband b{font-size:19px;font-weight:600;letter-spacing:-.01em}
-.aiband p{color:var(--snow2);font-size:15px;margin-top:2px}
-.aiband .go{color:var(--teal);font-weight:600;display:flex;gap:8px;align-items:center;white-space:nowrap}
 
 /* contact */
 #kontakt{padding:150px 0 70px;overflow:hidden;isolation:isolate}
@@ -265,8 +247,6 @@ footer a:hover{color:var(--snow)}
 /* ---------- responsive ---------- */
 @media (max-width:1020px){
   .prom{grid-template-columns:repeat(2,1fr)}
-  .proc{grid-template-columns:repeat(2,1fr);row-gap:40px}
-  .proc::before{display:none}
 }
 @media (max-width:900px){
   :root{--gut:16px}
@@ -289,12 +269,11 @@ footer a:hover{color:var(--snow)}
   .dots{margin-top:12px}
   .steps{padding:4vh 0 10vh}
   .step{min-height:62vh;justify-content:flex-start;padding-top:6vh}
-  #wandel,#loesung,#ablauf,#kontakt{padding-top:96px;padding-bottom:96px}
+  #wandel,#loesung,#kontakt{padding-top:96px;padding-bottom:96px}
   #versprechen{padding-bottom:96px}
-  .aiband{flex-direction:column;align-items:flex-start}
 }
 @media (max-width:560px){
-  .prom,.proc{grid-template-columns:1fr}
+  .prom{grid-template-columns:1fr}
   .frow{grid-template-columns:1fr}
   #top .btn{display:none}
   .one{grid-template-columns:1fr 1fr}
@@ -419,7 +398,6 @@ footer a:hover{color:var(--snow)}
     <a class="logo" href="#hero" aria-label="Axyom – Start" data-i18n-attr="aria-label:logo.aria"><img src="media/brand/logo-light.svg" alt="Axyom" width="67" height="30"></a>
     <nav aria-label="Hauptnavigation" data-i18n-attr="aria-label:hp.nav.aria">
       <a href="#loesung" data-i18n="hp.nav.product">Lösung</a>
-      <a href="#ablauf" data-i18n="hp.nav.process">Ablauf</a>
       <a href="/shopify/" data-i18n="hp.nav.ai">Axyom AI</a>
     </nav>
     <div class="lang-switch" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button></div>
@@ -581,23 +559,6 @@ footer a:hover{color:var(--snow)}
   </div>
 </section>
 
-<!-- ============ PROCESS ============ -->
-<section id="ablauf" class="light">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow" data-i18n="hp.p.eyebrow">Ablauf</span>
-      <h2 data-i18n-html="hp.p.title">Vom ersten Gespräch zum eigenen System<span class="dot">.</span></h2>
-      <p data-i18n="hp.p.sub">Sie sehen Ihr System, bevor es gebaut wird. Und Sie entscheiden bei jedem Schritt, ob es weitergeht.</p>
-    </div>
-    <div class="proc" id="proc">
-      <div class="pstep"><div class="n">1</div><h3 data-i18n="hp.p1.t">Kennenlernen</h3><p data-i18n="hp.p1.d">Wir kommen vorbei und schauen uns an, wie Ihr Betrieb heute arbeitet: welche Tools, welche Listen, wo es hakt.</p></div>
-      <div class="pstep"><div class="n">2</div><h3 data-i18n="hp.p2.t">Prototyp</h3><p data-i18n="hp.p2.d">Sie erhalten einen klickbaren Prototyp mit Ihren Abläufen. So sehen Sie, was Sie bekommen, bevor gebaut wird.</p></div>
-      <div class="pstep"><div class="n">3</div><h3 data-i18n="hp.p3.t">Aufbau</h3><p data-i18n="hp.p3.d">Wir bauen in Etappen, jede mit einer Abnahme durch Sie. Bestehende Daten übernehmen wir, wo es sinnvoll ist.</p></div>
-      <div class="pstep"><div class="n">4</div><h3 data-i18n="hp.p4.t">Betrieb</h3><p data-i18n="hp.p4.d">Wir betreiben, sichern und entwickeln Ihr System weiter. Mit einer festen Ansprechperson, die Ihren Betrieb kennt.</p></div>
-    </div>
-  </div>
-</section>
-
 <!-- ============ PROMISE ============ -->
 <section id="versprechen" class="light">
   <div class="wrap">
@@ -610,12 +571,6 @@ footer a:hover{color:var(--snow)}
       <div class="pcard rv d1"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11l2 2 4-4"/></svg><h3 data-i18n="ha.2.t">Ehrliche Einschätzung</h3><p data-i18n="ha.2.d">Wir sagen Ihnen vor dem Projekt, was Automatisierung in Ihrem Betrieb leisten kann und was nicht. Klare Erwartungen, keine Überraschungen.</p></div>
       <div class="pcard rv d2"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><h3 data-i18n="ha.3.t">Aus der Region</h3><p data-i18n="ha.3.d">Entwickelt in Liechtenstein und der Schweiz. Kurze Wege, persönliche Termine vor Ort und Betreuung in Ihrer Sprache.</p></div>
       <div class="pcard rv d3"><svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z"/><path d="M12 8v6M9 11l3 3 3-3"/></svg><h3 data-i18n="hp.v4.t">Ihre Daten bleiben Ihre</h3><p data-i18n="hp.v4.d">Sie können Ihre Daten jederzeit vollständig exportieren – auch nach Vertragsende. Nichts verlässt den Betrieb ohne Ihre Freigabe.</p></div>
-    </div>
-    <div style="margin-top:56px" class="rv">
-      <a class="aiband" href="/shopify/">
-        <div><b data-i18n="hp.ai.t">Auch von uns: Axyom AI für Shopify</b><p data-i18n="hp.ai.d">Der KI-Assistent, der in Ihrem Onlineshop Kundenfragen beantwortet.</p></div>
-        <span class="go"><span data-i18n="hp.ai.go">Mehr erfahren</span> <span aria-hidden="true">→</span></span>
-      </a>
     </div>
   </div>
 </section>
@@ -845,7 +800,7 @@ footer a:hover{color:var(--snow)}
   show(0);
 
   /* header, hero tilt, step tracking, process line — one rAF-throttled scroll handler */
-  var top = $('#top'), tilt = $('.hero-tilt'), proc = $('#proc'), pst = $$('.pstep'), ticking = false;
+  var top = $('#top'), tilt = $('.hero-tilt'), ticking = false;
   function onScroll() {
     ticking = false;
     var y = scrollY, vh = innerHeight;
@@ -859,11 +814,6 @@ footer a:hover{color:var(--snow)}
     var line = innerWidth <= 900 ? vh * .72 : vh * .5, best = 0, bd = 1e9;
     steps.forEach(function (s, i) { var r = s.getBoundingClientRect(), d = Math.abs(r.top + Math.min(r.height, vh * .5) / 2 - line); if (d < bd) { bd = d; best = i; } });
     show(best);
-    if (proc) {
-      var r = proc.getBoundingClientRect(), f = Math.min(1, Math.max(0, (vh * .8 - r.top) / (r.height + vh * .2)));
-      if (innerWidth > 1020) proc.style.setProperty('--pp', (f * 100).toFixed(1) + '%');
-      pst.forEach(function (s, i) { s.classList.toggle('on', f >= i / pst.length + .02 || reduce); });
-    }
   }
   addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   onScroll();
