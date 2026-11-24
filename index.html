@@ -204,12 +204,6 @@ section{position:relative}
 
 /* modules strip */
 #module{padding:40px 0 130px}
-.mods{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:44px}
-.mod{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;transition:transform .3s var(--ease),box-shadow .3s}
-.mod:hover{transform:translateY(-3px);box-shadow:0 18px 40px -20px rgba(15,26,29,.25)}
-.mod svg{width:26px;height:26px;stroke:var(--teal-d);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:14px}
-.mod h3{font-size:16.5px;letter-spacing:-.01em;margin-bottom:6px}
-.mod p{font-size:14.5px;color:var(--ink2);line-height:1.5}
 
 /* trades */
 #betriebe{padding:140px 0}
@@ -283,7 +277,7 @@ footer a:hover{color:var(--snow)}
 
 /* ---------- responsive ---------- */
 @media (max-width:1020px){
-  .mods,.prom{grid-template-columns:repeat(2,1fr)}
+  .prom{grid-template-columns:repeat(2,1fr)}
   .trades{grid-template-columns:repeat(2,1fr)}
   .proc{grid-template-columns:repeat(2,1fr);row-gap:40px}
   .proc::before{display:none}
@@ -314,7 +308,7 @@ footer a:hover{color:var(--snow)}
   .aiband{flex-direction:column;align-items:flex-start}
 }
 @media (max-width:560px){
-  .mods,.prom,.proc{grid-template-columns:1fr}
+  .prom,.proc{grid-template-columns:1fr}
   .trades{grid-template-columns:1fr 1fr;gap:10px}
   .trade b{left:12px;bottom:11px;font-size:15px}
   .frow{grid-template-columns:1fr}
@@ -393,6 +387,44 @@ footer a:hover{color:var(--snow)}
 .rail .rpill{position:absolute;z-index:0;top:6px;bottom:6px;border-radius:999px;background:var(--ink);transition:left .45s var(--ease),width .45s var(--ease)}
 .rail .prog{position:absolute;left:22px;right:22px;bottom:-1px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--teal) var(--p,0%),transparent var(--p,0%))}
 @media (max-width:900px){.rail{top:72px;background:var(--paper);margin:0 calc(-1 * var(--gut));padding:8px var(--gut) 2px}.rail a span{display:none}.rail a{padding:9px 12px}.stage{top:130px}}
+
+.kit2{margin-top:44px;display:grid;grid-template-columns:1fr 1.15fr;gap:28px;align-items:start}
+.picks{display:grid;gap:8px}
+.pick{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:40px 1fr 40px;gap:14px;align-items:center;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--line);transition:border-color .25s,box-shadow .25s,background .25s}
+.pick:hover{border-color:rgba(0,120,108,.35)}
+.pick:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.pick .pi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#f0f4f3;transition:background .25s}
+.pick .pi svg{width:20px;height:20px;fill:none;stroke:var(--mute);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s}
+.pick h3{font-size:15.5px;margin:0}
+.pick p{font-size:13.5px;color:var(--ink2);line-height:1.4;margin-top:2px}
+.pick .tg{width:38px;height:22px;border-radius:999px;background:#dde5e3;position:relative;transition:background .25s;justify-self:end}
+.pick .tg::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .25s var(--ease)}
+.pick.on{border-color:rgba(0,178,160,.5);box-shadow:0 10px 30px -18px rgba(0,120,108,.5)}
+.pick.on .pi{background:var(--teal-w)}.pick.on .pi svg{stroke:var(--teal-d)}
+.pick.on .tg{background:var(--teal)}.pick.on .tg::after{transform:translateX(16px)}
+.pv{position:sticky;top:110px;border-radius:18px;overflow:hidden;background:#fff;border:1px solid var(--line);box-shadow:0 40px 80px -40px rgba(15,26,29,.35)}
+.pv-bar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:#f3f6f5;border-bottom:1px solid var(--line)}
+.pv-bar i{width:9px;height:9px;border-radius:50%;background:#dfe5e3}
+.pv-bar span{margin:0 auto;font-size:11.5px;color:var(--mute);background:#fff;padding:3px 30px;border-radius:7px;border:1px solid var(--line)}
+.pv-body{display:grid;grid-template-columns:170px 1fr;min-height:430px}
+.pv-side{border-right:1px solid var(--line);padding:14px 10px;font-size:13px}
+.pv-brand{padding:4px 8px 14px}.pv-brand b{display:block;font-size:14px}.pv-brand small{color:var(--mute)}
+.pv-nav{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;color:var(--ink2)}
+.pv-nav svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pv-nav.on{background:var(--teal-w);color:var(--teal-dd);font-weight:600}
+.pv-nav.m{max-height:0;padding-top:0;padding-bottom:0;opacity:0;overflow:hidden;transform:translateX(-8px);transition:all .4s var(--ease)}
+.pv-nav.m.in{max-height:40px;padding-top:7px;padding-bottom:7px;opacity:1;transform:none}
+.pv-nav.flash{background:rgba(0,178,160,.18)}
+.pv-main{padding:18px}
+.pv-h{font-weight:650;font-size:16px}.pv-count{font-size:12.5px;color:var(--mute);margin:2px 0 14px}.pv-count b{color:var(--teal-d)}
+.pv-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pv-t{display:none;flex-direction:column;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--line);font-size:12.5px;font-weight:600;animation:pop .4s var(--ease)}
+.pv-t.in{display:flex}
+.pv-t svg{width:18px;height:18px;fill:none;stroke:var(--teal-d);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.pv-note{margin-top:16px;font-size:12.5px;color:var(--mute)}.pv-note .mb{display:none}@media (max-width:900px){.pv-note .dk{display:none}.pv-note .mb{display:inline}}
+@media (max-width:900px){.kit2{grid-template-columns:1fr}.pv{position:relative;top:auto;order:-1}.pv-body{grid-template-columns:130px 1fr;min-height:0}.pv-tiles{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.pick{grid-template-columns:36px 1fr 40px;gap:10px;padding:10px 12px}.pick p{display:none}.pv-side{display:none}.pv-body{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -550,15 +582,18 @@ footer a:hover{color:var(--snow)}
       <h2 data-i18n-html="hp.m.title">Nur das, was Ihr Betrieb braucht<span class="dot">.</span></h2>
       <p data-i18n="hp.m.sub">Jedes System wird aus Bausteinen zusammengestellt und auf Ihre Abläufe angepasst. Was Sie nicht brauchen, kommt nicht hinein.</p>
     </div>
-    <div class="mods">
-      <div class="mod rv"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.6 3.5 6"/></svg><h3 data-i18n="hp.m.crm.t">Kunden</h3><p data-i18n="hp.m.crm.d">Kontakte, Verlauf, Nachfassen und Dokumente pro Kunde.</p></div>
-      <div class="mod rv d1"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg><h3 data-i18n="hp.m.quote.t">Offerten</h3><p data-i18n="hp.m.quote.d">Aus Preislisten und Vorlagen, mit Status und Versionen.</p></div>
-      <div class="mod rv d2"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg><h3 data-i18n="hp.m.proj.t">Projekte</h3><p data-i18n="hp.m.proj.d">Projektakte mit Budget, Material, Dateien und Marge.</p></div>
-      <div class="mod rv d3"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><h3 data-i18n="hp.m.time.t">Stunden</h3><p data-i18n="hp.m.time.d">Zeiterfassung pro Person und Projekt, auch unterwegs.</p></div>
-      <div class="mod rv"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><h3 data-i18n="hp.m.inv.t">Rechnungen</h3><p data-i18n="hp.m.inv.d">QR-Rechnungen, Zahlungsabgleich, offene Posten.</p></div>
-      <div class="mod rv d1"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/></svg><h3 data-i18n="hp.m.disp.t">Einsatzplanung</h3><p data-i18n="hp.m.disp.d">Wer ist wann bei welchem Kunden – für Betriebe mit Aussendienst.</p></div>
-      <div class="mod rv d2"><svg viewBox="0 0 24 24"><path d="M4 4h16v5H4zM6 9v11h12V9"/><path d="M10 13h4"/></svg><h3 data-i18n="hp.m.arch.t">Archiv</h3><p data-i18n="hp.m.arch.d">Belege und Dokumente revisionssicher abgelegt und auffindbar.</p></div>
-      <div class="mod rv d3"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg><h3 data-i18n="hp.m.exp.t">Treuhand</h3><p data-i18n="hp.m.exp.d">Exporte für Ihren Treuhänder statt Belegstapel.</p></div>
+    <div class="kit2 rv">
+      <div class="picks"><button type="button" class="pick on" data-k="crm" aria-pressed="true"><span class="pi"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.6 3.5 6"/></svg></span><span class="pt"><h3 data-i18n="hp.m.crm.t">Kunden</h3><p data-i18n="hp.m.crm.d">Kontakte, Verlauf, Nachfassen und Dokumente pro Kunde.</p></span><span class="tg" aria-hidden="true"></span></button><button type="button" class="pick on" data-k="quote" aria-pressed="true"><span class="pi"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg></span><span class="pt"><h3 data-i18n="hp.m.quote.t">Offerten</h3><p data-i18n="hp.m.quote.d">Aus Preislisten und Vorlagen, mit Status und Versionen.</p></span><span class="tg" aria-hidden="true"></span></button><button type="button" class="pick on" data-k="proj" aria-pressed="true"><span class="pi"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg></span><span class="pt"><h3 data-i18n="hp.m.proj.t">Projekte</h3><p data-i18n="hp.m.proj.d">Projektakte mit Budget, Material, Dateien und Marge.</p></span><span class="tg" aria-hidden="true"></span></button><button type="button" class="pick" data-k="time" aria-pressed="false"><span class="pi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="pt"><h3 data-i18n="hp.m.time.t">Stunden</h3><p data-i18n="hp.m.time.d">Zeiterfassung pro Person und Projekt, auch unterwegs.</p></span><span class="tg" aria-hidden="true"></span></button><button type="button" class="pick on" data-k="inv" aria-pressed="true"><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="pt"><h3 data-i18n="hp.m.inv.t">Rechnungen</h3><p data-i18n="hp.m.inv.d">QR-Rechnungen, Zahlungsabgleich, offene Posten.</p></span><span class="tg" aria-hidden="true"></span></button><button type="button" class="pick" data-k="disp" aria-pressed="false"><span class="pi"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/></svg></span><span class="pt"><h3 data-i18n="hp.m.disp.t">Einsatzplanung</h3><p data-i18n="hp.m.disp.d">Wer ist wann bei welchem Kunden – für Betriebe mit Aussendienst.</p></span><span class="tg" aria-hidden="true"></span></button><button type="button" class="pick" data-k="arch" aria-pressed="false"><span class="pi"><svg viewBox="0 0 24 24"><path d="M4 4h16v5H4zM6 9v11h12V9"/><path d="M10 13h4"/></svg></span><span class="pt"><h3 data-i18n="hp.m.arch.t">Archiv</h3><p data-i18n="hp.m.arch.d">Belege und Dokumente revisionssicher abgelegt und auffindbar.</p></span><span class="tg" aria-hidden="true"></span></button><button type="button" class="pick" data-k="exp" aria-pressed="false"><span class="pi"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg></span><span class="pt"><h3 data-i18n="hp.m.exp.t">Treuhand</h3><p data-i18n="hp.m.exp.d">Exporte für Ihren Treuhänder statt Belegstapel.</p></span><span class="tg" aria-hidden="true"></span></button></div>
+      <div class="pv" aria-live="polite">
+        <div class="pv-bar"><i></i><i></i><i></i><span>app.axyom.ch</span></div>
+        <div class="pv-body">
+          <div class="pv-side"><div class="pv-brand"><b>Axyom</b><small data-i18n="hp.k.firm">Ihr Betrieb</small></div>
+            <div class="pv-nav on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span data-i18n="hp.k.home">Übersicht</span></div><div class="pv-nav m in" data-k="crm"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.6 3.5 6"/></svg><span data-i18n="hp.m.crm.t">Kunden</span></div><div class="pv-nav m in" data-k="quote"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg><span data-i18n="hp.m.quote.t">Offerten</span></div><div class="pv-nav m in" data-k="proj"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg><span data-i18n="hp.m.proj.t">Projekte</span></div><div class="pv-nav m" data-k="time"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="hp.m.time.t">Stunden</span></div><div class="pv-nav m in" data-k="inv"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span data-i18n="hp.m.inv.t">Rechnungen</span></div><div class="pv-nav m" data-k="disp"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/></svg><span data-i18n="hp.m.disp.t">Einsatzplanung</span></div><div class="pv-nav m" data-k="arch"><svg viewBox="0 0 24 24"><path d="M4 4h16v5H4zM6 9v11h12V9"/><path d="M10 13h4"/></svg><span data-i18n="hp.m.arch.t">Archiv</span></div><div class="pv-nav m" data-k="exp"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg><span data-i18n="hp.m.exp.t">Treuhand</span></div></div>
+          <div class="pv-main"><div class="pv-h" data-i18n="hp.k.title">Ihr System</div><div class="pv-count"><b class="n">4</b> <span data-i18n="hp.k.of">von 8 Bausteinen</span></div>
+            <div class="pv-tiles"><div class="pv-t in" data-k="crm"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.6 3.5 6"/></svg><span data-i18n="hp.m.crm.t">Kunden</span></div><div class="pv-t in" data-k="quote"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg><span data-i18n="hp.m.quote.t">Offerten</span></div><div class="pv-t in" data-k="proj"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg><span data-i18n="hp.m.proj.t">Projekte</span></div><div class="pv-t" data-k="time"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="hp.m.time.t">Stunden</span></div><div class="pv-t in" data-k="inv"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span data-i18n="hp.m.inv.t">Rechnungen</span></div><div class="pv-t" data-k="disp"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/></svg><span data-i18n="hp.m.disp.t">Einsatzplanung</span></div><div class="pv-t" data-k="arch"><svg viewBox="0 0 24 24"><path d="M4 4h16v5H4zM6 9v11h12V9"/><path d="M10 13h4"/></svg><span data-i18n="hp.m.arch.t">Archiv</span></div><div class="pv-t" data-k="exp"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg><span data-i18n="hp.m.exp.t">Treuhand</span></div></div>
+            <p class="pv-note"><span class="dk" data-i18n="hp.k.hint">Tippen Sie links an, was Ihr Betrieb braucht.</span><span class="mb" data-i18n="hp.k.hintm">Tippen Sie unten an, was Ihr Betrieb braucht.</span></p></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -945,6 +980,14 @@ footer a:hover{color:var(--snow)}
   var i=steps.findIndex(function(s){return s.classList.contains('on')}); window.onStep(i<0?0:i);
   addEventListener('resize',function(){var i=steps.findIndex(function(s){return s.classList.contains('on')}); window.onStep(i)});
 })();
+</script>
+<script>
+(function(){var b=[].slice.call(document.querySelectorAll('.pick'));
+function upd(k){var n=0;b.forEach(function(x){var on=x.classList.contains('on');if(on)n++;
+ document.querySelectorAll('[data-k="'+x.dataset.k+'"]').forEach(function(e){if(e!==x)e.classList.toggle('in',on)})});
+ document.querySelector('.pv-count .n').textContent=n;
+ if(k){var nv=document.querySelector('.pv-nav[data-k="'+k+'"]');nv.classList.add('flash');setTimeout(function(){nv.classList.remove('flash')},500)}}
+b.forEach(function(x){x.addEventListener('click',function(){x.classList.toggle('on');x.setAttribute('aria-pressed',x.classList.contains('on'));upd(x.dataset.k)})});upd();})();
 </script>
 </body>
 </html>
