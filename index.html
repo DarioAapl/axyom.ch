@@ -329,6 +329,17 @@ footer a:hover{color:var(--snow)}
   .stack .scr{transition:none;filter:none}
   .step{transition:none}
 }
+.gain{margin-top:56px}
+.gain h3{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:18px}
+.gtab{border:1px solid var(--line-d);border-radius:18px;overflow:hidden;background:var(--night2)}
+.grow{display:grid;grid-template-columns:1.1fr 1fr 1.3fr;align-items:center;padding:16px 24px;border-top:1px solid var(--line-d);font-size:15px}
+.grow.gh{border-top:0;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--snow2);padding:14px 24px;background:rgba(238,244,242,.02)}
+.grow .k{color:var(--snow);font-weight:500}
+.grow .b{color:var(--snow2);text-decoration:line-through;text-decoration-color:rgba(238,244,242,.3)}
+.grow .a{color:var(--snow);display:flex;gap:10px;align-items:center}
+.grow .a::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(0,178,160,.18);flex:none}
+.grow.gh .b{text-decoration:none}.grow.gh .a::before{display:none}
+@media(max-width:720px){.grow{grid-template-columns:1fr 1fr;row-gap:6px;padding:14px 18px}.grow .k{grid-column:1/-1}.grow.gh .k{display:none}}
 </style>
 </head>
 <body>
@@ -398,6 +409,16 @@ footer a:hover{color:var(--snow)}
         </div>
       </div>
     </div>
+    <div class="gain rv"><h3 data-i18n-html="hp.g.title">Was sich ändert<span class="dot">.</span></h3><div class="gtab">
+      <div class="grow gh"><span class="k"></span><span class="b" data-i18n="hp.w.before">Heute</span><span class="a" data-i18n="hp.w.after">Mit Axyom</span></div>
+      <div class="grow"><span class="k" data-i18n="hp.g.login">Logins</span><span class="b" data-i18n="hp.g.login.b">5 Passwörter</span><span class="a" data-i18n="hp.g.login.a">1 Login für alles</span></div>
+      <div class="grow"><span class="k" data-i18n="hp.g.abo">Abos</span><span class="b" data-i18n="hp.g.abo.b">5 Anbieter, 5 Rechnungen</span><span class="a" data-i18n="hp.g.abo.a">1 Abo, 1 Rechnung</span></div>
+      <div class="grow"><span class="k" data-i18n="hp.g.data">Daten erfassen</span><span class="b" data-i18n="hp.g.data.b">doppelt und dreifach</span><span class="a" data-i18n="hp.g.data.a">einmal – überall aktuell</span></div>
+      <div class="grow"><span class="k" data-i18n="hp.g.inv">Offerte → Rechnung</span><span class="b" data-i18n="hp.g.inv.b">abtippen</span><span class="a" data-i18n="hp.g.inv.a">ein Klick</span></div>
+      <div class="grow"><span class="k" data-i18n="hp.g.staff">Neue Mitarbeitende</span><span class="b" data-i18n="hp.g.staff.b">5 Programme lernen</span><span class="a" data-i18n="hp.g.staff.a">eines</span></div>
+      <div class="grow"><span class="k" data-i18n="hp.g.help">Support</span><span class="b" data-i18n="hp.g.help.b">5 Hotlines</span><span class="a" data-i18n="hp.g.help.a">ein Ansprechpartner in Liechtenstein</span></div>
+      <div class="grow"><span class="k" data-i18n="hp.g.month">Monatsabschluss</span><span class="b" data-i18n="hp.g.month.b">Belege zusammensuchen</span><span class="a" data-i18n="hp.g.month.a">bereit für den Treuhänder</span></div>
+    </div></div>
   </div>
 </section>
 
