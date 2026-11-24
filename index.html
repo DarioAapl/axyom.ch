@@ -214,6 +214,10 @@ section{position:relative}
 .pcard svg{width:30px;height:30px;stroke:var(--teal-d);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;margin-bottom:18px}
 .pcard h3{font-size:18px;margin-bottom:8px;letter-spacing:-.015em}
 .pcard p{font-size:15px;color:var(--ink2)}
+.pcard sup.fn{color:var(--teal-d);font-size:.7em;margin-left:2px;line-height:0}
+.fnote{margin-top:20px;font-size:13px;line-height:1.55;color:var(--mute);max-width:820px}
+.fnote sup{color:var(--teal-d);margin-right:3px}
+.fnote a{color:var(--teal-d);text-decoration:underline;text-underline-offset:2px}
 
 
 /* contact */
@@ -570,8 +574,9 @@ footer a:hover{color:var(--snow)}
       <div class="pcard rv"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><h3 data-i18n="ha.1.t">Persönliche Betreuung</h3><p data-i18n="ha.1.d">Sie haben eine feste Ansprechperson, die Ihren Betrieb kennt. Direkt erreichbar, ohne Ticketsystem und ohne Warteschleife.</p></div>
       <div class="pcard rv d1"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11l2 2 4-4"/></svg><h3 data-i18n="ha.2.t">Ehrliche Einschätzung</h3><p data-i18n="ha.2.d">Wir sagen Ihnen vor dem Projekt, was Automatisierung in Ihrem Betrieb leisten kann und was nicht. Klare Erwartungen, keine Überraschungen.</p></div>
       <div class="pcard rv d2"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><h3 data-i18n="ha.3.t">Aus der Region</h3><p data-i18n="ha.3.d">Entwickelt in Liechtenstein, gehostet in der Schweiz. Kurze Wege, persönliche Termine vor Ort und Betreuung in Ihrer Sprache.</p></div>
-      <div class="pcard rv d3"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/><path d="M12 14.5v2.5"/></svg><h3 data-i18n="hp.v4.t">Datenschutz inklusive</h3><p data-i18n="hp.v4.d">Ihre Daten liegen auf Servern in der Schweiz. Wir verkaufen sie nicht, nutzen sie nicht für Werbung und geben sie nicht weiter.</p></div>
+      <div class="pcard rv d3"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/><path d="M12 14.5v2.5"/></svg><h3><span data-i18n="hp.v4.t">Datenschutz inklusive</span><sup class="fn">*</sup></h3><p data-i18n="hp.v4.d">Ihre Daten liegen auf Servern in der Schweiz. Wir verkaufen sie nicht, nutzen sie nicht für Werbung und geben sie nicht weiter.</p></div>
     </div>
+    <p class="fnote rv"><sup>*</sup><span data-i18n="hp.v4.fn">Ausnahme KI-Funktionen: Für die Beleg-Erkennung und den KI-Assistenten werden die dafür nötigen Inhalte an unseren KI-Anbieter OpenAI (USA) übermittelt und dort verarbeitet. Mehr dazu in der</span> <a href="/privacy.html" data-i18n="hp.v4.fnl">Datenschutzerklärung</a>.</p>
   </div>
 </section>
 
