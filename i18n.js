@@ -62,7 +62,6 @@
     'hp.nav.trades': 'Who it’s for',
     'hp.nav.process': 'Process',
     'hp.nav.ai': 'Axyom AI',
-    'hp.hero.eyebrow': 'Business software from Liechtenstein',
     'hp.hero.title': 'Your business.<br><span class="soft">One system</span><span class="dot">.</span>',
     'hp.hero.sub': 'Customers, quotes, projects, hours and invoices in one place – built around the way your business works. Not the other way round.',
     'hp.hero.cta': 'Book an intro call',
