@@ -118,7 +118,7 @@
     'hp.s0.l1': 'Tasks by urgency, not by program',
     'hp.s0.l2': 'Several companies in one view',
     'hp.s1.tag': 'Customers',
-    'hp.s1.t': 'Every customer with their whole history.',
+    'hp.s1.t': 'Everything about a customer – on one page.',
     'hp.s1.d': 'Enquiries, visits, quotes, projects and invoices – in order, in one place. Whoever takes over knows the story at once.',
     'hp.s1.l1': 'Contacts, notes and documents with the customer',
     'hp.s1.l2': 'Follow-ups with a date, so nothing gets dropped',
